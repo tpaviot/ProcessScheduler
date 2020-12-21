@@ -1,0 +1,10 @@
+on: [push]
+jobs:
+  check-pylint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: GitHub Action for pylint
+        uses: cclauss/GitHub-Action-for-pylint@0.7.0
+        with:
+          args: 'pip install -r requirements.txt ; pylint src/processscheduler.py'
