@@ -36,4 +36,13 @@ jobs:
   - bash: |
         conda env create -n psenv -f environment.yml python=${{ parameters.py_maj }}.${{ parameters.py_min }}
     displayName: Install ProcessScheduler to a dedicated environment
- 
+
+  - bash: |
+      source activate psenv && \
+      python -c 'from processscheduler import *'
+    displayName: 'Test import'
+
+  - bash: |
+      source activate psenv && \
+      python test/test-features.py
+    displayName: 'Test features (unittest framework)'
