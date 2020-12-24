@@ -22,7 +22,7 @@ import warnings
 
 try:
     from z3 import (Solver, Int, Or, Sum, unsat, unknown,
-                    Optimize, set_param, ModelRef)
+                    Optimize, set_param, set_option, ModelRef)
 except ModuleNotFoundError:
     raise ImportError("z3 is a mandatory dependency")
 
@@ -308,27 +308,38 @@ class SchedulingProblem:
         it is contradictory with makespan """
         self._objectives.append(ObjectiveType.FLOWTIME)
 
-    def print_solution(self) -> None:
+    def print_solution(self) -> bool:
         """ print solution to console """
+        if self._solution is None:
+            warnings.warn("No solution.")
+            return False
         for task in self._tasks.values():
             task_start = task.start_value
             task_end = task.start_value + task._length
             ress = task._resources_required
             print(task._name, ":", ress, task_start, task_end)
+        return True
 
-    def render_gantt_ascii(self) -> None:
+    def render_gantt_ascii(self) -> bool:
         """ displays an ascii gantt chart """
+        if self._solution is None:
+            warnings.warn("No solution.")
+            return False
         print("Ascii Gantt solution")
         for task in self._tasks.values():
             task_line = '|' + task._name[:4] + '|' + ' ' * task.start_value + task._length * '#'
             print(task_line)
         print('-' * (self._horizon + 4))
+        return True
 
     def render_gantt_matplotlib(self, figsize=(9,6), savefig=False) -> bool:
         """ generate a gantt diagram using matplotlib.
         Inspired by
         https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
         """
+        if self._solution is None:
+            warnings.warn("No solution.")
+            return False
         try:
             import matplotlib.pyplot as plt
             from matplotlib.colors import LinearSegmentedColormap
@@ -369,9 +380,17 @@ class SchedulingProblem:
 # Solver class definition
 #
 class SchedulingSolver:
-    def __init__(self, problem, verbosity: Optional[bool]=True):
+    def __init__(self, problem, verbosity: Optional[bool]=True, max_time: Optional[int]=60):
+        """ Scheduling Solver
+
+        verbosity: True or False
+        max_time: time in seconds
+        """
         self._problem = problem
+
         self._verbosity = verbosity
+        if verbosity:
+            set_option("verbose", 2)
 
         # a dictionary to store all start, length and end variables for all tasks
         self._task_starts_IntVar = {} # type: Dict[Task, Int]
@@ -383,6 +402,9 @@ class SchedulingSolver:
         # by default, no optimization. This flag is set to True whenever any of the
         # add_objective_* is called
         self._optimization = False
+
+        # set timeout
+        set_option("timeout", max_time * 1000)  # in ms
 
     def prepare_model_before_resolution(self):
         """ the resolution worklow starts here. This method has to be called
@@ -420,13 +442,13 @@ class SchedulingSolver:
         if self._problem._objectives:
             self.set_optimization()
         if not self._optimization:
-            self._solver = Solver()
+            self._solver = Solver()  # SMT without optimization
             if self._problem._horizon is not None:
                 self._solver.add(self._horizon == self._problem._horizon)
             else:
                 if self._verbosity:
                     warnings.warn('Horizon not set')
-        else:
+        else:  # optimization enabled
             self._solver = Optimize()
 
         if self._verbosity:
