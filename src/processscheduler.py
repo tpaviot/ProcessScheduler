@@ -404,13 +404,31 @@ class SchedulingSolver:
         # add_objective_* is called
         self._optimization = False
 
+        # define the horizon variable
+        self._horizon = Int('horizon')
+
         # set timeout
         set_option("timeout", max_time * 1000)  # in ms
+
+        # create the solver
+        if self._problem._objectives:
+            self.set_optimization()
+        if not self._optimization:
+            self._solver = Solver()  # SMT without optimization
+            if self._problem._horizon is not None:
+                self._solver.add(self._horizon == self._problem._horizon)
+            else:
+                if self._verbosity:
+                    warnings.warn('Horizon not set')
+        else:  # optimization enabled
+            self._solver = Optimize()
+
+        if self._verbosity:
+            print("Solver:", type(self._solver))
 
     def prepare_model_before_resolution(self):
         """ the resolution worklow starts here. This method has to be called
         before solve is called. """
-        self.create_solver()
         self.set_random_seed_fixed()
         self.create_tasks_variables()
         # constraints
@@ -436,24 +454,6 @@ class SchedulingSolver:
         if not self._optimization:
             print("Add least one optimization objective. Optimization set to True.")
         self._optimization = True
-
-    def create_solver(self) -> None:
-        """ create a Solver or Optimize solver is optimization is enabled """
-        self._horizon = Int('horizon')
-        if self._problem._objectives:
-            self.set_optimization()
-        if not self._optimization:
-            self._solver = Solver()  # SMT without optimization
-            if self._problem._horizon is not None:
-                self._solver.add(self._horizon == self._problem._horizon)
-            else:
-                if self._verbosity:
-                    warnings.warn('Horizon not set')
-        else:  # optimization enabled
-            self._solver = Optimize()
-
-        if self._verbosity:
-            print("Solver:", type(self._solver))
 
     def create_objectives(self) -> None:
         """ create optimization objectives """
