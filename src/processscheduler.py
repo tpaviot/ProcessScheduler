@@ -13,7 +13,6 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from datetime import datetime, timedelta
 from enum import IntEnum
 import itertools
 import time
@@ -46,21 +45,34 @@ class PrecedenceType(IntEnum):
 #
 class _NamedUIDObject:
     """ a base class common to all classes """
-    def __init__(self, name):
+    def __init__(self, name) -> None:
         self._name = name
         self._uid = uuid.uuid4().int
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return self._uid
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self._name
+
+#
+# Resources class definition
+#
+class _Resource(_NamedUIDObject):
+    def __init__(self, name: str):
+        super().__init__(name)
+
+class Worker(_Resource):
+    """ Class representing an atomic resource, e.g. a machine or a human being
+    """
+    def __init__(self, name: str) -> None:
+        super().__init__(name)
 
 #
 # Tasks class definition
 #
 class Task(_NamedUIDObject):
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         super().__init__(name)
         # no default value for task length,
         # must explicitely set by the user
@@ -78,7 +90,7 @@ class Task(_NamedUIDObject):
         # assigned resource, after the solver is ended
         self._resources_assigned = []
 
-    def add_required_resource(self, resource) -> None:
+    def add_required_resource(self, resource: _Resource) -> None:
         if not isinstance(resource, _Resource):
             raise TypeError('you must pass a Resource instance')
         self._resources_required.append(resource)
@@ -86,49 +98,38 @@ class Task(_NamedUIDObject):
     def get_length(self) -> int:
         return self._length
 
-    def set_fixed_length(self, length_value):
+    def set_fixed_length(self, length_value: int) -> None:
         if not isinstance(length_value, int):
             raise TypeError("Task fixed length must be an integer.")
         self._fixed_length = True
         self._variable_length = False
         self._length = length_value
 
-    def set_variable_length(self):
+    def set_variable_length(self) -> None:
         self._fixed_length = False
         self._variable_length = True
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self._name
 
 class FixedLengthTask(Task):
-    def __init__(self, name, length):
+    def __init__(self, name: str, length: int):
         super().__init__(name)
         self.set_fixed_length(length)
 
 class ZeroLengthTask(Task):
-    def __init__(self, name):
+    def __init__(self, name: str) -> None:
         super().__init__(name)
         self.set_fixed_length(0)
 
 class VariableLengthTask(Task):
-    def __init__(self, name, length_at_least=0, length_at_most=None):
+    def __init__(self, name: str,
+                 length_at_least: Optional[int]=0, length_at_most: Optional[int]=None):
         super().__init__(name)
         self.set_variable_length()
         self._length_at_least = length_at_least
         self._length_at_most = length_at_most
 
-#
-# Resources class definition
-#
-class _Resource(_NamedUIDObject):
-    def __init__(self, name):
-        super().__init__(name)
-
-class Worker(_Resource):
-    """ Class representing an atomic resource, e.g. a machine or a human being
-    """
-    def __init__(self, name):
-        super().__init__(name)
 #
 # Generic _Constraint class definition.
 #
@@ -145,7 +146,8 @@ class _TaskConstraint(_Constraint):
         super().__init__()
 
 class TaskPrecedence(_TaskConstraint):
-    def __init__(self, task_before, task_after, offset=0, kind=PrecedenceType.LAX):  # no default name for a constraint
+    def __init__(self, task_before, task_after,
+                 offset=0, kind=PrecedenceType.LAX):
         """ kind might be either 'lax' (by default) or 'tight'
         Semantics : task after will start at least after offset periods
         task_before is finished.
@@ -155,12 +157,15 @@ class TaskPrecedence(_TaskConstraint):
         self._task_after = task_after
         self._offset = offset
         self._kind = kind
-        if kind == PrecedenceType.LAX:
-            comp_char = '<='
-        elif kind == PrecedenceType.STRICT:
-            comp_char = '<'
-        elif kind == PrecedenceType.TIGHT:
-            comp_char = '=='
+
+    def __repr__(self):
+        comp_chars = {PrecedenceType.LAX:'<=',
+                      PrecedenceType.STRICT:'<',
+                      PrecedenceType.TIGHT: '==',
+                     }
+        return "Prcedence constraint: %s %s %s" % (self._task_before,
+                                                   comp_chars[self._kind],
+                                                   self._task_after)
 
 class TaskStartSynced(_TaskConstraint):
     """ Two task that must start at the same time """
@@ -306,7 +311,6 @@ class SchedulingProblem:
     def print_solution(self) -> None:
         """ print solution to console """
         for task in self._tasks.values():
-            task_name = task._name
             task_start = task.start_value
             task_end = task.start_value + task._length
             ress = task._resources_required
@@ -315,9 +319,7 @@ class SchedulingProblem:
     def render_gantt_ascii(self) -> None:
         """ displays an ascii gantt chart """
         print("Ascii Gantt solution")
-        first_row = '|Name| Tasks'
         for task in self._tasks.values():
-            ress = task._resources_required
             task_line = '|' + task._name[:4] + '|' + ' ' * task.start_value + task._length * '#'
             print(task_line)
         print('-' * (self._horizon + 4))
@@ -356,13 +358,8 @@ class SchedulingProblem:
                 text += "(" + "".join("%s" % c for c in task._resources_required) + ")"
             else:
                 text += "(no resource)"
-            gantt.text(x=start + length / 2, 
-                    y=i * 2 + 1,
-                    s=text, 
-                    ha='center', 
-                    va='center',
-                    color='black',
-                   )
+            gantt.text(x=start + length / 2, y=i * 2 + 1,
+                       s=text, ha='center', va='center', color='black')
         plt.grid(axis='x')
         if savefig:
             plt.savefig('scr.png')
