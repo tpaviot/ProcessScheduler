@@ -20,7 +20,7 @@ task_hello = ps.FixedLengthTask('Hello', length=2)
 task_world = ps.FixedLengthTask('World', length=2)
 pb.add_tasks([task_hello, task_world])
 
-# precedence constraint: task_wolrd must be scheduled
+# precedence constraint: task_world must be scheduled
 # after task_hello
 c1 = ps.TaskPrecedence(task_hello, task_world, offset=0)
 pb.add_constraint(c1)
@@ -65,7 +65,7 @@ There are some [Jupypter notebooks](https://github.com/tpaviot/ProcessScheduler/
 ## Contibuting
 
 The development started in december 2020, this is a release-early-work-in-progress. Feel free to submit :
--  new issues: questions, feature requests etc. Use our [issue tracker](https://github.com/tpaviot/ProcessScheduler/issues). Don't forget to assign the proper issue label, and decribe the problem as precisely as possible by adding some python code to illustrate your question
+-  new issues: questions, feature requests etc. Use our [issue tracker](https://github.com/tpaviot/ProcessScheduler/issues). Don't forget to assign the proper issue label, and describe the problem as precisely as possible by adding some python code to illustrate your question
 -  new examples: submit a PR to add a notebook to the examples-notebooks suite
 -  new tests: submit a PR to improve the number/type of current unittests
 -  new code: submit a PR for fixing bugs, add new Task or Resource, opitmize function etc. Before, use pylint to remove trailing whitespaces, unused variables, unused imports

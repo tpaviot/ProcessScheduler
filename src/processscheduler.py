@@ -75,7 +75,7 @@ class Task(_NamedUIDObject):
     def __init__(self, name: str) -> None:
         super().__init__(name)
         # no default value for task length,
-        # must explicitely set by the user
+        # must explicitly set by the user
         self._fixed_length = None
         self._fixed_length_value = None
         self._length = None
@@ -85,7 +85,7 @@ class Task(_NamedUIDObject):
         self.start_value = None
         self.end_value = None
 
-        # required ressources to perfom the task
+        # required resources to perform the task
         self._resources_required = []
         # assigned resource, after the solver is ended
         self._resources_assigned = []
@@ -142,15 +142,17 @@ class _Constraint(_NamedUIDObject):
 # Task constraints
 #
 class _TaskConstraint(_Constraint):
-    def __init__(self):
-        super().__init__()
+    pass
 
 class TaskPrecedence(_TaskConstraint):
     def __init__(self, task_before, task_after,
                  offset=0, kind=PrecedenceType.LAX):
-        """ kind might be either 'lax' (by default) or 'tight'
+        """ kind might be either LAX/STRICT/TIGHT
         Semantics : task after will start at least after offset periods
         task_before is finished.
+        LAX constraint: task1_before_end + offset <= task_after_start
+        STRICT constraint: task1_before_end + offset < task_after_start
+        TIGHT constraint: task1_before_end + offset == task_after_start
         """
         super().__init__()
         self._task_before = task_before
@@ -205,7 +207,7 @@ class TaskDontOverlap(_TaskConstraint):
 
 class TaskExclusive(_TaskConstraint):
     """ TODO One task that needs to be processed alone, that is to say no other
-    task should be scheduled as soon as it started untill it is completed """
+    task should be scheduled as soon as it started until it is completed """
     def __init__(self, task: Task) -> None:
         super().__init__()
         self._task = task
@@ -214,8 +216,7 @@ class TaskExclusive(_TaskConstraint):
 # Resource constraints
 #
 class _ResourceConstraint(_Constraint):
-    def __init__(self):
-        super().__init__()
+    pass
 
 #
 # SchedulingProblem class definition
