@@ -198,7 +198,7 @@ class TaskEndAt(_TaskConstraint):
         self._value = value
 
 class TaskDontOverlap(_TaskConstraint):
-    """ TODO two tasks must not overlap, i.e. one needs to be completed before
+    """ two tasks must not overlap, i.e. one needs to be completed before
     the other can be processed """
     def __init__(self, task_1: Task, task_2: Task) -> None:
         super().__init__()
@@ -207,7 +207,7 @@ class TaskDontOverlap(_TaskConstraint):
 
 class TaskExclusive(_TaskConstraint):
     """ TODO One task that needs to be processed alone, that is to say no other
-    task should be scheduled as soon as it started until it is completed """
+    task should be scheduled as soon as it started and until it is completed """
     def __init__(self, task: Task) -> None:
         super().__init__()
         self._task = task
@@ -283,11 +283,18 @@ class SchedulingProblem:
         return [t for t in self.get_tasks() if isinstance(t, VariableLengthTask)]
 
     def add_constraint(self, constraint: _Constraint) -> bool:
+        if not isinstance(constraint, _Constraint):
+            raise TypeError("add_constraint takes a _Constraint instance")
         if not constraint in self._constraints:
             self._constraints.append(constraint)
             return True
         warnings.warn("Resource already added.")
         return False
+
+    def add_constraints(self, list_of_constraints: List[_Constraint]) -> None:
+        """ adds constraints to the problem """
+        for constraint in list_of_constraints:
+            self.add_constraint(constraint)
 
     def add_objective_makespan(self) -> None:
         """ makespan objective
@@ -381,11 +388,15 @@ class SchedulingProblem:
 # Solver class definition
 #
 class SchedulingSolver:
-    def __init__(self, problem, verbosity: Optional[bool]=True, max_time: Optional[int]=60):
+    def __init__(self, problem,
+                 verbosity: Optional[bool]=True,
+                 max_time: Optional[int]=60,
+                 parallel: Optional[bool]=False):
         """ Scheduling Solver
 
         verbosity: True or False
         max_time: time in seconds
+        parallel: True to enable mutlthreading
         """
         self._problem = problem
 
@@ -422,6 +433,10 @@ class SchedulingSolver:
                     warnings.warn('Horizon not set')
         else:  # optimization enabled
             self._solver = Optimize()
+
+        if parallel:
+            set_option("parallel.enable", True)
+            set_option("parallel.threads.max", 4)  #nbr of max tasks
 
         if self._verbosity:
             print("Solver:", type(self._solver))
@@ -577,6 +592,29 @@ class SchedulingSolver:
                 elif constraint._kind == PrecedenceType.TIGHT:
                     constraint_expr = task_1_end == task_2_start_variable
                 self._solver.add(constraint_expr)
+            # TaskDontOverlap
+            elif isinstance(constraint, TaskDontOverlap):
+                # Careful, much code duplication
+                # TODO: make all variable be properties
+                # of each task. It will be easier to process.
+                task_1 = constraint._task_1
+                task_2 = constraint._task_2
+                task_1_start_variable = self._task_starts_IntVar[task_1]
+                task_2_start_variable = self._task_starts_IntVar[task_2]
+                if task_1 in self._task_length_IntVar:  # it's a VariableLengthTask
+                    task_length_1 = self._task_length_IntVar[task_1]
+                else:  # just an integer, FixedVariableLength
+                    task_length_1 = task_1._length
+                if task_2 in self._task_length_IntVar:  # it's a VariableLengthTask
+                    task_length_2 = self._task_length_IntVar[task_2]
+                else:  # just an integer, FixedVariableLength
+                    task_length_2 = task_2._length
+                task_1_end = task_1_start_variable + task_length_1
+                task_2_end = task_2_start_variable + task_length_2
+                # the constraint
+                self._solver.add(Or(task_2_start_variable >= task_1_end,
+                                    task_1_start_variable >= task_2_end))
+
 
     def process_resource_contraints(self) -> None:
         """ process resource constraints """
@@ -728,6 +766,7 @@ if __name__ == "__main__":
 
     # precedence
     s.add_constraint(TaskStartAt(t7, 4))
+    #s.add_constraint(TaskDontOverlap(t4, t7))
     c1 = TaskPrecedence(t7, t8, offset=1, kind=PrecedenceType.LAX)
     s.add_constraint(c1)
 
