@@ -21,7 +21,7 @@ import uuid
 import warnings
 
 try:
-    from z3 import (Solver, Int, Or, Sum, unsat, unknown,
+    from z3 import (SolverFor, Int, Or, Xor, Sum, unsat, unknown,
                     Optimize, set_param, set_option, ModelRef)
 except ModuleNotFoundError:
     raise ImportError("z3 is a mandatory dependency")
@@ -46,14 +46,14 @@ class PrecedenceType(IntEnum):
 class _NamedUIDObject:
     """ a base class common to all classes """
     def __init__(self, name) -> None:
-        self._name = name
-        self._uid = uuid.uuid4().int
+        self.name = name
+        self.uid = uuid.uuid4().int
 
     def __hash__(self) -> int:
-        return self._uid
+        return self.uid
 
     def __repr__(self) -> str:
-        return self._name
+        return self.name
 
 #
 # Resources class definition
@@ -74,62 +74,84 @@ class Worker(_Resource):
 class Task(_NamedUIDObject):
     def __init__(self, name: str) -> None:
         super().__init__(name)
-        # no default value for task length,
-        # must explicitly set by the user
-        self._fixed_length = None
-        self._fixed_length_value = None
-        self._length = None
-        self._variable_length = None
+        # Following parameters are set after the solver was
+        # successfully executed.
+        # the _scheduled flag is set to True
+        # if the solver schedules the task
+        # by default set to False
+        self.scheduled = False
 
-        # these values will be filled by the solver
-        self.start_value = None
-        self.end_value = None
+        # scheduled start, end and duration set to 0 by default
+        # be set after the solver is called
+        self.scheduled_start = 0
+        self.scheduled_end = 0
+        self.scheduled_duration = 0
 
         # required resources to perform the task
         self._resources_required = []
+
         # assigned resource, after the solver is ended
         self._resources_assigned = []
+
+        # z3 Int variables
+        self.start = Int('%s_start' % name)
+        self.end = Int('%s_end' % name)
+        self.duration = None  # defined for specialized tasks
+
+        # SMT assertions
+        # start and end integer values must be positive
+        self._assertions = []
+
+        # these two flags are set to True is there is a constraint
+        # that set a lower or upper bound (e.g. a Precedence)
+        # this is useful to reduce the number of assertions in z3
+        # indeed if the task is lower_bounded by a precedence or
+        # a StartAt, then there's no need to assert task.start >= 0
+        self.lower_bounded = False
+        # idem for the upper bound: no need to assert task.end <= horizon
+        self.upper_bounded = False
+
+    def add_assertion(self, z3_assertion):
+        self._assertions.append(z3_assertion)
+
+    def get_assertions(self):
+        return self._assertions
 
     def add_required_resource(self, resource: _Resource) -> None:
         if not isinstance(resource, _Resource):
             raise TypeError('you must pass a Resource instance')
         self._resources_required.append(resource)
 
-    def get_length(self) -> int:
-        return self._length
-
-    def set_fixed_length(self, length_value: int) -> None:
-        if not isinstance(length_value, int):
-            raise TypeError("Task fixed length must be an integer.")
-        self._fixed_length = True
-        self._variable_length = False
-        self._length = length_value
-
-    def set_variable_length(self) -> None:
-        self._fixed_length = False
-        self._variable_length = True
-
-    def __repr__(self) -> str:
-        return self._name
-
-class FixedLengthTask(Task):
-    def __init__(self, name: str, length: int):
+class FixedDurationTask(Task):
+    def __init__(self, name: str, duration: int):
         super().__init__(name)
-        self.set_fixed_length(length)
+        self.duration = duration
+        # add an assertion: end = start + duration
+        self.add_assertion(self.start + self.duration == self.end)
 
-class ZeroLengthTask(Task):
+class ZeroDurationTask(Task):
     def __init__(self, name: str) -> None:
         super().__init__(name)
-        self.set_fixed_length(0)
+        self.duration = 0
+        # add an assertion: end = start because the duration is zero
+        self.add_assertion(self.start == self.end)
 
-class VariableLengthTask(Task):
+class VariableDurationTask(Task):
     def __init__(self, name: str,
                  length_at_least: Optional[int]=0, length_at_most: Optional[int]=None):
         super().__init__(name)
-        self.set_variable_length()
-        self._length_at_least = length_at_least
-        self._length_at_most = length_at_most
+        self.duration = Int('%s_duration' % self.name)
+        self.length_at_least = length_at_least
+        self.length_at_most = length_at_most
 
+        # set minimal duration
+        self.add_assertion(self.duration >= length_at_least)
+
+        if length_at_most is not None:
+            self.add_assertion(self.duration <= length_at_most)
+
+        # add an assertion: end = start + duration
+        self.add_assertion(self.start + self.duration == self.end)
 #
 # Generic _Constraint class definition.
 #
@@ -142,7 +164,15 @@ class _Constraint(_NamedUIDObject):
 # Task constraints
 #
 class _TaskConstraint(_Constraint):
-    pass
+    def __init__(self):
+        super().__init__()
+        self.assertions = []
+
+    def add_assertion(self, ass):
+        self.assertions.append(ass)
+
+    def get_assertions(self):
+        return self.assertions
 
 class TaskPrecedence(_TaskConstraint):
     def __init__(self, task_before, task_after,
@@ -155,62 +185,99 @@ class TaskPrecedence(_TaskConstraint):
         TIGHT constraint: task1_before_end + offset == task_after_start
         """
         super().__init__()
-        self._task_before = task_before
-        self._task_after = task_after
-        self._offset = offset
-        self._kind = kind
+
+        if not isinstance(offset, int) or offset < 0:
+            raise ValueError('offset must be a positive integer')
+
+        self.task_before = task_before
+        self.task_after = task_after
+        self.offset = offset
+        self.kind = kind
+
+        if offset > 0:
+            lower = task_before.end + offset
+        else:
+            lower = task_before.end
+        upper = task_after.start
+
+        if kind == PrecedenceType.LAX:
+            self.add_assertion(lower <= upper)
+        elif kind == PrecedenceType.STRICT:
+            self.add_assertion(lower < upper)
+        elif kind == PrecedenceType.TIGHT:
+            self.add_assertion(lower == upper)
+        else:
+            raise ValueError("Unknown precedence type")
+
+        task_after.lower_bounded = True
+        task_before.upper_bounded = True
 
     def __repr__(self):
         comp_chars = {PrecedenceType.LAX:'<=',
                       PrecedenceType.STRICT:'<',
                       PrecedenceType.TIGHT: '==',
                      }
-        return "Prcedence constraint: %s %s %s" % (self._task_before,
-                                                   comp_chars[self._kind],
-                                                   self._task_after)
+        return "Prcedence constraint: %s %s %s" % (self.task_before,
+                                                   comp_chars[self.kind],
+                                                   self.task_after)
 
-class TaskStartSynced(_TaskConstraint):
-    """ Two task that must start at the same time """
+class TasksStartSynced(_TaskConstraint):
+    """ Two tasks that must start at the same time """
     def __init__(self, task_1: Task, task_2: Task) -> None:
         super().__init__()
-        self._task_1 = task_1
-        self._task_2 = task_2
+        self.task_1 = task_1
+        self.task_2 = task_2
 
-class TaskEndSynced(_TaskConstraint):
+        self.add_assertion(task_1.start == task_2.start)
+
+class TasksEndSynced(_TaskConstraint):
     """ Two tasks that must complete at the same time """
     def __init__(self, task_1: Task, task_2: Task) -> None:
         super().__init__()
-        self._task_1 = task_1
-        self._task_2 = task_2
+        self.task_1 = task_1
+        self.task_2 = task_2
+
+        self.add_assertion(task_1.end == task_2.end)
 
 class TaskStartAt(_TaskConstraint):
     """ One task must start at the desired time """
     def __init__(self, task: Task, value: int) -> None:
         super().__init__()
-        self._task = task
-        self._value = value
+        self.task = task
+        self.value = value
+
+        self.add_assertion(task.start == value)
+
+        task.lower_bounded = True
 
 class TaskEndAt(_TaskConstraint):
     """ On task must complete at the desired time """
     def __init__(self, task: Task, value: int) -> None:
         super().__init__()
-        self._task = task
-        self._value = value
+        self.task = task
+        self.value = value
 
-class TaskDontOverlap(_TaskConstraint):
+        self.add_assertion(task.end == value)
+
+        task.upper_bounded = True
+
+class TasksDontOverlap(_TaskConstraint):
     """ two tasks must not overlap, i.e. one needs to be completed before
     the other can be processed """
     def __init__(self, task_1: Task, task_2: Task) -> None:
         super().__init__()
-        self._task_1 = task_1
-        self._task_2 = task_2
+        self.task_1 = task_1
+        self.task_2 = task_2
+
+        self.add_assertion(Xor(task_2.start >= task_1.end,
+                               task_1.start >= task_2.end))
 
 class TaskExclusive(_TaskConstraint):
     """ TODO One task that needs to be processed alone, that is to say no other
     task should be scheduled as soon as it started and until it is completed """
     def __init__(self, task: Task) -> None:
         super().__init__()
-        self._task = task
+        self.task = task
 
 #
 # Resource constraints
@@ -224,7 +291,14 @@ class _ResourceConstraint(_Constraint):
 class SchedulingProblem:
     def __init__(self, name: str, horizon: Optional[int]=None):
         self._name = name
-        self._horizon = horizon
+
+        # define the horizon variable if no horizon defined
+        if horizon is None:
+            self._horizon = Int('horizon')
+        else:  # an integer horizon is defined, no need to create a z3 variable
+            self._horizon = horizon
+
+        self._scheduled_horizon = 0  # set after the solver is finished
         # the list of tasks
         self._tasks = {} # type: Dict[str, Task]
         # the list of resources
@@ -237,26 +311,29 @@ class SchedulingProblem:
         self._solution = None # type: ModelRef
 
     def set_solution(self, solution: ModelRef) -> None:
-        """ for each tash, set the resource, start and length values """
+        """ for each task, set the resource, start and length values """
         self._solution = solution
 
-        for z3_variable in self._solution.decls():
-            var_name = z3_variable.name()
-            var_value = self._solution[z3_variable]
+        for task in self._tasks.values():
+            task.scheduled_start = solution[task.start].as_long()
+            task.scheduled_end = solution[task.end].as_long()
+            if isinstance(task, VariableDurationTask):
+                task.scheduled_duration = solution[task.duration].as_long()
+            else:
+                task.scheduled_duration = task.duration
+            # set task to "Scheduled" status
+            task.schedule = True
 
-            # set the value
-            if '_task_start' in var_name:
-                task_name = var_name.split('_task_start')[0]
-                self._tasks[task_name].start_value = var_value.as_long()
-            if '_task_length' in var_name:
-                task_name = var_name.split('_task_length')[0]
-                self._tasks[task_name]._length = var_value.as_long()
-            if var_name == 'horizon':
-                self._horizon = var_value.as_long()
+        # set the horizon
+        print("Horizon:", type(self._horizon))
+        if isinstance(self._horizon, int):
+            self._scheduled_horizon = self._horizon
+        else:
+            self._scheduled_horizon = solution[self._horizon].as_long()
 
     def add_task(self, task: Task) -> bool:
         """ add a single task to the problem """
-        task_name = task._name
+        task_name = task.name
         if not task_name in self._tasks:
             self._tasks[task_name] = task
         else:
@@ -273,14 +350,14 @@ class SchedulingProblem:
         """ return the list of tasks """
         return self._tasks.values()
 
-    def get_zero_length_tasks(self)-> List[ZeroLengthTask]:
-        return [t for t in self.get_tasks() if isinstance(t, ZeroLengthTask)]
+    def get_zero_length_tasks(self)-> List[ZeroDurationTask]:
+        return [t for t in self.get_tasks() if isinstance(t, ZeroDurationTask)]
 
-    def get_fixed_length_tasks(self) -> List[FixedLengthTask]:
-        return [t for t in self.get_tasks() if isinstance(t, FixedLengthTask)]
+    def get_fixed_length_tasks(self) -> List[FixedDurationTask]:
+        return [t for t in self.get_tasks() if isinstance(t, FixedDurationTask)]
 
-    def get_variable_length_tasks(self) -> List[VariableLengthTask]:
-        return [t for t in self.get_tasks() if isinstance(t, VariableLengthTask)]
+    def get_variable_length_tasks(self) -> List[VariableDurationTask]:
+        return [t for t in self.get_tasks() if isinstance(t, VariableDurationTask)]
 
     def add_constraint(self, constraint: _Constraint) -> bool:
         if not isinstance(constraint, _Constraint):
@@ -296,10 +373,14 @@ class SchedulingProblem:
         for constraint in list_of_constraints:
             self.add_constraint(constraint)
 
-    def add_objective_makespan(self) -> None:
+    def add_objective_makespan(self) -> bool:
         """ makespan objective
         """
+        if isinstance(self._horizon, int):
+            warnings.warn('Horizon set to fixed value %i, cannot be optimized' % self._horizon)
+            return False
         self._objectives.append(ObjectiveType.MAKESPAN)
+        return True
 
     def add_objective_start_latest(self) -> None:
         """ maximize the minimu start time, i.e. all the tasks
@@ -319,25 +400,23 @@ class SchedulingProblem:
     def print_solution(self) -> bool:
         """ print solution to console """
         if self._solution is None:
-            warnings.warn("No solution.")
+            warnings.warn("No solution to display.")
             return False
         for task in self._tasks.values():
-            task_start = task.start_value
-            task_end = task.start_value + task._length
             ress = task._resources_required
-            print(task._name, ":", ress, task_start, task_end)
+            print(task.name, ":", ress, task.scheduled_start, task.scheduled_end)
         return True
 
     def render_gantt_ascii(self) -> bool:
         """ displays an ascii gantt chart """
         if self._solution is None:
-            warnings.warn("No solution.")
+            warnings.warn("No solution to display.")
             return False
         print("Ascii Gantt solution")
         for task in self._tasks.values():
-            task_line = '|' + task._name[:4] + '|' + ' ' * task.start_value + task._length * '#'
+            task_line = '|' + task.name[:4] + '|' + ' ' * task.scheduled_start + task.scheduled_duration * '#'
             print(task_line)
-        print('-' * (self._horizon + 4))
+        print('-' * (self._scheduled_horizon + 4))
         return True
 
     def render_gantt_matplotlib(self, figsize=(9,6), savefig=False) -> bool:
@@ -346,7 +425,7 @@ class SchedulingProblem:
         https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
         """
         if self._solution is None:
-            warnings.warn("No solution.")
+            warnings.warn("No solution to plot.")
             return False
         try:
             import matplotlib.pyplot as plt
@@ -356,21 +435,29 @@ class SchedulingProblem:
             return False
         fig, gantt = plt.subplots(1, 1, figsize=figsize)
         gantt.set_title("Task schedule - %s" % self._name)
-        gantt.set_xlim(0, self._horizon)
-        gantt.set_xticks(range(self._horizon + 1))
+        gantt.set_xlim(0, self._scheduled_horizon)
+        gantt.set_xticks(range(self._scheduled_horizon + 1))
         # Setting labels for x-axis and y-axis
         gantt.set_xlabel('Periods', fontsize=12)
         gantt.set_ylabel('Tasks', fontsize=12)
         nbr_tasks = len(self.get_tasks())
-        cmap = LinearSegmentedColormap.from_list('custom blue', ['#ffff00','#002266'], N=nbr_tasks * 2)
+        nbr_of_colors = nbr_tasks * 2
+        cmap = LinearSegmentedColormap.from_list('custom blue',
+                                                 ['#ffff00','#002266'],
+                                                 N = nbr_of_colors)
+        # the task color is defined from the task name, this way the task has
+        # already the same color, even if it is defined after
         gantt.set_ylim(0, 2 * nbr_tasks)
         gantt.set_yticks(range(1, 2 * nbr_tasks, 2))
         gantt.set_yticklabels(map(str, self.get_tasks()))
         # create a bar for each task
         for i, task in enumerate(self.get_tasks()):
-            start = task.start_value
-            length = task._length
-            gantt.broken_barh([(start, length)], (i * 2, 2), facecolors=cmap(i))
+            start = task.scheduled_start
+            length = task.scheduled_duration
+            if length == 0:  # zero duration tasks, to be visible
+                gantt.broken_barh([(start - 0.05, 0.1)], (i * 2, 2), facecolors=cmap(i))
+            else:
+                gantt.broken_barh([(start, length)], (i * 2, 2), facecolors=cmap(i))
             # build the bar text string
             text = "%s" % task
             if task._resources_required:
@@ -389,14 +476,14 @@ class SchedulingProblem:
 #
 class SchedulingSolver:
     def __init__(self, problem,
-                 verbosity: Optional[bool]=True,
+                 verbosity: Optional[bool]=False,
                  max_time: Optional[int]=60,
                  parallel: Optional[bool]=False):
         """ Scheduling Solver
 
-        verbosity: True or False
-        max_time: time in seconds
-        parallel: True to enable mutlthreading
+        verbosity: True or False, False by default
+        max_time: time in seconds, 60 by default
+        parallel: True to enable mutlthreading, False by default
         """
         self._problem = problem
 
@@ -405,18 +492,11 @@ class SchedulingSolver:
             set_option("verbose", 2)
 
         # a dictionary to store all start, length and end variables for all tasks
-        self._task_starts_IntVar = {} # type: Dict[Task, Int]
-        self._task_ends_IntVar = {} # type: Dict[Task, Int]
-        self._task_length_IntVar = {} # type: Dict[Task, Int]
-
         self._resource_busy_IntVar = {} # type: Dict[Task, Int]
 
         # by default, no optimization. This flag is set to True whenever any of the
         # add_objective_* is called
         self._optimization = False
-
-        # define the horizon variable
-        self._horizon = Int('horizon')
 
         # set timeout
         set_option("timeout", max_time * 1000)  # in ms
@@ -425,12 +505,12 @@ class SchedulingSolver:
         if self._problem._objectives:
             self.set_optimization()
         if not self._optimization:
-            self._solver = Solver()  # SMT without optimization
-            if self._problem._horizon is not None:
-                self._solver.add(self._horizon == self._problem._horizon)
-            else:
-                if self._verbosity:
-                    warnings.warn('Horizon not set')
+            self._solver = SolverFor('QF_LIA')  # SMT without optimization
+            #if self._problem._horizon is not None:
+            #    self._solver.add(self._horizon == self._problem._horizon)
+            #else:
+            if self._verbosity:
+                warnings.warn('Horizon not set')
         else:  # optimization enabled
             self._solver = Optimize()
 
@@ -441,15 +521,26 @@ class SchedulingSolver:
         if self._verbosity:
             print("Solver:", type(self._solver))
 
+        # add all tasks assertions to the solver
+        for task in self._problem.get_tasks():
+            self._solver.add(task.get_assertions())
+            # bound start and end
+            self._solver.add(task.end >= 0)
+            if not task.lower_bounded:
+                self._solver.add(task.start >= 0)
+            if not task.upper_bounded:
+                self._solver.add(task.end <= self._problem._horizon)
+
+        # then process tasks constraints
+        for constraint in self._problem._constraints:
+            self._solver.add(constraint.get_assertions())
+
     def prepare_model_before_resolution(self):
         """ the resolution worklow starts here. This method has to be called
         before solve is called. """
         self.set_random_seed_fixed()
-        self.create_tasks_variables()
         # constraints
-        self.process_task_constraints()
         self.process_resource_requirements()
-        self.process_resource_contraints()
         # finally, the objectives
         self.create_objectives()
 
@@ -472,187 +563,62 @@ class SchedulingSolver:
 
     def create_objectives(self) -> None:
         """ create optimization objectives """
+        tasks = self._problem.get_tasks()
+
         for obj in self._problem._objectives:
             if obj == ObjectiveType.MAKESPAN:
                 # look for the minimum horizon, i.e. the shortest
                 # time horizon to complete all tasks
-                self._solver.minimize(self._horizon)
+                self._solver.minimize(self._problem._horizon)
             elif obj == ObjectiveType.LATEST:
                 # schedule all at the latest time according
                 # to a given horizon
                 mini = Int('SmallestStartTime')
-                tasks_start = self._task_starts_IntVar.values()
-                self._solver.add(Or([mini == tsk_st for tsk_st in tasks_start]))
-                for tsk_st in tasks_start:
-                    self._solver.add(mini <= tsk_st)
+                self._solver.add(Or([mini == task.start for task in tasks]))
+                for tsk in tasks:
+                    self._solver.add(mini <= tsk.start)
                 self._solver.maximize(mini)
             elif obj == ObjectiveType.FLOWTIME:
                 # minimum flowtime, i.e. minimize the sum of all end times
                 flowtime = Int('FlowTime')
-                self._solver.add(flowtime == Sum(list(self._task_ends_IntVar.values())))
+                self._solver.add(flowtime == Sum([task.end for task in tasks]))
                 self._solver.minimize(flowtime)
             elif obj == ObjectiveType.EARLIEST:
-                # minimize the greates start time
+                # minimize the greatest start time
                 maxi = Int('GreatestStartTime')
-                tasks_start = self._task_starts_IntVar.values()
-                self._solver.add(Or([maxi == tsk_st for tsk_st in tasks_start]))
-                for tsk_st in tasks_start:
-                    self._solver.add(maxi >= tsk_st)
+                self._solver.add(Or([maxi == task.start for task in tasks]))
+                for tsk in tasks:
+                    self._solver.add(maxi >= tsk.start)
                 self._solver.minimize(maxi)
-
-    def create_tasks_variables(self) -> None:
-        """ for each task, create task_start (for all tasks) and task_length """
-        for task in self._problem.get_tasks():
-            task_name = "%s" % task
-            # create a variable for the task start
-            task_start = Int(task_name + "_task_start")
-            task_end = Int(task_name + "_task_end")
-            # add the constraint start >= 0
-            self._solver.add(task_start >= 0)
-            self._solver.add(task_end >= 0)
-            if isinstance(task, ZeroLengthTask):
-                self._solver.add(task_start == task_end)
-            # for fixed length tasks only
-            if isinstance(task, FixedLengthTask):
-                self._solver.add(task_end == task_start + task._length)
-                self._solver.add(task_end <= self._horizon)
-            if isinstance(task, VariableLengthTask):
-                task_length = Int(task_name + "_task_length")
-                # task length should be positive
-                self._solver.add(task_length >= 0)
-                self._solver.add(task_end == task_start + task_length)
-                self._solver.add(task_end <= self._horizon)
-                self._solver.add(task_length >= task._length_at_least)
-                if task._length_at_most is not None:
-                    self._solver.add(task_length <= task._length_at_most)
-                self._task_length_IntVar[task] = task_length
-            # store the start and end variables in the related dictionary
-            self._task_starts_IntVar[task] = task_start
-            self._task_ends_IntVar[task] = task_end
-
-    def process_task_constraints(self) -> None:
-        """ process task constraints """
-        for constraint in self._problem._constraints:
-            # StartsSynced
-            if isinstance(constraint, TaskStartSynced):
-                # add the constraint that both start times must be equal
-                task_1_start_variable = self._task_starts_IntVar[constraint._task_1]
-                task_2_start_variable = self._task_starts_IntVar[constraint._task_2]
-                self._solver.add(task_1_start_variable == task_2_start_variable)
-            # TaskEndSynced
-            elif isinstance(constraint, TaskEndSynced):
-                task_1 = constraint._task_1
-                task_2 = constraint._task_2
-                task_1_start_variable = self._task_starts_IntVar[task_1]
-                task_2_start_variable = self._task_starts_IntVar[task_2]
-                if task_1 in self._task_length_IntVar:  # it's a VariableLengthTask
-                    task_length_1 = self._task_length_IntVar[task_1]
-                else:  # just an integer, FixedVariableLength
-                    task_length_1 = task_1._length
-                if task_2 in self._task_length_IntVar:  # it's a VariableLengthTask
-                    task_length_2 = self._task_length_IntVar[task_2]
-                else:  # just an integer, FixedVariableLength
-                    task_length_2 = task_2._length
-                task_1_end = task_1_start_variable + task_length_1
-                task_2_end = task_2_start_variable + task_length_2
-                self._solver.add(task_1_end == task_2_end)
-            # TaskStartAt
-            elif isinstance(constraint, TaskStartAt):
-                task_start_variable = self._task_starts_IntVar[constraint._task]
-                value = constraint._value
-                self._solver.add(task_start_variable == value)
-            # TaskEndAt
-            elif isinstance(constraint, TaskEndAt):
-                task = constraint._task
-                task_start_variable = self._task_starts_IntVar[task]
-                if task in self._task_length_IntVar:  # it's a VariableLengthTask
-                    task_length = self._task_length_IntVar[task]
-                else:  # just an integer, FixedVariableLength
-                    task_length = task._length
-                value = constraint._value
-                self._solver.add(task_start_variable + task_length == value)
-            # TaskPrecedence
-            elif isinstance(constraint, TaskPrecedence):
-                task_1 = constraint._task_before
-                task_2 = constraint._task_after
-                task_1_start_variable = self._task_starts_IntVar[task_1]
-                task_2_start_variable = self._task_starts_IntVar[task_2]
-                if task_1 in self._task_length_IntVar:  # it's a VariableLengthTask
-                    task_1_length = self._task_length_IntVar[task_1]
-                else:  # just an integer, FixedVariableLength
-                    task_1_length = task_1._length
-                if constraint._offset == 0:  # just to avoid constrains like x + 0 < y
-                    task_1_end = task_1_start_variable + task_1_length
-                else:
-                    task_1_end = task_1_start_variable + task_1_length + constraint._offset
-                if constraint._kind == PrecedenceType.LAX:
-                    constraint_expr = task_1_end <= task_2_start_variable
-                elif constraint._kind == PrecedenceType.STRICT:
-                    constraint_expr = task_1_end < task_2_start_variable
-                elif constraint._kind == PrecedenceType.TIGHT:
-                    constraint_expr = task_1_end == task_2_start_variable
-                self._solver.add(constraint_expr)
-            # TaskDontOverlap
-            elif isinstance(constraint, TaskDontOverlap):
-                # Careful, much code duplication
-                # TODO: make all variable be properties
-                # of each task. It will be easier to process.
-                task_1 = constraint._task_1
-                task_2 = constraint._task_2
-                task_1_start_variable = self._task_starts_IntVar[task_1]
-                task_2_start_variable = self._task_starts_IntVar[task_2]
-                if task_1 in self._task_length_IntVar:  # it's a VariableLengthTask
-                    task_length_1 = self._task_length_IntVar[task_1]
-                else:  # just an integer, FixedVariableLength
-                    task_length_1 = task_1._length
-                if task_2 in self._task_length_IntVar:  # it's a VariableLengthTask
-                    task_length_2 = self._task_length_IntVar[task_2]
-                else:  # just an integer, FixedVariableLength
-                    task_length_2 = task_2._length
-                task_1_end = task_1_start_variable + task_length_1
-                task_2_end = task_2_start_variable + task_length_2
-                # the constraint
-                self._solver.add(Or(task_2_start_variable >= task_1_end,
-                                    task_1_start_variable >= task_2_end))
-
-
-    def process_resource_contraints(self) -> None:
-        """ process resource constraints """
-        pass  # TODO
 
     def process_resource_requirements(self) -> None:
         # create variables for busy tasks
         for task in self._problem.get_tasks():
-            task_name = task._name
-            # the start variable for the task
-            task_start = self._task_starts_IntVar[task]
-            # the length variable (or int) for the task
-            if task in self._task_length_IntVar:  # it's a VariableLengthTask
-                task_length = self._task_length_IntVar[task]
-            else:  # just an integer, FixedVariableLength
-                task_length = task._length
+            task_name = task.name
             # then loop over required resources
             for resource in task._resources_required:
-                resource_name = resource._name
+                resource_name = resource.name
                 # create two variables for this resource
                 resource_busy_start = Int('%s_busy_%s_start' % (resource_name, task_name))
                 resource_busy_end = Int('%s_busy_%s_end' % (resource_name, task_name))
                 # add a constraint about resource occupation
                 #
-                # These two constraints representthe fact that this resource
+                # These two constraints represent the fact that this resource
                 # is actually used by the task
                 #
                 # the resource occupation
-                self._solver.add(resource_busy_start + task_length == resource_busy_end)
+                self._solver.add(resource_busy_start + task.duration == resource_busy_end)
                 # sync task and resource occupation
-                self._solver.add(resource_busy_start ==  task_start)
+                self._solver.add(resource_busy_start ==  task.start)
 
                 # store the resource variables
                 # Note that a resource may be busy due to several different tasks
                 if resource not in self._resource_busy_IntVar:
-                    self._resource_busy_IntVar[resource] = [(resource_busy_start, resource_busy_end)]
+                    self._resource_busy_IntVar[resource] = [(resource_busy_start,
+                                                             resource_busy_end)]
                 else:
-                    self._resource_busy_IntVar[resource].append((resource_busy_start, resource_busy_end))
+                    self._resource_busy_IntVar[resource].append((resource_busy_start,
+                                                                 resource_busy_end))
         # when done, tell that these intervals cannot overlap
         # We just tell that, when we take two tasks of busy resource, one may be before
         # or after the other.
@@ -674,8 +640,8 @@ class SchedulingSolver:
                 i, j = comb
                 start_task_i, end_task_i = tasks[i]
                 start_task_j, end_task_j = tasks[j]
-                # add the Or constraint
-                self._solver.add(Or(start_task_i >= end_task_j, start_task_j >= end_task_i))
+                # add the Xor constraint
+                self._solver.add(Xor(start_task_i >= end_task_j, start_task_j >= end_task_i))
 
     def check_sat(self) -> bool:
         """ check satisfiability """
@@ -718,38 +684,34 @@ class SchedulingSolver:
                 var_value = solution[decl]
                 print("%s=%s" %(var_name, var_value))
 
-        # propagate the result to the scenario
+        ## propagate the result to the scenario
         self._problem.set_solution(solution)
 
         return True
 
 if __name__ == "__main__":
-    s = SchedulingProblem('tst-problem')#, horizon=30)
+    pb = SchedulingProblem('tst-problem', horizon=30)
 
-    t1 = FixedLengthTask('t1', length=1)
-    assert t1._fixed_length
-    assert not t1._variable_length
-    assert t1.get_length() == 1
+    t1 = FixedDurationTask('t1', duration=1)
+    print(t1)
+    assert t1.duration == 1
 
-    t2 = ZeroLengthTask('t2')
-    assert t2._fixed_length
-    assert not t2._variable_length
+    t2 = ZeroDurationTask('t2')
+    assert t2.duration == 0
 
-    t3 = VariableLengthTask('t3')
-    assert not t3._fixed_length
-    assert t3._variable_length
+    t3 = VariableDurationTask('t3')
 
-    t4 = FixedLengthTask('t4', length=2)
-    t5 = FixedLengthTask('t5', length=3)
-    t6 = FixedLengthTask('t6', length=2)
-    t7 = FixedLengthTask('t7', length=2)
-    t8 = FixedLengthTask('t8', length=2)
+    t4 = FixedDurationTask('t4', duration=2)
+    t5 = FixedDurationTask('t5', duration=3)
+    t6 = FixedDurationTask('t6', duration=2)
+    t7 = FixedDurationTask('t7', duration=2)
+    t8 = FixedDurationTask('t8', duration=2)
 
-    s.add_task(t1)
-    s.add_task(t1)
-    s.add_tasks([t2, t3, t4, t5, t6, t7, t8])
+    pb.add_task(t1)
+    pb.add_task(t1)
+    pb.add_tasks([t2, t3, t4, t5, t6, t7, t8])
 
-    assert s.get_zero_length_tasks() == [t2]
+    assert pb.get_zero_length_tasks() == [t2]
 
     r1 = Worker('R1')
     r2 = Worker('R2')
@@ -759,26 +721,26 @@ if __name__ == "__main__":
     t2.add_required_resource(r2)
 
     # constraints
-    s.add_constraint(TaskStartSynced(t1, t2))
-    s.add_constraint(TaskStartAt(t4, 4))
-    s.add_constraint(TaskEndAt(t5, 9))
-    s.add_constraint(TaskEndSynced(t5, t6))
+    pb.add_constraint(TasksStartSynced(t1, t2))
+    pb.add_constraint(TaskStartAt(t4, 4))
+    pb.add_constraint(TaskEndAt(t5, 9))
+    pb.add_constraint(TasksEndSynced(t5, t6))
 
     # precedence
-    s.add_constraint(TaskStartAt(t7, 4))
+    pb.add_constraint(TaskStartAt(t7, 4))
     #s.add_constraint(TaskDontOverlap(t4, t7))
     c1 = TaskPrecedence(t7, t8, offset=1, kind=PrecedenceType.LAX)
-    s.add_constraint(c1)
+    pb.add_constraint(c1)
 
     # set optimization
-    #s.add_objective_makespan()
-    #s.add_objective_start_latest()
-    #s.add_objective_start_earliest()
-    #s.add_objective_flowtime()
+    pb.add_objective_makespan()
+    pb.add_objective_start_latest()
+    pb.add_objective_start_earliest()
+    pb.add_objective_flowtime()
 
-    solver = SchedulingSolver(s, verbosity=False)
+    solver = SchedulingSolver(pb, verbosity=False)
     solver.solve()
 
-    s.print_solution()
-    s.render_gantt_ascii()
-    s.render_gantt_matplotlib()
+    pb.print_solution()
+    pb.render_gantt_ascii()
+    pb.render_gantt_matplotlib()

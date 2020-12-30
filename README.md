@@ -16,8 +16,8 @@ import processscheduler as ps
 pb = ps.SchedulingProblem('HelloWorld')
 
 # add two tasks
-task_hello = ps.FixedLengthTask('Hello', length=2)
-task_world = ps.FixedLengthTask('World', length=2)
+task_hello = ps.FixedDurationTask('Hello', duration=2)
+task_world = ps.FixedDurationTask('World', duration=2)
 pb.add_tasks([task_hello, task_world])
 
 # precedence constraint: task_world must be scheduled
@@ -38,9 +38,9 @@ pb.render_gantt_matplotlib()
 
 ## Features
 
--  tasks: ZeroLengthTask, FixedLengthTask, VariableLengthTask
+-  tasks: ZeroDurationTask, FixedDurationTask, VariableDurationTask
 -  resources: Worker
--  task constraints: TaskPrecedence, TaskStartSynced, TaskEndSynced, TaskStartAt, TaskEndAt
+-  task constraints: TaskPrecedence, TasksStartSynced, TasksEndSynced, TaskStartAt, TaskEndAt
 -  objectives: makespan, flowtime, earliest, latest
 
 ## Installation

@@ -30,27 +30,25 @@ class TestFeatures(unittest.TestCase):
         self.assertIsInstance(pb, ps.SchedulingProblem)
 
     def test_create_zero_length_(self) -> None:
-        task = ps.ZeroLengthTask('zt')
-        self.assertTrue(task._fixed_length)
-        self.assertFalse(task._variable_length)
+        task = ps.ZeroDurationTask('zt')
 
     def test_dont_overlap_task_constraint(self) -> None:
         # problem
         pb1 = ps.SchedulingProblem("DontOverlapExample", horizon=10)
         # tasks
-        t1 = ps.FixedLengthTask('t1', length=2)
-        t2 = ps.FixedLengthTask('t2', length=2)
-        t3 = ps.FixedLengthTask('t3', length=2)
+        t1 = ps.FixedDurationTask('t1', duration=2)
+        t2 = ps.FixedDurationTask('t2', duration=3)
+        t3 = ps.FixedDurationTask('t3', duration=4)
         pb1.add_tasks([t1, t2,t3])
         # constraints
         c1 = ps.TaskStartAt(t2, 1)
-        c2 = ps.TaskDontOverlap(t2, t3)
+        c2 = ps.TasksDontOverlap(t2, t3)
         pb1.add_constraints([c1, c2])
         # solve
         solver1 = ps.SchedulingSolver(pb1, verbosity=False)
         solver1.solve()
         # t3 should be scheduled last
-        self.assertEqual(t3.start_value, 3)
+        self.assertEqual(t3.scheduled_start, 4)
 
 if __name__ == "__main__":
     unittest.main()
