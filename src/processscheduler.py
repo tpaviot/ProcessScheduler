@@ -21,8 +21,9 @@ import uuid
 import warnings
 
 try:
-    from z3 import (SolverFor, Int, Or, Xor, Sum, unsat, unknown,
-                    Optimize, set_param, set_option, ModelRef)
+    from z3 import (SolverFor, Bool, Int, Or, Xor, Sum, unsat,
+                    unknown, PbEq, Optimize, set_param, set_option,
+                    ModelRef)
 except ModuleNotFoundError:
     raise ImportError("z3 is a mandatory dependency")
 
@@ -62,11 +63,42 @@ class _Resource(_NamedUIDObject):
     def __init__(self, name: str):
         super().__init__(name)
 
+        # for each resource
+        # we define a list that contains periods for which
+        # the resource is busy
+        # for instance:
+        # self.busy_intervals=[(1,3), (5, 7)]
+        self.busy_intervals = []
+
+    def add_busy_interval(self, interval):
+        # an interval is considered as a tuple (begin, end)
+        self.busy_intervals.append(interval)
+
 class Worker(_Resource):
     """ Class representing an atomic resource, e.g. a machine or a human being
     """
     def __init__(self, name: str) -> None:
         super().__init__(name)
+
+class AlternativeWorkers(_Resource):
+    """ Class representing n workers chosen among a list
+    of n possible workers
+    """
+    def __init__(self, name: str, resources: List[_Resource], number_of_workers: int):
+        super().__init__(name)
+        self._resources = resources
+        self._number_of_workers = number_of_workers
+
+        # create as many booleans as resources in the list
+        selection_list = [Bool('Selected_%s' % res.name) for res in resources]
+        print(selection_list)
+
+        # create the assertion
+        # exactly n boolean values are allowed to be True,
+        # the other must be False
+        # see https://github.com/Z3Prover/z3/issues/694
+        # and https://stackoverflow.com/questions/43081929/k-out-of-n-constraint-in-z3py
+        self.assertion = PbEq([(boolean, True) for boolean in selection_list], number_of_workers)
 
 #
 # Tasks class definition
@@ -120,6 +152,14 @@ class Task(_NamedUIDObject):
     def add_required_resource(self, resource: _Resource) -> None:
         if not isinstance(resource, _Resource):
             raise TypeError('you must pass a Resource instance')
+        resource_busy_start = Int('%s_busy_%s_start' % (resource.name, self.name))
+        resource_busy_end = Int('%s_busy_%s_end' % (resource.name, self.name))
+        # create the busy interval for the resource
+        resource.add_busy_interval((resource_busy_start, resource_busy_end))
+        # set the busy resource to keep synced with the task
+        self.add_assertion(resource_busy_start + self.duration == resource_busy_end)
+        self.add_assertion(resource_busy_start ==  self.start)
+        # finally, store this resource into the resource list
         self._resources_required.append(resource)
 
 class FixedDurationTask(Task):
@@ -299,10 +339,10 @@ class SchedulingProblem:
             self._horizon = horizon
 
         self._scheduled_horizon = 0  # set after the solver is finished
-        # the list of tasks
+        # the list of tasks to be scheduled in this scenario
         self._tasks = {} # type: Dict[str, Task]
-        # the list of resources
-        self._resources = [] # type: List[_Resource]
+        # the list of resources available in this scenario
+        self._resources = {} # type: Dict[str, _Resource]
         # the constraints are defined in the scenario
         self._constraints = [] # type: List[_Constraint]
         # multiple objectives is possible
@@ -325,7 +365,6 @@ class SchedulingProblem:
             task.schedule = True
 
         # set the horizon
-        print("Horizon:", type(self._horizon))
         if isinstance(self._horizon, int):
             self._scheduled_horizon = self._horizon
         else:
@@ -345,6 +384,20 @@ class SchedulingProblem:
         """ adds tasks to the problem """
         for task in list_of_tasks:
             self.add_task(task)
+
+    def add_resource(self, resource: _Resource) -> bool:
+        """ add a single resource to the problem """
+        resource_name = resource.name
+        if not resource_name in self._resources:
+            self._resources[resource_name] = resource
+        else:
+            warnings.warn('resource %s already part of the problem' % resource)
+            return False
+        return True
+
+    def add_resources(self, list_of_resources: List[_Resource]) -> None:
+        for resource in list_of_resources:
+            self.add_resource(resource)
 
     def get_tasks(self) -> List[Task]:
         """ return the list of tasks """
@@ -414,7 +467,8 @@ class SchedulingProblem:
             return False
         print("Ascii Gantt solution")
         for task in self._tasks.values():
-            task_line = '|' + task.name[:4] + '|' + ' ' * task.scheduled_start + task.scheduled_duration * '#'
+            task_line = '|' + task.name[:4] + '|' + \
+                        ' ' * task.scheduled_start + task.scheduled_duration * '#'
             print(task_line)
         print('-' * (self._scheduled_horizon + 4))
         return True
@@ -461,7 +515,9 @@ class SchedulingProblem:
             # build the bar text string
             text = "%s" % task
             if task._resources_required:
-                text += "(" + "".join("%s" % c for c in task._resources_required) + ")"
+                resources_names = ["%s" % c for c in task._resources_required]
+                resources_names.sort()  # alphabetical sort
+                text += "(" + ",".join(resources_names) + ")"
             else:
                 text += "(no resource)"
             gantt.text(x=start + length / 2, y=i * 2 + 1,
@@ -491,15 +547,15 @@ class SchedulingSolver:
         if verbosity:
             set_option("verbose", 2)
 
-        # a dictionary to store all start, length and end variables for all tasks
-        self._resource_busy_IntVar = {} # type: Dict[Task, Int]
-
         # by default, no optimization. This flag is set to True whenever any of the
         # add_objective_* is called
         self._optimization = False
 
         # set timeout
         set_option("timeout", max_time * 1000)  # in ms
+
+        # by default, set the random seed to a fixed value
+        set_param("smt.random_seed", 1234)
 
         # create the solver
         if self._problem._objectives:
@@ -535,20 +591,8 @@ class SchedulingSolver:
         for constraint in self._problem._constraints:
             self._solver.add(constraint.get_assertions())
 
-    def prepare_model_before_resolution(self):
-        """ the resolution worklow starts here. This method has to be called
-        before solve is called. """
-        self.set_random_seed_fixed()
-        # constraints
         self.process_resource_requirements()
-        # finally, the objectives
         self.create_objectives()
-
-    def set_random_seed_fixed(self) -> None:
-        """ set the random seed to a constant value, each time the
-        solver is called, the solution will be the same
-        """
-        set_param("smt.random_seed", 1234)
 
     def set_random_seed_variable(self) -> None:
         """ each time the solver is called, the result may be different
@@ -592,54 +636,18 @@ class SchedulingSolver:
                 self._solver.minimize(maxi)
 
     def process_resource_requirements(self) -> None:
-        # create variables for busy tasks
-        for task in self._problem.get_tasks():
-            task_name = task.name
-            # then loop over required resources
-            for resource in task._resources_required:
-                resource_name = resource.name
-                # create two variables for this resource
-                resource_busy_start = Int('%s_busy_%s_start' % (resource_name, task_name))
-                resource_busy_end = Int('%s_busy_%s_end' % (resource_name, task_name))
-                # add a constraint about resource occupation
-                #
-                # These two constraints represent the fact that this resource
-                # is actually used by the task
-                #
-                # the resource occupation
-                self._solver.add(resource_busy_start + task.duration == resource_busy_end)
-                # sync task and resource occupation
-                self._solver.add(resource_busy_start ==  task.start)
-
-                # store the resource variables
-                # Note that a resource may be busy due to several different tasks
-                if resource not in self._resource_busy_IntVar:
-                    self._resource_busy_IntVar[resource] = [(resource_busy_start,
-                                                             resource_busy_end)]
-                else:
-                    self._resource_busy_IntVar[resource].append((resource_busy_start,
-                                                                 resource_busy_end))
-        # when done, tell that these intervals cannot overlap
-        # We just tell that, when we take two tasks of busy resource, one may be before
-        # or after the other.
-        # let's take an example:
-        # lets T1=(start1, end1) and T2 =(start2, end2)
-        # then start2 >= end1 OR start1 >= end2
-        # we must do that for each combination of two tasks in the resource_IntVar list.
-        # for that, use the itertools.combination class
-        # example of use
-        # list(itertools.combinations(['T1', 'T2', 'T3'], r=2))
-        for res in self._resource_busy_IntVar:
-            tasks = self._resource_busy_IntVar[res]
-            number_of_tasks = len(tasks)
-            if number_of_tasks <= 1:  # no possible overlap, nothing to do
+        """ force non overlapping of resources busy intervals """
+        for resource in self._problem._resources.values():  # loop over resources
+            intervals = resource.busy_intervals
+            if len(intervals) <= 1:  # no need to carry about overlapping, only one task
                 continue
             # get all pairs combination
-            combinations = list(itertools.combinations(range(number_of_tasks), r=2))
-            for comb in combinations:
-                i, j = comb
-                start_task_i, end_task_i = tasks[i]
-                start_task_j, end_task_j = tasks[j]
+            all_pairs = list(itertools.combinations(range(len(intervals)), r=2))
+
+            for pair in all_pairs:
+                i, j = pair
+                start_task_i, end_task_i = intervals[i]
+                start_task_j, end_task_j = intervals[j]
                 # add the Xor constraint
                 self._solver.add(Xor(start_task_i >= end_task_j, start_task_j >= end_task_i))
 
@@ -666,7 +674,6 @@ class SchedulingSolver:
 
     def solve(self) -> bool:
         """ call the solver and returns the solution, if ever """
-        self.prepare_model_before_resolution()
         # check satisfiability
         if not self.check_sat():
             warnings.warn("The problem doesn't have any solution")
@@ -713,13 +720,17 @@ if __name__ == "__main__":
 
     assert pb.get_zero_length_tasks() == [t2]
 
-    r1 = Worker('R1')
-    r2 = Worker('R2')
-
+    r1 = Worker('W1')
+    r2 = Worker('W2')
+    r3 = Worker('W3')
+    r4 = AlternativeWorkers('W4', [r2, r3], 1)
+    pb.add_resources([r1, r2, r3])
     # resources required
     t1.add_required_resource(r1)
-    t2.add_required_resource(r2)
-
+    t1.add_required_resource(r2)
+    #print(t1.get_assertions())
+    for res in pb._resources.values():
+        print(res.busy_intervals)
     # constraints
     pb.add_constraint(TasksStartSynced(t1, t2))
     pb.add_constraint(TaskStartAt(t4, 4))
