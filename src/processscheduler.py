@@ -13,6 +13,10 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import sys
+print("Go to hell fuckin' 2020 !")
+sys.exit(1)
+
 from enum import IntEnum
 import itertools
 import time
