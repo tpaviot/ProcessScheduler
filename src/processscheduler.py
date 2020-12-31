@@ -21,7 +21,7 @@ import uuid
 import warnings
 
 try:
-    from z3 import (SolverFor, Bool, Int, Or, Xor, Sum, unsat,
+    from z3 import (SolverFor, Bool, If, Int, And, Or, Xor, Sum, unsat,
                     unknown, PbEq, Optimize, set_param, set_option,
                     ModelRef)
 except ModuleNotFoundError:
@@ -83,22 +83,28 @@ class Worker(_Resource):
 class AlternativeWorkers(_Resource):
     """ Class representing n workers chosen among a list
     of n possible workers
+    number_of_workers: 1 by default
     """
-    def __init__(self, name: str, resources: List[_Resource], number_of_workers: int):
-        super().__init__(name)
-        self._resources = resources
-        self._number_of_workers = number_of_workers
+    def __init__(self, list_of_workers: List[_Resource], number_of_workers: Optional[int]=1):
+        super().__init__('')
+        self.list_of_workers = list_of_workers
+        self.number_of_workers = number_of_workers
+
+        # a dict that maps workers and selected boolean
+        self.selection_dict = {}
 
         # create as many booleans as resources in the list
-        selection_list = [Bool('Selected_%s' % res.name) for res in resources]
-        print(selection_list)
+        selection_list = []
+        for wrkr in list_of_workers:
+            worker_is_selected = Bool('Selected_%i_%s' % (self.uid, wrkr.name))
+            selection_list.append(worker_is_selected)
+            self.selection_dict[wrkr] = worker_is_selected
 
-        # create the assertion
-        # exactly n boolean values are allowed to be True,
-        # the other must be False
+        # create the assertion : exactly n boolean flags are allowed to be True,
+        # the others must be False
         # see https://github.com/Z3Prover/z3/issues/694
         # and https://stackoverflow.com/questions/43081929/k-out-of-n-constraint-in-z3py
-        self.assertion = PbEq([(boolean, True) for boolean in selection_list], number_of_workers)
+        self.selection_assertion = PbEq([(boolean, True) for boolean in selection_list], number_of_workers)
 
 #
 # Tasks class definition
@@ -122,8 +128,8 @@ class Task(_NamedUIDObject):
         # required resources to perform the task
         self._resources_required = []
 
-        # assigned resource, after the solver is ended
-        self._resources_assigned = []
+        # assigned resource names, after the solver is ended
+        self.resources_assigned = []
 
         # z3 Int variables
         self.start = Int('%s_start' % name)
@@ -149,18 +155,44 @@ class Task(_NamedUIDObject):
     def get_assertions(self):
         return self._assertions
 
-    def add_required_resource(self, resource: _Resource) -> None:
+    def add_required_resource(self, resource: _Resource) -> bool:
         if not isinstance(resource, _Resource):
             raise TypeError('you must pass a Resource instance')
-        resource_busy_start = Int('%s_busy_%s_start' % (resource.name, self.name))
-        resource_busy_end = Int('%s_busy_%s_end' % (resource.name, self.name))
-        # create the busy interval for the resource
-        resource.add_busy_interval((resource_busy_start, resource_busy_end))
-        # set the busy resource to keep synced with the task
-        self.add_assertion(resource_busy_start + self.duration == resource_busy_end)
-        self.add_assertion(resource_busy_start ==  self.start)
-        # finally, store this resource into the resource list
-        self._resources_required.append(resource)
+        if isinstance(resource, AlternativeWorkers):
+            # loop over each resource
+            for worker in resource.list_of_workers:
+                resource_maybe_busy_start = Int('%s_maybe_busy_%s_start' % (worker.name, self.name))
+                resource_maybe_busy_end = Int('%s_maybe_busy_%s_end' % (worker.name, self.name))
+                # create the busy interval for the resource
+                worker.add_busy_interval((resource_maybe_busy_start, resource_maybe_busy_end))
+                # add assertions. If worker is selected then sync the resource with the task
+                selected_variable = resource.selection_dict[worker]
+                # in the case the worker is selected
+                # else: reject in the past !! (i.e. this resource will be scheduled in the past)
+                # define the assertion ...
+                assertion = If(selected_variable,
+                               And(resource_maybe_busy_start + self.duration == resource_maybe_busy_end,
+                                            resource_maybe_busy_start ==  self.start),
+                               And(resource_maybe_busy_start < 0, resource_maybe_busy_end < 0))
+                # ... and store it into the task assertions list
+                self.add_assertion(assertion)
+                # also, don't forget to add the AlternativeWorker assertion
+                self.add_assertion(resource.selection_assertion)
+
+                # finally, add each worker to the "required" resource list
+                self._resources_required.append(worker)
+        elif isinstance(resource, Worker):
+            resource_busy_start = Int('%s_busy_%s_start' % (resource.name, self.name))
+            resource_busy_end = Int('%s_busy_%s_end' % (resource.name, self.name))
+            # create the busy interval for the resource
+            resource.add_busy_interval((resource_busy_start, resource_busy_end))
+            # set the busy resource to keep synced with the task
+            self.add_assertion(resource_busy_start + self.duration == resource_busy_end)
+            self.add_assertion(resource_busy_start ==  self.start)
+
+            # finally, store this resource into the resource list
+            self._resources_required.append(resource)
+        return True
 
 class FixedDurationTask(Task):
     def __init__(self, name: str, duration: int):
@@ -201,7 +233,7 @@ class _Constraint(_NamedUIDObject):
         super().__init__(name='')
 
 #
-# Task constraints
+# Task constraints base class
 #
 class _TaskConstraint(_Constraint):
     def __init__(self):
@@ -214,6 +246,9 @@ class _TaskConstraint(_Constraint):
     def get_assertions(self):
         return self.assertions
 
+#
+# Tasks constraints for two or more classes
+#
 class TaskPrecedence(_TaskConstraint):
     def __init__(self, task_before, task_after,
                  offset=0, kind=PrecedenceType.LAX):
@@ -279,6 +314,22 @@ class TasksEndSynced(_TaskConstraint):
 
         self.add_assertion(task_1.end == task_2.end)
 
+
+class TasksDontOverlap(_TaskConstraint):
+    """ two tasks must not overlap, i.e. one needs to be completed before
+    the other can be processed """
+    def __init__(self, task_1: Task, task_2: Task) -> None:
+        super().__init__()
+        self.task_1 = task_1
+        self.task_2 = task_2
+
+        self.add_assertion(Xor(task_2.start >= task_1.end,
+                               task_1.start >= task_2.end))
+
+#
+# Task constraints for one single task
+#
+
 class TaskStartAt(_TaskConstraint):
     """ One task must start at the desired time """
     def __init__(self, task: Task, value: int) -> None:
@@ -287,6 +338,28 @@ class TaskStartAt(_TaskConstraint):
         self.value = value
 
         self.add_assertion(task.start == value)
+
+        task.lower_bounded = True
+
+class TaskStartAfterStrict(_TaskConstraint):
+    """ task.start > value """
+    def __init__(self, task: Task, value: int) -> None:
+        super().__init__()
+        self.task = task
+        self.value = value
+
+        self.add_assertion(task.start > value)
+
+        task.lower_bounded = True
+
+class TaskStartAfterLax(_TaskConstraint):
+    """  task.start >= value  """
+    def __init__(self, task: Task, value: int) -> None:
+        super().__init__()
+        self.task = task
+        self.value = value
+
+        self.add_assertion(task.start >= value)
 
         task.lower_bounded = True
 
@@ -301,23 +374,34 @@ class TaskEndAt(_TaskConstraint):
 
         task.upper_bounded = True
 
-class TasksDontOverlap(_TaskConstraint):
-    """ two tasks must not overlap, i.e. one needs to be completed before
-    the other can be processed """
-    def __init__(self, task_1: Task, task_2: Task) -> None:
-        super().__init__()
-        self.task_1 = task_1
-        self.task_2 = task_2
-
-        self.add_assertion(Xor(task_2.start >= task_1.end,
-                               task_1.start >= task_2.end))
-
-class TaskExclusive(_TaskConstraint):
-    """ TODO One task that needs to be processed alone, that is to say no other
-    task should be scheduled as soon as it started and until it is completed """
-    def __init__(self, task: Task) -> None:
+class TaskEndBeforeStrict(_TaskConstraint):
+    """ task.end < value """
+    def __init__(self, task: Task, value: int) -> None:
         super().__init__()
         self.task = task
+        self.value = value
+
+        self.add_assertion(task.end < value)
+
+        task.upper_bounded = True
+
+class TaskEndBeforeLax(_TaskConstraint):
+    """ task.end <= value """
+    def __init__(self, task: Task, value: int) -> None:
+        super().__init__()
+        self.task = task
+        self.value = value
+
+        self.add_assertion(task.end <= value)
+
+        task.upper_bounded = True
+
+# class TaskExclusive(_TaskConstraint):
+#     """ TODO One task that needs to be processed alone, that is to say no other
+#     task should be scheduled as soon as it started and until it is completed """
+#     def __init__(self, task: Task) -> None:
+#         super().__init__()
+#         self.task = task
 
 #
 # Resource constraints
@@ -364,6 +448,8 @@ class SchedulingProblem:
             # set task to "Scheduled" status
             task.schedule = True
 
+        # set the resource assignement
+        task.resources_assigned = ['bilou']
         # set the horizon
         if isinstance(self._horizon, int):
             self._scheduled_horizon = self._horizon
@@ -713,17 +799,19 @@ if __name__ == "__main__":
     t6 = FixedDurationTask('t6', duration=2)
     t7 = FixedDurationTask('t7', duration=2)
     t8 = FixedDurationTask('t8', duration=2)
+    t9 = FixedDurationTask('t9', duration=3)
 
     pb.add_task(t1)
     pb.add_task(t1)
-    pb.add_tasks([t2, t3, t4, t5, t6, t7, t8])
+    pb.add_tasks([t2, t3, t4, t5, t6, t7, t8, t9])
 
     assert pb.get_zero_length_tasks() == [t2]
 
     r1 = Worker('W1')
     r2 = Worker('W2')
     r3 = Worker('W3')
-    r4 = AlternativeWorkers('W4', [r2, r3], 1)
+    r4 = AlternativeWorkers([r1, r2, r3], 1)
+    t9.add_required_resource(r4)
     pb.add_resources([r1, r2, r3])
     # resources required
     t1.add_required_resource(r1)
@@ -744,12 +832,12 @@ if __name__ == "__main__":
     pb.add_constraint(c1)
 
     # set optimization
-    pb.add_objective_makespan()
-    pb.add_objective_start_latest()
-    pb.add_objective_start_earliest()
-    pb.add_objective_flowtime()
+    #pb.add_objective_makespan()
+    #pb.add_objective_start_latest()
+    #pb.add_objective_start_earliest()
+    #pb.add_objective_flowtime()
 
-    solver = SchedulingSolver(pb, verbosity=False)
+    solver = SchedulingSolver(pb, verbosity=True)
     solver.solve()
 
     pb.print_solution()
