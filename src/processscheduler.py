@@ -13,10 +13,6 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import sys
-print("Go to hell fuckin' 2020 !")
-sys.exit(1)
-
 from enum import IntEnum
 import itertools
 import time
@@ -32,7 +28,7 @@ except ModuleNotFoundError:
     raise ImportError("z3 is a mandatory dependency")
 
 #
-# Base types
+# Base enum types
 #
 class ObjectiveType(IntEnum):
     MAKESPAN = 1
@@ -108,7 +104,8 @@ class AlternativeWorkers(_Resource):
         # the others must be False
         # see https://github.com/Z3Prover/z3/issues/694
         # and https://stackoverflow.com/questions/43081929/k-out-of-n-constraint-in-z3py
-        self.selection_assertion = PbEq([(boolean, True) for boolean in selection_list], number_of_workers)
+        self.selection_assertion = PbEq([(boolean, True) for boolean in selection_list],
+                                        number_of_workers)
 
 #
 # Tasks class definition
@@ -116,13 +113,6 @@ class AlternativeWorkers(_Resource):
 class Task(_NamedUIDObject):
     def __init__(self, name: str) -> None:
         super().__init__(name)
-        # Following parameters are set after the solver was
-        # successfully executed.
-        # the _scheduled flag is set to True
-        # if the solver schedules the task
-        # by default set to False
-        self.scheduled = False
-
         # scheduled start, end and duration set to 0 by default
         # be set after the solver is called
         self.scheduled_start = 0
@@ -130,7 +120,7 @@ class Task(_NamedUIDObject):
         self.scheduled_duration = 0
 
         # required resources to perform the task
-        self._resources_required = []
+        self.resources_required = []
 
         # assigned resource names, after the solver is ended
         self.resources_assigned = []
@@ -171,20 +161,20 @@ class Task(_NamedUIDObject):
                 worker.add_busy_interval((resource_maybe_busy_start, resource_maybe_busy_end))
                 # add assertions. If worker is selected then sync the resource with the task
                 selected_variable = resource.selection_dict[worker]
+                schedule_as_usual = And(resource_maybe_busy_start + self.duration == resource_maybe_busy_end,
+                                        resource_maybe_busy_start ==  self.start)
                 # in the case the worker is selected
                 # else: reject in the past !! (i.e. this resource will be scheduled in the past)
+                move_to_past = And(resource_maybe_busy_start < 0, resource_maybe_busy_end < 0)
                 # define the assertion ...
-                assertion = If(selected_variable,
-                               And(resource_maybe_busy_start + self.duration == resource_maybe_busy_end,
-                                            resource_maybe_busy_start ==  self.start),
-                               And(resource_maybe_busy_start < 0, resource_maybe_busy_end < 0))
+                assertion = If(selected_variable, schedule_as_usual, move_to_past)
                 # ... and store it into the task assertions list
                 self.add_assertion(assertion)
                 # also, don't forget to add the AlternativeWorker assertion
                 self.add_assertion(resource.selection_assertion)
 
                 # finally, add each worker to the "required" resource list
-                self._resources_required.append(worker)
+                self.resources_required.append(worker)
         elif isinstance(resource, Worker):
             resource_busy_start = Int('%s_busy_%s_start' % (resource.name, self.name))
             resource_busy_end = Int('%s_busy_%s_end' % (resource.name, self.name))
@@ -195,7 +185,7 @@ class Task(_NamedUIDObject):
             self.add_assertion(resource_busy_start ==  self.start)
 
             # finally, store this resource into the resource list
-            self._resources_required.append(resource)
+            self.resources_required.append(resource)
         return True
 
 class FixedDurationTask(Task):
@@ -333,7 +323,6 @@ class TasksDontOverlap(_TaskConstraint):
 #
 # Task constraints for one single task
 #
-
 class TaskStartAt(_TaskConstraint):
     """ One task must start at the desired time """
     def __init__(self, task: Task, value: int) -> None:
@@ -400,13 +389,6 @@ class TaskEndBeforeLax(_TaskConstraint):
 
         task.upper_bounded = True
 
-# class TaskExclusive(_TaskConstraint):
-#     """ TODO One task that needs to be processed alone, that is to say no other
-#     task should be scheduled as soon as it started and until it is completed """
-#     def __init__(self, task: Task) -> None:
-#         super().__init__()
-#         self.task = task
-
 #
 # Resource constraints
 #
@@ -422,19 +404,19 @@ class SchedulingProblem:
 
         # define the horizon variable if no horizon defined
         if horizon is None:
-            self._horizon = Int('horizon')
+            self.horizon = Int('horizon')
         else:  # an integer horizon is defined, no need to create a z3 variable
-            self._horizon = horizon
+            self.horizon = horizon
 
         self._scheduled_horizon = 0  # set after the solver is finished
         # the list of tasks to be scheduled in this scenario
         self._tasks = {} # type: Dict[str, Task]
         # the list of resources available in this scenario
-        self._resources = {} # type: Dict[str, _Resource]
+        self.resources = {} # type: Dict[str, _Resource]
         # the constraints are defined in the scenario
         self._constraints = [] # type: List[_Constraint]
         # multiple objectives is possible
-        self._objectives = [] # type: List[ObjectiveType]
+        self.objectives = [] # type: List[ObjectiveType]
         # the solution
         self._solution = None # type: ModelRef
 
@@ -449,16 +431,12 @@ class SchedulingProblem:
                 task.scheduled_duration = solution[task.duration].as_long()
             else:
                 task.scheduled_duration = task.duration
-            # set task to "Scheduled" status
-            task.schedule = True
 
-        # set the resource assignement
-        task.resources_assigned = ['bilou']
         # set the horizon
-        if isinstance(self._horizon, int):
-            self._scheduled_horizon = self._horizon
+        if isinstance(self.horizon, int):
+            self._scheduled_horizon = self.horizon
         else:
-            self._scheduled_horizon = solution[self._horizon].as_long()
+            self._scheduled_horizon = solution[self.horizon].as_long()
 
     def add_task(self, task: Task) -> bool:
         """ add a single task to the problem """
@@ -478,8 +456,8 @@ class SchedulingProblem:
     def add_resource(self, resource: _Resource) -> bool:
         """ add a single resource to the problem """
         resource_name = resource.name
-        if not resource_name in self._resources:
-            self._resources[resource_name] = resource
+        if not resource_name in self.resources:
+            self.resources[resource_name] = resource
         else:
             warnings.warn('resource %s already part of the problem' % resource)
             return False
@@ -519,26 +497,26 @@ class SchedulingProblem:
     def add_objective_makespan(self) -> bool:
         """ makespan objective
         """
-        if isinstance(self._horizon, int):
-            warnings.warn('Horizon set to fixed value %i, cannot be optimized' % self._horizon)
+        if isinstance(self.horizon, int):
+            warnings.warn('Horizon set to fixed value %i, cannot be optimized' % self.horizon)
             return False
-        self._objectives.append(ObjectiveType.MAKESPAN)
+        self.objectives.append(ObjectiveType.MAKESPAN)
         return True
 
     def add_objective_start_latest(self) -> None:
         """ maximize the minimu start time, i.e. all the tasks
         are scheduled as late as possible """
-        self._objectives.append(ObjectiveType.LATEST)
+        self.objectives.append(ObjectiveType.LATEST)
 
     def add_objective_start_earliest(self) -> None:
         """ minimize the greatest start time, i.e. tasks are schedules
         as early as possible """
-        self._objectives.append(ObjectiveType.EARLIEST)
+        self.objectives.append(ObjectiveType.EARLIEST)
 
     def add_objective_flowtime(self) -> None:
         """ the flowtime is the sum of all ends, minimize. Be carful that
         it is contradictory with makespan """
-        self._objectives.append(ObjectiveType.FLOWTIME)
+        self.objectives.append(ObjectiveType.FLOWTIME)
 
     def print_solution(self) -> bool:
         """ print solution to console """
@@ -546,7 +524,7 @@ class SchedulingProblem:
             warnings.warn("No solution to display.")
             return False
         for task in self._tasks.values():
-            ress = task._resources_required
+            ress = task.resources_required
             print(task.name, ":", ress, task.scheduled_start, task.scheduled_end)
         return True
 
@@ -577,7 +555,7 @@ class SchedulingProblem:
         except ImportError:
             warnings.warn('matplotlib not installed')
             return False
-        fig, gantt = plt.subplots(1, 1, figsize=figsize)
+        gantt = plt.subplots(1, 1, figsize=figsize)[1]
         gantt.set_title("Task schedule - %s" % self._name)
         gantt.set_xlim(0, self._scheduled_horizon)
         gantt.set_xticks(range(self._scheduled_horizon + 1))
@@ -604,8 +582,8 @@ class SchedulingProblem:
                 gantt.broken_barh([(start, length)], (i * 2, 2), facecolors=cmap(i))
             # build the bar text string
             text = "%s" % task
-            if task._resources_required:
-                resources_names = ["%s" % c for c in task._resources_required]
+            if task.resources_required:
+                resources_names = ["%s" % c for c in task.resources_required]
                 resources_names.sort()  # alphabetical sort
                 text += "(" + ",".join(resources_names) + ")"
             else:
@@ -648,13 +626,10 @@ class SchedulingSolver:
         set_param("smt.random_seed", 1234)
 
         # create the solver
-        if self._problem._objectives:
+        if self._problem.objectives:
             self.set_optimization()
         if not self._optimization:
             self._solver = SolverFor('QF_LIA')  # SMT without optimization
-            #if self._problem._horizon is not None:
-            #    self._solver.add(self._horizon == self._problem._horizon)
-            #else:
             if self._verbosity:
                 warnings.warn('Horizon not set')
         else:  # optimization enabled
@@ -675,7 +650,7 @@ class SchedulingSolver:
             if not task.lower_bounded:
                 self._solver.add(task.start >= 0)
             if not task.upper_bounded:
-                self._solver.add(task.end <= self._problem._horizon)
+                self._solver.add(task.end <= self._problem.horizon)
 
         # then process tasks constraints
         for constraint in self._problem._constraints:
@@ -699,11 +674,11 @@ class SchedulingSolver:
         """ create optimization objectives """
         tasks = self._problem.get_tasks()
 
-        for obj in self._problem._objectives:
+        for obj in self._problem.objectives:
             if obj == ObjectiveType.MAKESPAN:
                 # look for the minimum horizon, i.e. the shortest
                 # time horizon to complete all tasks
-                self._solver.minimize(self._problem._horizon)
+                self._solver.minimize(self._problem.horizon)
             elif obj == ObjectiveType.LATEST:
                 # schedule all at the latest time according
                 # to a given horizon
@@ -727,7 +702,7 @@ class SchedulingSolver:
 
     def process_resource_requirements(self) -> None:
         """ force non overlapping of resources busy intervals """
-        for resource in self._problem._resources.values():  # loop over resources
+        for resource in self._problem.resources.values():  # loop over resources
             intervals = resource.busy_intervals
             if len(intervals) <= 1:  # no need to carry about overlapping, only one task
                 continue
@@ -764,7 +739,7 @@ class SchedulingSolver:
 
     def solve(self) -> bool:
         """ call the solver and returns the solution, if ever """
-        # check satisfiability
+        # first check satisfiability
         if not self.check_sat():
             warnings.warn("The problem doesn't have any solution")
             return False
@@ -787,7 +762,7 @@ class SchedulingSolver:
         return True
 
 if __name__ == "__main__":
-    pb = SchedulingProblem('tst-problem', horizon=30)
+    pb = SchedulingProblem('tst-problem')#, horizon=30)
 
     t1 = FixedDurationTask('t1', duration=1)
     print(t1)
@@ -821,7 +796,7 @@ if __name__ == "__main__":
     t1.add_required_resource(r1)
     t1.add_required_resource(r2)
     #print(t1.get_assertions())
-    for res in pb._resources.values():
+    for res in pb.resources.values():
         print(res.busy_intervals)
     # constraints
     pb.add_constraint(TasksStartSynced(t1, t2))
@@ -836,10 +811,10 @@ if __name__ == "__main__":
     pb.add_constraint(c1)
 
     # set optimization
-    #pb.add_objective_makespan()
-    #pb.add_objective_start_latest()
-    #pb.add_objective_start_earliest()
-    #pb.add_objective_flowtime()
+    pb.add_objective_makespan()
+    pb.add_objective_start_latest()
+    pb.add_objective_start_earliest()
+    pb.add_objective_flowtime()
 
     solver = SchedulingSolver(pb, verbosity=True)
     solver.solve()
