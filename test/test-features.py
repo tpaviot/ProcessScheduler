@@ -18,19 +18,25 @@
 #under the License.
 
 import unittest
-import warnings
 
 import processscheduler as ps
 
 class TestFeatures(unittest.TestCase):
-    def test_create_problem(self) -> None:
+    def test_create_problem_with_horizon(self) -> None:
         """ Scenario creation
         """
-        pb = ps.SchedulingProblem('pb1', horizon=10)
+        pb = ps.SchedulingProblem('ProblemWithHorizon', horizon=10)
+        self.assertIsInstance(pb, ps.SchedulingProblem)
+
+    def test_create_problem_without_horizon(self) -> None:
+        """ Scenario creation
+        """
+        pb = ps.SchedulingProblem('ProblemWithoutHorizon')
         self.assertIsInstance(pb, ps.SchedulingProblem)
 
     def test_create_zero_length_(self) -> None:
         task = ps.ZeroDurationTask('zt')
+        self.assertIsInstance(task, ps.ZeroDurationTask)
 
     def test_dont_overlap_task_constraint(self) -> None:
         # problem

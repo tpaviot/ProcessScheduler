@@ -16,7 +16,7 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 from enum import IntEnum
 import itertools
 import time
-from typing import Any, Dict, List, Optional, Tuple, Union, ValuesView
+from typing import Any, Dict, List, Optional, Tuple, ValuesView
 import uuid
 import warnings
 
@@ -122,7 +122,7 @@ class Task(_NamedUIDObject):
         self.resources_required = [] # type: List[_Resource]
 
         # assigned resource names, after the solver is ended
-        self.resources_assigned = [] # type: List[_Resource]
+        # self.resources_assigned = [] # type: List[_Resource]
 
         # z3 Int variables
         self.start = Int('%s_start' % name)
