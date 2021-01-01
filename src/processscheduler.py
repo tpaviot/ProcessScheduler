@@ -16,14 +16,14 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 from enum import IntEnum
 import itertools
 import time
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union, ValuesView
 import uuid
 import warnings
 
 try:
     from z3 import (SolverFor, Bool, If, Int, And, Or, Xor, Sum, unsat,
                     unknown, PbEq, Optimize, set_param, set_option,
-                    ModelRef)
+                    ArithRef, BoolRef, ModelRef)
 except ModuleNotFoundError:
     raise ImportError("z3 is a mandatory dependency")
 
@@ -46,7 +46,7 @@ class PrecedenceType(IntEnum):
 #
 class _NamedUIDObject:
     """ a base class common to all classes """
-    def __init__(self, name) -> None:
+    def __init__(self, name: str) -> None:
         self.name = name
         self.uid = uuid.uuid4().int
 
@@ -66,11 +66,10 @@ class _Resource(_NamedUIDObject):
         # for each resource
         # we define a list that contains periods for which
         # the resource is busy
-        # for instance:
-        # self.busy_intervals=[(1,3), (5, 7)]
-        self.busy_intervals = []
+        # for instance busy_intervals can be [(1,3), (5, 7)]
+        self.busy_intervals = [] # type: List[Tuple[ArithRef, ArithRef]]
 
-    def add_busy_interval(self, interval):
+    def add_busy_interval(self, interval: Tuple[ArithRef, ArithRef]):
         # an interval is considered as a tuple (begin, end)
         self.busy_intervals.append(interval)
 
@@ -120,19 +119,20 @@ class Task(_NamedUIDObject):
         self.scheduled_duration = 0
 
         # required resources to perform the task
-        self.resources_required = []
+        self.resources_required = [] # type: List[_Resource]
 
         # assigned resource names, after the solver is ended
-        self.resources_assigned = []
+        self.resources_assigned = [] # type: List[_Resource]
 
         # z3 Int variables
         self.start = Int('%s_start' % name)
         self.end = Int('%s_end' % name)
-        self.duration = None  # defined for specialized tasks
+        # defined inside specialized tasks
+        self.duration = None # type: Any
 
         # SMT assertions
         # start and end integer values must be positive
-        self._assertions = []
+        self._assertions = [] # type: List[BoolRef]
 
         # these two flags are set to True is there is a constraint
         # that set a lower or upper bound (e.g. a Precedence)
@@ -467,7 +467,7 @@ class SchedulingProblem:
         for resource in list_of_resources:
             self.add_resource(resource)
 
-    def get_tasks(self) -> List[Task]:
+    def get_tasks(self) -> ValuesView[Task]:
         """ return the list of tasks """
         return self._tasks.values()
 
@@ -541,20 +541,20 @@ class SchedulingProblem:
         print('-' * (self._scheduled_horizon + 4))
         return True
 
-    def render_gantt_matplotlib(self, figsize=(9,6), savefig=False) -> bool:
+    def render_gantt_matplotlib(self, figsize=(9,6), savefig=False) -> None:
         """ generate a gantt diagram using matplotlib.
         Inspired by
         https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
         """
         if self._solution is None:
             warnings.warn("No solution to plot.")
-            return False
+            return None
         try:
             import matplotlib.pyplot as plt
             from matplotlib.colors import LinearSegmentedColormap
         except ImportError:
             warnings.warn('matplotlib not installed')
-            return False
+            return None
         gantt = plt.subplots(1, 1, figsize=figsize)[1]
         gantt.set_title("Task schedule - %s" % self._name)
         gantt.set_xlim(0, self._scheduled_horizon)
@@ -577,9 +577,11 @@ class SchedulingProblem:
             start = task.scheduled_start
             length = task.scheduled_duration
             if length == 0:  # zero duration tasks, to be visible
-                gantt.broken_barh([(start - 0.05, 0.1)], (i * 2, 2), facecolors=cmap(i))
+                bar_dimension = (start - 0.05, 0.1)
             else:
-                gantt.broken_barh([(start, length)], (i * 2, 2), facecolors=cmap(i))
+                bar_dimension = (start, length)
+
+            gantt.broken_barh([bar_dimension], (i * 2, 2), facecolors=cmap(i))
             # build the bar text string
             text = "%s" % task
             if task.resources_required:
@@ -594,7 +596,6 @@ class SchedulingProblem:
         if savefig:
             plt.savefig('scr.png')
         plt.show()
-        return True
 
 # Solver class definition
 #
@@ -666,7 +667,7 @@ class SchedulingSolver:
 
     def set_optimization(self) -> None:
         """" set the optimization flag to True """
-        if not self._optimization:
+        if not self._optimization and self._verbosity:
             print("Add least one optimization objective. Optimization set to True.")
         self._optimization = True
 
