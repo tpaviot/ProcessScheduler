@@ -40,14 +40,18 @@ pb.render_gantt_matplotlib()
 
 ## Features
 
--  tasks: ZeroDurationTask, FixedDurationTask, VariableDurationTask
--  resources: Worker
--  task constraints: TaskPrecedence, TasksStartSynced, TasksEndSynced, TaskStartAt, TaskEndAt
--  objectives: makespan, flowtime, earliest, latest
+- tasks: ZeroDurationTask, FixedDurationTask, VariableDurationTask
+
+- resources: Worker, AlternativeWorkers
+
+- task constraints: TasksPrecedence, TasksStartSynced, TasksEndSynced, TaskStartAt, TaskEndAt,
+TaskStartAfterStrict, TaskStartAfterLax, TaskEndBeforeStrict, TaskEndBeforeLax
+
+- objectives: makespan, flowtime, earliest, latest
 
 ## Installation
 
-ProcessScheduler has not any release yet.
+ProcessScheduler has not any release yet. You have to download/test the development version from the git repository.
 
 Fist create a local copy of this repository:
 ```bash
@@ -67,11 +71,14 @@ There are some [Jupypter notebooks](https://github.com/tpaviot/ProcessScheduler/
 ## Contibuting
 
 The development started in december 2020, this is a release-early-work-in-progress. Feel free to submit :
--  new issues: questions, feature requests etc. Use our [issue tracker](https://github.com/tpaviot/ProcessScheduler/issues). Don't forget to assign the proper issue label, and describe the problem as precisely as possible by adding some python code to illustrate your question
--  new examples: submit a PR to add a notebook to the examples-notebooks suite
--  new tests: submit a PR to improve the number/type of current unittests
--  new code: submit a PR for fixing bugs, add new Task or Resource, opitmize function etc. Before, use pylint to remove trailing whitespaces, unused variables, unused imports
+- new issues: questions, feature requests etc. Use our [issue tracker](https://github.com/tpaviot/ProcessScheduler/issues). Don't forget to assign the proper issue label, and describe the problem as precisely as possible by adding some python code to illustrate your question
 
-## License
+- new examples: submit a PR to add a notebook to the examples-notebooks suite
 
-ProcessScheduler is distributed under the terms of the GNU General Public License v3 or (at your option) any later version.
+- new tests: submit a PR to improve the number/type of current unittests
+
+- new code: submit a PR for fixing bugs, add new Task or Resource, opitmize function etc. Before submission, use pylint to remove trailing whitespaces, unused variables, unused imports
+
+## License/Author
+
+ProcessScheduler is distributed under the terms of the GNU General Public License v3 or (at your option) any later version. 
