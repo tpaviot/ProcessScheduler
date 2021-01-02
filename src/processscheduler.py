@@ -462,7 +462,6 @@ class SchedulingProblem:
                         # then this worker should not be added to the list of
                         # assignedresources
                         if task.name in lower_bound.__repr__():
-                            print("Ressource", req_res.name, " not assigned to task", task.name)
                             resource_should_be_assigned = False
                 # add this resource to assigned resources, anytime
                 if resource_should_be_assigned and req_res not in task.assigned_resources:
@@ -507,6 +506,10 @@ class SchedulingProblem:
     def get_tasks(self) -> ValuesView[Task]:
         """ return the list of tasks """
         return self._tasks.values()
+
+    def get_resources(self) -> ValuesView[Worker]:
+        """ return the list of tasks """
+        return self.resources.values()
 
     def add_constraint(self, constraint: _Constraint) -> bool:
         """ add a constraint to the problem """
@@ -570,7 +573,10 @@ class SchedulingProblem:
         print('-' * (self._scheduled_horizon + 4))
         return True
 
-    def render_gantt_matplotlib(self, figsize=(9,6), savefig=False) -> None:
+    def render_gantt_matplotlib(self,
+                                figsize=(9,6),
+                                savefig: Optional[Bool]=False,
+                                render_mode: Optional[str]='Resources') -> None:
         """ generate a gantt diagram using matplotlib.
         Inspired by
         https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
@@ -584,46 +590,86 @@ class SchedulingProblem:
         except ImportError:
             warnings.warn('matplotlib not installed')
             return None
+
+        # render mode is Resource by default, can be set to 'Task'
+        if render_mode == 'Resources':
+            plot_title = "Resources schedule - %s" % self._name
+            plot_ylabel = 'Resources'
+            plot_ticklabels = map(str, self.get_resources())
+            nbr_y_values = len(self.get_resources())
+        else:
+            plot_title = "Task schedule - %s" % self._name
+            plot_ylabel = 'Tasks'
+            plot_ticklabels = map(str, self.get_tasks())
+            nbr_y_values = len(self.get_tasks())
+
         gantt = plt.subplots(1, 1, figsize=figsize)[1]
-        gantt.set_title("Task schedule - %s" % self._name)
+        gantt.set_title(plot_title)
         gantt.set_xlim(0, self._scheduled_horizon)
         gantt.set_xticks(range(self._scheduled_horizon + 1))
         # Setting labels for x-axis and y-axis
         gantt.set_xlabel('Periods', fontsize=12)
-        gantt.set_ylabel('Tasks', fontsize=12)
-        nbr_tasks = len(self.get_tasks())
-        nbr_of_colors = nbr_tasks * 2
+        gantt.set_ylabel(plot_ylabel, fontsize=12)
+
+        # colors definition
+        nbr_of_colors = nbr_y_values * 2
         cmap = LinearSegmentedColormap.from_list('custom blue',
                                                  ['#ffff00','#002266'],
                                                  N = nbr_of_colors)
         # the task color is defined from the task name, this way the task has
         # already the same color, even if it is defined after
-        gantt.set_ylim(0, 2 * nbr_tasks)
-        gantt.set_yticks(range(1, 2 * nbr_tasks, 2))
-        gantt.set_yticklabels(map(str, self.get_tasks()))
-        # create a bar for each task
-        for i, task in enumerate(self.get_tasks()):
-            start = task.scheduled_start
-            length = task.scheduled_duration
+        gantt.set_ylim(0, 2 * nbr_y_values)
+        gantt.set_yticks(range(1, 2 * nbr_y_values, 2))
+        gantt.set_yticklabels(plot_ticklabels)
+        # in Resources mode, create one line per resource on the y axis
+        gantt.grid(axis='x', linestyle='dashed')
+
+        def compute_bar_dimension(start: int, length: int) -> int:
+            """ compute the bar dimension """
             if length == 0:  # zero duration tasks, to be visible
                 bar_dimension = (start - 0.05, 0.1)
             else:
                 bar_dimension = (start, length)
+            return bar_dimension
 
-            gantt.broken_barh([bar_dimension], (i * 2, 2), facecolors=cmap(i))
-            # build the bar text string
-            text = "%s" % task
-            if task.assigned_resources:
-                resources_names = ["%s" % c for c in task.assigned_resources]
-                resources_names.sort()  # alphabetical sort
-                text += "(" + ",".join(resources_names) + ")"
-            else:
-                text += r"($\emptyset$)"
-            gantt.text(x=start + length / 2, y=i * 2 + 1,
-                       s=text, ha='center', va='center', color='black')
-        plt.grid(axis='x')
+        # in Tasks mode, create one line per task on the y axis
+        if render_mode == 'Tasks':
+            for i, task in enumerate(self.get_tasks()):
+                start = task.scheduled_start
+                length = task.scheduled_duration
+                bar_dimension = compute_bar_dimension(start, length)
+
+                gantt.broken_barh([bar_dimension], (i * 2, 2), facecolors=cmap(i))
+                # build the bar text string
+                text = "%s" % task
+                if task.assigned_resources:
+                    resources_names = ["%s" % c for c in task.assigned_resources]
+                    resources_names.sort()  # alphabetical sort
+                    text += "(" + ",".join(resources_names) + ")"
+                else:
+                    text += r"($\emptyset$)"
+                gantt.text(x=start + length / 2, y=i * 2 + 1,
+                           s=text, ha='center', va='center', color='black')
+        elif render_mode == 'Resources':
+            color_code = 0
+            for i, ress in enumerate(self.get_resources()):
+                #each interval from the busy_intervals list is rendered as a bar
+                for st_var, end_var in ress.busy_intervals:
+                    start = self._solution[st_var].as_long()
+                    end = self._solution[end_var].as_long()
+                    if start >= 0 and end >= 0:  # only assigned resource
+                        task_name  = st_var.__repr__().split("_busy_")[1].split('_')[0]
+                        length = end - start
+                        bar_dimension = compute_bar_dimension(start, length)
+                        gantt.broken_barh([bar_dimension], (i * 2, 2),
+                                          edgecolor='black', linewidth=1,
+                                          facecolors=cmap(color_code))
+                        gantt.text(x=start + length / 2, y=i * 2 + 1,
+                                   s=task_name, ha='center', va='center', color='black')
+                        color_code += 1
         if savefig:
             plt.savefig('scr.png')
+
         plt.show()
         return None
 
@@ -826,6 +872,7 @@ if __name__ == "__main__":
     # resources required
     t1.add_required_resource(r1)
     t1.add_required_resource(r2)
+    t3.add_required_resource(r3)
     #print(t1.get_assertions())
     for res in pb.resources.values():
         print(res.busy_intervals)
