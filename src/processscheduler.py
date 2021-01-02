@@ -47,16 +47,34 @@ class PrecedenceType(IntEnum):
 # _NamedUIDObject, name and uid for hashing
 #
 class _NamedUIDObject:
-    """ a base class common to all classes """
+    """ The base object for most ProcessScheduler classes """
     def __init__(self, name: str) -> None:
+        # the object name
         self.name = name
-        self.uid = uuid.uuid4().int
+
+        # unique identifier
+        self.uid = uuid.uuid4().int # type: int
+
+        # SMT assertions
+        # start and end integer values must be positive
+        self.assertions = [] # type: List[BoolRef]
 
     def __hash__(self) -> int:
         return self.uid
 
+    def __eq__(self, other) -> Bool:
+        return self.uid == other.uid
+
     def __repr__(self) -> str:
         return self.name
+
+    def add_assertion(self, z3_assertion: BoolRef):
+        """ add a z3 assertion to be satisfied """
+        self.assertions.append(z3_assertion)
+
+    def get_assertions(self) -> List[BoolRef]:
+        """ return the assertions list """
+        return self.assertions
 
 #
 # Resources class definition
@@ -135,10 +153,6 @@ class Task(_NamedUIDObject):
         # defined inside specialized tasks
         self.duration = None # type: Any
 
-        # SMT assertions
-        # start and end integer values must be positive
-        self._assertions = [] # type: List[BoolRef]
-
         # these two flags are set to True is there is a constraint
         # that set a lower or upper bound (e.g. a Precedence)
         # this is useful to reduce the number of assertions in z3
@@ -147,14 +161,6 @@ class Task(_NamedUIDObject):
         self.lower_bounded = False
         # idem for the upper bound: no need to assert task.end <= horizon
         self.upper_bounded = False
-
-    def add_assertion(self, z3_assertion):
-        """ add a z3 assertion to be satisfied """
-        self._assertions.append(z3_assertion)
-
-    def get_assertions(self):
-        """ return the assertions list """
-        return self._assertions
 
     def add_required_resource(self, resource: _Resource) -> bool:
         """ add a required resource to the current task, required does not
@@ -246,15 +252,6 @@ class _TaskConstraint(_Constraint):
     """ abstract class for task constraint """
     def __init__(self):
         super().__init__()
-        self.assertions = []
-
-    def add_assertion(self, ass):
-        """ add a z3 assertion to the assertion list """
-        self.assertions.append(ass)
-
-    def get_assertions(self):
-        """ return the assertions list """
-        return self.assertions
 
 #
 # Tasks constraints for two or more classes

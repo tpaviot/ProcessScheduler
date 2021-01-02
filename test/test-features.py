@@ -38,6 +38,12 @@ class TestFeatures(unittest.TestCase):
         task = ps.ZeroDurationTask('zt')
         self.assertIsInstance(task, ps.ZeroDurationTask)
 
+    def test_eq_overloading(self) -> None:
+        task_1 = ps.ZeroDurationTask('task1')
+        task_2 = ps.ZeroDurationTask('task2')
+        self.assertEqual(task_1, task_1)
+        self.assertEqual(task_1, task_2)
+
     def test_dont_overlap_task_constraint(self) -> None:
         # problem
         pb1 = ps.SchedulingProblem("DontOverlapExample", horizon=10)
