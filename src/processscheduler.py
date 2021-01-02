@@ -24,8 +24,8 @@ try:
     from z3 import (SolverFor, Bool, If, Int, And, Or, Xor, Sum, unsat,
                     unknown, PbEq, Optimize, set_param, set_option,
                     ArithRef, BoolRef, ModelRef)
-except ModuleNotFoundError:
-    raise ImportError("z3 is a mandatory dependency")
+except ModuleNotFoundError as z3_not_found:
+    raise ImportError("z3 is a mandatory dependency") from z3_not_found
 
 #
 # Base enum types
@@ -84,10 +84,8 @@ class _Resource(_NamedUIDObject):
     def __init__(self, name: str):
         super().__init__(name)
 
-        # for each resource
-        # we define a list that contains periods for which
-        # the resource is busy
-        # for instance busy_intervals can be [(1,3), (5, 7)]
+        # for each resource, we define a list that contains periods for which
+        # the resource is busy, for instance busy_intervals can be [(1,3), (5, 7)]
         self.busy_intervals = [] # type: List[Tuple[ArithRef, ArithRef]]
 
     def add_busy_interval(self, interval: Tuple[ArithRef, ArithRef]):
@@ -96,17 +94,16 @@ class _Resource(_NamedUIDObject):
         self.busy_intervals.append(interval)
 
 class Worker(_Resource):
-    """ Class representing an atomic resource, e.g. a machine or a human being
-    """
+    """ A worker is an atomic resource that cannot be splitted into smaller parts.
+    Typical workers are human beings, machines etc. """
     def __init__(self, name: str) -> None:
         super().__init__(name)
 
 class AlternativeWorkers(_Resource):
-    """ Class representing n workers chosen among a list
-    of n possible workers
-    number_of_workers: 1 by default
-    """
+    """ Class representing the selection of n workers chosen among a list
+    of possible workers """
     def __init__(self, list_of_workers: List[_Resource], number_of_workers: Optional[int]=1):
+        """ create an instance of the AlternativeWorkers class. """
         super().__init__('')
         self.list_of_workers = list_of_workers
         self.number_of_workers = number_of_workers
@@ -142,7 +139,7 @@ class Task(_NamedUIDObject):
         self.scheduled_duration = 0
 
         # required resources to perform the task
-        self.resources_required = [] # type: List[_Resource]
+        self.required_resources = [] # type: List[_Resource]
 
         # assigned resource names, after the solver is ended
         self.assigned_resources = [] # type: List[_Resource]
@@ -189,7 +186,7 @@ class Task(_NamedUIDObject):
                 self.add_assertion(resource.selection_assertion)
 
                 # finally, add each worker to the "required" resource list
-                self.resources_required.append(worker)
+                self.required_resources.append(worker)
         elif isinstance(resource, Worker):
             resource_busy_start = Int('%s_busy_%s_start' % (resource.name, self.name))
             resource_busy_end = Int('%s_busy_%s_end' % (resource.name, self.name))
@@ -200,7 +197,7 @@ class Task(_NamedUIDObject):
             self.add_assertion(resource_busy_start ==  self.start)
 
             # finally, store this resource into the resource list
-            self.resources_required.append(resource)
+            self.required_resources.append(resource)
         return True
 
 class FixedDurationTask(Task):
@@ -453,23 +450,23 @@ class SchedulingProblem:
         # all required workers should be assigned
         for task in self._tasks.values():
             # parse resources
-            for res in task.resources_required:
+            for req_res in task.required_resources:
                 resource_should_be_assigned = True  # by default, unless this is an alternative worker
                 # among those workers, some of them
                 # are busy "in the past", that is to say they
                 # should not be assigned to the related task
                 # for each interval
-                for lower_bound, _ in res.busy_intervals:
+                for lower_bound, _ in req_res.busy_intervals:
                     if solution[lower_bound].as_long() < 0:
                         # if the task name is in the variable name,
                         # then this worker should not be added to the list of
                         # assignedresources
                         if task.name in lower_bound.__repr__():
-                            print("Ressource", res.name, " not assigned to task", task.name)
+                            print("Ressource", req_res.name, " not assigned to task", task.name)
                             resource_should_be_assigned = False
                 # add this resource to assigned resources, anytime
-                if resource_should_be_assigned and res not in task.assigned_resources:
-                    task.assigned_resources.append(res)
+                if resource_should_be_assigned and req_res not in task.assigned_resources:
+                    task.assigned_resources.append(req_res)
 
         # at last, set the horizon solution
         if isinstance(self.horizon, int):
@@ -672,7 +669,7 @@ class SchedulingSolver:
             self._solver = Optimize()
 
         if parallel:
-            set_option("parallel.enable", True)
+            set_option("parallel.enable", True)  # enable parallel computation
             set_option("parallel.threads.max", 4)  #nbr of max tasks
 
         if self._verbosity:
