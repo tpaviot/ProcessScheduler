@@ -31,12 +31,14 @@ except ModuleNotFoundError:
 # Base enum types
 #
 class ObjectiveType(IntEnum):
+    """" objectives, i.e. the target of the optimization workflow (minimize or maximize) """
     MAKESPAN = 1
     FLOWTIME = 2
     EARLIEST = 3
     LATEST = 4
 
 class PrecedenceType(IntEnum):
+    """ precedence types """
     LAX = 1
     STRICT = 2
     TIGHT = 3
@@ -60,6 +62,7 @@ class _NamedUIDObject:
 # Resources class definition
 #
 class _Resource(_NamedUIDObject):
+    """ base class for the representation of a resource """
     def __init__(self, name: str):
         super().__init__(name)
 
@@ -70,6 +73,7 @@ class _Resource(_NamedUIDObject):
         self.busy_intervals = [] # type: List[Tuple[ArithRef, ArithRef]]
 
     def add_busy_interval(self, interval: Tuple[ArithRef, ArithRef]):
+        """ add an interval in which the resource is busy """
         # an interval is considered as a tuple (begin, end)
         self.busy_intervals.append(interval)
 
@@ -110,6 +114,7 @@ class AlternativeWorkers(_Resource):
 # Tasks class definition
 #
 class Task(_NamedUIDObject):
+    """ a Task object """
     def __init__(self, name: str) -> None:
         super().__init__(name)
         # scheduled start, end and duration set to 0 by default
@@ -122,7 +127,7 @@ class Task(_NamedUIDObject):
         self.resources_required = [] # type: List[_Resource]
 
         # assigned resource names, after the solver is ended
-        # self.resources_assigned = [] # type: List[_Resource]
+        self.assigned_resources = [] # type: List[_Resource]
 
         # z3 Int variables
         self.start = Int('%s_start' % name)
@@ -144,12 +149,16 @@ class Task(_NamedUIDObject):
         self.upper_bounded = False
 
     def add_assertion(self, z3_assertion):
+        """ add a z3 assertion to be satisfied """
         self._assertions.append(z3_assertion)
 
     def get_assertions(self):
+        """ return the assertions list """
         return self._assertions
 
     def add_required_resource(self, resource: _Resource) -> bool:
+        """ add a required resource to the current task, required does not
+        mean it actually will be assigned """
         if not isinstance(resource, _Resource):
             raise TypeError('you must pass a Resource instance')
         if isinstance(resource, AlternativeWorkers):
@@ -189,6 +198,7 @@ class Task(_NamedUIDObject):
         return True
 
 class FixedDurationTask(Task):
+    """ Task with constant duration """
     def __init__(self, name: str, duration: int):
         super().__init__(name)
         self.duration = duration
@@ -196,6 +206,8 @@ class FixedDurationTask(Task):
         self.add_assertion(self.start + self.duration == self.end)
 
 class ZeroDurationTask(Task):
+    """ Task with a duration of 0, i.e. start==end. A ZeroDurationTask
+    can have some resources required """
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self.duration = 0
@@ -203,6 +215,7 @@ class ZeroDurationTask(Task):
         self.add_assertion(self.start == self.end)
 
 class VariableDurationTask(Task):
+    """ Tasj with a priori unknown duration. its duration is computed by the solver """
     def __init__(self, name: str,
                  length_at_least: Optional[int]=0, length_at_most: Optional[int]=None):
         super().__init__(name)
@@ -230,20 +243,24 @@ class _Constraint(_NamedUIDObject):
 # Task constraints base class
 #
 class _TaskConstraint(_Constraint):
+    """ abstract class for task constraint """
     def __init__(self):
         super().__init__()
         self.assertions = []
 
     def add_assertion(self, ass):
+        """ add a z3 assertion to the assertion list """
         self.assertions.append(ass)
 
     def get_assertions(self):
+        """ return the assertions list """
         return self.assertions
 
 #
 # Tasks constraints for two or more classes
 #
 class TaskPrecedence(_TaskConstraint):
+    """ Task precedence relation """
     def __init__(self, task_before, task_after,
                  offset=0, kind=PrecedenceType.LAX):
         """ kind might be either LAX/STRICT/TIGHT
@@ -393,12 +410,14 @@ class TaskEndBeforeLax(_TaskConstraint):
 # Resource constraints
 #
 class _ResourceConstraint(_Constraint):
+    """ Abstract class for resource constraint """
     pass
 
 #
 # SchedulingProblem class definition
 #
 class SchedulingProblem:
+    """  A scheduling problem """
     def __init__(self, name: str, horizon: Optional[int]=None):
         self._name = name
 
@@ -424,6 +443,7 @@ class SchedulingProblem:
         """ for each task, set the resource, start and length values """
         self._solution = solution
 
+        # set tasks start, end and duration solution
         for task in self._tasks.values():
             task.scheduled_start = solution[task.start].as_long()
             task.scheduled_end = solution[task.end].as_long()
@@ -432,7 +452,29 @@ class SchedulingProblem:
             else:
                 task.scheduled_duration = task.duration
 
-        # set the horizon
+        # traverse all tasks to perform resources assignement
+        # all required workers should be assigned
+        for task in self._tasks.values():
+            # parse resources
+            for res in task.resources_required:
+                resource_should_be_assigned = True  # by default, unless this is an alternative worker
+                # among those workers, some of them
+                # are busy "in the past", that is to say they
+                # should not be assigned to the related task
+                # for each interval
+                for lower_bound, _ in res.busy_intervals:
+                    if solution[lower_bound].as_long() < 0:
+                        # if the task name is in the variable name,
+                        # then this worker should not be added to the list of
+                        # assignedresources
+                        if task.name in lower_bound.__repr__():
+                            print("Ressource", res.name, " not assigned to task", task.name)
+                            resource_should_be_assigned = False
+                # add this resource to assigned resources, anytime
+                if resource_should_be_assigned and res not in task.assigned_resources:
+                    task.assigned_resources.append(res)
+
+        # at last, set the horizon solution
         if isinstance(self.horizon, int):
             self._scheduled_horizon = self.horizon
         else:
@@ -464,6 +506,7 @@ class SchedulingProblem:
         return True
 
     def add_resources(self, list_of_resources: List[_Resource]) -> None:
+        """ add resources to the problem """
         for resource in list_of_resources:
             self.add_resource(resource)
 
@@ -471,16 +514,8 @@ class SchedulingProblem:
         """ return the list of tasks """
         return self._tasks.values()
 
-    def get_zero_length_tasks(self)-> List[ZeroDurationTask]:
-        return [t for t in self.get_tasks() if isinstance(t, ZeroDurationTask)]
-
-    def get_fixed_length_tasks(self) -> List[FixedDurationTask]:
-        return [t for t in self.get_tasks() if isinstance(t, FixedDurationTask)]
-
-    def get_variable_length_tasks(self) -> List[VariableDurationTask]:
-        return [t for t in self.get_tasks() if isinstance(t, VariableDurationTask)]
-
     def add_constraint(self, constraint: _Constraint) -> bool:
+        """ add a constraint to the problem """
         if not isinstance(constraint, _Constraint):
             raise TypeError("add_constraint takes a _Constraint instance")
         if not constraint in self._constraints:
@@ -524,7 +559,7 @@ class SchedulingProblem:
             warnings.warn("No solution to display.")
             return False
         for task in self._tasks.values():
-            ress = task.resources_required
+            ress = task.assigned_resources
             print(task.name, ":", ress, task.scheduled_start, task.scheduled_end)
         return True
 
@@ -584,22 +619,25 @@ class SchedulingProblem:
             gantt.broken_barh([bar_dimension], (i * 2, 2), facecolors=cmap(i))
             # build the bar text string
             text = "%s" % task
-            if task.resources_required:
-                resources_names = ["%s" % c for c in task.resources_required]
+            if task.assigned_resources:
+                resources_names = ["%s" % c for c in task.assigned_resources]
                 resources_names.sort()  # alphabetical sort
                 text += "(" + ",".join(resources_names) + ")"
             else:
-                text += "(no resource)"
+                text += r"($\emptyset$)"
             gantt.text(x=start + length / 2, y=i * 2 + 1,
                        s=text, ha='center', va='center', color='black')
         plt.grid(axis='x')
         if savefig:
             plt.savefig('scr.png')
         plt.show()
+        return None
 
+#
 # Solver class definition
 #
 class SchedulingSolver:
+    """ A solver class """
     def __init__(self, problem,
                  verbosity: Optional[bool]=False,
                  max_time: Optional[int]=60,
@@ -784,8 +822,6 @@ if __name__ == "__main__":
     pb.add_task(t1)
     pb.add_task(t1)
     pb.add_tasks([t2, t3, t4, t5, t6, t7, t8, t9])
-
-    assert pb.get_zero_length_tasks() == [t2]
 
     r1 = Worker('W1')
     r2 = Worker('W2')
