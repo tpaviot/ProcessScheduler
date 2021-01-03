@@ -599,7 +599,7 @@ class SchedulingProblem:
             return None
 
         if not self.get_resources():
-            self.render_mode = 'Tasks'
+            render_mode = 'Tasks'
 
         # render mode is Resource by default, can be set to 'Task'
         if render_mode == 'Resources':
@@ -620,7 +620,7 @@ class SchedulingProblem:
         gantt.set_xlim(0, self._scheduled_horizon)
         gantt.set_xticks(range(self._scheduled_horizon + 1))
         # Setting labels for x-axis and y-axis
-        gantt.set_xlabel('Periods', fontsize=12)
+        gantt.set_xlabel('Time (%i periods)' % self._scheduled_horizon, fontsize=12)
         gantt.set_ylabel(plot_ylabel, fontsize=12)
 
         # colormap definition
