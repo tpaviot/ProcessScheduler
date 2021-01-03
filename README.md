@@ -40,14 +40,11 @@ pb.render_gantt_matplotlib()
 
 ## Features
 
--  tasks: ZeroDurationTask, FixedDurationTask, VariableDurationTask
-
--  resources: Worker, AlternativeWorkers
-
--  task constraints: TasksPrecedence, TasksStartSynced, TasksEndSynced, TaskStartAt, TaskEndAt,
+-   tasks: ZeroDurationTask, FixedDurationTask, VariableDurationTask
+-   resources: Worker, AlternativeWorkers
+-   task constraints: TasksPrecedence, TasksStartSynced, TasksEndSynced, TaskStartAt, TaskEndAt,
 TaskStartAfterStrict, TaskStartAfterLax, TaskEndBeforeStrict, TaskEndBeforeLax
-
--  objectives: makespan, flowtime, earliest, latest
+-   objectives: makespan, flowtime, earliest, latest
 
 ## Installation
 
@@ -72,11 +69,8 @@ There are some [Jupypter notebooks](https://github.com/tpaviot/ProcessScheduler/
 
 The development started in december 2020, this is a release-early-work-in-progress. Feel free to submit :
 -   new issues: questions, feature requests etc. Use our [issue tracker](https://github.com/tpaviot/ProcessScheduler/issues). Don't forget to assign the proper issue label, and describe the problem as precisely as possible by adding some python code to illustrate your question
-
 -   new examples: submit a PR to add a notebook to the examples-notebooks suite
-
 -   new tests: submit a PR to improve the number/type of current unittests
-
 -   new code: submit a PR for fixing bugs, add new Task or Resource, opitmize function etc. Before submission, use pylint to remove trailing whitespaces, unused variables, unused imports
 
 ## License/Author
