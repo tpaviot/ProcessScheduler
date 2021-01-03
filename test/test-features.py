@@ -79,7 +79,7 @@ class TestFeatures(unittest.TestCase):
         task = ps.FixedDurationTask('task', 2)
         c = ps.TaskStartAt(task, 1)
         self.assertIsInstance(c, ps.TaskStartAt)
-        self.assertTrue(task.lower_bounded)
+        self.assertFalse(task.lower_bounded)
         self.assertFalse(task.upper_bounded)
         self.assertEqual(c.value, 1)
 
@@ -141,6 +141,13 @@ class TestFeatures(unittest.TestCase):
         t_2 = ps.FixedDurationTask('t2', duration=3)
         c_2 = ps.TasksEndSynced(t_1, t_2)
 
+    #
+    # Boolean operators
+    #
+    def test_not(self) -> None:
+        t_1 = ps.FixedDurationTask('t1', duration=2)
+        c2 = ps.not_(ps.TaskStartAt(t_1, 1))
+        self.assertIsInstance(c2, ps.BoolRef)
 
 if __name__ == "__main__":
     unittest.main()
