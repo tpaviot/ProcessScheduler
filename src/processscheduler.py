@@ -173,8 +173,9 @@ class Task(_NamedUIDObject):
                 worker.add_busy_interval((resource_maybe_busy_start, resource_maybe_busy_end))
                 # add assertions. If worker is selected then sync the resource with the task
                 selected_variable = resource.selection_dict[worker]
-                schedule_as_usual = And(resource_maybe_busy_start + self.duration == resource_maybe_busy_end,
-                                        resource_maybe_busy_start ==  self.start)
+                length_assert = resource_maybe_busy_start + self.duration == resource_maybe_busy_end
+                start_synced_assert = resource_maybe_busy_start ==  self.start
+                schedule_as_usual = And(length_assert, start_synced_assert)
                 # in the case the worker is selected
                 # else: reject in the past !! (i.e. this resource will be scheduled in the past)
                 move_to_past = And(resource_maybe_busy_start < 0, resource_maybe_busy_end < 0)
@@ -451,7 +452,9 @@ class SchedulingProblem:
         for task in self._tasks.values():
             # parse resources
             for req_res in task.required_resources:
-                resource_should_be_assigned = True  # by default, unless this is an alternative worker
+                # by default, resource_should_be_assigned is set to True
+                # if will be set to False if the resource is an alternative worker
+                resource_should_be_assigned = True
                 # among those workers, some of them
                 # are busy "in the past", that is to say they
                 # should not be assigned to the related task
@@ -490,6 +493,10 @@ class SchedulingProblem:
 
     def add_resource(self, resource: _Resource) -> bool:
         """ add a single resource to the problem """
+        # Prevent an AlternativeWorker to be added
+        if isinstance(resource, AlternativeWorkers):
+            warnings.warn('AlternativeWorkers don''t need to be added to the problem, ')
+            return False
         resource_name = resource.name
         if not resource_name in self.resources:
             self.resources[resource_name] = resource
@@ -591,17 +598,22 @@ class SchedulingProblem:
             warnings.warn('matplotlib not installed')
             return None
 
+        if not self.get_resources():
+            self.render_mode = 'Tasks'
+
         # render mode is Resource by default, can be set to 'Task'
         if render_mode == 'Resources':
-            plot_title = "Resources schedule - %s" % self._name
+            plot_title = 'Resources schedule - %s' % self._name
             plot_ylabel = 'Resources'
             plot_ticklabels = map(str, self.get_resources())
             nbr_y_values = len(self.get_resources())
-        else:
-            plot_title = "Task schedule - %s" % self._name
+        elif render_mode == 'Tasks':
+            plot_title = 'Task schedule - %s' % self._name
             plot_ylabel = 'Tasks'
             plot_ticklabels = map(str, self.get_tasks())
             nbr_y_values = len(self.get_tasks())
+        else:
+            raise ValueError("rendermode must be either 'Resources' or 'Tasks'")
 
         gantt = plt.subplots(1, 1, figsize=figsize)[1]
         gantt.set_title(plot_title)
@@ -611,11 +623,15 @@ class SchedulingProblem:
         gantt.set_xlabel('Periods', fontsize=12)
         gantt.set_ylabel(plot_ylabel, fontsize=12)
 
-        # colors definition
-        nbr_of_colors = nbr_y_values * 2
+        # colormap definition
         cmap = LinearSegmentedColormap.from_list('custom blue',
-                                                 ['#ffff00','#002266'],
-                                                 N = nbr_of_colors)
+                                                 ['#bbccdd','#ee3300'],
+                                                 N = len(self.get_tasks()) * 2) # nbr of colors
+        # defined a mapping between the tasks and the colors, so that
+        # each task has the same color on both graphs
+        task_colors = {}
+        for i, task in enumerate(self.get_tasks()):
+            task_colors[task.name] = cmap(i)
         # the task color is defined from the task name, this way the task has
         # already the same color, even if it is defined after
         gantt.set_ylim(0, 2 * nbr_y_values)
@@ -624,49 +640,45 @@ class SchedulingProblem:
         # in Resources mode, create one line per resource on the y axis
         gantt.grid(axis='x', linestyle='dashed')
 
-        def compute_bar_dimension(start: int, length: int) -> int:
-            """ compute the bar dimension """
+        def draw_broken_barh_with_text(start, length, bar_color, text):
+            # first compute the bar dimension
             if length == 0:  # zero duration tasks, to be visible
                 bar_dimension = (start - 0.05, 0.1)
             else:
                 bar_dimension = (start, length)
-            return bar_dimension
+            gantt.broken_barh([bar_dimension], (i * 2, 2),
+                              edgecolor='black', linewidth=1,
+                              facecolors=bar_color)
+            gantt.text(x=start + length / 2, y=i * 2 + 1,
+                       s=text, ha='center', va='center', color='black')
 
         # in Tasks mode, create one line per task on the y axis
         if render_mode == 'Tasks':
             for i, task in enumerate(self.get_tasks()):
-                start = task.scheduled_start
-                length = task.scheduled_duration
-                bar_dimension = compute_bar_dimension(start, length)
-
-                gantt.broken_barh([bar_dimension], (i * 2, 2), facecolors=cmap(i))
                 # build the bar text string
-                text = "%s" % task
+                text = '%s' % task
                 if task.assigned_resources:
-                    resources_names = ["%s" % c for c in task.assigned_resources]
+                    resources_names = ['%s' % c for c in task.assigned_resources]
                     resources_names.sort()  # alphabetical sort
-                    text += "(" + ",".join(resources_names) + ")"
+                    text += '(' + ','.join(resources_names) + ')'
                 else:
-                    text += r"($\emptyset$)"
-                gantt.text(x=start + length / 2, y=i * 2 + 1,
-                           s=text, ha='center', va='center', color='black')
+                    text += r'($\emptyset$)'
+                draw_broken_barh_with_text(task.scheduled_start,
+                                           task.scheduled_duration,
+                                           task_colors[task.name],
+                                           text)
         elif render_mode == 'Resources':
-            color_code = 0
             for i, ress in enumerate(self.get_resources()):
                 #each interval from the busy_intervals list is rendered as a bar
                 for st_var, end_var in ress.busy_intervals:
                     start = self._solution[st_var].as_long()
                     end = self._solution[end_var].as_long()
                     if start >= 0 and end >= 0:  # only assigned resource
-                        task_name  = st_var.__repr__().split("_busy_")[1].split('_')[0]
-                        length = end - start
-                        bar_dimension = compute_bar_dimension(start, length)
-                        gantt.broken_barh([bar_dimension], (i * 2, 2),
-                                          edgecolor='black', linewidth=1,
-                                          facecolors=cmap(color_code))
-                        gantt.text(x=start + length / 2, y=i * 2 + 1,
-                                   s=task_name, ha='center', va='center', color='black')
-                        color_code += 1
+                        task_name  = st_var.__repr__().split('_busy_')[1].split('_')[0]
+                        draw_broken_barh_with_text(start,
+                                                   end - start,
+                                                   task_colors[task_name],
+                                                   task_name)
         if savefig:
             plt.savefig('scr.png')
 
@@ -899,4 +911,4 @@ if __name__ == "__main__":
 
     pb.print_solution()
     pb.render_gantt_ascii()
-    pb.render_gantt_matplotlib()
+    pb.render_gantt_matplotlib(render_mode='Resources')
