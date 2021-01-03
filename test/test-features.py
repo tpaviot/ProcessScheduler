@@ -23,14 +23,10 @@ import processscheduler as ps
 
 class TestFeatures(unittest.TestCase):
     def test_create_problem_with_horizon(self) -> None:
-        """ Scenario creation
-        """
         pb = ps.SchedulingProblem('ProblemWithHorizon', horizon=10)
         self.assertIsInstance(pb, ps.SchedulingProblem)
 
     def test_create_problem_without_horizon(self) -> None:
-        """ Scenario creation
-        """
         pb = ps.SchedulingProblem('ProblemWithoutHorizon')
         self.assertIsInstance(pb, ps.SchedulingProblem)
 
@@ -61,6 +57,7 @@ class TestFeatures(unittest.TestCase):
         solver1.solve()
         # t3 should be scheduled last
         self.assertEqual(t3.scheduled_start, 4)
+
 
 if __name__ == "__main__":
     unittest.main()
