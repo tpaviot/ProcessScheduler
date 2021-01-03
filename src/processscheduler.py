@@ -21,7 +21,7 @@ import uuid
 import warnings
 
 try:
-    from z3 import (SolverFor, Bool, If, Int, And, Or, Xor, Sum, unsat,
+    from z3 import (SolverFor, Bool, If, Int, And, Or, Not, Xor, Sum, unsat,
                     unknown, PbEq, Optimize, set_param, set_option,
                     ArithRef, BoolRef, ModelRef)
 except ModuleNotFoundError as z3_not_found:
@@ -75,6 +75,25 @@ class _NamedUIDObject:
     def get_assertions(self) -> List[BoolRef]:
         """ return the assertions list """
         return self.assertions
+#
+# Boolean operators for _NamedUIDObject objects
+#
+def not_(a: _NamedUIDObject) -> _NamedUIDObject:
+    """ a boolean not over a _NamedUIDObject, returns
+    the negation of all assertions """
+    return Not(And(a.get_assertions()))
+
+def or_(a: _NamedUIDObject, b: _NamedUIDObject) -> _NamedUIDObject:
+    """ returns a boolean or between a and b assertions"""
+    return Or(And(a.get_assertions()), And(b.get_assertions()))
+
+def and_(a: _NamedUIDObject, b: _NamedUIDObject) -> _NamedUIDObject:
+    """ return a boolean and between tasks assertions """
+    return And(And(a.get_assertions()), And(b.get_assertions()))
+
+def xor_(a: _NamedUIDObject, b: _NamedUIDObject) -> _NamedUIDObject:
+    """ return a boolean xor between tasks assertions """
+    return Xor(And(a.get_assertions()), And(b.get_assertions()))
 
 #
 # Resources class definition
@@ -344,8 +363,6 @@ class TaskStartAt(_TaskConstraint):
 
         self.add_assertion(task.start == value)
 
-        task.lower_bounded = True
-
 class TaskStartAfterStrict(_TaskConstraint):
     """ task.start > value """
     def __init__(self, task: Task, value: int) -> None:
@@ -518,15 +535,14 @@ class SchedulingProblem:
         """ return the list of tasks """
         return self.resources.values()
 
-    def add_constraint(self, constraint: _Constraint) -> bool:
+    def add_constraint(self, constraint: _Constraint) -> None:
         """ add a constraint to the problem """
-        if not isinstance(constraint, _Constraint):
-            raise TypeError("add_constraint takes a _Constraint instance")
-        if constraint not in self._constraints:
+        if isinstance(constraint, _Constraint):
+            self._constraints.append(constraint.get_assertions())
+        elif isinstance(constraint, BoolRef):
             self._constraints.append(constraint)
-            return True
-        warnings.warn("Resource already added.")
-        return False
+        else:
+            raise TypeError("You must provide either a _Constraint or BoolRef instance.")
 
     def add_constraints(self, list_of_constraints: List[_Constraint]) -> None:
         """ adds constraints to the problem """
@@ -733,7 +749,7 @@ class SchedulingSolver:
 
         # then process tasks constraints
         for constraint in self._problem._constraints:
-            self._solver.add(constraint.get_assertions())
+            self._solver.add(constraint)
 
         self.process_resource_requirements()
         self.create_objectives()
