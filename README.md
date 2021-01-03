@@ -46,7 +46,7 @@ pb.render_gantt_matplotlib()
 
 -   task constraints: TasksPrecedence, TasksStartSynced, TasksEndSynced, TaskStartAt, TaskEndAt, TaskStartAfterStrict, TaskStartAfterLax, TaskEndBeforeStrict, TaskEndBeforeLax
 
--   boolean operators between task constraints: not, or, xor, and
+-   nested boolean operators between task constraints: not, or, xor, and
 
 -   objectives: makespan, flowtime, earliest, latest
 
