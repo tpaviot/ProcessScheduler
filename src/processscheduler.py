@@ -102,7 +102,7 @@ class Worker(_Resource):
 class AlternativeWorkers(_Resource):
     """ Class representing the selection of n workers chosen among a list
     of possible workers """
-    def __init__(self, list_of_workers: List[_Resource], number_of_workers: Optional[int]=1):
+    def __init__(self, list_of_workers: List[_Resource], number_of_workers: Optional[int] = 1):
         """ create an instance of the AlternativeWorkers class. """
         super().__init__('')
         self.list_of_workers = list_of_workers
@@ -221,7 +221,7 @@ class ZeroDurationTask(Task):
 class VariableDurationTask(Task):
     """ Tasj with a priori unknown duration. its duration is computed by the solver """
     def __init__(self, name: str,
-                 length_at_least: Optional[int]=0, length_at_most: Optional[int]=None):
+                 length_at_least: Optional[int] = 0, length_at_most: Optional[int] = None):
         super().__init__(name)
         self.duration = Int('%s_duration' % self.name)
         self.length_at_least = length_at_least
@@ -479,7 +479,7 @@ class SchedulingProblem:
     def add_task(self, task: Task) -> bool:
         """ add a single task to the problem """
         task_name = task.name
-        if not task_name in self._tasks:
+        if task_name not in self._tasks:
             self._tasks[task_name] = task
         else:
             warnings.warn('task %s already part of the problem' % task)
@@ -498,7 +498,7 @@ class SchedulingProblem:
             warnings.warn('AlternativeWorkers don''t need to be added to the problem, ')
             return False
         resource_name = resource.name
-        if not resource_name in self.resources:
+        if resource_name not in self.resources:
             self.resources[resource_name] = resource
         else:
             warnings.warn('resource %s already part of the problem' % resource)
@@ -522,7 +522,7 @@ class SchedulingProblem:
         """ add a constraint to the problem """
         if not isinstance(constraint, _Constraint):
             raise TypeError("add_constraint takes a _Constraint instance")
-        if not constraint in self._constraints:
+        if constraint not in self._constraints:
             self._constraints.append(constraint)
             return True
         warnings.warn("Resource already added.")
@@ -582,8 +582,8 @@ class SchedulingProblem:
 
     def render_gantt_matplotlib(self,
                                 figsize=(9,6),
-                                savefig: Optional[Bool]=False,
-                                render_mode: Optional[str]='Resources') -> None:
+                                savefig: Optional[Bool] = False,
+                                render_mode: Optional[str] = 'Resources') -> None:
         """ generate a gantt diagram using matplotlib.
         Inspired by
         https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
@@ -691,9 +691,9 @@ class SchedulingProblem:
 class SchedulingSolver:
     """ A solver class """
     def __init__(self, problem,
-                 verbosity: Optional[bool]=False,
-                 max_time: Optional[int]=60,
-                 parallel: Optional[bool]=False):
+                 verbosity: Optional[bool] = False,
+                 max_time: Optional[int] = 60,
+                 parallel: Optional[bool] = False):
         """ Scheduling Solver
 
         verbosity: True or False, False by default
@@ -851,6 +851,7 @@ class SchedulingSolver:
         self._problem.set_solution(solution)
 
         return True
+
 
 if __name__ == "__main__":
     pb = SchedulingProblem('tst-problem')#, horizon=30)
