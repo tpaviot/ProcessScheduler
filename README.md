@@ -41,9 +41,11 @@ pb.render_gantt_matplotlib()
 ## Features
 
 -   tasks: ZeroDurationTask, FixedDurationTask, VariableDurationTask
+
 -   resources: Worker, AlternativeWorkers
--   task constraints: TasksPrecedence, TasksStartSynced, TasksEndSynced, TaskStartAt, TaskEndAt,
-TaskStartAfterStrict, TaskStartAfterLax, TaskEndBeforeStrict, TaskEndBeforeLax
+
+-   task constraints: TasksPrecedence, TasksStartSynced, TasksEndSynced, TaskStartAt, TaskEndAt, TaskStartAfterStrict, TaskStartAfterLax, TaskEndBeforeStrict, TaskEndBeforeLax
+
 -   objectives: makespan, flowtime, earliest, latest
 
 ## Installation
