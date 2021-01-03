@@ -557,28 +557,16 @@ class SchedulingProblem:
         it is contradictory with makespan """
         self.objectives.append(ObjectiveType.FLOWTIME)
 
-    def print_solution(self) -> bool:
+    def print_solution(self) -> None:
         """ print solution to console """
-        if self._solution is None:
+        if self._solution is not None:
+            for task in self._tasks.values():
+                ress = task.assigned_resources
+                print(task.name, ":", ress, end=";")
+                print('start:', task.scheduled_start, end=";")
+                print('end:', task.scheduled_end)
+        else:
             warnings.warn("No solution to display.")
-            return False
-        for task in self._tasks.values():
-            ress = task.assigned_resources
-            print(task.name, ":", ress, task.scheduled_start, task.scheduled_end)
-        return True
-
-    def render_gantt_ascii(self) -> bool:
-        """ displays an ascii gantt chart """
-        if self._solution is None:
-            warnings.warn("No solution to display.")
-            return False
-        print("Ascii Gantt solution")
-        for task in self._tasks.values():
-            task_line = '|' + task.name[:4] + '|' + \
-                        ' ' * task.scheduled_start + task.scheduled_duration * '#'
-            print(task_line)
-        print('-' * (self._scheduled_horizon + 4))
-        return True
 
     def render_gantt_matplotlib(self,
                                 figsize=(9,6),
@@ -911,5 +899,4 @@ if __name__ == "__main__":
     solver.solve()
 
     pb.print_solution()
-    pb.render_gantt_ascii()
     pb.render_gantt_matplotlib(render_mode='Resources')
