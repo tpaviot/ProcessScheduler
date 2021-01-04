@@ -22,7 +22,7 @@ import unittest
 import processscheduler as ps
 
 class TestSolver(unittest.TestCase):
-    def test_schedule_single_task(self) -> None:
+    def test_schedule_single_fixed_duration_task(self) -> None:
         pb = ps.SchedulingProblem('SingleTaskScehduling', horizon=2)
         task = ps.FixedDurationTask('task', duration=2)
         pb.add_task(task)
@@ -32,6 +32,23 @@ class TestSolver(unittest.TestCase):
         # and end at 2
         self.assertEqual(task.scheduled_start, 0)
         self.assertEqual(task.scheduled_end, 2)
+
+    def test_schedule_single_variable_duration_task(self) -> None:
+        pb = ps.SchedulingProblem('SingleTaskScehduling')
+        task = ps.VariableDurationTask('task')
+        pb.add_task(task)
+
+        # add two constraints to set start and end
+        pb.add_constraint(ps.TaskStartAt(task, 1))
+        pb.add_constraint(ps.TaskEndAt(task, 4))
+
+        solver = ps.SchedulingSolver(pb, verbosity=True)
+        solver.solve()
+        # task should have been scheduled with start at 0
+        # and end at 2
+        self.assertEqual(task.scheduled_start, 1)
+        self.assertEqual(task.scheduled_duration, 3)
+        self.assertEqual(task.scheduled_end, 4)
 
 
 if __name__ == "__main__":

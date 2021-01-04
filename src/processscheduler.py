@@ -422,8 +422,6 @@ class TaskEndAt(_TaskConstraint):
 
         self.add_assertion(task.end == value)
 
-        task.upper_bounded = True
-
 class TaskEndBeforeStrict(_TaskConstraint):
     """ task.end < value """
     def __init__(self, task: Task, value: int) -> None:
@@ -461,7 +459,7 @@ class SchedulingProblem:
     def __init__(self, name: str, horizon: Optional[int]=None):
         self._name = name
 
-        # define the horizon variable if no horizon defined
+        # define the horizon variable if no horizon is defined
         if horizon is None:
             self.horizon = Int('horizon')
         else:  # an integer horizon is defined, no need to create a z3 variable
@@ -741,32 +739,22 @@ class SchedulingSolver:
         if verbosity:
             set_option("verbose", 2)
 
-        # by default, no optimization. This flag is set to True whenever any of the
-        # add_objective_* is called
-        self._optimization = False
-
         # set timeout
         set_option("timeout", max_time * 1000)  # in ms
 
-        # by default, set the random seed to a fixed value
-        set_param("smt.random_seed", 1234)
-
         # create the solver
         if self._problem.objectives:
-            self.set_optimization()
-        if not self._optimization:
+            self._solver = Optimize()  # Solver with optimization
+            if verbosity:
+                print("Solver with optimization enabled")
+        else:
             self._solver = SolverFor('QF_LIA')  # SMT without optimization
-            if self._verbosity:
-                warnings.warn('Horizon not set')
-        else:  # optimization enabled
-            self._solver = Optimize()
+            if verbosity:
+                print("Solver without optimization enabled")
 
         if parallel:
             set_option("parallel.enable", True)  # enable parallel computation
             set_option("parallel.threads.max", 4)  #nbr of max tasks
-
-        if self._verbosity:
-            print("Solver:", type(self._solver))
 
         # add all tasks assertions to the solver
         for task in self._problem.get_tasks():
@@ -784,17 +772,6 @@ class SchedulingSolver:
 
         self.process_resource_requirements()
         self.create_objectives()
-
-    def set_random_seed_variable(self) -> None:
-        """ each time the solver is called, the result may be different
-        """
-        set_param("smt.random_seed", int(time.time()))
-
-    def set_optimization(self) -> None:
-        """" set the optimization flag to True """
-        if not self._optimization and self._verbosity:
-            print("Add least one optimization objective. Optimization set to True.")
-        self._optimization = True
 
     def create_objectives(self) -> None:
         """ create optimization objectives """
@@ -938,9 +915,9 @@ if __name__ == "__main__":
 
     # set optimization
     pb.add_objective_makespan()
-    pb.add_objective_start_latest()
-    pb.add_objective_start_earliest()
-    pb.add_objective_flowtime()
+    #pb.add_objective_start_latest()
+    #pb.add_objective_start_earliest()
+    #pb.add_objective_flowtime()
 
     solver = SchedulingSolver(pb, verbosity=True)
     solver.solve()
