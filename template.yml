@@ -57,6 +57,7 @@ jobs:
       source activate psenv && \
       coverage run --source processscheduler test/test-features.py && \
       coverage report -m && \
-      coverage html      
-    displayName: 'Run coverage'
+      coverage html &&\
+      curl -s https://codecov.io/bash
+    displayName: 'Run coverage and export report to codecov'
 
