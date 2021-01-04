@@ -39,6 +39,12 @@ jobs:
 
   - bash: |
       source activate psenv && \
+      conda install pip && \
+      pip install coverage
+    displayName: 'Install additional packages (coverage)'
+
+  - bash: |
+      source activate psenv && \
       python -c 'from processscheduler import *'
     displayName: 'Test import'
 
@@ -46,3 +52,11 @@ jobs:
       source activate psenv && \
       python test/test-features.py
     displayName: 'Test features (unittest framework)'
+
+  - bash: |
+      source activate psenv && \
+      coverage run --source processscheduler test/test-features.py && \
+      coverage report -m && \
+      coverage html      
+    displayName: 'Run coverage'
+
