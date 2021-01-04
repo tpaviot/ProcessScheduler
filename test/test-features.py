@@ -104,7 +104,7 @@ class TestFeatures(unittest.TestCase):
         c = ps.TaskEndAt(task, 3)
         self.assertIsInstance(c, ps.TaskEndAt)
         self.assertFalse(task.lower_bounded)
-        self.assertTrue(task.upper_bounded)
+        self.assertFalse(task.upper_bounded)
         self.assertEqual(c.value, 3)
 
     def test_create_task_before_strict(self) -> None:
