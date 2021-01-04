@@ -52,6 +52,25 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(task.scheduled_duration, 3)
         self.assertEqual(task.scheduled_end, 4)
 
+    def test_schedule_two_fixed_duration_task_with_precedence(self) -> None:
+        pb = ps.SchedulingProblem('TwoFixedDurationTasksWithPrecedence', horizon=5)
+        task_1 = ps.FixedDurationTask('task1', duration=2)
+        task_2 = ps.FixedDurationTask('task2', duration=3)
+        pb.add_tasks([task_1, task_2])
+
+        # add two constraints to set start and end
+        pb.add_constraint(ps.TaskStartAt(task_1, 0))
+        pb.add_constraint(ps.TaskPrecedence(task_before=task_1,
+                                            task_after=task_2))
+
+        solver = ps.SchedulingSolver(pb)
+        success = solver.solve()
+        self.assertTrue(success)
+        self.assertEqual(task_1.scheduled_start, 0)
+        self.assertEqual(task_1.scheduled_end, 2)
+        self.assertEqual(task_2.scheduled_start, 2)
+        self.assertEqual(task_2.scheduled_end, 5)
+
     def test_schedule_single_task_single_resource(self) -> None:
         pb = ps.SchedulingProblem('SingleTaskSingleResource', horizon=7)
 
