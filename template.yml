@@ -17,6 +17,7 @@ jobs:
   - ${{ if or(contains(parameters.vmImage, 'macOS'),contains(parameters.vmImage, 'Ubuntu')) }}:
     - bash: echo "##vso[task.prependpath]$CONDA/bin"
       displayName: 'Add conda to PATH'
+
   - ${{ if contains(parameters.vmImage, 'win') }}:
     - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
       displayName: 'Add conda to PATH'
@@ -51,13 +52,13 @@ jobs:
   - bash: |
       source activate psenv && \
       python test/test-features.py
-    displayName: 'Test features (unittest framework)'
+    displayName: 'Unittest suite'
 
-  - bash: |
-      source activate psenv && \
-      coverage run --source processscheduler test/test-features.py && \
-      coverage report -m && \
-      coverage html &&\
-      curl -s https://codecov.io/bash
-    displayName: 'Run coverage and export report to codecov'
-
+  - ${{ if eq(parameters.name, 'Ubuntu_20_04_python39') }}:
+    - bash: |
+        source activate psenv && \
+        coverage run --source processscheduler test/test-features.py && \
+        coverage report -m && \
+        coverage html &&\
+        bash <(curl -s https://codecov.io/bash)
+      displayName: 'Run coverage and export report to codecov (Linux py39 only)'
