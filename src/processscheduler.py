@@ -598,8 +598,9 @@ class SchedulingProblem:
             warnings.warn("No solution to display.")
 
     def render_gantt_matplotlib(self,
-                                figsize=(9,6),
-                                savefig: Optional[Bool] = False,
+                                fig_size:Optional[Tuple[int, int]] = (9,6),
+                                save_fig: Optional[Bool] = False,
+                                show_plot: Optional[Bool] = True,
                                 render_mode: Optional[str] = 'Resources') -> None:
         """ generate a gantt diagram using matplotlib.
         Inspired by
@@ -632,7 +633,7 @@ class SchedulingProblem:
         else:
             raise ValueError("rendermode must be either 'Resources' or 'Tasks'")
 
-        gantt = plt.subplots(1, 1, figsize=figsize)[1]
+        gantt = plt.subplots(1, 1, figsize=fig_size)[1]
         gantt.set_title(plot_title)
         gantt.set_xlim(0, self._scheduled_horizon)
         gantt.set_xticks(range(self._scheduled_horizon + 1))
@@ -696,10 +697,12 @@ class SchedulingProblem:
                                                    end - start,
                                                    task_colors[task_name],
                                                    task_name)
-        if savefig:
+        if save_fig:
             plt.savefig('scr.png')
 
-        plt.show()
+        if show_plot:
+            plt.show()
+
         return None
 
 #
