@@ -120,6 +120,13 @@ class _Resource(_NamedUIDObject):
         # the resource is busy, for instance busy_intervals can be [(1,3), (5, 7)]
         self.busy_intervals = [] # type: List[Tuple[ArithRef, ArithRef]]
 
+    def __eq__(self, other) -> Bool:
+        """ Necessary to define _eq__ because of
+        lgtm warnings of kind
+        The class '_Resource' does not override '__eq__',
+        but adds the new attribute busy_intervals """
+        return self.uid == other.uid
+
     def add_busy_interval(self, interval: Tuple[ArithRef, ArithRef]):
         """ add an interval in which the resource is busy """
         # an interval is considered as a tuple (begin, end)
@@ -190,6 +197,13 @@ class Task(_NamedUIDObject):
         self.lower_bounded = False
         # idem for the upper bound: no need to assert task.end <= horizon
         self.upper_bounded = False
+
+    def __eq__(self, other) -> Bool:
+        """ Necessary to define _eq__ because of
+        lgtm warnings of kind
+        The class 'Task' does not override '__eq__',
+        but adds the new attribute assigned_resources """
+        return self.uid == other.uid
 
     def add_required_resource(self, resource: _Resource) -> bool:
         """ add a required resource to the current task, required does not
