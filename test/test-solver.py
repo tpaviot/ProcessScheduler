@@ -1,0 +1,38 @@
+#Copyright 2020 Thomas Paviot (tpaviot@gmail.com)
+#
+#Licensed to the Apache Software Foundation (ASF) under one
+#or more contributor license agreements.  See the NOTICE file
+#distributed with this work for additional information
+#regarding copyright ownership.  The ASF licenses this file
+#to you under the Apache License, Version 2.0 (the
+#"License"); you may not use this file except in compliance
+#with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing,
+#software distributed under the License is distributed on an
+#"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#KIND, either express or implied.  See the License for the
+#specific language governing permissions and limitations
+#under the License.
+
+import unittest
+
+import processscheduler as ps
+
+class TestSolver(unittest.TestCase):
+    def test_schedule_single_task(self) -> None:
+        pb = ps.SchedulingProblem('SingleTaskScehduling', horizon=2)
+        task = ps.FixedDurationTask('task', duration=2)
+        pb.add_task(task)
+        solver = ps.SchedulingSolver(pb)
+        solver.solve()
+        # task should have been scheduled with start at 0
+        # and end at 2
+        self.assertEqual(task.scheduled_start, 0)
+        self.assertEqual(task.scheduled_end, 2)
+
+
+if __name__ == "__main__":
+    unittest.main()
