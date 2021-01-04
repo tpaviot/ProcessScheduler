@@ -16,7 +16,7 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 from enum import IntEnum
 import itertools
 import time
-from typing import Any, Dict, List, Optional, Tuple, ValuesView
+from typing import Any, Dict, List, Optional, Tuple, Union, ValuesView
 import uuid
 import warnings
 
@@ -76,24 +76,37 @@ class _NamedUIDObject:
         """ return the assertions list """
         return self.assertions
 #
-# Boolean operators for _NamedUIDObject objects
+# Nested boolean operators for _NamedUIDObject objects
+# or BoolRef
 #
-def not_(a: _NamedUIDObject) -> _NamedUIDObject:
+def _get_assertions(a: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
+    if isinstance(a, BoolRef):
+        assertion = a
+    elif isinstance(a, _NamedUIDObject):
+        assertion = a.get_assertions()
+    else:
+        raise TypeError("must either be a _NamedUIDObject or BoolRef instance")
+    return assertion
+
+def not_(a: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
     """ a boolean not over a _NamedUIDObject, returns
     the negation of all assertions """
-    return Not(And(a.get_assertions()))
+    return Not(And(_get_assertions(a)))
 
-def or_(a: _NamedUIDObject, b: _NamedUIDObject) -> _NamedUIDObject:
+def or_(a: Union[BoolRef, _NamedUIDObject],
+        b: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
     """ returns a boolean or between a and b assertions"""
-    return Or(And(a.get_assertions()), And(b.get_assertions()))
+    return Or(And(_get_assertions(a)), And(_get_assertions(b)))
 
-def and_(a: _NamedUIDObject, b: _NamedUIDObject) -> _NamedUIDObject:
+def and_(a: Union[BoolRef, _NamedUIDObject],
+         b: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
     """ return a boolean and between tasks assertions """
-    return And(And(a.get_assertions()), And(b.get_assertions()))
+    return And(And(_get_assertions(a)), And(_get_assertions(b)))
 
-def xor_(a: _NamedUIDObject, b: _NamedUIDObject) -> _NamedUIDObject:
+def xor_(a: Union[BoolRef, _NamedUIDObject],
+         b: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
     """ return a boolean xor between tasks assertions """
-    return Xor(And(a.get_assertions()), And(b.get_assertions()))
+    return Xor(And(_get_assertions(a)), And(_get_assertions(b)))
 
 #
 # Resources class definition
@@ -445,7 +458,7 @@ class SchedulingProblem:
         # the list of resources available in this scenario
         self.resources = {} # type: Dict[str, _Resource]
         # the constraints are defined in the scenario
-        self._constraints = [] # type: List[_Constraint]
+        self._constraints = [] # type: List[BoolRef]
         # multiple objectives is possible
         self.objectives = [] # type: List[ObjectiveType]
         # the solution
@@ -531,11 +544,11 @@ class SchedulingProblem:
         """ return the list of tasks """
         return self._tasks.values()
 
-    def get_resources(self) -> ValuesView[Worker]:
+    def get_resources(self) -> ValuesView[_Resource]:
         """ return the list of tasks """
         return self.resources.values()
 
-    def add_constraint(self, constraint: _Constraint) -> None:
+    def add_constraint(self, constraint: Union[_Constraint, BoolRef]) -> None:
         """ add a constraint to the problem """
         if isinstance(constraint, _Constraint):
             self._constraints.append(constraint.get_assertions())
