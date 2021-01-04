@@ -117,11 +117,11 @@ class TestFeatures(unittest.TestCase):
 
     def test_create_task_before_lax(self) -> None:
         task = ps.FixedDurationTask('task', 2)
-        c = ps.TaskEndBeforeLax(task, 3)
-        self.assertIsInstance(c, ps.TaskEndBeforeLax)
+        constraint = ps.TaskEndBeforeLax(task, 3)
+        self.assertIsInstance(constraint, ps.TaskEndBeforeLax)
         self.assertFalse(task.lower_bounded)
         self.assertTrue(task.upper_bounded)
-        self.assertEqual(c.value, 3)
+        self.assertEqual(constraint.value, 3)
 
     #
     # Two tasks constraints
@@ -129,25 +129,56 @@ class TestFeatures(unittest.TestCase):
     def test_tasks_dont_overlap(self) -> None:
         t_1 = ps.FixedDurationTask('t1', duration=2)
         t_2 = ps.FixedDurationTask('t2', duration=3)
-        c_2 = ps.TasksDontOverlap(t_1, t_2)
+        constraint = ps.TasksDontOverlap(t_1, t_2)
+        self.assertIsInstance(constraint, ps.TasksDontOverlap)
 
     def test_tasks_start_sync(self) -> None:
         t_1 = ps.FixedDurationTask('t1', duration=2)
         t_2 = ps.FixedDurationTask('t2', duration=3)
-        c_2 = ps.TasksStartSynced(t_1, t_2)
+        constraint = ps.TasksStartSynced(t_1, t_2)
+        self.assertIsInstance(constraint, ps.TasksStartSynced)
 
     def test_tasks_end_sync(self) -> None:
         t_1 = ps.FixedDurationTask('t1', duration=2)
         t_2 = ps.FixedDurationTask('t2', duration=3)
-        c_2 = ps.TasksEndSynced(t_1, t_2)
+        constraint = ps.TasksEndSynced(t_1, t_2)
+        self.assertIsInstance(constraint, ps.TasksEndSynced)
 
     #
     # Boolean operators
     #
-    def test_not(self) -> None:
+    def test_operator_not_(self) -> None:
         t_1 = ps.FixedDurationTask('t1', duration=2)
-        c2 = ps.not_(ps.TaskStartAt(t_1, 1))
-        self.assertIsInstance(c2, ps.BoolRef)
+        not_constraint = ps.not_(ps.TaskStartAt(t_1, 1))
+        self.assertIsInstance(not_constraint, ps.BoolRef)
+
+    def test_operator_or_(self) -> None:
+        t_1 = ps.FixedDurationTask('t1', duration=2)
+        or_constraint = ps.or_(ps.TaskStartAt(t_1, 1),
+                               ps.TaskStartAt(t_1, 2))
+        self.assertIsInstance(or_constraint, ps.BoolRef)
+
+    def test_operator_xor_(self) -> None:
+        t_1 = ps.FixedDurationTask('t1', duration=2)
+        xor_constraint = ps.xor_(ps.TaskStartAt(t_1, 1),
+                                 ps.TaskStartAt(t_1, 2))
+        self.assertIsInstance(xor_constraint, ps.BoolRef)
+
+    def test_operator_and_(self) -> None:
+        t_1 = ps.FixedDurationTask('t1', duration=2)
+        and_constraint = ps.and_(ps.TaskStartAfterLax(t_1, 1),
+                                 ps.TaskEndBeforeLax(t_1, 7))
+        self.assertIsInstance(and_constraint, ps.BoolRef)
+
+    def test_nested_boolean_operators(self) -> None:
+        t_1 = ps.VariableDurationTask('t1')
+        or_constraint_1 = ps.or_(ps.TaskStartAt(t_1, 1),
+                                 ps.TaskStartAt(t_1, 2))
+        or_constraint_2 = ps.or_(ps.TaskStartAt(t_1, 4),
+                                 ps.TaskStartAt(t_1, 5))
+        and_constraint = ps.and_(or_constraint_1, or_constraint_2)
+        self.assertIsInstance(and_constraint, ps.BoolRef)
+
 
 if __name__ == "__main__":
     unittest.main()
