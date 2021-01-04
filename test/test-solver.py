@@ -73,6 +73,28 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(task.scheduled_end, 7)
         self.assertEqual(task.assigned_resources, [worker])
 
+    def test_schedule_two_tasks_two_alternative_workers(self) -> None:
+        pb = ps.SchedulingProblem('TwoTasksTwoAlternativeWorkers', horizon=4)
+        # two tasks
+        task_1 = ps.FixedDurationTask('task1', duration=3)
+        task_2 = ps.FixedDurationTask('task2', duration=2)
+        pb.add_tasks([task_1, task_2])
+        # two workers
+        worker_1 = ps.Worker('worker1')
+        worker_2 = ps.Worker('worker2')
+        pb.add_resources([worker_1, worker_2])
+
+        task_1.add_required_resource(ps.AlternativeWorkers([worker_1, worker_2], 1))
+        task_2.add_required_resource(ps.AlternativeWorkers([worker_1, worker_2], 1))
+
+        solver = ps.SchedulingSolver(pb)
+        success = solver.solve()
+        self.assertTrue(success)
+        # each task should have one worker assigned
+        self.assertEqual(len(task_1.assigned_resources), 1)
+        self.assertEqual(len(task_2.assigned_resources), 1)
+        self.assertFalse(task_1.assigned_resources == task_2.assigned_resources)
+
     def test_unsat_1(self):
         pb = ps.SchedulingProblem('Unsat1')
 
