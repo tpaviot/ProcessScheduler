@@ -67,12 +67,42 @@ class TestSolver(unittest.TestCase):
         success = solver.solve()
         self.assertTrue(success)
 
-        pb.print_solution()
         # task should have been scheduled with start at 0
         # and end at 2
         self.assertEqual(task.scheduled_start, 0)
         self.assertEqual(task.scheduled_end, 7)
         self.assertEqual(task.assigned_resources, [worker])
+
+    def test_unsat_1(self):
+        pb = ps.SchedulingProblem('Unsat1')
+
+        task = ps.FixedDurationTask('task', duration=7)
+        pb.add_task(task)
+
+        # add two constraints to set start and end
+        # impossible to satisfy both
+        pb.add_constraint(ps.TaskStartAt(task, 1))
+        pb.add_constraint(ps.TaskEndAt(task, 4))
+
+        solver = ps.SchedulingSolver(pb)
+        success = solver.solve()
+        self.assertFalse(success)
+
+    def test_render_solution(self):
+        """ take the single task/single resource and display output """
+        pb = ps.SchedulingProblem('RenderSolution', horizon=7)
+        task = ps.FixedDurationTask('task', duration=7)
+        pb.add_task(task)
+        worker = ps.Worker('worker')
+        pb.add_resource(worker)
+        task.add_required_resource(worker)
+        solver = ps.SchedulingSolver(pb)
+        success = solver.solve()
+        self.assertTrue(success)
+        # display solution, using both ascii or matplotlib
+        pb.print_solution()
+        pb.render_gantt_matplotlib(render_mode='Resources', show_plot=False)
+        pb.render_gantt_matplotlib(render_mode='Tasks', show_plot=False)
 
 
 if __name__ == "__main__":
