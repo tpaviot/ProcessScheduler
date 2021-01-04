@@ -1,6 +1,7 @@
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/7221205f866145bfa4f18c08bd96e71f)](https://www.codacy.com/gh/tpaviot/ProcessScheduler/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=tpaviot/ProcessScheduler&amp;utm_campaign=Badge_Grade)
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/tpaviot/ProcessScheduler.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/tpaviot/ProcessScheduler/context:python)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/tpaviot/ProcessScheduler.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/tpaviot/ProcessScheduler/alerts/)
+[![codecov](https://codecov.io/gh/tpaviot/ProcessScheduler/branch/master/graph/badge.svg?token=9HI1FPJUDL)](https://codecov.io/gh/tpaviot/ProcessScheduler)
 [![Azure Build Status](https://dev.azure.com/tpaviot/ProcessScheduler/_apis/build/status/tpaviot.ProcessScheduler?branchName=master)](https://dev.azure.com/tpaviot/ProcessScheduler/_build?definitionId=9)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tpaviot/ProcessScheduler/HEAD?filepath=examples-notebooks)
 
