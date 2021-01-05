@@ -59,6 +59,13 @@ jobs:
       python test/test-solver.py
     displayName: 'Test solver results'
 
+  - bash: |
+      source activate psenv && \
+      cd doc && \
+      pip install -r requirements.txt && \
+      make html
+    displayName: 'Build Sphinx documentation'
+
   - ${{ if eq(parameters.name, 'Ubuntu_20_04_python39') }}:
     - bash: |
         source activate psenv && \
