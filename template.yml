@@ -63,6 +63,7 @@ jobs:
       source activate psenv && \
       cd doc && \
       pip install -r requirements.txt && \
+      pip install pandoc && \
       make html
     displayName: 'Build Sphinx documentation'
 
