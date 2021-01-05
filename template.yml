@@ -62,7 +62,7 @@ jobs:
   - bash: |
       source activate psenv && \
       cd doc && \
-      conda install sphinx sphinx-rtd-theme sphinx-autodoc-typehints nbsphinx ipykernel && \
+      conda install sphinx sphinx_rtd_theme sphinx-autodoc-typehints nbsphinx ipykernel && \
       make html
     displayName: 'Build Sphinx documentation'
 
