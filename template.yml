@@ -62,8 +62,7 @@ jobs:
   - bash: |
       source activate psenv && \
       cd doc && \
-      pip install -r requirements.txt && \
-      pip install pandoc && \
+      conda install sphinx sphinx-rtd-theme sphinx-autodoc-typehints nbsphinx ipykernel && \
       make html
     displayName: 'Build Sphinx documentation'
 
