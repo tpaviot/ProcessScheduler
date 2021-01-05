@@ -126,7 +126,7 @@ class _Resource(_NamedUIDObject):
         self.busy_intervals.append(interval)
 
 class Worker(_Resource):
-    """ A worker is an atomic resource that cannot be splitted into smaller parts.
+    """ A worker is an atomic resource that cannot be split into smaller parts.
     Typical workers are human beings, machines etc. """
     def __init__(self, name: str) -> None:
         super().__init__(name)
@@ -493,7 +493,7 @@ class SchedulingProblem:
             else:
                 task.scheduled_duration = task.duration
 
-        # traverse all tasks to perform resources assignement
+        # traverse all tasks to perform resources assignment
         # all required workers should be assigned
         for task in self._tasks.values():
             # parse resources
@@ -588,7 +588,7 @@ class SchedulingProblem:
         return True
 
     def add_objective_start_latest(self) -> None:
-        """ maximize the minimu start time, i.e. all the tasks
+        """ maximize the minimum start time, i.e. all the tasks
         are scheduled as late as possible """
         self.objectives.append(ObjectiveType.LATEST)
 
@@ -828,18 +828,18 @@ class SchedulingSolver:
         init_time = time.perf_counter()
         sat_result  = self._solver.check()
         final_time = time.perf_counter()
-        print('Satisfiability checked in %.2fs' % (final_time - init_time))
+        print('%s Satisfiability checked in %.2fs' % (self._problem._name, final_time - init_time))
 
         if self._verbosity:
             for assertion in self._solver.assertions():
                 print("\t", assertion)
 
         if sat_result == unsat:
-            print("No solution exists.")
+            print("No solution exists for problem %s." % self._problem._name)
             return False
 
         if sat_result == unknown:
-            print("No solution can be found.")
+            print("No solution can be found for problem %s." % self._problem._name)
             return False
 
         return True
