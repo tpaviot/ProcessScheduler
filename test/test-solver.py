@@ -17,6 +17,8 @@
 #specific language governing permissions and limitations
 #under the License.
 
+import os
+import random
 import unittest
 
 import processscheduler as ps
@@ -60,8 +62,10 @@ class TestSolver(unittest.TestCase):
 
         # add two constraints to set start and end
         pb.add_constraint(ps.TaskStartAt(task_1, 0))
-        pb.add_constraint(ps.TaskPrecedence(task_before=task_1,
-                                            task_after=task_2))
+        prec_constraint = ps.TaskPrecedence(task_before=task_1,
+                                            task_after=task_2)
+        print(prec_constraint)
+        pb.add_constraint(prec_constraint)
 
         solver = ps.SchedulingSolver(pb)
         success = solver.solve()
@@ -143,8 +147,29 @@ class TestSolver(unittest.TestCase):
         # display solution, using both ascii or matplotlib
         pb.print_solution()
         pb.render_gantt_matplotlib(render_mode='Resources', show_plot=False)
-        pb.render_gantt_matplotlib(render_mode='Tasks', show_plot=False)
+        pb.render_gantt_matplotlib(render_mode='Tasks', show_plot=False, fig_filename='test_export.svg')
+        self.assertTrue(os.path.isfile('test_export.svg'))
 
+    def test_stress_parallel(self):
+        """ a stress test with parallel mode solving """
+        n = 2000 # pb size
+        pb = ps.SchedulingProblem('ParallelStress', horizon = 10 * n)
+        
+        tasks = [ps.FixedDurationTask('task%i' % i, duration=random.randint(1, n // 10)) for i in range(n)]
+        pb.add_tasks(tasks)
+
+        workers = [ps.Worker('task%i' % i) for i in range(n * 3)]
+        pb.add_resources(workers)
+
+        # for each task, add three single required workers
+        for task in tasks:
+            task.add_required_resource(random.choice(workers))
+            task.add_required_resource(random.choice(workers))
+            task.add_required_resource(random.choice(workers))
+
+        solver = ps.SchedulingSolver(pb, parallel=True)
+        success = solver.solve()
+        self.assertTrue(success)
 
 if __name__ == "__main__":
     unittest.main()

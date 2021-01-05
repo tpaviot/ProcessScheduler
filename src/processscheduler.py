@@ -211,6 +211,9 @@ class Task(_NamedUIDObject):
         mean it actually will be assigned """
         if not isinstance(resource, _Resource):
             raise TypeError('you must pass a Resource instance')
+        if resource in self.required_resources:
+            warnings.warn('This resource is already set as a required resource for this task')
+            return False
         if isinstance(resource, AlternativeWorkers):
             # loop over each resource
             for worker in resource.list_of_workers:
@@ -601,6 +604,7 @@ class SchedulingProblem:
 
     def print_solution(self) -> None:
         """ print solution to console """
+        print("Problem %s solution:" % self._name)
         if self._solution is not None:
             for task in self._tasks.values():
                 ress = task.assigned_resources
@@ -612,9 +616,9 @@ class SchedulingProblem:
 
     def render_gantt_matplotlib(self,
                                 fig_size:Optional[Tuple[int, int]] = (9,6),
-                                save_fig: Optional[Bool] = False,
                                 show_plot: Optional[Bool] = True,
-                                render_mode: Optional[str] = 'Resources') -> None:
+                                render_mode: Optional[str] = 'Resources',
+                                fig_filename: Optional[str] = None,) -> None:
         """ generate a gantt diagram using matplotlib.
         Inspired by
         https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
@@ -710,8 +714,8 @@ class SchedulingProblem:
                                                    end - start,
                                                    task_colors[task_name],
                                                    task_name)
-        if save_fig:
-            plt.savefig('scr.png')
+        if fig_filename is not None:
+            plt.savefig(fig_filename)
 
         if show_plot:
             plt.show()
@@ -844,20 +848,14 @@ class SchedulingSolver:
         """ call the solver and returns the solution, if ever """
         # first check satisfiability
         if not self.check_sat():
-            warnings.warn("The problem doesn't have any solution")
             return False
 
         solution = self._solver.model()
 
         if self._verbosity:
-            print("Solver satistics:")
+            print('Solver satistics:')
             for key, value in self._solver.statistics():
-                print("\t%s : %s" % (key, value))
-            print("### Solution found ###")
-            for decl in solution.decls():
-                var_name = decl.name()
-                var_value = solution[decl]
-                print("%s=%s" %(var_name, var_value))
+                print('\t%s: %s' % (key, value))
 
         ## propagate the result to the scenario
         self._problem.set_solution(solution)
