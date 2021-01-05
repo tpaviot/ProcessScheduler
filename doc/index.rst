@@ -1,9 +1,7 @@
 ProcessScheduler
 ================
 
-A pure python C++ header parser that parses C++ headers in a mildly naive
-manner that allows it to handle many C++ constructs, including many modern
-(C++11 and beyond) features.
+A a 100% pure python library to compute resource-constrained task schedules. It is distributed under the terms of the `GNU General Public License v3 <https://www.gnu.org/licenses/gpl-3.0.txt>`_ or later.
 
 .. toctree::
    :maxdepth: 2
