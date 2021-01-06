@@ -178,7 +178,26 @@ class TestFeatures(unittest.TestCase):
                                  ps.TaskStartAt(t_1, 5))
         and_constraint = ps.and_(or_constraint_1, or_constraint_2)
         self.assertIsInstance(and_constraint, ps.BoolRef)
+    #
+    # Implies
+    #
+    def test_implies(self) -> None:
+        t_1 = ps.FixedDurationTask('t1', 2)
+        t_2 = ps.FixedDurationTask('t2', 2)
+        implies_constraint = ps.implies(t_1.start==1, ps.TaskStartAt(t_2, 3))
+        self.assertIsInstance(implies_constraint, ps.BoolRef)
 
+    #
+    # If/Then/Else
+    #
+    def test_if_then_else(self) -> None:
+        t_1 = ps.FixedDurationTask('t1', 2)
+        t_2 = ps.FixedDurationTask('t2', 2)
+        t_3 = ps.FixedDurationTask('t2', 2)
+        ite_constraint = ps.if_then_else(t_1.start==1, # condition
+                                         ps.TaskStartAt(t_2, 3), # then
+                                         ps.TaskStartAt(t_2, 3)) # else
+        self.assertIsInstance(ite_constraint, ps.BoolRef)
 
 if __name__ == "__main__":
     unittest.main()

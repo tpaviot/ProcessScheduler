@@ -20,7 +20,7 @@ except ModuleNotFoundError as z3_not_found:
     raise ImportError("z3 not found. It is a mandatory dependency") from z3_not_found
 
 # Expose everything usefule
-from processscheduler.boolean import not_, or_, and_, xor_
+from processscheduler.first_order_logic import not_, or_, and_, xor_, if_then_else, implies
 from processscheduler.task import ZeroDurationTask, FixedDurationTask, VariableDurationTask
 from processscheduler.task_constraint import *
 from processscheduler.resource import Worker, AlternativeWorkers

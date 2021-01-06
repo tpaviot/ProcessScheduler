@@ -14,13 +14,13 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Union
 
-from z3 import And, Xor, Or, Not, BoolRef
+from z3 import And, Xor, Or, Not, If, Implies, BoolRef
 
 from processscheduler.base import _NamedUIDObject
 
+
 #
-# Nested boolean operators for _NamedUIDObject objects
-# or BoolRef
+# Utility functions
 #
 def _get_assertions(constraint: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
     if isinstance(constraint, BoolRef):
@@ -31,6 +31,10 @@ def _get_assertions(constraint: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
         raise TypeError("constraint must either be a _NamedUIDObject or BoolRef instance")
     return assertion
 
+#
+# Nested boolean operators for _NamedUIDObject objects
+# or BoolRef
+#
 def not_(constraint: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
     """ a boolean not over a _NamedUIDObject, returns
     the negation of all assertions """
@@ -51,3 +55,24 @@ def xor_(constraint_1: Union[BoolRef, _NamedUIDObject],
          constraint_2: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
     """ return a boolean xor between tasks assertions """
     return Xor(And(_get_assertions(constraint_1)), And(_get_assertions(constraint_2)))
+
+#
+# Logical consequence
+#
+def implies(constraint_1: Union[BoolRef, _NamedUIDObject],
+            constraint_2: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
+    """ return a boolean xor between tasks assertions """
+    print(type(constraint_1))
+    print(type(constraint_2))
+    return Implies(And(_get_assertions(constraint_1)), And(_get_assertions(constraint_2)))
+
+#
+# ITE
+#
+def if_then_else(constraint_if: Union[BoolRef, _NamedUIDObject],
+                 constraint_then: Union[BoolRef, _NamedUIDObject],
+                 constraint_else: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
+    """ return a boolean xor between tasks assertions """
+    return If(And(_get_assertions(constraint_if)),
+              And(_get_assertions(constraint_then)),
+              And(_get_assertions(constraint_else)))
