@@ -36,6 +36,7 @@ jobs:
 
   - bash: |
         conda env create -n psenv -f environment.yml python=${{ parameters.py_maj }}.${{ parameters.py_min }} && \
+        source activate psenv && \
         pip install .
     displayName: Install ProcessScheduler to a dedicated environment
 
