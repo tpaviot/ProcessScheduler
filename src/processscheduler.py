@@ -22,10 +22,12 @@ import warnings
 
 try:
     from z3 import (SolverFor, Bool, If, Int, And, Or, Not, Xor, Sum, unsat,
-                    unknown, PbEq, Optimize, set_param, set_option,
+                    unknown, PbLe, Optimize, set_param, set_option,
                     ArithRef, BoolRef, ModelRef)
 except ModuleNotFoundError as z3_not_found:
     raise ImportError("z3 is a mandatory dependency") from z3_not_found
+
+__VERSION__ = '0.1-dev'
 
 #
 # Base enum types
@@ -47,8 +49,13 @@ class PrecedenceType(IntEnum):
 # _NamedUIDObject, name and uid for hashing
 #
 class _NamedUIDObject:
-    """ The base object for most ProcessScheduler classes """
+    """ The base object for most ProcessScheduler classes"""
     def __init__(self, name: str) -> None:
+        """
+        Instanciation of a _NamedUIDObject
+
+        :param name: the instance name, provided as a string.
+        """
         # the object name
         self.name = name
 
@@ -128,8 +135,9 @@ class _Resource(_NamedUIDObject):
 class Worker(_Resource):
     """ A worker is an atomic resource that cannot be split into smaller parts.
     Typical workers are human beings, machines etc. """
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, productivity: Optional[float] = None) -> None:
         super().__init__(name)
+        self.productivity = productivity
 
     # Necessary to define _eq__ and __hash__ because of lgtm warnings of kind
     def __hash__(self) -> int:
@@ -162,7 +170,7 @@ class AlternativeWorkers(_Resource):
         # the others must be False
         # see https://github.com/Z3Prover/z3/issues/694
         # and https://stackoverflow.com/questions/43081929/k-out-of-n-constraint-in-z3py
-        self.selection_assertion = PbEq([(boolean, True) for boolean in selection_list],
+        self.selection_assertion = PbLe([(boolean, True) for boolean in selection_list],
                                         number_of_workers)
 
 #
@@ -181,7 +189,7 @@ class Task(_NamedUIDObject):
         # required resources to perform the task
         self.required_resources = [] # type: List[_Resource]
 
-        # assigned resource names, after the solver is ended
+        # assigned resource names, after the resolution is completed
         self.assigned_resources = [] # type: List[_Resource]
 
         # z3 Int variables
@@ -228,14 +236,16 @@ class Task(_NamedUIDObject):
                 schedule_as_usual = And(length_assert, start_synced_assert)
                 # in the case the worker is selected
                 # else: reject in the past !! (i.e. this resource will be scheduled in the past)
-                move_to_past = And(resource_maybe_busy_start < 0, resource_maybe_busy_end < 0)
+                # to a place where they cannot conflict with the schedule
+                # and with a zero busy time, that mean they don't contribute in cost
+                # or work amount
+                move_to_past = And(resource_maybe_busy_start == -1, resource_maybe_busy_end == -1)
                 # define the assertion ...
                 assertion = If(selected_variable, schedule_as_usual, move_to_past)
                 # ... and store it into the task assertions list
                 self.add_assertion(assertion)
                 # also, don't forget to add the AlternativeWorker assertion
                 self.add_assertion(resource.selection_assertion)
-
                 # finally, add each worker to the "required" resource list
                 self.required_resources.append(worker)
         elif isinstance(resource, Worker):
@@ -246,18 +256,13 @@ class Task(_NamedUIDObject):
             # set the busy resource to keep synced with the task
             self.add_assertion(resource_busy_start + self.duration == resource_busy_end)
             self.add_assertion(resource_busy_start ==  self.start)
-
             # finally, store this resource into the resource list
             self.required_resources.append(resource)
         return True
 
-class FixedDurationTask(Task):
-    """ Task with constant duration """
-    def __init__(self, name: str, duration: int):
-        super().__init__(name)
-        self.duration = duration
-        # add an assertion: end = start + duration
-        self.add_assertion(self.start + self.duration == self.end)
+    def add_required_resources(self, list_of_resources):
+        for resource in list_of_resources:
+            self.add_required_resource(resource)
 
 class ZeroDurationTask(Task):
     """ Task with a duration of 0, i.e. start==end. A ZeroDurationTask
@@ -265,17 +270,30 @@ class ZeroDurationTask(Task):
     def __init__(self, name: str) -> None:
         super().__init__(name)
         self.duration = 0
+        self.work_amount = 0
         # add an assertion: end = start because the duration is zero
         self.add_assertion(self.start == self.end)
+
+class FixedDurationTask(Task):
+    """ Task with constant duration """
+    def __init__(self, name: str, duration: int, work_amount: Optional[float] = 0.):
+        super().__init__(name)
+        self.duration = duration
+        self.work_amount = work_amount
+        # add an assertion: end = start + duration
+        self.add_assertion(self.start + self.duration == self.end)
 
 class VariableDurationTask(Task):
     """ Tasj with a priori unknown duration. its duration is computed by the solver """
     def __init__(self, name: str,
-                 length_at_least: Optional[int] = 0, length_at_most: Optional[int] = None):
+                 length_at_least: Optional[int] = 0,
+                 length_at_most: Optional[int] = None,
+                 work_amount: Optional[float] = 0.):
         super().__init__(name)
         self.duration = Int('%s_duration' % self.name)
         self.length_at_least = length_at_least
         self.length_at_most = length_at_most
+        self.work_amount = work_amount
 
         # set minimal duration
         self.add_assertion(self.duration >= length_at_least)
@@ -448,17 +466,14 @@ class TaskEndBeforeLax(_TaskConstraint):
         task.upper_bounded = True
 
 #
-# Resource constraints
-#
-class _ResourceConstraint(_Constraint):
-    """ Abstract class for resource constraint """
-    pass
-
-#
 # SchedulingProblem class definition
 #
 class SchedulingProblem:
-    """  A scheduling problem """
+    """A scheduling problem 
+    
+    :param name: the problem name, a string type
+    :param horizon: an optional integer, the final instant of the timeline
+    """
     def __init__(self, name: str, horizon: Optional[int]=None):
         self._name = name
 
@@ -775,6 +790,7 @@ class SchedulingSolver:
             self._solver.add(constraint)
 
         self.process_resource_requirements()
+        self.process_work_amount()
         self.create_objectives()
 
     def create_objectives(self) -> None:
@@ -823,6 +839,20 @@ class SchedulingSolver:
                 # add the Xor constraint
                 self._solver.add(Xor(start_task_i >= end_task_j, start_task_j >= end_task_i))
 
+    def process_work_amount(self) -> None:
+        """ for each task, compute the total work for all required resources """
+        for task in self._problem.get_tasks():
+            if task.work_amount > 0.:
+                work_total_for_all_resources = []
+                for required_resource in task.required_resources:
+                    # look for start and end busy intervals
+                    for interv_low, interv_up in required_resource.busy_intervals:
+                        task_name = task.name
+                        if task_name in interv_low.__repr__():
+                            work_contribution = required_resource.productivity * (interv_up - interv_low)
+                            work_total_for_all_resources.append(work_contribution)
+                self._solver.add(Sum(work_total_for_all_resources) >= task.work_amount)
+
     def check_sat(self) -> bool:
         """ check satisfiability """
         init_time = time.perf_counter()
@@ -856,7 +886,11 @@ class SchedulingSolver:
             print('Solver satistics:')
             for key, value in self._solver.statistics():
                 print('\t%s: %s' % (key, value))
-
+            print('Solution:')
+            for decl in solution.decls():
+                var_name = decl.name()
+                var_value = solution[decl]
+                print("\t%s=%s" %(var_name, var_value))
         ## propagate the result to the scenario
         self._problem.set_solution(solution)
 
