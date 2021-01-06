@@ -35,9 +35,7 @@ jobs:
     displayName: 'Conda config and info'
 
   - bash: |
-        conda env create -n psenv -f environment.yml python=${{ parameters.py_maj }}.${{ parameters.py_min }} && \
-        source activate psenv && \
-        pip install .
+        conda env create -n psenv -f environment.yml python=${{ parameters.py_maj }}.${{ parameters.py_min }}
     displayName: Install ProcessScheduler to a dedicated environment
 
   - bash: |
@@ -71,8 +69,8 @@ jobs:
   - ${{ if eq(parameters.name, 'Ubuntu_20_04_python39') }}:
     - bash: |
         source activate psenv && \
-        coverage run --source processscheduler test/test-features.py && \
-        coverage run -a --source processscheduler test/test-solver.py && \
+        coverage run -m processscheduler test/test-features.py && \
+        coverage run -a -m processscheduler test/test-solver.py && \
         coverage report -m && \
         coverage html &&\
         bash <(curl -s https://codecov.io/bash)
