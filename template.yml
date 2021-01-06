@@ -51,13 +51,17 @@ jobs:
 
   - bash: |
       source activate psenv && \
-      python test/test-solver.py
-    displayName: 'Test features'
+      python -m unittest
+    displayName: 'Run unittest suite'
 
-  - bash: |
-      source activate psenv && \
-      python test/test-solver.py
-    displayName: 'Test solver results'
+  - ${{ if eq(parameters.name, 'Ubuntu_20_04_python39') }}:
+    - bash: |
+        source activate psenv && \
+        coverage run -m unittest && \
+        coverage report -m && \
+        coverage html &&\
+        bash <(curl -s https://codecov.io/bash)
+      displayName: 'Coverage and export to codecov (Linux py39 only)'
 
   - bash: |
       source activate psenv && \
@@ -65,13 +69,3 @@ jobs:
       conda install sphinx sphinx_rtd_theme sphinx-autodoc-typehints nbsphinx ipykernel && \
       make html
     displayName: 'Build Sphinx documentation'
-
-  - ${{ if eq(parameters.name, 'Ubuntu_20_04_python39') }}:
-    - bash: |
-        source activate psenv && \
-        coverage run -m processscheduler test/test-features.py && \
-        coverage run -a -m processscheduler test/test-solver.py && \
-        coverage report -m && \
-        coverage html &&\
-        bash <(curl -s https://codecov.io/bash)
-      displayName: 'Run coverage and export report to codecov (Linux py39 only)'
