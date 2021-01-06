@@ -35,7 +35,8 @@ jobs:
     displayName: 'Conda config and info'
 
   - bash: |
-        conda env create -n psenv -f environment.yml python=${{ parameters.py_maj }}.${{ parameters.py_min }}
+        conda env create -n psenv -f environment.yml python=${{ parameters.py_maj }}.${{ parameters.py_min }} && \
+        pip install .
     displayName: Install ProcessScheduler to a dedicated environment
 
   - bash: |
