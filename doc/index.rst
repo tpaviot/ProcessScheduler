@@ -7,8 +7,10 @@ A a 100% pure python library to compute resource-constrained task schedules. It 
    :maxdepth: 2
    :caption: Contents:
 
-   about
-   modeling
+   introduction
+   scheduling_problem
+   task
+   resource
    solving
    getting-started
    advanced

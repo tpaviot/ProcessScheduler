@@ -1,42 +1,17 @@
-Scheduling problem modeling
-===========================
+Task
+====
 
-There are a variety of command line tools provided by the cxxheaderparser
-project.
+According to the `APICS dictionary <http://www.apics.org/>`_, a task may either be:
 
-SchedulingProblem
------------------
+1. In project management, the lowest level to which work can be divided on a project
 
-The :class:`SchedulingProblem` class is the container for all modeling objects, such as tasks, resources and constraints.
+2. In activity-based cost accounting, a task, a subdivision of an activity, is the least amount of work. Tasks are used to describe activities.
 
-A :class:`SchedulingProblem` instance holds a *time* interval: the lower bound of this interval (the *initial time*) is always 0, the upper bound (the *final time*) can be set by passing the :attr:`horizon` attribute to the
-:func:`__init__` method:
+In the context of the this software library, the concept of task reflects the first point. The purpose of ProcessScheduler is to provide a sequence (a temporal ordering) of a collection of tasks.
 
-.. code-block:: python
+The Task class
+--------------
 
-    problem_modeling = SchedulingProblem('MySchedulingProblem', horizon=20)
- 
-The time interval is divided into a finite number of *periods*. Each period has a duration of 1. Let :math:`horizon` be the horizon, then the number of periods is :math:`horizon` as well, and the number of points in the interval :math:`[0;horizon]` is :math:`horizon+1`.
-
-.. image:: img/TimeLineHorizon.svg
-    :align: center
-    :width: 90%
-
-A period is the finest granularity that describes the time line, the task durations, and the schedule itself. The time line is dimensionless. It is up to you to map one period to the desired duration, in seconds/minutes/hours. For example:
-
-- you need to schedule a set of tasks in a single day, let's say from 8 am to 6pm (office hours). The time interval is 10 hours length. If you plan to schedule tasks with a granularity of 1 hour, then the horizon value will be 10:
-
-.. math:: horizon = \frac{18-8}{1}=10
-
-- you need to schedule a set of tasks in the morning, from 8 am to 12. The time interval is 4 hours. If you plan to schedule tasks with a granularity of 1 minute, then the horizon must be 240:
-
-.. math:: horizon = \frac{12-8}{1/60}=240
-
-.. note::
-   The :attr:`horizon` attribute is optional. If its not passed to the :class:`SchedulingProblem` instantiation, the solver will later find an horizon value compliant with the set of constraints. In the case where your scheduling problem aims at optimizing the horizon (e.g. a makespan objective), then don't set the horizon at startup.
-
-Tasks
------
 A :class:`Task` is defined by the three parameters:
 
 - :attr:`start`: a point in the :math:`[0, horizon]` integer interval. If the task is scheduled, then :math:`start>=0`
@@ -92,19 +67,19 @@ Builtin constraints: if the class name starts with *Task* then the constraint ap
 
 .. image:: img/TasksStartSynced.svg
     :align: center
-    :width: 70%
+    :width: 90%
 
 - :class:`TasksEndSynced`: takes two parameters :attr:`task_1` and :attr:`task_2` such as the schedule must satisfy the constraint :math:`task_1.end = task_2.end`
 
 .. image:: img/TasksEndSynced.svg
     :align: center
-    :width: 70%
+    :width: 90%
 
 - :class:`TasksDontOverlap`: takes two parameters :attr:`task_1` and :attr:`task_2` such as the task_1 ends before the task_2 istarted or the opposite (task_2 ends before task_1 is started)
 
 .. image:: img/TasksDontOverlap.svg
     :align: center
-    :width: 70%
+    :width: 90%
 
 - :class:`TaskStartAt`: takes two parameters :attr:`task` and :attr:`value` such as the task starts exactly at the instant *value* :math:`task.start = value`
 
@@ -117,7 +92,3 @@ Builtin constraints: if the class name starts with *Task* then the constraint ap
 - :class:`TaskEndBeforeStrict`: takes two parameters :attr:`task` and :attr:`value` such as the task ends strictly before the instant *value* :math:`task.end < value`
 
 - :class:`TaskEndBeforeLax`: takes two parameters :attr:`task` and :attr:`value` such as the task ends before the instant *value* :math:`task.end <= value`
-
-Workers
--------
-The Worker class.
