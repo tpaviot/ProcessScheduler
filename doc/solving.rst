@@ -45,4 +45,4 @@ It is obvious that these constraints cannot be both satisfied.
 4. The solver successes in finding a schedule that satisfies all the constraints. The :func:`solve` method returns True.
 
 .. note::
-   If the solver fails to give a solution: increase the :attr:`max_time` (case 3), remove some contraints (cases 1 and 2). In most cases, the solver does find a solution.
+   If the solver fails to give a solution, increase the :attr:`max_time` (case 3) or remove some constraints (cases 1 and 2). In most cases, the solver does find a solution.

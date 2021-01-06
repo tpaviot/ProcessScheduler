@@ -19,8 +19,8 @@ A Worker is created as follows:
     john = Worker('JohnBenis')
 
 
-Resource assignement
---------------------
+Resource assignment
+-------------------
 Resources are assigned to tasks in two steps:
 
 1. Tell the task that it requires a set of resources to be processed
