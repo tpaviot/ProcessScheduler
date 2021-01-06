@@ -113,13 +113,13 @@ class SchedulingProblem:
         """ add a single resource to the problem """
         # Prevent an AlternativeWorker to be added
         if isinstance(resource, AlternativeWorkers):
-            warnings.warn('AlternativeWorkers don''t need to be added to the problem, ')
+            warnings.warn('AlternativeWorkers don''t need to be added to the problem.')
             return False
         resource_name = resource.name
         if resource_name not in self.resources:
             self.resources[resource_name] = resource
         else:
-            warnings.warn('resource %s already part of the problem' % resource)
+            warnings.warn('Resource %s already part of the problem' % resource)
             return False
         return True
 
