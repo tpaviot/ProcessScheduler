@@ -16,7 +16,11 @@ A :class:`SchedulingProblem` instance holds a *time* interval: the lower bound o
 
     problem_modeling = SchedulingProblem('MySchedulingProblem', horizon=20)
  
-The time interval is divided into a finite number of *periods*. Each period has a duration of 1. Let :math:`horizon` be the horizon, then the number of periods is :math:`horizon` as well, and the number of points in the interval (the *instants*) is :math:`horizon+1`.
+The time interval is divided into a finite number of *periods*. Each period has a duration of 1. Let :math:`horizon` be the horizon, then the number of periods is :math:`horizon` as well, and the number of points in the interval :math:`[0;horizon]` is :math:`horizon+1`.
+
+.. image:: img/TimeLineHorizon.svg
+    :align: center
+    :width: 90%
 
 A period is the finest granularity that describes the time line, the task durations, and the schedule itself. The time line is dimensionless. It is up to you to map one period to the desired duration, in seconds/minutes/hours. For example:
 
@@ -39,8 +43,11 @@ A :class:`Task` is defined by the three parameters:
 
 - :attr:`end`: a point in the :math:`[0, horizon]` integer interval. If the task is scheduled, then :math:`end>=start`
 
-- :attr:`duration`: a integer number of periods. Of course :math:`start+duration=end`
+- :attr:`duration`: a integer number of periods, such as :math:`duration=end-start`
 
+.. image:: img/Task.svg
+    :align: center
+    :width: 90%
 
 .. note::
   :attr:`start` and :attr:`end` attributes can be constrained, but not set at the Task class instantiation.
@@ -62,13 +69,14 @@ Three base Task objects can be used to represent a task:
 
 - a :class:`VariableDurationTask`: a task for which you do not know the duration or for which you want to leave the solver suggest a value.
 
-.. note::
-  A :class:`VariableDurationTask` duration can be bounded by lower and upper values (a number of periods).
-
 .. code-block:: python
 
     # The duration of this task will depend on the number of workers that hold boxes
     move_boxes = VariableDurationTask('MoveBoxesFromMachineAToInventory')
+
+.. note::
+  A :class:`VariableDurationTask` duration can be bounded by lower and upper values (a number of periods).
+
 
 Task Constraints
 ----------------
@@ -82,9 +90,21 @@ Builtin constraints: if the class name starts with *Task* then the constraint ap
 
 - :class:`TasksStartSynced`: takes two parameters :attr:`task_1` and :attr:`task_2` such as the schedule must satisfy the constraint :math:`task_1.start = task_2.start`
 
+.. image:: img/TasksStartSynced.svg
+    :align: center
+    :width: 70%
+
 - :class:`TasksEndSynced`: takes two parameters :attr:`task_1` and :attr:`task_2` such as the schedule must satisfy the constraint :math:`task_1.end = task_2.end`
 
+.. image:: img/TasksEndSynced.svg
+    :align: center
+    :width: 70%
+
 - :class:`TasksDontOverlap`: takes two parameters :attr:`task_1` and :attr:`task_2` such as the task_1 ends before the task_2 istarted or the opposite (task_2 ends before task_1 is started)
+
+.. image:: img/TasksDontOverlap.svg
+    :align: center
+    :width: 70%
 
 - :class:`TaskStartAt`: takes two parameters :attr:`task` and :attr:`value` such as the task starts exactly at the instant *value* :math:`task.start = value`
 
