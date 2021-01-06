@@ -59,7 +59,7 @@ jobs:
         source activate psenv && \
         coverage run -m unittest && \
         coverage report -m && \
-        coverage html &&\
+        coverage html && \
         bash <(curl -s https://codecov.io/bash)
       displayName: 'Coverage and export to codecov (Linux py39 only)'
 
