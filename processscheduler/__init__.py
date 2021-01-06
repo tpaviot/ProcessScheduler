@@ -15,6 +15,14 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 __VERSION__ = '0.1-dev'
 
 try:
-    import z3
+    from z3 import BoolRef
 except ModuleNotFoundError as z3_not_found:
     raise ImportError("z3 not found. It is a mandatory dependency") from z3_not_found
+
+# Expose everything usefule
+from processscheduler.boolean import not_, or_, and_, xor_
+from processscheduler.task import ZeroDurationTask, FixedDurationTask, VariableDurationTask
+from processscheduler.task_constraint import *
+from processscheduler.resource import Worker, AlternativeWorkers
+from processscheduler.problem import SchedulingProblem
+from processscheduler.solver import SchedulingSolver

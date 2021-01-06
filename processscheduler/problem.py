@@ -12,7 +12,7 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from typing import List, Optional, Tuple, Union, ValuesView
+from typing import Dict, List, Optional, Tuple, Union, ValuesView
 import warnings
 
 from z3 import Bool, BoolRef, Int, ModelRef
@@ -31,7 +31,7 @@ class SchedulingProblem:
     :param name: the problem name, a string type
     :param horizon: an optional integer, the final instant of the timeline
     """
-    def __init__(self, name: str, horizon: Optional[int]=None):
+    def __init__(self, name: str, horizon: Optional[int] = None):
         self._name = name
 
         # define the horizon variable if no horizon is defined
