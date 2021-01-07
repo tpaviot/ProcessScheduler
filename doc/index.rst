@@ -13,9 +13,11 @@ A a 100% pure python library to compute resource-constrained task schedules. It 
    builtin_task_constraints
    first_order_logic_constraints
    resource
+   work
+   objectives
    solving
+   solver_debug_mode
    getting-started
-   advanced
    api
 
 

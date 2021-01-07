@@ -1,0 +1,4 @@
+Debug mode solver
+=================
+
+todo.
