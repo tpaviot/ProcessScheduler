@@ -193,10 +193,9 @@ class TestFeatures(unittest.TestCase):
     def test_if_then_else(self) -> None:
         t_1 = ps.FixedDurationTask('t1', 2)
         t_2 = ps.FixedDurationTask('t2', 2)
-        t_3 = ps.FixedDurationTask('t2', 2)
         ite_constraint = ps.if_then_else(t_1.start==1, # condition
                                          ps.TaskStartAt(t_2, 3), # then
-                                         ps.TaskStartAt(t_2, 3)) # else
+                                         ps.TaskStartAt(t_2, 6)) # else
         self.assertIsInstance(ite_constraint, ps.BoolRef)
 
 if __name__ == "__main__":
