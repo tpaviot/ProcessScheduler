@@ -8,9 +8,13 @@ It is mostly intended to be used in an industrial context (manufacturing, buildi
 Features
 --------
 
-- f1
+- Task with fixed or variable length, work_amount
 
-- f2
+- Resource, worker, productivity and cost
+
+- First order logic operators (and/or/xor/not), implication and if/then/else
+
+- Gantt chart rendering using matplotlib
 
 What's inside
 -------------
