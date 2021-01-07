@@ -17,30 +17,19 @@ import warnings
 
 from z3 import Bool, BoolRef, Int, ModelRef
 
-from processscheduler.base import ObjectiveType
+from processscheduler.base import ObjectiveType, _NamedUIDObject
 from processscheduler.resource import _Resource, AlternativeWorkers
 from processscheduler.task import Task, VariableDurationTask
 from processscheduler.task_constraint import _Constraint
 
-#
-# SchedulingProblem class definition
-#
-class SchedulingProblem:
+class SchedulingProblem(_NamedUIDObject):
     """A scheduling problem
 
     :param name: the problem name, a string type
     :param horizon: an optional integer, the final instant of the timeline
     """
     def __init__(self, name: str, horizon: Optional[int] = None):
-        self._name = name
-
-        # define the horizon variable if no horizon is defined
-        if horizon is None:
-            self.horizon = Int('horizon')
-        else:  # an integer horizon is defined, no need to create a z3 variable
-            self.horizon = horizon
-
-        self._scheduled_horizon = 0  # set after the solver is finished
+        super().__init__(name)
         # the list of tasks to be scheduled in this scenario
         self._tasks = {} # type: Dict[str, Task]
         # the list of resources available in this scenario
@@ -51,6 +40,16 @@ class SchedulingProblem:
         self.objectives = [] # type: List[ObjectiveType]
         # the solution
         self._solution = None # type: ModelRef
+
+        # define the horizon variable
+        self.horizon = Int('horizon')
+        self.fixed_horizon = False  # set to True is horizon is fixed
+        if isinstance(horizon, int) and horizon > 0:  # fixed_horizon
+            self._constraints.append(self.horizon == horizon)
+            self.fixed_horizon = True
+        # the scheduled_horizon is set to 0 by default, it will be
+        # set by the solver
+        self.scheduled_horizon = 0
 
     def set_solution(self, solution: ModelRef) -> None:
         """ for each task, set the resource, start and length values """
@@ -89,10 +88,7 @@ class SchedulingProblem:
                     task.assigned_resources.append(req_res)
 
         # at last, set the horizon solution
-        if isinstance(self.horizon, int):
-            self._scheduled_horizon = self.horizon
-        else:
-            self._scheduled_horizon = solution[self.horizon].as_long()
+        self.scheduled_horizon = solution[self.horizon].as_long()
 
     def add_task(self, task: Task) -> bool:
         """ add a single task to the problem """
@@ -153,8 +149,8 @@ class SchedulingProblem:
     def add_objective_makespan(self) -> bool:
         """ makespan objective
         """
-        if isinstance(self.horizon, int):
-            warnings.warn('Horizon set to fixed value %i, cannot be optimized' % self.horizon)
+        if self.fixed_horizon:
+            warnings.warn('Horizon constrained to be fixed, no horizon optimization possible.')
             return False
         self.objectives.append(ObjectiveType.MAKESPAN)
         return True
@@ -176,7 +172,7 @@ class SchedulingProblem:
 
     def print_solution(self) -> None:
         """ print solution to console """
-        print("Problem %s solution:" % self._name)
+        print("Problem %s solution:" % self.name)
         if self._solution is not None:
             for task in self._tasks.values():
                 ress = task.assigned_resources
@@ -210,12 +206,12 @@ class SchedulingProblem:
 
         # render mode is Resource by default, can be set to 'Task'
         if render_mode == 'Resources':
-            plot_title = 'Resources schedule - %s' % self._name
+            plot_title = 'Resources schedule - %s' % self.name
             plot_ylabel = 'Resources'
             plot_ticklabels = map(str, self.get_resources())
             nbr_y_values = len(self.get_resources())
         elif render_mode == 'Tasks':
-            plot_title = 'Task schedule - %s' % self._name
+            plot_title = 'Task schedule - %s' % self.name
             plot_ylabel = 'Tasks'
             plot_ticklabels = map(str, self.get_tasks())
             nbr_y_values = len(self.get_tasks())
@@ -224,10 +220,10 @@ class SchedulingProblem:
 
         gantt = plt.subplots(1, 1, figsize=fig_size)[1]
         gantt.set_title(plot_title)
-        gantt.set_xlim(0, self._scheduled_horizon)
-        gantt.set_xticks(range(self._scheduled_horizon + 1))
+        gantt.set_xlim(0, self.scheduled_horizon)
+        gantt.set_xticks(range(self.scheduled_horizon + 1))
         # Setting labels for x-axis and y-axis
-        gantt.set_xlabel('Time (%i periods)' % self._scheduled_horizon, fontsize=12)
+        gantt.set_xlabel('Time (%i periods)' % self.scheduled_horizon, fontsize=12)
         gantt.set_ylabel(plot_ylabel, fontsize=12)
 
         # colormap definition

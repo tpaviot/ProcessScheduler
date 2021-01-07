@@ -142,18 +142,18 @@ class SchedulingSolver:
         init_time = time.perf_counter()
         sat_result  = self._solver.check()
         final_time = time.perf_counter()
-        print('%s Satisfiability checked in %.2fs' % (self._problem._name, final_time - init_time))
+        print('%s Satisfiability checked in %.2fs' % (self._problem.name, final_time - init_time))
 
         if self._verbosity:
             for assertion in self._solver.assertions():
                 print("\t", assertion)
 
         if sat_result == unsat:
-            print("No solution exists for problem %s." % self._problem._name)
+            print("No solution exists for problem %s." % self._problem.name)
             return False
 
         if sat_result == unknown:
-            print("No solution can be found for problem %s." % self._problem._name)
+            print("No solution can be found for problem %s." % self._problem.name)
             return False
 
         return True

@@ -45,7 +45,7 @@ class _NamedUIDObject:
         :param name: the instance name, provided as a string.
         """
         # the object name
-        self.name = name
+        self.name = name # type: str
 
         # unique identifier
         self.uid = uuid.uuid4().int # type: int
