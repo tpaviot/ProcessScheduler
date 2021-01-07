@@ -186,12 +186,12 @@ class TestSolver(unittest.TestCase):
         problem = _get_big_random_problem('SolveMakeSpanObjective', 2000)
         # first look for a solution without optimization
         self.assertTrue(_solve_problem(problem))
-        horizon_without_optimization = problem._scheduled_horizon
+        horizon_without_optimization = problem.scheduled_horizon
         # then add the objective and look for another solution
         problem.add_objective_makespan()
         # another solution
         self.assertTrue(_solve_problem(problem))
-        horizon_with_optimization = problem._scheduled_horizon
+        horizon_with_optimization = problem.scheduled_horizon
         # horizon_with_optimization should be less than horizon_without_optimization
         self.assertLess(horizon_with_optimization, horizon_without_optimization)
 
