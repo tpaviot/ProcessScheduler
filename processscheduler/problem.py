@@ -59,10 +59,7 @@ class SchedulingProblem(_NamedUIDObject):
         for task in self._tasks.values():
             task.scheduled_start = solution[task.start].as_long()
             task.scheduled_end = solution[task.end].as_long()
-            if isinstance(task, VariableDurationTask):
-                task.scheduled_duration = solution[task.duration].as_long()
-            else:
-                task.scheduled_duration = task.duration
+            task.scheduled_duration = solution[task.duration].as_long()
 
         # traverse all tasks to perform resources assignment
         # all required workers should be assigned

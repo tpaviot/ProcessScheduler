@@ -54,7 +54,7 @@ Will be written in Python:
 .. note::
 	The :func:`implies` and :func:`if_then_else` functions names do not conflict with any other function name from another package, thus dont have any underscore suffix.
 
-Finally, an if/then/else statement is available throug the funcion :func:`if_then_else` which taks 3 parameters: a condition and two assertions that applies if the condition is True or False.
+Finally, an if/then/else statement is available through the function :func:`if_then_else` which takes 3 parameters: a condition and two assertions that applies if the condition is True or False.
 
 .. code-block:: python
 

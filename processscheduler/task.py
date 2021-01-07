@@ -29,6 +29,7 @@ class Task(_NamedUIDObject):
         self.scheduled_start = 0
         self.scheduled_end = 0
         self.scheduled_duration = 0
+        self.scheduled_flag = False
 
         # required resources to perform the task
         self.required_resources = [] # type: List[_Resource]
@@ -39,8 +40,8 @@ class Task(_NamedUIDObject):
         # z3 Int variables
         self.start = Int('%s_start' % name)
         self.end = Int('%s_end' % name)
-        # defined inside specialized tasks
-        self.duration = None # type: Any
+        self.scheduled = Bool('t%s_scheduled' % name)
+        self.duration = Int('%s_duration' % name)
 
         # these two flags are set to True is there is a constraint
         # that set a lower or upper bound (e.g. a Precedence)
@@ -51,12 +52,18 @@ class Task(_NamedUIDObject):
         # idem for the upper bound: no need to assert task.end <= horizon
         self.upper_bounded = False
 
+        # optional flag, set to True if this task is optional, else True
+        self.optional = False
+
     # Necessary to define _eq__ and __hash__ because of lgtm warnings of kind
     def __hash__(self) -> int:
         return self.uid
 
     def __eq__(self, other) -> Bool:
         return self.uid == other.uid
+
+    def set_optional(self):
+        self.optional = True
 
     def add_required_resource(self, resource: _Resource) -> bool:
         """ add a required resource to the current task, required does not
@@ -113,19 +120,19 @@ class ZeroDurationTask(Task):
     can have some resources required """
     def __init__(self, name: str) -> None:
         super().__init__(name)
-        self.duration = 0
         self.work_amount = 0
         # add an assertion: end = start because the duration is zero
         self.add_assertion(self.start == self.end)
+        self.add_assertion(self.duration == 0)
 
 class FixedDurationTask(Task):
     """ Task with constant duration """
     def __init__(self, name: str, duration: int, work_amount: Optional[float] = 0.):
         super().__init__(name)
-        self.duration = duration
         self.work_amount = work_amount
         # add an assertion: end = start + duration
         self.add_assertion(self.start + self.duration == self.end)
+        self.add_assertion(self.duration == duration)
 
 class VariableDurationTask(Task):
     """ Tasj with a priori unknown duration. its duration is computed by the solver """
@@ -134,7 +141,6 @@ class VariableDurationTask(Task):
                  length_at_most: Optional[int] = None,
                  work_amount: Optional[float] = 0.):
         super().__init__(name)
-        self.duration = Int('%s_duration' % self.name)
         self.length_at_least = length_at_least
         self.length_at_most = length_at_most
         self.work_amount = work_amount

@@ -17,7 +17,7 @@ import time
 from typing import Optional
 
 from z3 import (SolverFor,Int, Or, Xor, Sum, unsat,
-                    unknown, Optimize, set_option)
+                ArithRef, unknown, Optimize, set_option)
 
 from processscheduler.base import ObjectiveType
 
@@ -76,6 +76,9 @@ class SchedulingSolver:
         self.process_resource_requirements()
         self.process_work_amount()
         self.create_objectives()
+
+        # each time the solver is called, the current_solution is stored
+        self.current_solution = None
 
     def create_objectives(self) -> None:
         """ create optimization objectives """
@@ -178,4 +181,15 @@ class SchedulingSolver:
         ## propagate the result to the scenario
         self._problem.set_solution(solution)
 
+        self.current_solution = solution
+
         return True
+
+    def find_another_solution(self, variable: ArithRef) -> bool:
+        """ let the solver find another solution for the variable """
+        if self.current_solution is None:
+            warnings.warning('No current solution. First call the solve() method.')
+            return False
+        current_variable_value = self.current_solution[variable].as_long()
+        self._solver.add(variable != current_variable_value)
+        return self.solve()

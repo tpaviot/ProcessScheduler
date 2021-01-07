@@ -269,5 +269,23 @@ class TestSolver(unittest.TestCase):
         self.assertTrue(task_1.scheduled_start == 1)
         self.assertTrue(task_2.scheduled_start == 2)
 
+    #
+    # Find other solution
+    #
+    def test_find_another_solution(self):
+        problem = ps.SchedulingProblem('FindAnotherSolution', horizon=6)
+        solutions =[]
+        # only one task, there are many diffrent solutions
+        task_1 = ps.FixedDurationTask('task1', duration=2)
+        problem.add_task(task_1)
+        solver = ps.SchedulingSolver(problem)
+        success = solver.solve()
+
+        while success:
+            solutions.append(task_1.scheduled_start)
+            success = solver.find_another_solution(task_1.start)
+        # there should be 5 solutions
+        self.assertEqual(solutions, [0, 1, 2, 3, 4])
+
 if __name__ == "__main__":
     unittest.main()
