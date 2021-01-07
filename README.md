@@ -8,18 +8,18 @@
 A python library to compute resource-constrained task schedules.
 
 ## About
-Computation is performed using the [Z3Prover](https://github.com/Z3Prover/z3).
+The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the [Z3Prover](https://github.com/Z3Prover/z3).
 
 ## Helloworld
 
 ```python
 import processscheduler as ps
 # a simple problem, without horizon (solver will find it)
-pb = ps.SchedulingProblem('HelloWorld')
+pb = ps.SchedulingProblem('HelloWorldProcessScheduler')
 
 # add two tasks
-task_hello = ps.FixedDurationTask('Hello', duration=2)
-task_world = ps.FixedDurationTask('World', duration=2)
+task_hello = ps.FixedDurationTask('Process', duration=2)
+task_world = ps.FixedDurationTask('Scheduler', duration=2)
 pb.add_tasks([task_hello, task_world])
 
 # precedence constraint: task_world must be scheduled
@@ -28,15 +28,14 @@ c1 = ps.TaskPrecedence(task_hello, task_world, offset=0)
 pb.add_constraint(c1)
 
 # solve
-solver = ps.SchedulingSolver(pb, verbosity=False)
+solver = ps.SchedulingSolver(pb)
 solver.solve()
 
 # displays solution, ascii or matplotlib gantt diagram
-pb.print_solution()
 pb.render_gantt_matplotlib()
 ```
 
-![png](examples-notebooks/pics/hello_world_gantt.png)
+![png](examples-notebooks/pics/hello_world_gantt.svg)
 
 ## Features
 
@@ -68,6 +67,10 @@ Documentation can be found at https://processscheduler.readthedocs.io/
 ## Jypter notebooks
 
 There are some [Jupypter notebooks](https://github.com/tpaviot/ProcessScheduler/tree/master/example-notebooks). They can be executed online at [myBinder.org](https://mybinder.org/v2/gh/tpaviot/ProcessScheduler/HEAD?filepath=example-notebooks)
+
+## Code quality
+
+ProcessScheduler code is unittested, covered (coverage.py, codecov.io), continuously-integrated at MS azure, analyzed (codacy).
 
 ## Contibuting
 
