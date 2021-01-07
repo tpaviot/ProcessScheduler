@@ -4,9 +4,11 @@ Built-in Task Constraints
 
 ProcessScheduler provides a set of ready-to-use temporal task constraints. They allow expressing common rules such as "the task A must start exactly at the instant 4", "the task B must end at the same time than the task C ends", "the task C must be scheduled exactly 3 periods after the task D is completed" etc.
 
-There are a set of builtin ready-to-use constraints, listed below. In the :ref:`advanced-constraints` section you will see how to build your own constraints.
+There are a set of builtin ready-to-use constraints, listed below.
 
-Builtin constraints: if the class name starts with *Task* then the constraint applies to one single task, if the class name starts with *Tasks* it applies to 2 task instances.
+.. note::
+
+	Naming convention: if the class name starts with *Task** then the constraint applies to one single task, if the class name starts with *Tasks** it applies to 2 or more task instances.
 
 - :class:`TaskPrecedence`
 
