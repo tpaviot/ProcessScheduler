@@ -1,10 +1,10 @@
-Calling the solver
-==================
+Problem solving
+===============
 
 Solving a scheduling problem involves the :class:`SchedulingSolver` class.
 
-Defining the solver
--------------------
+Define the solver
+-----------------
 A :class:`SchedulingSolver` instance takes a :class:`SchedulingProblem` instance:
 
 .. code-block:: python
@@ -19,8 +19,8 @@ It takes three optional arguments:
 
 - :attr:`parallel`: boolean False by default, if True the solver will be executed in multithreaded mode. It *might* be quicker. It might not.
 
-Solving
--------
+Solve
+-----
 Just call the :func:`solve` method.
 
 .. code-block:: python

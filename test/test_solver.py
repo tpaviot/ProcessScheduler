@@ -287,5 +287,38 @@ class TestSolver(unittest.TestCase):
         # there should be 5 solutions
         self.assertEqual(solutions, [0, 1, 2, 3, 4])
 
+    #
+    # Total work_amount, resource productivity
+    #
+    def test_work_amount_1(self):
+        problem = ps.SchedulingProblem('WorkAmount')
+        # only one task, there are many diffrent solutions
+        task_1 = ps.VariableDurationTask('task1', work_amount=11)
+        problem.add_task(task_1)
+        # create one worker with a productivity of 2
+        worker_1 = ps.Worker('Worker1', productivity=2)
+        problem.add_resource(worker_1)
+        task_1.add_required_resource(worker_1)
+        # solve
+        self.assertTrue(_solve_problem(problem))
+        # the expected duration for task 1 is 6
+        self.assertEqual(task_1.scheduled_duration, 6)
+
+    def test_work_amount_2(self):
+        # try the same problem than above, but with one more resource
+        # check that the task duration is lower
+        problem = ps.SchedulingProblem('WorkAmount', horizon=4)
+        # only one task, there are many diffrent solutions
+        task_1 = ps.VariableDurationTask('task1', work_amount=11)
+        problem.add_task(task_1)
+        # create two workers
+        worker_1 = ps.Worker('Worker1', productivity=2)
+        worker_2 = ps.Worker('Worker2', productivity=3)
+        problem.add_resources([worker_1, worker_2])
+        task_1.add_required_resources([worker_1, worker_2])
+        # solve
+        self.assertTrue(_solve_problem(problem))  
+
+
 if __name__ == "__main__":
     unittest.main()

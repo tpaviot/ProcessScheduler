@@ -198,5 +198,6 @@ class TestFeatures(unittest.TestCase):
                                          ps.TaskStartAt(t_2, 6)) # else
         self.assertIsInstance(ite_constraint, ps.BoolRef)
 
+
 if __name__ == "__main__":
     unittest.main()
