@@ -15,6 +15,7 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 import itertools
 import time
 from typing import Optional
+import warnings
 
 from z3 import (SolverFor,Int, Or, Xor, Sum, unsat,
                 ArithRef, unknown, Optimize, set_option)
@@ -188,7 +189,7 @@ class SchedulingSolver:
     def find_another_solution(self, variable: ArithRef) -> bool:
         """ let the solver find another solution for the variable """
         if self.current_solution is None:
-            warnings.warning('No current solution. First call the solve() method.')
+            warnings.warn('No current solution. First call the solve() method.')
             return False
         current_variable_value = self.current_solution[variable].as_long()
         self._solver.add(variable != current_variable_value)
