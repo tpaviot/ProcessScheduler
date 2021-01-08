@@ -16,7 +16,7 @@ from typing import List, Optional, Tuple
 
 from z3 import ArithRef, Bool, PbLe
 
-from processscheduler.base import _NamedUIDObject
+from processscheduler.base import _NamedUIDObject, is_positive_integer
 
 #
 # Resources class definition
@@ -38,8 +38,10 @@ class _Resource(_NamedUIDObject):
 class Worker(_Resource):
     """ A worker is an atomic resource that cannot be split into smaller parts.
     Typical workers are human beings, machines etc. """
-    def __init__(self, name: str, productivity: Optional[float] = None) -> None:
+    def __init__(self, name: str, productivity: Optional[int] = 0) -> None:
         super().__init__(name)
+        if not is_positive_integer(productivity):
+            raise TypeError('productivity must be an integer >= 0')
         self.productivity = productivity
 
     # Necessary to define _eq__ and __hash__ because of lgtm warnings of kind

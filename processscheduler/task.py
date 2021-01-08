@@ -17,7 +17,7 @@ import warnings
 
 from z3 import Bool, Int, And, If
 
-from processscheduler.base import _NamedUIDObject
+from processscheduler.base import _NamedUIDObject, is_strict_positive_integer, is_positive_integer
 from processscheduler.resource import _Resource, Worker, AlternativeWorkers
 
 class Task(_NamedUIDObject):
@@ -127,8 +127,12 @@ class ZeroDurationTask(Task):
 
 class FixedDurationTask(Task):
     """ Task with constant duration """
-    def __init__(self, name: str, duration: int, work_amount: Optional[float] = 0.):
+    def __init__(self, name: str, duration: int, work_amount: Optional[int] = 0):
         super().__init__(name)
+        if not is_strict_positive_integer(duration):
+            raise TypeError('duration must be a strict positive integer')
+        if not is_positive_integer(work_amount):
+            raise TypeError('work_amount me be a positive integer')
         self.work_amount = work_amount
         # add an assertion: end = start + duration
         self.add_assertion(self.start + self.duration == self.end)
@@ -139,7 +143,7 @@ class VariableDurationTask(Task):
     def __init__(self, name: str,
                  length_at_least: Optional[int] = 0,
                  length_at_most: Optional[int] = None,
-                 work_amount: Optional[float] = 0.):
+                 work_amount: Optional[int] = 0):
         super().__init__(name)
         self.length_at_least = length_at_least
         self.length_at_most = length_at_most

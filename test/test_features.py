@@ -25,6 +25,14 @@ class TestFeatures(unittest.TestCase):
     def test_create_problem_with_horizon(self) -> None:
         pb = ps.SchedulingProblem('ProblemWithHorizon', horizon=10)
         self.assertIsInstance(pb, ps.SchedulingProblem)
+        with self.assertRaises(TypeError):
+            ps.SchedulingProblem(4) # name not string
+        with self.assertRaises(TypeError):
+            ps.SchedulingProblem('NullIntegerHorizon', horizon=0)
+        with self.assertRaises(TypeError):
+            ps.SchedulingProblem('FloatHorizon', horizon=3.5)
+        with self.assertRaises(TypeError):
+            ps.SchedulingProblem('NegativeIntegerHorizon', horizon=-2)
 
     def test_create_problem_without_horizon(self) -> None:
         pb = ps.SchedulingProblem('ProblemWithoutHorizon')
@@ -40,6 +48,16 @@ class TestFeatures(unittest.TestCase):
     def test_create_task_fixed_duration(self) -> None:
         task = ps.FixedDurationTask('fdt', 1)
         self.assertIsInstance(task, ps.FixedDurationTask)
+        with self.assertRaises(TypeError):
+            ps.FixedDurationTask('FloatDuration', 1.0)
+        with self.assertRaises(TypeError):
+            ps.FixedDurationTask('NullInteger', 0)
+        with self.assertRaises(TypeError):
+            ps.FixedDurationTask('NegativeInteger', -1)
+        with self.assertRaises(TypeError):
+            ps.FixedDurationTask('FloatWorkAmount', 2, work_amount=1.0)
+        with self.assertRaises(TypeError):
+            ps.FixedDurationTask('NegativeWorkAmount', 2, work_amount=-3)
 
     def test_create_task_variable_duration(self) -> None:
         task = ps.VariableDurationTask('vdt')
@@ -51,6 +69,10 @@ class TestFeatures(unittest.TestCase):
     def test_create_worker(self) -> None:
         worker = ps.Worker('wkr')
         self.assertIsInstance(worker, ps.Worker)
+        with self.assertRaises(TypeError):
+            ps.Worker('WorkerNegativeIntProductivity', productivity=-3)
+        with self.assertRaises(TypeError):
+            ps.Worker('WorkerFloatProductivity', productivity=3.14)
 
     def test_create_alternative_workers(self) -> None:
         worker_1 = ps.Worker('wkr_1')
@@ -71,6 +93,36 @@ class TestFeatures(unittest.TestCase):
         task_2 = ps.ZeroDurationTask('task2')
         self.assertEqual(task_1, task_1)
         self.assertNotEqual(task_1, task_2)
+
+    def test_redondnt_tasks_resources(self) -> None:
+        pb = ps.SchedulingProblem('ProblemRedundantTaskResource')
+        # we should not be able to add twice the same resource or task
+        task_1 = ps.ZeroDurationTask('task1')
+        pb.add_task(task_1)
+        pb.add_task(task_1) # a warning should be raised
+        self.assertEqual(list(pb.get_tasks()), [task_1])
+        # objects that are not tasks should not be added to the problem
+        with self.assertRaises(TypeError):
+            pb.add_task(True)
+        with self.assertRaises(TypeError):
+            pb.add_task("gg")
+        with self.assertRaises(TypeError):
+            pb.add_task(3.14)
+        self.assertEqual(list(pb.get_tasks()), [task_1])
+        # do the same for resources
+        worker_1 = ps.Worker('Worker1')
+        pb.add_resource(worker_1)
+        pb.add_resource(worker_1)
+        self.assertEqual(list(pb.get_resources()), [worker_1])
+        # it might not be possible to add another kind
+        # of resource to a problem
+        with self.assertRaises(TypeError):
+            pb.add_resource(task_1)
+        with self.assertRaises(TypeError):
+            pb.add_resource(1)
+        with self.assertRaises(TypeError):
+            pb.add_resource(2.0)
+        self.assertEqual(list(pb.get_resources()), [worker_1])
 
     #
     # Single task constraints
@@ -178,6 +230,18 @@ class TestFeatures(unittest.TestCase):
                                  ps.TaskStartAt(t_1, 5))
         and_constraint = ps.and_(or_constraint_1, or_constraint_2)
         self.assertIsInstance(and_constraint, ps.BoolRef)
+
+    def test_add_constraint(self) -> None:
+        pb = ps.SchedulingProblem('ProblemRedundantTaskResource')
+        t_1 = ps.FixedDurationTask('t1', duration=2)
+        or_constraint = ps.or_(ps.TaskStartAt(t_1, 1),
+                               ps.TaskStartAt(t_1, 2))
+        not_constraint = ps.not_(ps.TaskEndAt(t_1, 5))
+        self.assertIsInstance(or_constraint, ps.BoolRef)
+        self.assertIsInstance(not_constraint, ps.BoolRef)
+        pb.add_constraint(or_constraint)
+        pb.add_constraint(not_constraint)
+
     #
     # Implies
     #

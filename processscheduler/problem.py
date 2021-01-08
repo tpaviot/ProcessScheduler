@@ -17,7 +17,9 @@ import warnings
 
 from z3 import Bool, BoolRef, Int, ModelRef
 
-from processscheduler.base import ObjectiveType, _NamedUIDObject
+from processscheduler.base import (ObjectiveType, _NamedUIDObject,
+                                   is_strict_positive_integer,
+                                   is_positive_integer)
 from processscheduler.resource import _Resource, AlternativeWorkers
 from processscheduler.task import Task, VariableDurationTask
 from processscheduler.task_constraint import _Constraint
@@ -40,13 +42,14 @@ class SchedulingProblem(_NamedUIDObject):
         self.objectives = [] # type: List[ObjectiveType]
         # the solution
         self._solution = None # type: ModelRef
-
         # define the horizon variable
         self.horizon = Int('horizon')
         self.fixed_horizon = False  # set to True is horizon is fixed
-        if isinstance(horizon, int) and horizon > 0:  # fixed_horizon
+        if is_strict_positive_integer(horizon):  # fixed_horizon
             self._constraints.append(self.horizon == horizon)
             self.fixed_horizon = True
+        elif horizon is not None:
+            raise TypeError('horizon must either be a strict positive integer or None')
         # the scheduled_horizon is set to 0 by default, it will be
         # set by the solver
         self.scheduled_horizon = 0
@@ -89,6 +92,8 @@ class SchedulingProblem(_NamedUIDObject):
 
     def add_task(self, task: Task) -> bool:
         """ add a single task to the problem """
+        if not isinstance(task, Task):
+            raise TypeError('task must be a Task object')
         task_name = task.name
         if task_name not in self._tasks:
             self._tasks[task_name] = task
@@ -105,9 +110,8 @@ class SchedulingProblem(_NamedUIDObject):
     def add_resource(self, resource: _Resource) -> bool:
         """ add a single resource to the problem """
         # Prevent an AlternativeWorker to be added
-        if isinstance(resource, AlternativeWorkers):
-            warnings.warn('AlternativeWorkers don''t need to be added to the problem.')
-            return False
+        if not isinstance(resource, _Resource):
+            raise TypeError('resource must be a _Resource object')
         resource_name = resource.name
         if resource_name not in self.resources:
             self.resources[resource_name] = resource

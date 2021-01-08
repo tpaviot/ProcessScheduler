@@ -17,6 +17,15 @@ from typing import List
 import uuid
 
 from z3 import BoolRef
+
+#
+# Utility functions
+#
+def is_strict_positive_integer(value: int) -> bool:
+    return isinstance(value, int) and value > 0
+
+def is_positive_integer(value: int) -> bool:
+    return isinstance(value, int) and value >= 0
 #
 # Base enum types
 #
@@ -44,6 +53,9 @@ class _NamedUIDObject:
 
         :param name: the instance name, provided as a string.
         """
+        # check name type
+        if not isinstance(name, str):
+            raise TypeError('name must be a str instance')
         # the object name
         self.name = name # type: str
 
