@@ -55,13 +55,6 @@ class Task(_NamedUIDObject):
         # optional flag, set to True if this task is optional, else True
         self.optional = False
 
-    # Necessary to define _eq__ and __hash__ because of lgtm warnings of kind
-    def __hash__(self) -> int:
-        return self.uid
-
-    def __eq__(self, other) -> Bool:
-        return self.uid == other.uid
-
     def set_optional(self):
         self.optional = True
 
@@ -145,15 +138,23 @@ class VariableDurationTask(Task):
                  length_at_most: Optional[int] = None,
                  work_amount: Optional[int] = 0):
         super().__init__(name)
+
+        if is_positive_integer(length_at_most):
+            self.add_assertion(self.duration <= length_at_most)
+        elif length_at_most is not None:
+            raise TypeError('length_as_most should either be a positive integer or None')
+
+        if not is_positive_integer(length_at_least):
+            raise TypeError('length_at_least must be a positive integer')
+
+        if not is_positive_integer(work_amount):
+            raise TypeError('work_amount me be a positive integer')
+
         self.length_at_least = length_at_least
         self.length_at_most = length_at_most
         self.work_amount = work_amount
 
         # set minimal duration
         self.add_assertion(self.duration >= length_at_least)
-
-        if length_at_most is not None:
-            self.add_assertion(self.duration <= length_at_most)
-
         # add an assertion: end = start + duration
         self.add_assertion(self.start + self.duration == self.end)

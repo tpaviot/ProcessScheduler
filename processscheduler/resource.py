@@ -44,14 +44,6 @@ class Worker(_Resource):
             raise TypeError('productivity must be an integer >= 0')
         self.productivity = productivity
 
-    # Necessary to define _eq__ and __hash__ because of lgtm warnings of kind
-    def __hash__(self) -> int:
-        return self.uid
-
-    def __eq__(self, other) -> Bool:
-        return self.uid == other.uid
-
-
 class AlternativeWorkers(_Resource):
     """ Class representing the selection of n workers chosen among a list
     of possible workers """

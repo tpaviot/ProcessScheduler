@@ -60,9 +60,22 @@ class TestFeatures(unittest.TestCase):
             ps.FixedDurationTask('NegativeWorkAmount', 2, work_amount=-3)
 
     def test_create_task_variable_duration(self) -> None:
-        task = ps.VariableDurationTask('vdt')
-        self.assertIsInstance(task, ps.VariableDurationTask)
-
+        ps.VariableDurationTask('vdt1')
+        ps.VariableDurationTask('vdt2', length_at_most=4)
+        ps.VariableDurationTask('vdt3', length_at_least=4)
+        ps.VariableDurationTask('vdt21', work_amount=10)
+        with self.assertRaises(TypeError):
+            ps.VariableDurationTask('vdt3', length_at_most=4.5)
+        with self.assertRaises(TypeError):
+            ps.VariableDurationTask('vdt4', length_at_most=-1)
+        with self.assertRaises(TypeError):
+            ps.VariableDurationTask('vdt5', length_at_least=-1)
+        with self.assertRaises(TypeError):
+            ps.VariableDurationTask('vdt6', work_amount=-1)
+        with self.assertRaises(TypeError):
+            ps.VariableDurationTask('vdt7', work_amount=1.5)
+        with self.assertRaises(TypeError):
+            ps.VariableDurationTask('vdt8', work_amount=None)
     #
     # Workers
     #
@@ -94,7 +107,7 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(task_1, task_1)
         self.assertNotEqual(task_1, task_2)
 
-    def test_redondnt_tasks_resources(self) -> None:
+    def test_redondant_tasks_resources(self) -> None:
         pb = ps.SchedulingProblem('ProblemRedundantTaskResource')
         # we should not be able to add twice the same resource or task
         task_1 = ps.ZeroDurationTask('task1')
@@ -123,6 +136,18 @@ class TestFeatures(unittest.TestCase):
         with self.assertRaises(TypeError):
             pb.add_resource(2.0)
         self.assertEqual(list(pb.get_resources()), [worker_1])
+
+    def test_resource_requirements(self) -> None:
+        task_1 = ps.FixedDurationTask('task1', duration=3)
+        worker_1 = ps.Worker('Worker1')
+        worker_2 = ps.Worker('Worker1')
+        worker_3 = ps.Worker('Worker1')
+        task_1.add_required_resource(worker_1)
+        task_1.add_required_resources([worker_1, worker_2])
+        with self.assertRaises(TypeError):
+            task_1.add_required_resource(3)
+        with self.assertRaises(TypeError):
+            task_1.add_required_resources("a_string")
 
     #
     # Single task constraints
