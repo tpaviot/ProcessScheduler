@@ -317,7 +317,7 @@ class TestSolver(unittest.TestCase):
         problem.add_resources([worker_1, worker_2])
         task_1.add_required_resources([worker_1, worker_2])
         # solve
-        self.assertTrue(_solve_problem(problem))  
+        self.assertTrue(_solve_problem(problem))
 
 
 if __name__ == "__main__":

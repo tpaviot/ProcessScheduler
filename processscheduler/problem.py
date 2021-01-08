@@ -18,10 +18,9 @@ import warnings
 from z3 import Bool, BoolRef, Int, ModelRef
 
 from processscheduler.base import (ObjectiveType, _NamedUIDObject,
-                                   is_strict_positive_integer,
-                                   is_positive_integer)
-from processscheduler.resource import _Resource, AlternativeWorkers
-from processscheduler.task import Task, VariableDurationTask
+                                   is_strict_positive_integer)
+from processscheduler.resource import _Resource
+from processscheduler.task import Task
 from processscheduler.task_constraint import _Constraint
 
 class SchedulingProblem(_NamedUIDObject):

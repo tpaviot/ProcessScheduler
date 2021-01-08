@@ -141,7 +141,6 @@ class TestFeatures(unittest.TestCase):
         task_1 = ps.FixedDurationTask('task1', duration=3)
         worker_1 = ps.Worker('Worker1')
         worker_2 = ps.Worker('Worker1')
-        worker_3 = ps.Worker('Worker1')
         task_1.add_required_resource(worker_1)
         task_1.add_required_resources([worker_1, worker_2])
         with self.assertRaises(TypeError):
