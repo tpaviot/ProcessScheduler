@@ -114,7 +114,7 @@ class SchedulingSolver:
     def process_resource_requirements(self) -> None:
         """ force non overlapping of resources busy intervals """
         for resource in self._problem.resources.values():  # loop over resources
-            intervals = resource.busy_intervals
+            intervals = resource.get_busy_intervals()
             if len(intervals) <= 1:  # no need to carry about overlapping, only one task
                 continue
             # get all pairs combination
@@ -133,12 +133,10 @@ class SchedulingSolver:
             if task.work_amount > 0.:
                 work_total_for_all_resources = []
                 for required_resource in task.required_resources:
-                    # look for start and end busy intervals
-                    for interv_low, interv_up in required_resource.busy_intervals:
-                        task_name = task.name
-                        if task_name in interv_low.__repr__():
-                            work_contribution = required_resource.productivity * (interv_up - interv_low)
-                            work_total_for_all_resources.append(work_contribution)
+                    # work contribution for the resource
+                    interv_low, interv_up = required_resource.busy_intervals[task]
+                    work_contribution = required_resource.productivity * (interv_up - interv_low)
+                    work_total_for_all_resources.append(work_contribution)
                 self._solver.add(Sum(work_total_for_all_resources) >= task.work_amount)
 
     def check_sat(self) -> bool:

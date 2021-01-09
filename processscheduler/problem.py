@@ -75,13 +75,10 @@ class SchedulingProblem(_NamedUIDObject):
                 # are busy "in the past", that is to say they
                 # should not be assigned to the related task
                 # for each interval
-                for lower_bound, _ in req_res.busy_intervals:
-                    if solution[lower_bound].as_long() < 0:
-                        # if the task name is in the variable name,
-                        # then this worker should not be added to the list of
-                        # assignedresources
-                        if task.name in lower_bound.__repr__():
-                            resource_should_be_assigned = False
+                lower_bound, _ = req_res.busy_intervals[task]
+                if solution[lower_bound].as_long() < 0:
+                    # should not be scheduled
+                    resource_should_be_assigned = False
                 # add this resource to assigned resources, anytime
                 if resource_should_be_assigned and req_res not in task.assigned_resources:
                     task.assigned_resources.append(req_res)
@@ -273,11 +270,12 @@ class SchedulingProblem(_NamedUIDObject):
         elif render_mode == 'Resources':
             for i, ress in enumerate(self.get_resources()):
                 #each interval from the busy_intervals list is rendered as a bar
-                for st_var, end_var in ress.busy_intervals:
+                for task in ress.busy_intervals.keys():
+                    task_name = task.name
+                    st_var, end_var = ress.busy_intervals[task]
                     start = self._solution[st_var].as_long()
                     end = self._solution[end_var].as_long()
                     if start >= 0 and end >= 0:  # only assigned resource
-                        task_name  = st_var.__repr__().split('_busy_')[1].split('_')[0]
                         draw_broken_barh_with_text(start,
                                                    end - start,
                                                    task_colors[task_name],

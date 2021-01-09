@@ -319,6 +319,16 @@ class TestSolver(unittest.TestCase):
         # solve
         self.assertTrue(_solve_problem(problem))
 
+    #
+    # Import/export
+    #
+    def test_export_to_smt2(self):
+        problem = _get_big_random_problem('SolveExportToSMT2', 5000)
+        solver = ps.SchedulingSolver(problem)
+        success = solver.solve()
+        self.assertTrue(success)
+        solver.export_to_smt2('big_random_problem.smt2')
+        self.assertTrue(os.path.isfile('big_random_problem.smt2'))
 
 if __name__ == "__main__":
     unittest.main()

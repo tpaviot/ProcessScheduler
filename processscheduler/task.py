@@ -72,7 +72,7 @@ class Task(_NamedUIDObject):
                 resource_maybe_busy_start = Int('%s_maybe_busy_%s_start' % (worker.name, self.name))
                 resource_maybe_busy_end = Int('%s_maybe_busy_%s_end' % (worker.name, self.name))
                 # create the busy interval for the resource
-                worker.add_busy_interval((resource_maybe_busy_start, resource_maybe_busy_end))
+                worker.add_busy_interval(self, (resource_maybe_busy_start, resource_maybe_busy_end))
                 # add assertions. If worker is selected then sync the resource with the task
                 selected_variable = resource.selection_dict[worker]
                 length_assert = resource_maybe_busy_start + self.duration == resource_maybe_busy_end
@@ -96,7 +96,7 @@ class Task(_NamedUIDObject):
             resource_busy_start = Int('%s_busy_%s_start' % (resource.name, self.name))
             resource_busy_end = Int('%s_busy_%s_end' % (resource.name, self.name))
             # create the busy interval for the resource
-            resource.add_busy_interval((resource_busy_start, resource_busy_end))
+            resource.add_busy_interval(self, (resource_busy_start, resource_busy_end))
             # set the busy resource to keep synced with the task
             self.add_assertion(resource_busy_start + self.duration == resource_busy_end)
             self.add_assertion(resource_busy_start ==  self.start)

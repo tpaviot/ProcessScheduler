@@ -26,14 +26,20 @@ class _Resource(_NamedUIDObject):
     def __init__(self, name: str):
         super().__init__(name)
 
-        # for each resource, we define a list that contains periods for which
-        # the resource is busy, for instance busy_intervals can be [(1,3), (5, 7)]
-        self.busy_intervals = [] # type: List[Tuple[ArithRef, ArithRef]]
+        # for each resource, we define a dict that stores
+        # all tasks and busy intervals of the resource.
+        # busy intervals can be for example [(1,3), (5, 7)]
+        self.busy_intervals = {} # type: Dict[Task, Tuple[ArithRef, ArithRef]]
 
-    def add_busy_interval(self, interval: Tuple[ArithRef, ArithRef]):
+    def add_busy_interval(self, task, interval: Tuple[ArithRef, ArithRef]):
         """ add an interval in which the resource is busy """
         # an interval is considered as a tuple (begin, end)
-        self.busy_intervals.append(interval)
+        if not task in self.busy_intervals:
+            self.busy_intervals[task] = interval
+
+    def get_busy_intervals(self) -> List[Tuple[ArithRef, ArithRef]]:
+        """ returns the list of all busy intervals """
+        return list(self.busy_intervals.values())
 
 class Worker(_Resource):
     """ A worker is an atomic resource that cannot be split into smaller parts.
