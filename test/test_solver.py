@@ -190,7 +190,7 @@ class TestSolver(unittest.TestCase):
         # then add the objective and look for another solution
         problem.add_objective_makespan()
         # another solution
-        self.assertTrue(_solve_problem(problem))
+        self.assertTrue(_solve_problem(problem, verbose=True))
         horizon_with_optimization = problem.scheduled_horizon
         # horizon_with_optimization should be less than horizon_without_optimization
         self.assertLess(horizon_with_optimization, horizon_without_optimization)
@@ -286,6 +286,16 @@ class TestSolver(unittest.TestCase):
             success = solver.find_another_solution(task_1.start)
         # there should be 5 solutions
         self.assertEqual(solutions, [0, 1, 2, 3, 4])
+
+    def test_find_another_solution_solve_before(self):
+        problem = ps.SchedulingProblem('FindAnotherSolutionSolveBefore', horizon=6)
+        solutions =[]
+        # only one task, there are many diffrent solutions
+        task_1 = ps.FixedDurationTask('task1', duration=2)
+        problem.add_task(task_1)
+        solver = ps.SchedulingSolver(problem)
+        result = solver.find_another_solution() # error, first have to solve
+        self.assertFalse(result)
 
     #
     # Total work_amount, resource productivity
