@@ -294,7 +294,7 @@ class TestSolver(unittest.TestCase):
         task_1 = ps.FixedDurationTask('task1', duration=2)
         problem.add_task(task_1)
         solver = ps.SchedulingSolver(problem)
-        result = solver.find_another_solution() # error, first have to solve
+        result = solver.find_another_solution(task_1.start) # error, first have to solve
         self.assertFalse(result)
 
     #
