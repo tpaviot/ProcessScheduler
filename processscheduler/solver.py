@@ -157,7 +157,9 @@ class SchedulingSolver:
             return False
 
         if sat_result == unknown:
-            print("No solution can be found for problem %s." % self._problem.name)
+            reason = self._solver.reason_unknown()
+            print("No solution can be found for problem %s because: %s" % (self._problem.name,
+                                                                           reason))
             return False
 
         return True
@@ -194,3 +196,8 @@ class SchedulingSolver:
         current_variable_value = self.current_solution[variable].as_long()
         self._solver.add(variable != current_variable_value)
         return self.solve()
+
+    def export_to_smt2(self, smt_filename):
+        """ export the model to a smt file to be processed by another SMT solver """
+        with open(smt_filename, 'w') as outfile:
+            outfile.write(self._solver.to_smt2())
