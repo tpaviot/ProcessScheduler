@@ -15,7 +15,7 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 from typing import List, Optional, Tuple
 import warnings
 
-from z3 import ArithRef, Bool, PbLe, Xor
+from z3 import ArithRef, Bool, PbEq, PbGe, PbLe, Xor
 
 from processscheduler.base import _NamedUIDObject, is_positive_integer
 
@@ -65,11 +65,20 @@ class Worker(_Resource):
 class AlternativeWorkers(_Resource):
     """ Class representing the selection of n workers chosen among a list
     of possible workers """
-    def __init__(self, list_of_workers: List[_Resource], number_of_workers: Optional[int] = 1):
+    def __init__(self,
+                 list_of_workers: List[_Resource],
+                 nb_workers: Optional[int] = 1,
+                 kind: Optional[str] = 'exact'):
         """ create an instance of the AlternativeWorkers class. """
         super().__init__('')
+
+        problem_function = {'atleast': PbGe, 'atmost': PbLe, 'exact': PbEq}
+
+        if kind not in problem_function:
+            raise ValueError("kind must be either 'exact', 'atleast' or 'atmost'")
+
         self.list_of_workers = list_of_workers
-        self.number_of_workers = number_of_workers
+        self.nb_workers = nb_workers
 
         # a dict that maps workers and selected boolean
         self.selection_dict = {}
@@ -85,5 +94,5 @@ class AlternativeWorkers(_Resource):
         # the others must be False
         # see https://github.com/Z3Prover/z3/issues/694
         # and https://stackoverflow.com/questions/43081929/k-out-of-n-constraint-in-z3py
-        self.selection_assertion = PbLe([(boolean, True) for boolean in selection_list],
-                                        number_of_workers)
+        self.selection_assertion = problem_function[kind]([(boolean, True) for boolean in selection_list],
+                                                          nb_workers)

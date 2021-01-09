@@ -131,6 +131,44 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(len(task_2.assigned_resources), 1)
         self.assertFalse(task_1.assigned_resources == task_2.assigned_resources)
 
+    def test_alternative_workers_2(self) -> None:
+                # problem
+        pb_alt = ps.SchedulingProblem("AlternativeWorkerExample")
+
+        # tasks
+        t1 = ps.FixedDurationTask('t1', duration=3)
+        t2 = ps.FixedDurationTask('t2', duration=2)
+        t3 = ps.FixedDurationTask('t3', duration=2)
+        t4 = ps.FixedDurationTask('t4', duration=2)
+        t5 = ps.FixedDurationTask('t5', duration=2)
+        pb_alt.add_tasks([t1, t2, t3, t4, t5])
+
+        # resource requirements
+        w1 = ps.Worker('W1')
+        w2 = ps.Worker('W2')
+        w3 = ps.Worker('W3')
+        w4 = ps.AlternativeWorkers([w1, w2, w3], nb_workers=1, kind='exact')
+        w5 = ps.AlternativeWorkers([w1, w2, w3], nb_workers=2, kind='atmost')
+        w6 = ps.AlternativeWorkers([w1, w2, w3], nb_workers=3, kind='atleast')
+
+        pb_alt.add_resources([w1, w2, w3])
+
+        # resource assignement
+        t1.add_required_resource(w1)  # t1 only needs w1
+        t2.add_required_resource(w2)  # t2 only needs w2
+        t3.add_required_resource(w4)  # t3 needs one of w1, 2 or 3
+        t4.add_required_resource(w5)  # t4 needs at most 2 of w1, w2 or 3
+        t5.add_required_resource(w6)  # t5 needs at least 3 of w1, w2 or w3
+
+        # add a makespan objective
+        pb_alt.add_objective_makespan()
+
+        # solve
+        solver1 = ps.SchedulingSolver(pb_alt, verbosity=False)
+        solver1.solve()
+
+        self.assertEqual(pb_alt.scheduled_horizon, 7)
+
     def test_unsat_1(self):
         problem = ps.SchedulingProblem('Unsat1')
 
@@ -289,7 +327,6 @@ class TestSolver(unittest.TestCase):
 
     def test_find_another_solution_solve_before(self):
         problem = ps.SchedulingProblem('FindAnotherSolutionSolveBefore', horizon=6)
-        solutions =[]
         # only one task, there are many diffrent solutions
         task_1 = ps.FixedDurationTask('task1', duration=2)
         problem.add_task(task_1)
