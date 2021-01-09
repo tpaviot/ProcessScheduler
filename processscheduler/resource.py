@@ -13,8 +13,9 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 from typing import List, Optional, Tuple
+import warnings
 
-from z3 import ArithRef, Bool, PbLe
+from z3 import ArithRef, Bool, PbLe, Xor
 
 from processscheduler.base import _NamedUIDObject, is_positive_integer
 
@@ -31,11 +32,22 @@ class _Resource(_NamedUIDObject):
         # busy intervals can be for example [(1,3), (5, 7)]
         self.busy_intervals = {} # type: Dict[Task, Tuple[ArithRef, ArithRef]]
 
-    def add_busy_interval(self, task, interval: Tuple[ArithRef, ArithRef]):
+    def add_busy_interval(self, task, interval: Tuple[ArithRef, ArithRef]) -> None:
         """ add an interval in which the resource is busy """
-        # an interval is considered as a tuple (begin, end)
-        if not task in self.busy_intervals:
-            self.busy_intervals[task] = interval
+        if task in self.busy_intervals:
+            warnings.warn('%s is already defined as a required resource for task %s' % (self.name,
+                                                                                        task.name))
+            return False
+        # add the assertions: this new interval must not overlap with all the
+        # intervals already defined
+        start, end = interval
+        for start_task_i, end_task_i in self.get_busy_intervals():
+            self.add_assertion(Xor(start_task_i >= end, start >= end_task_i))
+
+        # finally add this interval to the dict
+        self.busy_intervals[task] = interval
+
+        return True
 
     def get_busy_intervals(self) -> List[Tuple[ArithRef, ArithRef]]:
         """ returns the list of all busy intervals """

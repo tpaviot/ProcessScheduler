@@ -12,12 +12,11 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-import itertools
 import time
 from typing import Optional
 import warnings
 
-from z3 import (SolverFor,Int, Or, Xor, Sum, unsat,
+from z3 import (SolverFor,Int, Or, Sum, unsat,
                 ArithRef, unknown, Optimize, set_option)
 
 from processscheduler.base import ObjectiveType
@@ -74,7 +73,10 @@ class SchedulingSolver:
         for constraint in self._problem._constraints:
             self._solver.add(constraint)
 
-        self.process_resource_requirements()
+        # process resources requirements
+        for ress in self._problem.get_resources():
+            self._solver.add(ress.get_assertions())
+
         self.process_work_amount()
         self.create_objectives()
 
@@ -110,22 +112,6 @@ class SchedulingSolver:
                 for tsk in tasks:
                     self._solver.add(maxi >= tsk.start)
                 self._solver.minimize(maxi)
-
-    def process_resource_requirements(self) -> None:
-        """ force non overlapping of resources busy intervals """
-        for resource in self._problem.resources.values():  # loop over resources
-            intervals = resource.get_busy_intervals()
-            if len(intervals) <= 1:  # no need to carry about overlapping, only one task
-                continue
-            # get all pairs combination
-            all_pairs = list(itertools.combinations(range(len(intervals)), r=2))
-
-            for pair in all_pairs:
-                i, j = pair
-                start_task_i, end_task_i = intervals[i]
-                start_task_j, end_task_j = intervals[j]
-                # add the Xor constraint
-                self._solver.add(Xor(start_task_i >= end_task_j, start_task_j >= end_task_i))
 
     def process_work_amount(self) -> None:
         """ for each task, compute the total work for all required resources """
