@@ -49,6 +49,11 @@ maybe performed either by:
     driller_1 = Worker('Driller1')
     driller_2 = Worker('Driller2')
     driller_3 = Worker('Driller3')
-    drilling_hole.ad_required_resource(AlternativeWorkers([driller_1, driller_2, driller_3], 1))
+    drilling_hole.ad_required_resource(AlternativeWorkers([driller_1, driller_2, driller_3],
+                                       nb_workers=1,
+                                       kind='exact'))
 
-The last 1 parameters tells the solver to choose 1 resource to perform the task. The number of workers is at least 1, and at most :math:`n`, under the condition that :math:`n` is smaller than the number of workers.
+This tells the solver to select *exactly 1* resource among the list of workers able to process the task. The :attr:`kind` parameter can take either :const:`'exact'` (default value), :const:`'atleast'` or :const:`'atmost'` values.
+
+
+:const:`nb_workers` can take any integer between 1 (default value) and the number of capable workers in the list.
