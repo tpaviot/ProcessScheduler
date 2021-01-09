@@ -75,15 +75,15 @@ class Task(_NamedUIDObject):
                 worker.add_busy_interval(self, (resource_maybe_busy_start, resource_maybe_busy_end))
                 # add assertions. If worker is selected then sync the resource with the task
                 selected_variable = resource.selection_dict[worker]
-                length_assert = resource_maybe_busy_start + self.duration == resource_maybe_busy_end
-                start_synced_assert = resource_maybe_busy_start ==  self.start
-                schedule_as_usual = And(length_assert, start_synced_assert)
+                schedule_as_usual = And(resource_maybe_busy_start ==  self.start,
+                                        resource_maybe_busy_end ==  self.end)
                 # in the case the worker is selected
                 # else: reject in the past !! (i.e. this resource will be scheduled in the past)
                 # to a place where they cannot conflict with the schedule
                 # and with a zero busy time, that mean they don't contribute in cost
                 # or work amount
-                move_to_past = And(resource_maybe_busy_start == -1, resource_maybe_busy_end == -1)
+                move_to_past = And(resource_maybe_busy_start == -1,
+                                   resource_maybe_busy_end == -1)
                 # define the assertion ...
                 assertion = If(selected_variable, schedule_as_usual, move_to_past)
                 # ... and store it into the task assertions list
