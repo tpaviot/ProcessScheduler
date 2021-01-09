@@ -17,6 +17,7 @@ A a 100% pure python library to compute resource-constrained task schedules. It 
    objectives
    solving
    solver_debug_mode
+   gantt
    getting-started
    api
 
