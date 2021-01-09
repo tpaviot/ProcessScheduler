@@ -132,7 +132,7 @@ class TestSolver(unittest.TestCase):
         self.assertFalse(task_1.assigned_resources == task_2.assigned_resources)
 
     def test_alternative_workers_2(self) -> None:
-                # problem
+        # problem
         pb_alt = ps.SchedulingProblem("AlternativeWorkerExample")
 
         # tasks
@@ -376,6 +376,7 @@ class TestSolver(unittest.TestCase):
         self.assertTrue(success)
         solver.export_to_smt2('big_random_problem.smt2')
         self.assertTrue(os.path.isfile('big_random_problem.smt2'))
+
 
 if __name__ == "__main__":
     unittest.main()
