@@ -233,20 +233,34 @@ class TestSolver(unittest.TestCase):
         # horizon_with_optimization should be less than horizon_without_optimization
         self.assertLess(horizon_with_optimization, horizon_without_optimization)
 
-    def test_flowtime_objective(self):
+    def test_flowtime_objective_big_problem(self):
         problem = _get_big_random_problem('SolveFlowTimeObjective', 20)  # long to compute
         problem.add_objective_flowtime()
         self.assertTrue(_solve_problem(problem))
 
-    def test_start_latest_objective(self):
+    def test_start_latest_objective_big_problem(self):
         problem = _get_big_random_problem('SolveStartLatestObjective', 1000)
         problem.add_objective_start_latest()
         self.assertTrue(_solve_problem(problem))
 
-    def test_start_earliest_objective(self):
+    def test_start_earliest_objective_big_problem(self):
         problem = _get_big_random_problem('SolveStartEarliestObjective', 1000)
         problem.add_objective_start_earliest()
         self.assertTrue(_solve_problem(problem))
+
+    def test_start_latest(self):
+        problem = ps.SchedulingProblem('SolveStartLatest', horizon=51)
+        # only one task, the solver should schedule a start time at 0
+        task_1 = ps.FixedDurationTask('task1', duration=2)
+        task_2 = ps.FixedDurationTask('task2', duration=3)
+        problem.add_tasks([task_1, task_2])
+        problem.add_constraint(ps.TaskPrecedence(task_1, task_2))
+        problem.add_objective_start_latest()
+        self.assertTrue(_solve_problem(problem))
+        # check that the task is not scheduled to start à 0
+        # the only solution is 1
+        self.assertEqual(task_1.scheduled_start, 51 - (3 + 2))
+        self.assertEqual(task_2.scheduled_start, 51 - 3)
 
     #
     # Logical Operators
