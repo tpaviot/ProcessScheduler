@@ -286,6 +286,16 @@ class TestFeatures(unittest.TestCase):
                                          ps.TaskStartAt(t_2, 6)) # else
         self.assertIsInstance(ite_constraint, ps.BoolRef)
 
+    #
+    # Indicators
+    #
+    def test_create_indicator(self) -> None:
+        pb = ps.SchedulingProblem('CreateIndicator')
+        i_1 = ps.Indicator('SquareHorizon', pb.horizon ** 2)  # ArithRef
+        i_2 = ps.Indicator('IsLooooong ?', pb.horizon > 1000)  # BoolRef
+        with self.assertRaises(TypeError):
+            i_3 = ps.Indicator('foo', 4)
+
 
 if __name__ == "__main__":
     unittest.main()

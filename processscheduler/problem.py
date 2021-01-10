@@ -19,9 +19,11 @@ from z3 import Bool, BoolRef, Int, ModelRef
 
 from processscheduler.base import (ObjectiveType, _NamedUIDObject,
                                    is_strict_positive_integer)
+from processscheduler.objective import Indicator
 from processscheduler.resource import _Resource
 from processscheduler.task import Task
 from processscheduler.task_constraint import _Constraint
+
 
 class SchedulingProblem(_NamedUIDObject):
     """A scheduling problem
@@ -37,8 +39,9 @@ class SchedulingProblem(_NamedUIDObject):
         self.resources = {} # type: Dict[str, _Resource]
         # the constraints are defined in the scenario
         self._constraints = [] # type: List[BoolRef]
-        # multiple objectives is possible
-        self.objectives = [] # type: List[ObjectiveType]
+        # list of define indicators
+        self.objectives = [] # TODO remove
+        self.indicators = [] # type: List[Indicator]
         # the solution
         self._solution = None # type: ModelRef
         # define the horizon variable
@@ -83,8 +86,23 @@ class SchedulingProblem(_NamedUIDObject):
                 if resource_should_be_assigned and req_res not in task.assigned_resources:
                     task.assigned_resources.append(req_res)
 
-        # at last, set the horizon solution
+        # set the horizon solution
         self.scheduled_horizon = solution[self.horizon].as_long()
+
+        # set the indicators values
+        for indicator in self.indicators:
+            indicator.scheduled_value = solution[indicator.indicator_variable].as_long()
+
+    def add_indicator(self, indicator: Indicator) -> bool:
+        """ add an indicatr to the problem """
+        if not isinstance(indicator, Indicator):
+            raise TypeError('indicator must be a Indicator object')
+        if indicator not in self.indicators:
+            self.indicators.append(indicator)
+        else:
+            warnings.warn('indicator %s already part of the problem' % indicator)
+            return False
+        return True
 
     def add_task(self, task: Task) -> bool:
         """ add a single task to the problem """
@@ -170,10 +188,11 @@ class SchedulingProblem(_NamedUIDObject):
     def print_solution(self) -> None:
         """ print solution to console """
         print("Problem %s solution:" % self.name)
+        print("\thorizon: %i" % self.scheduled_horizon)
         if self._solution is not None:
             for task in self._tasks.values():
                 ress = task.assigned_resources
-                print(task.name, ":", ress, end=";")
+                print("\t", task.name, ":", ress, end=";")
                 print('start:', task.scheduled_start, end=";")
                 print('end:', task.scheduled_end)
         else:
@@ -182,8 +201,9 @@ class SchedulingProblem(_NamedUIDObject):
     def render_gantt_matplotlib(self,
                                 fig_size:Optional[Tuple[int, int]] = (9,6),
                                 show_plot: Optional[Bool] = True,
+                                show_indicators: Optional[Bool] = True,
                                 render_mode: Optional[str] = 'Resources',
-                                fig_filename: Optional[str] = None,) -> None:
+                                fig_filename: Optional[str] = None) -> None:
         """ generate a gantt diagram using matplotlib.
         Inspired by
         https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
@@ -194,6 +214,7 @@ class SchedulingProblem(_NamedUIDObject):
         try:
             import matplotlib.pyplot as plt
             from matplotlib.colors import LinearSegmentedColormap
+            from matplotlib.patches import Rectangle
         except ImportError:
             warnings.warn('matplotlib not installed')
             return None
@@ -280,6 +301,13 @@ class SchedulingProblem(_NamedUIDObject):
                                                    end - start,
                                                    task_colors[task_name],
                                                    task_name)
+        # display indicator values in the legend area
+        if self.indicators and show_indicators:
+            for indicator in self.indicators:
+                gantt.plot([], [], ' ', label="%s: %i" % (indicator.name,
+                                                          indicator.scheduled_value))
+            gantt.legend(title='Indicators', title_fontsize='large')
+
         if fig_filename is not None:
             plt.savefig(fig_filename)
 

@@ -167,7 +167,7 @@ class TestSolver(unittest.TestCase):
         solver1 = ps.SchedulingSolver(pb_alt, verbosity=False)
         solver1.solve()
 
-        self.assertEqual(pb_alt.scheduled_horizon, 7)
+        self.assertEqual(pb_alt.scheduled_horizon, 5)
 
     def test_unsat_1(self):
         problem = ps.SchedulingProblem('Unsat1')
@@ -390,6 +390,21 @@ class TestSolver(unittest.TestCase):
         self.assertTrue(success)
         solver.export_to_smt2('big_random_problem.smt2')
         self.assertTrue(os.path.isfile('big_random_problem.smt2'))
+
+    #
+    # Indicators
+    #
+    def test_compute_indicator(self) -> None:
+        problem = ps.SchedulingProblem('ComputeIndicator', horizon=2)
+        t_1 = ps.FixedDurationTask('t1', 2)
+        t_2 = ps.FixedDurationTask('t2', 2)
+        problem.add_tasks([t_1, t_2])
+        i_1 = ps.Indicator('FlowTime', t_1.end + t_2.end)
+        problem.add_indicator(i_1)
+        solver = ps.SchedulingSolver(problem)
+        success = solver.solve()
+        self.assertTrue(success)
+        self.assertEqual(i_1.scheduled_value, 4)
 
 
 if __name__ == "__main__":

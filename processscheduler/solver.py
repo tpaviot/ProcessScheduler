@@ -77,6 +77,10 @@ class SchedulingSolver:
         for ress in self._problem.get_resources():
             self._solver.add(ress.get_assertions())
 
+        # process indicators
+        for indic in self._problem.indicators:
+            self._solver.add(indic.get_assertions())
+
         self.process_work_amount()
         self.create_objectives()
 
