@@ -17,7 +17,7 @@ from typing import Union
 from z3 import And, Xor, Or, Not, If, Implies, BoolRef
 
 from processscheduler.base import _NamedUIDObject
-
+#import processscheduler.context as ps_context
 
 #
 # Utility functions

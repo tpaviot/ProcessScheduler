@@ -18,6 +18,7 @@ import warnings
 from z3 import ArithRef, Bool, PbEq, PbGe, PbLe, Xor
 
 from processscheduler.base import _NamedUIDObject, is_positive_integer
+import processscheduler.context as ps_context
 
 #
 # Resources class definition
@@ -61,6 +62,9 @@ class Worker(_Resource):
         if not is_positive_integer(productivity):
             raise TypeError('productivity must be an integer >= 0')
         self.productivity = productivity
+
+        # only worker are add to the main context, not AlternativeWorkers
+        ps_context.main_context.add_resource(self)
 
 class AlternativeWorkers(_Resource):
     """ Class representing the selection of n workers chosen among a list

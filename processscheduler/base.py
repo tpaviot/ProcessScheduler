@@ -12,7 +12,6 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from enum import IntEnum
 from typing import List
 import uuid
 
@@ -26,21 +25,6 @@ def is_strict_positive_integer(value: int) -> bool:
 
 def is_positive_integer(value: int) -> bool:
     return isinstance(value, int) and value >= 0
-#
-# Base enum types
-#
-class ObjectiveType(IntEnum):
-    """" objectives, i.e. the target of the optimization workflow (minimize or maximize) """
-    MAKESPAN = 1
-    FLOWTIME = 2
-    EARLIEST = 3
-    LATEST = 4
-
-class PrecedenceType(IntEnum):
-    """ precedence types """
-    LAX = 1
-    STRICT = 2
-    TIGHT = 3
 
 #
 # _NamedUIDObject, name and uid for hashing

@@ -29,10 +29,8 @@ def _get_big_random_problem(name:str, n: int) -> ps.SchedulingProblem:
 
     tasks = [ps.FixedDurationTask('task%i' % i,
                                   duration=random.randint(1, n // 10)) for i in range(n)]
-    problem.add_tasks(tasks)
 
     workers = [ps.Worker('task%i' % i) for i in range(n * 3)]
-    problem.add_resources(workers)
 
     # for each task, add three single required workers
     for task in tasks:
@@ -51,7 +49,7 @@ class TestSolver(unittest.TestCase):
     def test_schedule_single_fixed_duration_task(self) -> None:
         problem = ps.SchedulingProblem('SingleFixedDurationTaskScheduling', horizon=2)
         task = ps.FixedDurationTask('task', duration=2)
-        problem.add_task(task)
+        #problem.add_task(task)
         self.assertTrue(_solve_problem(problem))
         # task should have been scheduled with start at 0
         # and end at 2
@@ -61,7 +59,7 @@ class TestSolver(unittest.TestCase):
     def test_schedule_single_variable_duration_task(self) -> None:
         problem = ps.SchedulingProblem('SingleVariableDurationTaskScheduling')
         task = ps.VariableDurationTask('task')
-        problem.add_task(task)
+        #problem.add_task(task)
 
         # add two constraints to set start and end
         problem.add_constraint(ps.TaskStartAt(task, 1))
@@ -78,14 +76,11 @@ class TestSolver(unittest.TestCase):
         problem = ps.SchedulingProblem('TwoFixedDurationTasksWithPrecedence', horizon=5)
         task_1 = ps.FixedDurationTask('task1', duration=2)
         task_2 = ps.FixedDurationTask('task2', duration=3)
-        problem.add_tasks([task_1, task_2])
 
         # add two constraints to set start and end
         problem.add_constraint(ps.TaskStartAt(task_1, 0))
-        prec_constraint = ps.TaskPrecedence(task_before=task_1,
-                                            task_after=task_2)
-        print(prec_constraint)
-        problem.add_constraint(prec_constraint)
+        problem.add_constraint(ps.TaskPrecedence(task_before=task_1,
+                                                 task_after=task_2))
 
         self.assertTrue(_solve_problem(problem))
         self.assertEqual(task_1.scheduled_start, 0)
@@ -97,10 +92,10 @@ class TestSolver(unittest.TestCase):
         problem = ps.SchedulingProblem('SingleTaskSingleResource', horizon=7)
 
         task = ps.FixedDurationTask('task', duration=7)
-        problem.add_task(task)
+        #problem.add_task(task)
 
         worker = ps.Worker('worker')
-        problem.add_resource(worker)
+        #problem.add_resource(worker)
 
         task.add_required_resource(worker)
 
@@ -116,11 +111,11 @@ class TestSolver(unittest.TestCase):
         # two tasks
         task_1 = ps.FixedDurationTask('task1', duration=3)
         task_2 = ps.FixedDurationTask('task2', duration=2)
-        problem.add_tasks([task_1, task_2])
+        #problem.add_tasks([task_1, task_2])
         # two workers
         worker_1 = ps.Worker('worker1')
         worker_2 = ps.Worker('worker2')
-        problem.add_resources([worker_1, worker_2])
+        #problem.add_resources([worker_1, worker_2])
 
         task_1.add_required_resource(ps.AlternativeWorkers([worker_1, worker_2], 1))
         task_2.add_required_resource(ps.AlternativeWorkers([worker_1, worker_2], 1))
@@ -141,7 +136,7 @@ class TestSolver(unittest.TestCase):
         t3 = ps.FixedDurationTask('t3', duration=2)
         t4 = ps.FixedDurationTask('t4', duration=2)
         t5 = ps.FixedDurationTask('t5', duration=2)
-        pb_alt.add_tasks([t1, t2, t3, t4, t5])
+        #pb_alt.add_tasks([t1, t2, t3, t4, t5])
 
         # resource requirements
         w1 = ps.Worker('W1')
@@ -151,7 +146,7 @@ class TestSolver(unittest.TestCase):
         w5 = ps.AlternativeWorkers([w1, w2, w3], nb_workers=2, kind='atmost')
         w6 = ps.AlternativeWorkers([w1, w2, w3], nb_workers=3, kind='atleast')
 
-        pb_alt.add_resources([w1, w2, w3])
+        #pb_alt.add_resources([w1, w2, w3])
 
         # resource assignement
         t1.add_required_resource(w1)  # t1 only needs w1
@@ -173,7 +168,6 @@ class TestSolver(unittest.TestCase):
         problem = ps.SchedulingProblem('Unsat1')
 
         task = ps.FixedDurationTask('task', duration=7)
-        problem.add_task(task)
 
         # add two constraints to set start and end
         # impossible to satisfy both
@@ -186,9 +180,9 @@ class TestSolver(unittest.TestCase):
         """ take the single task/single resource and display output """
         problem = ps.SchedulingProblem('RenderSolution', horizon=7)
         task = ps.FixedDurationTask('task', duration=7)
-        problem.add_task(task)
+        #problem.add_task(task)
         worker = ps.Worker('worker')
-        problem.add_resource(worker)
+        #problem.add_resource(worker)
         task.add_required_resource(worker)
         self.assertTrue(_solve_problem(problem))
         # display solution, using both ascii or matplotlib
@@ -241,7 +235,7 @@ class TestSolver(unittest.TestCase):
     def test_start_latest_objective_big_problem(self):
         problem = _get_big_random_problem('SolveStartLatestObjective', 1000)
         problem.add_objective_start_latest()
-        self.assertTrue(_solve_problem(problem))
+        self.assertTrue(_solve_problem(problem, verbose=True))
 
     def test_start_earliest_objective_big_problem(self):
         problem = _get_big_random_problem('SolveStartEarliestObjective', 1000)
@@ -253,8 +247,9 @@ class TestSolver(unittest.TestCase):
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask('task1', duration=2)
         task_2 = ps.FixedDurationTask('task2', duration=3)
-        problem.add_tasks([task_1, task_2])
+        
         problem.add_constraint(ps.TaskPrecedence(task_1, task_2))
+
         problem.add_objective_start_latest()
         self.assertTrue(_solve_problem(problem))
         # check that the task is not scheduled to start à 0
@@ -269,7 +264,7 @@ class TestSolver(unittest.TestCase):
         problem = ps.SchedulingProblem('OperatorNot', horizon=4)
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask('task1', duration=3)
-        problem.add_task(task_1)
+        #problem.add_task(task_1)
         problem.add_constraint(ps.not_(ps.TaskStartAt(task_1, 0)))
         self.assertTrue(_solve_problem(problem))
         # check that the task is not scheduled to start à 0
@@ -280,7 +275,7 @@ class TestSolver(unittest.TestCase):
         problem = ps.SchedulingProblem('OperatorNotAnd', horizon=4)
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask('task1', duration=2)
-        problem.add_task(task_1)
+        #problem.add_task(task_1)
         problem.add_constraint(ps.and_(ps.not_(ps.TaskStartAt(task_1, 0)),
                                        ps.not_(ps.TaskStartAt(task_1, 1))))
         self.assertTrue(_solve_problem(problem, verbose=True))
@@ -295,7 +290,6 @@ class TestSolver(unittest.TestCase):
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask('task1', duration=2)
         task_2 = ps.FixedDurationTask('task2', duration=2)
-        problem.add_tasks([task_1, task_2])
         problem.add_constraint(ps.TaskStartAt(task_1, 1))
         problem.add_constraint(ps.implies(task_1.start == 1,
                                           ps.TaskStartAt(task_2, 4)))
@@ -311,7 +305,7 @@ class TestSolver(unittest.TestCase):
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask('task1', duration=2)
         task_2 = ps.FixedDurationTask('task2', duration=2)
-        problem.add_tasks([task_1, task_2])
+        #problem.add_tasks([task_1, task_2])
         problem.add_constraint(ps.TaskStartAt(task_1, 1))
         problem.add_constraint(ps.if_then_else(task_1.start == 0, # this condition is False
                                                ps.TaskStartAt(task_2, 4), # assertion not set
@@ -329,7 +323,6 @@ class TestSolver(unittest.TestCase):
         solutions =[]
         # only one task, there are many diffrent solutions
         task_1 = ps.FixedDurationTask('task1', duration=2)
-        problem.add_task(task_1)
         solver = ps.SchedulingSolver(problem)
         success = solver.solve()
 
@@ -343,7 +336,6 @@ class TestSolver(unittest.TestCase):
         problem = ps.SchedulingProblem('FindAnotherSolutionSolveBefore', horizon=6)
         # only one task, there are many diffrent solutions
         task_1 = ps.FixedDurationTask('task1', duration=2)
-        problem.add_task(task_1)
         solver = ps.SchedulingSolver(problem)
         result = solver.find_another_solution(task_1.start) # error, first have to solve
         self.assertFalse(result)
@@ -355,10 +347,8 @@ class TestSolver(unittest.TestCase):
         problem = ps.SchedulingProblem('WorkAmount')
         # only one task, there are many diffrent solutions
         task_1 = ps.VariableDurationTask('task1', work_amount=11)
-        problem.add_task(task_1)
         # create one worker with a productivity of 2
         worker_1 = ps.Worker('Worker1', productivity=2)
-        problem.add_resource(worker_1)
         task_1.add_required_resource(worker_1)
         # solve
         self.assertTrue(_solve_problem(problem))
@@ -371,11 +361,9 @@ class TestSolver(unittest.TestCase):
         problem = ps.SchedulingProblem('WorkAmount', horizon=4)
         # only one task, there are many diffrent solutions
         task_1 = ps.VariableDurationTask('task1', work_amount=11)
-        problem.add_task(task_1)
         # create two workers
         worker_1 = ps.Worker('Worker1', productivity=2)
         worker_2 = ps.Worker('Worker2', productivity=3)
-        problem.add_resources([worker_1, worker_2])
         task_1.add_required_resources([worker_1, worker_2])
         # solve
         self.assertTrue(_solve_problem(problem))
@@ -398,9 +386,9 @@ class TestSolver(unittest.TestCase):
         problem = ps.SchedulingProblem('ComputeIndicator', horizon=2)
         t_1 = ps.FixedDurationTask('t1', 2)
         t_2 = ps.FixedDurationTask('t2', 2)
-        problem.add_tasks([t_1, t_2])
+
         i_1 = ps.Indicator('FlowTime', t_1.end + t_2.end)
-        problem.add_indicator(i_1)
+
         solver = ps.SchedulingSolver(problem)
         success = solver.solve()
         self.assertTrue(success)

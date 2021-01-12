@@ -20,6 +20,8 @@ from z3 import Bool, Int, And, If
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer, is_positive_integer
 from processscheduler.resource import _Resource, Worker, AlternativeWorkers
 
+import processscheduler.context as ps_context
+
 class Task(_NamedUIDObject):
     """ a Task object """
     def __init__(self, name: str) -> None:
@@ -54,6 +56,9 @@ class Task(_NamedUIDObject):
 
         # optional flag, set to True if this task is optional, else True
         self.optional = False
+
+        # add this task to the current context
+        ps_context.main_context.add_task(self)
 
     def set_optional(self):
         self.optional = True

@@ -12,18 +12,17 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from typing import Dict, List, Optional, Tuple, Union, ValuesView
+from typing import Dict, List, Optional, Tuple, Union
 import warnings
 
-from z3 import Bool, BoolRef, Int, ModelRef
+from z3 import Bool, BoolRef, Int, ModelRef, Or, Sum
 
-from processscheduler.base import (ObjectiveType, _NamedUIDObject,
-                                   is_strict_positive_integer)
-from processscheduler.objective import Indicator
+from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
+from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective, BuiltinIndicator
 from processscheduler.resource import _Resource
 from processscheduler.task import Task
-from processscheduler.task_constraint import _Constraint
-
+#from processscheduler.task_constraint import _Constraint
+import processscheduler.context as ps_context
 
 class SchedulingProblem(_NamedUIDObject):
     """A scheduling problem
@@ -33,22 +32,27 @@ class SchedulingProblem(_NamedUIDObject):
     """
     def __init__(self, name: str, horizon: Optional[int] = None):
         super().__init__(name)
+        # the problem context, where all will be stored
+        # at creation
+        self.context = ps_context.SchedulingContext()
+        # set this context as global
+        ps_context.main_context = self.context
         # the list of tasks to be scheduled in this scenario
-        self._tasks = {} # type: Dict[str, Task]
-        # the list of resources available in this scenario
-        self.resources = {} # type: Dict[str, _Resource]
-        # the constraints are defined in the scenario
-        self._constraints = [] # type: List[BoolRef]
-        # list of define indicators
-        self.objectives = [] # TODO remove
-        self.indicators = [] # type: List[Indicator]
+        # self._tasks = {} # type: Dict[str, Task]
+        # # the list of resources available in this scenario
+        # self.resources = {} # type: Dict[str, _Resource]
+        # # the constraints are defined in the scenario
+        # self._constraints = [] # type: List[BoolRef]
+        # # list of define indicators
+        # self.indicators = [] # type: List[Indicator]
+        # self.objectives = [] # type: List[Union[Indicator, ArithRef]]
         # the solution
         self._solution = None # type: ModelRef
         # define the horizon variable
         self.horizon = Int('horizon')
         self.fixed_horizon = False  # set to True is horizon is fixed
         if is_strict_positive_integer(horizon):  # fixed_horizon
-            self._constraints.append(self.horizon == horizon)
+            self.context.add_constraint(self.horizon == horizon)
             self.fixed_horizon = True
         elif horizon is not None:
             raise TypeError('horizon must either be a strict positive integer or None')
@@ -61,14 +65,14 @@ class SchedulingProblem(_NamedUIDObject):
         self._solution = solution
 
         # set tasks start, end and duration solution
-        for task in self._tasks.values():
+        for task in self.context.tasks:
             task.scheduled_start = solution[task.start].as_long()
             task.scheduled_end = solution[task.end].as_long()
             task.scheduled_duration = solution[task.duration].as_long()
 
         # traverse all tasks to perform resources assignment
         # all required workers should be assigned
-        for task in self._tasks.values():
+        for task in self.context.tasks:
             # parse resources
             for req_res in task.required_resources:
                 # by default, resource_should_be_assigned is set to True
@@ -90,76 +94,80 @@ class SchedulingProblem(_NamedUIDObject):
         self.scheduled_horizon = solution[self.horizon].as_long()
 
         # set the indicators values
-        for indicator in self.indicators:
+        for indicator in self.context.indicators:
             indicator.scheduled_value = solution[indicator.indicator_variable].as_long()
 
-    def add_indicator(self, indicator: Indicator) -> bool:
-        """ add an indicatr to the problem """
-        if not isinstance(indicator, Indicator):
-            raise TypeError('indicator must be a Indicator object')
-        if indicator not in self.indicators:
-            self.indicators.append(indicator)
-        else:
-            warnings.warn('indicator %s already part of the problem' % indicator)
-            return False
-        return True
+    # def add_indicator(self, indicator: Indicator) -> bool:
+    #     """ add an indicatr to the problem """
+    #     if not isinstance(indicator, Indicator):
+    #         raise TypeError('indicator must be a Indicator object')
+    #     if indicator not in self.indicators:
+    #         self.indicators.append(indicator)
+    #     else:
+    #         warnings.warn('indicator %s already part of the problem' % indicator)
+    #         return False
+    #     return True
 
-    def add_task(self, task: Task) -> bool:
-        """ add a single task to the problem """
-        if not isinstance(task, Task):
-            raise TypeError('task must be a Task object')
-        task_name = task.name
-        if task_name not in self._tasks:
-            self._tasks[task_name] = task
-        else:
-            warnings.warn('task %s already part of the problem' % task)
-            return False
-        return True
+    # def add_task(self, task: Task) -> bool:
+    #     """ add a single task to the problem """
+    #     if not isinstance(task, Task):
+    #         raise TypeError('task must be a Task object')
+    #     task_name = task.name
+    #     if task_name not in self._tasks:
+    #         self._tasks[task_name] = task
+    #     else:
+    #         warnings.warn('task %s already part of the problem' % task)
+    #         return False
+    #     return True
 
-    def add_tasks(self, list_of_tasks: List[Task]) -> None:
-        """ adds tasks to the problem """
-        for task in list_of_tasks:
-            self.add_task(task)
+    # def add_tasks(self, list_of_tasks: List[Task]) -> None:
+    #     """ adds tasks to the problem """
+    #     for task in list_of_tasks:
+    #         self.add_task(task)
 
-    def add_resource(self, resource: _Resource) -> bool:
-        """ add a single resource to the problem """
-        # Prevent an AlternativeWorker to be added
-        if not isinstance(resource, _Resource):
-            raise TypeError('resource must be a _Resource object')
-        resource_name = resource.name
-        if resource_name not in self.resources:
-            self.resources[resource_name] = resource
-        else:
-            warnings.warn('Resource %s already part of the problem' % resource)
-            return False
-        return True
+    # def add_resource(self, resource: _Resource) -> bool:
+    #     """ add a single resource to the problem """
+    #     # Prevent an AlternativeWorker to be added
+    #     if not isinstance(resource, _Resource):
+    #         raise TypeError('resource must be a _Resource object')
+    #     resource_name = resource.name
+    #     if resource_name not in self.resources:
+    #         self.resources[resource_name] = resource
+    #     else:
+    #         warnings.warn('Resource %s already part of the problem' % resource)
+    #         return False
+    #     return True
 
-    def add_resources(self, list_of_resources: List[_Resource]) -> None:
-        """ add resources to the problem """
-        for resource in list_of_resources:
-            self.add_resource(resource)
+    # def add_resources(self, list_of_resources: List[_Resource]) -> None:
+    #     """ add resources to the problem """
+    #     for resource in list_of_resources:
+    #         self.add_resource(resource)
 
-    def get_tasks(self) -> ValuesView[Task]:
-        """ return the list of tasks """
-        return self._tasks.values()
+    # def get_tasks(self) -> ValuesView[Task]:
+    #     """ return the list of tasks """
+    #     return self._tasks.values()
 
-    def get_resources(self) -> ValuesView[_Resource]:
-        """ return the list of tasks """
-        return self.resources.values()
+    # def get_resources(self) -> ValuesView[_Resource]:
+    #     """ return the list of tasks """
+    #     return self.resources.values()
 
-    def add_constraint(self, constraint: Union[_Constraint, BoolRef]) -> None:
-        """ add a constraint to the problem """
-        if isinstance(constraint, _Constraint):
-            self._constraints.append(constraint.get_assertions())
-        elif isinstance(constraint, BoolRef):
-            self._constraints.append(constraint)
-        else:
-            raise TypeError("You must provide either a _Constraint or BoolRef instance.")
+    def add_constraint(self, constraint):
+        self.context.add_constraint(constraint)
+    # def add_constraint(self, constraint: Union[_Constraint, BoolRef]) -> None:
+    #     """ add a constraint to the problem """
+    #     if isinstance(constraint, _Constraint):
+    #         self._constraints.append(constraint.get_assertions())
+    #     elif isinstance(constraint, BoolRef):
+    #         self._constraints.append(constraint)
+    #     else:
+    #         raise TypeError("You must provide either a _Constraint or BoolRef instance.")
 
-    def add_constraints(self, list_of_constraints: List[_Constraint]) -> None:
+    def add_constraints(self, list_of_constraints) -> None:
         """ adds constraints to the problem """
-        for constraint in list_of_constraints:
-            self.add_constraint(constraint)
+        self.context.add_constraints(list_of_constraints)
+
+    # def add_objective(self, objective: Objective) -> None:
+    #     self.objectives.append(objective)
 
     def add_objective_makespan(self) -> bool:
         """ makespan objective
@@ -167,30 +175,44 @@ class SchedulingProblem(_NamedUIDObject):
         if self.fixed_horizon:
             warnings.warn('Horizon constrained to be fixed, no horizon optimization possible.')
             return False
-        self.objectives.append(ObjectiveType.MAKESPAN)
+        MinimizeObjective('MakeSpan', self.horizon)
         return True
 
     def add_objective_start_latest(self) -> None:
         """ maximize the minimum start time, i.e. all the tasks
         are scheduled as late as possible """
-        self.objectives.append(ObjectiveType.LATEST)
+        mini = Int('SmallestStartTime')
+        a = BuiltinIndicator('GreatestStartTime')
+        a.add_assertion(Or([mini == task.start for task in self.context.tasks]))
+        for tsk in self.context.tasks:
+            a.add_assertion(mini <= tsk.start)
+        a.indicator_variable=mini
+        MaximizeObjective('SmallestStartTime', mini)
 
     def add_objective_start_earliest(self) -> None:
         """ minimize the greatest start time, i.e. tasks are schedules
         as early as possible """
-        self.objectives.append(ObjectiveType.EARLIEST)
+        maxi = Int('GreatestStartTime')
+        a = BuiltinIndicator('GreatestStartTime')
+        a.add_assertion(Or([maxi == task.start for task in self.context.tasks]))
+        for tsk in self.context.tasks:
+            a.add_assertion(maxi >= tsk.start)
+        a.indicator_variable=maxi
+        MinimizeObjective('GreatestStartTimeObjective', maxi)
 
     def add_objective_flowtime(self) -> None:
         """ the flowtime is the sum of all ends, minimize. Be carful that
         it is contradictory with makespan """
-        self.objectives.append(ObjectiveType.FLOWTIME)
+        flow_time_expr = Sum([task.end for task in self.context.tasks])
+        smallest_start_time_indicator = Indicator('FlowTime', flow_time_expr)
+        MinimizeObjective('FlowTimeObjective', smallest_start_time_indicator)
 
     def print_solution(self) -> None:
         """ print solution to console """
         print("Problem %s solution:" % self.name)
         print("\thorizon: %i" % self.scheduled_horizon)
         if self._solution is not None:
-            for task in self._tasks.values():
+            for task in self.context.tasks:
                 ress = task.assigned_resources
                 print("\t", task.name, ":", ress, end=";")
                 print('start:', task.scheduled_start, end=";")
@@ -214,25 +236,24 @@ class SchedulingProblem(_NamedUIDObject):
         try:
             import matplotlib.pyplot as plt
             from matplotlib.colors import LinearSegmentedColormap
-            from matplotlib.patches import Rectangle
         except ImportError:
             warnings.warn('matplotlib not installed')
             return None
 
-        if not self.get_resources():
+        if not self.context.resources:
             render_mode = 'Tasks'
 
         # render mode is Resource by default, can be set to 'Task'
         if render_mode == 'Resources':
             plot_title = 'Resources schedule - %s' % self.name
             plot_ylabel = 'Resources'
-            plot_ticklabels = map(str, self.get_resources())
-            nbr_y_values = len(self.get_resources())
+            plot_ticklabels = map(str, self.context.resources)
+            nbr_y_values = len(self.context.resources)
         elif render_mode == 'Tasks':
             plot_title = 'Task schedule - %s' % self.name
             plot_ylabel = 'Tasks'
-            plot_ticklabels = map(str, self.get_tasks())
-            nbr_y_values = len(self.get_tasks())
+            plot_ticklabels = map(str, self.context.tasks)
+            nbr_y_values = len(self.context.tasks)
         else:
             raise ValueError("rendermode must be either 'Resources' or 'Tasks'")
 
@@ -247,11 +268,11 @@ class SchedulingProblem(_NamedUIDObject):
         # colormap definition
         cmap = LinearSegmentedColormap.from_list('custom blue',
                                                  ['#bbccdd','#ee3300'],
-                                                 N = len(self.get_tasks()) * 2) # nbr of colors
+                                                 N = len(self.context.tasks * 2)) # nbr of colors
         # defined a mapping between the tasks and the colors, so that
         # each task has the same color on both graphs
         task_colors = {}
-        for i, task in enumerate(self.get_tasks()):
+        for i, task in enumerate(self.context.tasks):
             task_colors[task.name] = cmap(i)
         # the task color is defined from the task name, this way the task has
         # already the same color, even if it is defined after
@@ -275,7 +296,7 @@ class SchedulingProblem(_NamedUIDObject):
 
         # in Tasks mode, create one line per task on the y axis
         if render_mode == 'Tasks':
-            for i, task in enumerate(self.get_tasks()):
+            for i, task in enumerate(self.context.tasks):
                 # build the bar text string
                 text = '%s' % task
                 if task.assigned_resources:
@@ -289,7 +310,7 @@ class SchedulingProblem(_NamedUIDObject):
                                            task_colors[task.name],
                                            text)
         elif render_mode == 'Resources':
-            for i, ress in enumerate(self.get_resources()):
+            for i, ress in enumerate(self.context.resources):
                 #each interval from the busy_intervals list is rendered as a bar
                 for task in ress.busy_intervals.keys():
                     task_name = task.name
@@ -302,8 +323,8 @@ class SchedulingProblem(_NamedUIDObject):
                                                    task_colors[task_name],
                                                    task_name)
         # display indicator values in the legend area
-        if self.indicators and show_indicators:
-            for indicator in self.indicators:
+        if self.context.indicators and show_indicators:
+            for indicator in self.context.indicators:
                 gantt.plot([], [], ' ', label="%s: %i" % (indicator.name,
                                                           indicator.scheduled_value))
             gantt.legend(title='Indicators', title_fontsize='large')

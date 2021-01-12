@@ -16,10 +16,10 @@ import time
 from typing import Optional
 import warnings
 
-from z3 import (SolverFor,Int, Or, Sum, unsat,
+from z3 import (SolverFor, Sum, unsat,
                 ArithRef, unknown, Optimize, set_option)
 
-from processscheduler.base import ObjectiveType
+from processscheduler.objective import MaximizeObjective, MinimizeObjective
 
 #
 # Solver class definition
@@ -37,6 +37,7 @@ class SchedulingSolver:
         parallel: True to enable mutlthreading, False by default
         """
         self._problem = problem
+        self.problem_context = problem.context
 
         self._verbosity = verbosity
         if verbosity:
@@ -46,7 +47,7 @@ class SchedulingSolver:
         set_option("timeout", max_time * 1000)  # in ms
 
         # create the solver
-        if self._problem.objectives:
+        if self.problem_context.objectives:
             self._solver = Optimize()  # Solver with optimization
             if verbosity:
                 print("Solver with optimization enabled")
@@ -60,7 +61,7 @@ class SchedulingSolver:
             set_option("parallel.threads.max", 4)  #nbr of max tasks
 
         # add all tasks assertions to the solver
-        for task in self._problem.get_tasks():
+        for task in self.problem_context.tasks:
             self._solver.add(task.get_assertions())
             # bound start and end
             self._solver.add(task.end >= 0)
@@ -70,18 +71,19 @@ class SchedulingSolver:
                 self._solver.add(task.end <= self._problem.horizon)
 
         # then process tasks constraints
-        for constraint in self._problem._constraints:
+        for constraint in self.problem_context.constraints:
             self._solver.add(constraint)
 
         # process resources requirements
-        for ress in self._problem.get_resources():
+        for ress in self.problem_context.resources:
             self._solver.add(ress.get_assertions())
 
         # process indicators
-        for indic in self._problem.indicators:
+        for indic in self.problem_context.indicators:
             self._solver.add(indic.get_assertions())
 
         self.process_work_amount()
+
         self.create_objectives()
 
         # each time the solver is called, the current_solution is stored
@@ -89,37 +91,19 @@ class SchedulingSolver:
 
     def create_objectives(self) -> None:
         """ create optimization objectives """
-        tasks = self._problem.get_tasks()
-
-        for obj in self._problem.objectives:
-            if obj == ObjectiveType.MAKESPAN:
+        for obj in self.problem_context.objectives:
+            if isinstance(obj, MaximizeObjective):
                 # look for the minimum horizon, i.e. the shortest
                 # time horizon to complete all tasks
-                self._solver.minimize(self._problem.horizon)
-            elif obj == ObjectiveType.LATEST:
-                # schedule all at the latest time according
-                # to a given horizon
-                mini = Int('SmallestStartTime')
-                self._solver.add(Or([mini == task.start for task in tasks]))
-                for tsk in tasks:
-                    self._solver.add(mini <= tsk.start)
-                self._solver.maximize(mini)
-            elif obj == ObjectiveType.FLOWTIME:
-                # minimum flowtime, i.e. minimize the sum of all end times
-                flowtime = Int('FlowTime')
-                self._solver.add(flowtime == Sum([task.end for task in tasks]))
-                self._solver.minimize(flowtime)
-            elif obj == ObjectiveType.EARLIEST:
-                # minimize the greatest start time
-                maxi = Int('GreatestStartTime')
-                self._solver.add(Or([maxi == task.start for task in tasks]))
-                for tsk in tasks:
-                    self._solver.add(maxi >= tsk.start)
-                self._solver.minimize(maxi)
+                print("Maximze !")
+                self._solver.maximize(obj.target)
+            elif isinstance(obj, MinimizeObjective):
+                print("Minimize")
+                self._solver.minimize(obj.target)
 
     def process_work_amount(self) -> None:
         """ for each task, compute the total work for all required resources """
-        for task in self._problem.get_tasks():
+        for task in self.problem_context.tasks:
             if task.work_amount > 0.:
                 work_total_for_all_resources = []
                 for required_resource in task.required_resources:
@@ -137,9 +121,13 @@ class SchedulingSolver:
         print('%s Satisfiability checked in %.2fs' % (self._problem.name, final_time - init_time))
 
         if self._verbosity:
+            print("\tAssertions:\n\t======")
             for assertion in self._solver.assertions():
                 print("\t", assertion)
-
+            print("\tObjectives:\n\t======")
+            if isinstance(self._solver, Optimize):
+                for obj in self._solver.objectives():
+                    print('\t', obj)
         if sat_result == unsat:
             print("No solution exists for problem %s." % self._problem.name)
             return False

@@ -111,31 +111,31 @@ class TestFeatures(unittest.TestCase):
         pb = ps.SchedulingProblem('ProblemRedundantTaskResource')
         # we should not be able to add twice the same resource or task
         task_1 = ps.ZeroDurationTask('task1')
-        pb.add_task(task_1)
-        pb.add_task(task_1) # a warning should be raised
-        self.assertEqual(list(pb.get_tasks()), [task_1])
+        #pb.add_task(task_1)
+        #pb.add_task(task_1) # a warning should be raised
+        self.assertEqual(list(pb.context.tasks), [task_1])
         # objects that are not tasks should not be added to the problem
-        with self.assertRaises(TypeError):
-            pb.add_task(True)
-        with self.assertRaises(TypeError):
-            pb.add_task("gg")
-        with self.assertRaises(TypeError):
-            pb.add_task(3.14)
-        self.assertEqual(list(pb.get_tasks()), [task_1])
+        #with self.assertRaises(TypeError):
+            #pb.add_task(True)
+        #with self.assertRaises(TypeError):
+            #pb.add_task("gg")
+        #with self.assertRaises(TypeError):
+            #pb.add_task(3.14)
+        self.assertEqual(list(pb.context.tasks), [task_1])
         # do the same for resources
         worker_1 = ps.Worker('Worker1')
-        pb.add_resource(worker_1)
-        pb.add_resource(worker_1)
-        self.assertEqual(list(pb.get_resources()), [worker_1])
+        #pb.add_resource(worker_1)
+        #pb.add_resource(worker_1)
+        self.assertEqual(list(pb.context.resources), [worker_1])
         # it might not be possible to add another kind
         # of resource to a problem
-        with self.assertRaises(TypeError):
-            pb.add_resource(task_1)
-        with self.assertRaises(TypeError):
-            pb.add_resource(1)
-        with self.assertRaises(TypeError):
-            pb.add_resource(2.0)
-        self.assertEqual(list(pb.get_resources()), [worker_1])
+        #with self.assertRaises(TypeError):
+            #pb.add_resource(task_1)
+        #with self.assertRaises(TypeError):
+            #pb.add_resource(1)
+        #with self.assertRaises(TypeError):
+            #pb.add_resource(2.0)
+        self.assertEqual(list(pb.context.resources), [worker_1])
 
     def test_resource_requirements(self) -> None:
         task_1 = ps.FixedDurationTask('task1', duration=3)
@@ -263,8 +263,8 @@ class TestFeatures(unittest.TestCase):
         not_constraint = ps.not_(ps.TaskEndAt(t_1, 5))
         self.assertIsInstance(or_constraint, ps.BoolRef)
         self.assertIsInstance(not_constraint, ps.BoolRef)
-        pb.add_constraint(or_constraint)
-        pb.add_constraint(not_constraint)
+        #pb.add_constraint(or_constraint)
+        #pb.add_constraint(not_constraint)
 
     #
     # Implies
