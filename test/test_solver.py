@@ -257,6 +257,25 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(task_1.scheduled_start, 51 - (3 + 2))
         self.assertEqual(task_2.scheduled_start, 51 - 3)
 
+    def test_priorities(self):
+        problem = ps.SchedulingProblem('SolvePriorities')
+        task_1 = ps.FixedDurationTask('task1', duration=2, priority=1)
+        task_2 = ps.FixedDurationTask('task2', duration=2, priority=10)
+        task_3 = ps.FixedDurationTask('task3', duration=2, priority=100)
+        
+        problem.add_constraint(ps.TasksDontOverlap(task_1, task_2))
+        problem.add_constraint(ps.TasksDontOverlap(task_2, task_3))
+        problem.add_constraint(ps.TasksDontOverlap(task_1, task_3))
+
+        problem.add_objective_priorities()
+
+        self.assertTrue(_solve_problem(problem))
+        # check that the task is not scheduled to start à 0
+        # the only solution is 1
+        self.assertLess(task_3.scheduled_start, task_2.scheduled_start)
+        self.assertLess(task_2.scheduled_start, task_1.scheduled_start)
+
+
     #
     # Logical Operators
     #

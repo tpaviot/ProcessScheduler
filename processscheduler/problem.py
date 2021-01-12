@@ -178,6 +178,13 @@ class SchedulingProblem(_NamedUIDObject):
         MinimizeObjective('MakeSpan', self.horizon)
         return True
 
+    def add_objective_priorities(self) -> None:
+        """ optimize the solution such that all task with a higher
+        priority value are scheduled before other tasks """
+        priority_sum = Sum([task.end  * task.priority for task in self.context.tasks])
+        priority_indicator = Indicator('PriorityTotal', priority_sum)
+        MinimizeObjective('PriorityObjective', priority_indicator)
+
     def add_objective_start_latest(self) -> None:
         """ maximize the minimum start time, i.e. all the tasks
         are scheduled as late as possible """

@@ -33,6 +33,10 @@ class Task(_NamedUIDObject):
         self.scheduled_duration = 0
         self.scheduled_flag = False
 
+        # attibutes set at __init__
+        self.work_amount = 0
+        self.priority = 1  # by default
+
         # required resources to perform the task
         self.required_resources = [] # type: List[_Resource]
 
@@ -118,20 +122,23 @@ class ZeroDurationTask(Task):
     can have some resources required """
     def __init__(self, name: str) -> None:
         super().__init__(name)
-        self.work_amount = 0
         # add an assertion: end = start because the duration is zero
         self.add_assertion(self.start == self.end)
         self.add_assertion(self.duration == 0)
 
 class FixedDurationTask(Task):
     """ Task with constant duration """
-    def __init__(self, name: str, duration: int, work_amount: Optional[int] = 0):
+    def __init__(self, name: str,
+                 duration: int,
+                 work_amount: Optional[int] = 0,
+                 priority: Optional[int] = 1):
         super().__init__(name)
         if not is_strict_positive_integer(duration):
             raise TypeError('duration must be a strict positive integer')
         if not is_positive_integer(work_amount):
             raise TypeError('work_amount me be a positive integer')
         self.work_amount = work_amount
+        self.priority = priority
         # add an assertion: end = start + duration
         self.add_assertion(self.start + self.duration == self.end)
         self.add_assertion(self.duration == duration)
@@ -141,7 +148,8 @@ class VariableDurationTask(Task):
     def __init__(self, name: str,
                  length_at_least: Optional[int] = 0,
                  length_at_most: Optional[int] = None,
-                 work_amount: Optional[int] = 0):
+                 work_amount: Optional[int] = 0,
+                 priority: Optional[int] = 1):
         super().__init__(name)
 
         if is_positive_integer(length_at_most):
@@ -158,7 +166,7 @@ class VariableDurationTask(Task):
         self.length_at_least = length_at_least
         self.length_at_most = length_at_most
         self.work_amount = work_amount
-
+        self.priority = priority
         # set minimal duration
         self.add_assertion(self.duration >= length_at_least)
         # add an assertion: end = start + duration
