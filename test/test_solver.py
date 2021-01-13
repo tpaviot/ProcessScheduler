@@ -473,6 +473,40 @@ class TestSolver(unittest.TestCase):
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[cost_ind.name], 300)
 
+    #
+    # Resource constraints
+    #
+    def test_all_same_different_workers(self):
+        pb = ps.SchedulingProblem('AllSameDifferentWorkers')
+
+        task_1 = ps.FixedDurationTask('task1', duration = 2)
+        task_2 = ps.FixedDurationTask('task2', duration = 2)
+        task_3 = ps.FixedDurationTask('task3', duration = 2)
+        task_4 = ps.FixedDurationTask('task4', duration = 2)
+
+        worker_1 = ps.Worker('John')
+        worker_2 = ps.Worker('Bob')
+
+        res_for_t1 = ps.AlternativeWorkers([worker_1, worker_2], 1)
+        res_for_t2 = ps.AlternativeWorkers([worker_1, worker_2], 1)
+        res_for_t3 = ps.AlternativeWorkers([worker_1, worker_2], 1)
+        res_for_t4 = ps.AlternativeWorkers([worker_1, worker_2], 1)
+
+        task_1.add_required_resource(res_for_t1)
+        task_2.add_required_resource(res_for_t2)
+        task_3.add_required_resource(res_for_t3)
+        task_4.add_required_resource(res_for_t4)
+
+        c = ps.AllSameWorkers(res_for_t1, res_for_t2)
+        d = ps.AllSameWorkers(res_for_t3, res_for_t4)
+        e = ps.AllDifferentWorkers(res_for_t2, res_for_t4)
+        pb.add_constraints([c, d, e])
+
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertEqual(solution.horizon, 4)
+
 
 if __name__ == "__main__":
     unittest.main()

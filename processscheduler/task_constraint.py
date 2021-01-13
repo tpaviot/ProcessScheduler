@@ -14,15 +14,7 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 
 from z3 import Xor
 
-from processscheduler.base import _NamedUIDObject
-
-#
-# Generic _Constraint class definition.
-#
-class _Constraint(_NamedUIDObject):
-    """ abstract _Constraint class """
-    def __init__(self):
-        super().__init__(name='')
+from processscheduler.base import _Constraint
 
 #
 # Task constraints base class

@@ -66,3 +66,12 @@ class _NamedUIDObject:
     def get_assertions(self) -> List[BoolRef]:
         """ return the assertions list """
         return self.assertions
+
+#
+# Generic _Constraint class definition.
+# Used by both task and resource constraints
+#
+class _Constraint(_NamedUIDObject):
+    """ abstract _Constraint class """
+    def __init__(self):
+        super().__init__(name='')
