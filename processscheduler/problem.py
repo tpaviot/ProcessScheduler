@@ -21,7 +21,6 @@ from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
 from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective, BuiltinIndicator
 from processscheduler.resource import _Resource
 from processscheduler.task import Task
-#from processscheduler.task_constraint import _Constraint
 import processscheduler.context as ps_context
 
 class SchedulingProblem(_NamedUIDObject):
@@ -52,7 +51,8 @@ class SchedulingProblem(_NamedUIDObject):
 
     def add_constraints(self, list_of_constraints) -> None:
         """ adds constraints to the problem """
-        self.context.add_constraints(list_of_constraints)
+        for cstr in list_of_constraints:
+            self.context.add_constraint(cstr)
 
     def add_objective_makespan(self) -> bool:
         """ makespan objective

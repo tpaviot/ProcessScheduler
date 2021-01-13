@@ -91,15 +91,14 @@ class AlternativeWorkers(_Resource):
         self.selection_dict = {}
 
         # create as many booleans as resources in the list
-        selection_list = []
-        for wrkr in list_of_workers:
-            worker_is_selected = Bool('Selected_%s_%i' % (wrkr.name, self.uid))
-            selection_list.append(worker_is_selected)
-            self.selection_dict[wrkr] = worker_is_selected
+        for worker in list_of_workers:
+            worker_is_selected = Bool('Selected_%s_%i' % (worker.name, self.uid))
+            self.selection_dict[worker] = worker_is_selected
 
         # create the assertion : exactly n boolean flags are allowed to be True,
         # the others must be False
         # see https://github.com/Z3Prover/z3/issues/694
         # and https://stackoverflow.com/questions/43081929/k-out-of-n-constraint-in-z3py
-        self.selection_assertion = problem_function[kind]([(boolean, True) for boolean in selection_list],
+        selection_list = list(self.selection_dict.values())
+        self.selection_assertion = problem_function[kind]([(selected, True) for selected in selection_list],
                                                           nb_workers)
