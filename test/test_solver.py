@@ -115,7 +115,7 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(task_solution.assigned_resources, ['worker'])
 
     def test_schedule_two_tasks_two_alternative_workers(self) -> None:
-        problem = ps.SchedulingProblem('TwoTasksTwoAlternativeWorkers', horizon=4)
+        problem = ps.SchedulingProblem('TwoTasksTwoSelectWorkers', horizon=4)
         # two tasks
         task_1 = ps.FixedDurationTask('task1', duration=3)
         task_2 = ps.FixedDurationTask('task2', duration=2)
@@ -123,8 +123,8 @@ class TestSolver(unittest.TestCase):
         worker_1 = ps.Worker('worker1')
         worker_2 = ps.Worker('worker2')
 
-        task_1.add_required_resource(ps.AlternativeWorkers([worker_1, worker_2], 1))
-        task_2.add_required_resource(ps.AlternativeWorkers([worker_1, worker_2], 1))
+        task_1.add_required_resource(ps.SelectWorkers([worker_1, worker_2], 1))
+        task_2.add_required_resource(ps.SelectWorkers([worker_1, worker_2], 1))
 
         solution = _solve_problem(problem)
         self.assertTrue(solution)
@@ -136,7 +136,7 @@ class TestSolver(unittest.TestCase):
         self.assertFalse(task_1_solution.assigned_resources == task_2_solution.assigned_resources)
 
     def test_schedule_three_tasks_three_alternative_workers(self) -> None:
-        problem = ps.SchedulingProblem('ThreeTasksThreeAlternativeWorkers')
+        problem = ps.SchedulingProblem('ThreeTasksThreeSelectWorkers')
         # two tasks
         task_1 = ps.FixedDurationTask('task1', duration=3)
         task_2 = ps.FixedDurationTask('task2', duration=2)
@@ -148,9 +148,9 @@ class TestSolver(unittest.TestCase):
         worker_3 = ps.Worker('worker3')
 
         all_workers = [worker_1, worker_2, worker_3]
-        task_1.add_required_resource(ps.AlternativeWorkers(all_workers, 1))
-        task_2.add_required_resource(ps.AlternativeWorkers(all_workers, 2))
-        task_3.add_required_resource(ps.AlternativeWorkers(all_workers, 3))
+        task_1.add_required_resource(ps.SelectWorkers(all_workers, 1))
+        task_2.add_required_resource(ps.SelectWorkers(all_workers, 2))
+        task_3.add_required_resource(ps.SelectWorkers(all_workers, 3))
 
         solution = _solve_problem(problem)
         self.assertTrue(solution)
@@ -174,9 +174,9 @@ class TestSolver(unittest.TestCase):
         w1 = ps.Worker('W1')
         w2 = ps.Worker('W2')
         w3 = ps.Worker('W3')
-        w4 = ps.AlternativeWorkers([w1, w2, w3], nb_workers=1, kind='exact')
-        w5 = ps.AlternativeWorkers([w1, w2, w3], nb_workers=2, kind='atmost')
-        w6 = ps.AlternativeWorkers([w1, w2, w3], nb_workers=3, kind='atleast')
+        w4 = ps.SelectWorkers([w1, w2, w3], nb_workers=1, kind='exact')
+        w5 = ps.SelectWorkers([w1, w2, w3], nb_workers=2, kind='atmost')
+        w6 = ps.SelectWorkers([w1, w2, w3], nb_workers=3, kind='atleast')
 
         # resource assignement
         t1.add_required_resource(w1)  # t1 only needs w1
@@ -487,19 +487,19 @@ class TestSolver(unittest.TestCase):
         worker_1 = ps.Worker('John')
         worker_2 = ps.Worker('Bob')
 
-        res_for_t1 = ps.AlternativeWorkers([worker_1, worker_2], 1)
-        res_for_t2 = ps.AlternativeWorkers([worker_1, worker_2], 1)
-        res_for_t3 = ps.AlternativeWorkers([worker_1, worker_2], 1)
-        res_for_t4 = ps.AlternativeWorkers([worker_1, worker_2], 1)
+        res_for_t1 = ps.SelectWorkers([worker_1, worker_2], 1)
+        res_for_t2 = ps.SelectWorkers([worker_1, worker_2], 1)
+        res_for_t3 = ps.SelectWorkers([worker_1, worker_2], 1)
+        res_for_t4 = ps.SelectWorkers([worker_1, worker_2], 1)
 
         task_1.add_required_resource(res_for_t1)
         task_2.add_required_resource(res_for_t2)
         task_3.add_required_resource(res_for_t3)
         task_4.add_required_resource(res_for_t4)
 
-        c = ps.AllSameWorkers(res_for_t1, res_for_t2)
-        d = ps.AllSameWorkers(res_for_t3, res_for_t4)
-        e = ps.AllDifferentWorkers(res_for_t2, res_for_t4)
+        c = ps.AllSameSelected(res_for_t1, res_for_t2)
+        d = ps.AllSameSelected(res_for_t3, res_for_t4)
+        e = ps.AllDifferentSelected(res_for_t2, res_for_t4)
         pb.add_constraints([c, d, e])
 
         solver = ps.SchedulingSolver(pb)

@@ -18,7 +18,7 @@ import warnings
 from z3 import Bool, Int, And, If
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer, is_positive_integer
-from processscheduler.resource import _Resource, Worker, AlternativeWorkers
+from processscheduler.resource import _Resource, Worker, SelectWorkers
 
 import processscheduler.context as ps_context
 
@@ -64,7 +64,7 @@ class Task(_NamedUIDObject):
         if resource in self.required_resources:
             raise ValueError('resource %s already defined as a required resource for task %s' % (resource.name,
                                                                                                  self.name))
-        if isinstance(resource, AlternativeWorkers):
+        if isinstance(resource, SelectWorkers):
             # loop over each resource
             for worker in resource.list_of_workers:
                 resource_maybe_busy_start = Int('%s_maybe_busy_%s_start' % (worker.name, self.name))

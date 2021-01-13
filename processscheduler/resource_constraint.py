@@ -17,7 +17,7 @@ from processscheduler.base import _Constraint
 #
 # SameWorkers constraint
 #
-class AllSameWorkers(_Constraint):
+class AllSameSelected(_Constraint):
     """ Selected workers by both AlternateWorkers are constrained to
     be the same
     """
@@ -29,7 +29,7 @@ class AllSameWorkers(_Constraint):
             if res_work_1 in alternate_workers_2.selection_dict:
                 self.add_assertion(alternate_workers_1.selection_dict[res_work_1] == alternate_workers_2.selection_dict[res_work_1])
 
-class AllDifferentWorkers(_Constraint):
+class AllDifferentSelected(_Constraint):
     """ Selected workers by both AlternateWorkers are constrained to
     be the same
     """

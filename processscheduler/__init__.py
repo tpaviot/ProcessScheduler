@@ -24,8 +24,8 @@ from processscheduler.first_order_logic import not_, or_, and_, xor_, if_then_el
 from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective
 from processscheduler.task import ZeroDurationTask, FixedDurationTask, VariableDurationTask
 from processscheduler.task_constraint import *
-from processscheduler.resource_constraint import AllSameWorkers, AllDifferentWorkers
-from processscheduler.resource import Worker, AlternativeWorkers
+from processscheduler.resource_constraint import AllSameSelected, AllDifferentSelected
+from processscheduler.resource import Worker, SelectWorkers
 from processscheduler.problem import SchedulingProblem
 from processscheduler.solver import SchedulingSolver
 from processscheduler.context import main_context, SchedulingContext

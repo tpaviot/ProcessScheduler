@@ -66,17 +66,17 @@ class Worker(_Resource):
             raise TypeError('productivity must be an integer >= 0')
         self.productivity = productivity
         self.cost_per_period = cost_per_period
-        # only worker are add to the main context, not AlternativeWorkers
+        # only worker are add to the main context, not SelectWorkers
         ps_context.main_context.add_resource(self)
 
-class AlternativeWorkers(_Resource):
+class SelectWorkers(_Resource):
     """ Class representing the selection of n workers chosen among a list
     of possible workers """
     def __init__(self,
                  list_of_workers: List[_Resource],
                  nb_workers: Optional[int] = 1,
                  kind: Optional[str] = 'exact'):
-        """ create an instance of the AlternativeWorkers class. """
+        """ create an instance of the SelectWorkers class. """
         super().__init__('')
 
         problem_function = {'atleast': PbGe, 'atmost': PbLe, 'exact': PbEq}

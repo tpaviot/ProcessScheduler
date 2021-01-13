@@ -104,15 +104,15 @@ class TestFeatures(unittest.TestCase):
         worker_1 = ps.Worker('wkr_1')
         worker_2 = ps.Worker('wkr_2')
         worker_3 = ps.Worker('wkr_3')
-        single_alternative_workers = ps.AlternativeWorkers([worker_1,
+        single_alternative_workers = ps.SelectWorkers([worker_1,
                                                             worker_2], 1)
         self.assertIsInstance(single_alternative_workers,
-                              ps.AlternativeWorkers)
-        double_alternative_workers = ps.AlternativeWorkers([worker_1,
+                              ps.SelectWorkers)
+        double_alternative_workers = ps.SelectWorkers([worker_1,
                                                             worker_2,
                                                             worker_3], 2)
         self.assertIsInstance(double_alternative_workers,
-                              ps.AlternativeWorkers)
+                              ps.SelectWorkers)
 
     def test_worker_same_name(self) -> None:
         pb = ps.SchedulingProblem('ProblemWithoutHorizon')
