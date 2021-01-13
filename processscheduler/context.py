@@ -47,28 +47,24 @@ class SchedulingContext:
             return False
         return True
 
-    def add_task(self, task) -> bool:
-        """ add a single task to the problem """
-        if task not in self.tasks:
-            self.tasks.append(task)
-        else:
-            warnings.warn('task %s already part of the problem' % task)
-            return False
-        return True
+    def add_task(self, task) -> None:
+        """ add a single task to the problem. There must not be two tasks with the same name """
+        all_task_names = [t.name for t in self.tasks]
+        if task.name in all_task_names:
+            raise ValueError('a task with the name %s already exists.' % task.name)
+        self.tasks.append(task)
 
     def add_tasks(self, list_of_tasks) -> None:
         """ adds tasks to the problem """
         for task in list_of_tasks:
             self.add_task(task)
 
-    def add_resource(self, resource) -> bool:
+    def add_resource(self, resource) -> None:
         """ add a single resource to the problem """
-        if resource not in self.resources:
-            self.resources.append(resource)
-        else:
-            warnings.warn('Resource %s already part of the problem' % resource)
-            return False
-        return True
+        all_resource_names = [t.name for t in self.resources]
+        if resource.name in all_resource_names:
+            raise ValueError('a resource with the name %s already exists.' % resource.name)
+        self.resources.append(resource)
 
     def add_resources(self, list_of_resources) -> None:
         """ add resources to the problem """

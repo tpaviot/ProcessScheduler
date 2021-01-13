@@ -20,6 +20,7 @@ from z3 import (SolverFor, Sum, unsat,
                 ArithRef, unknown, Optimize, set_option)
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective
+from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
 
 #
 # Solver class definition
@@ -140,6 +141,65 @@ class SchedulingSolver:
 
         return True
 
+    def build_solution(self, z3_sol):
+        """ create a SchedulingSolution instance, and return it """
+        solution = SchedulingSolution(self._problem.name)
+
+        # set the horizon solution
+        solution.horizon = z3_sol[self._problem.horizon].as_long()
+
+        # process tasks
+        for task in self._problem.context.tasks:
+            # for each task, create a TaskSolution instance
+            new_task_solution = TaskSolution(task.name)
+            new_task_solution.type = type(task).__name__
+            new_task_solution.start = z3_sol[task.start].as_long()
+            new_task_solution.end = z3_sol[task.end].as_long()
+            new_task_solution.duration = z3_sol[task.duration].as_long()
+
+            # process resource assignement
+            for req_res in task.required_resources:
+                # by default, resource_should_be_assigned is set to True
+                # if will be set to False if the resource is an alternative worker
+                resource_is_assigned = True
+                # among those workers, some of them
+                # are busy "in the past", that is to say they
+                # should not be assigned to the related task
+                # for each interval
+                lower_bound, _ = req_res.busy_intervals[task]
+                if z3_sol[lower_bound].as_long() < 0:
+                    # should not be scheduled
+                    resource_is_assigned = False
+                # add this resource to assigned resources, anytime
+                if resource_is_assigned and (req_res.name not in new_task_solution.assigned_resources):
+                    new_task_solution.assigned_resources.append(req_res.name)
+
+            solution.add_task_solution(new_task_solution)
+
+        # process resources
+        for resource in self._problem.context.resources:
+            # for each task, create a TaskSolution instance
+            new_resource_solution = ResourceSolution(resource.name)
+            new_resource_solution.type = type(resource).__name__
+            # check for task processed by this resource
+            for task in resource.busy_intervals.keys():
+                task_name = task.name
+                st_var, end_var = resource.busy_intervals[task]
+                start = z3_sol[st_var].as_long()
+                end = z3_sol[end_var].as_long()
+                if start >= 0 and end >= 0:
+                    new_resource_solution.assignements.append((task_name, start, end))
+
+            solution.add_resource_solution(new_resource_solution)
+
+        # process indicators
+        for indicator in self._problem.context.indicators:
+            indicator_name = indicator.name
+            indicator_value = z3_sol[indicator.indicator_variable].as_long()
+            solution.add_indicator_solution(indicator_name, indicator_value)
+
+        return solution
+
     def solve(self) -> bool:
         """ call the solver and returns the solution, if ever """
         # first check satisfiability
@@ -147,6 +207,7 @@ class SchedulingSolver:
             return False
 
         solution = self._solver.model()
+        self.current_solution = solution
 
         if self._verbosity:
             print('Solver satistics:')
@@ -157,12 +218,10 @@ class SchedulingSolver:
                 var_name = decl.name()
                 var_value = solution[decl]
                 print("\t%s=%s" %(var_name, var_value))
-        ## propagate the result to the scenario
-        self._problem.set_solution(solution)
 
-        self.current_solution = solution
+        sol = self.build_solution(solution)
 
-        return True
+        return sol
 
     def find_another_solution(self, variable: ArithRef) -> bool:
         """ let the solver find another solution for the variable """

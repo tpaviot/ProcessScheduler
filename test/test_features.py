@@ -63,19 +63,19 @@ class TestFeatures(unittest.TestCase):
         ps.VariableDurationTask('vdt1')
         ps.VariableDurationTask('vdt2', length_at_most=4)
         ps.VariableDurationTask('vdt3', length_at_least=4)
-        ps.VariableDurationTask('vdt21', work_amount=10)
+        ps.VariableDurationTask('vdt4', work_amount=10)
         with self.assertRaises(TypeError):
-            ps.VariableDurationTask('vdt3', length_at_most=4.5)
+            ps.VariableDurationTask('vdt5', length_at_most=4.5)
         with self.assertRaises(TypeError):
-            ps.VariableDurationTask('vdt4', length_at_most=-1)
+            ps.VariableDurationTask('vdt6', length_at_most=-1)
         with self.assertRaises(TypeError):
-            ps.VariableDurationTask('vdt5', length_at_least=-1)
+            ps.VariableDurationTask('vdt7', length_at_least=-1)
         with self.assertRaises(TypeError):
-            ps.VariableDurationTask('vdt6', work_amount=-1)
+            ps.VariableDurationTask('vdt8', work_amount=-1)
         with self.assertRaises(TypeError):
-            ps.VariableDurationTask('vdt7', work_amount=1.5)
+            ps.VariableDurationTask('vdt9', work_amount=1.5)
         with self.assertRaises(TypeError):
-            ps.VariableDurationTask('vdt8', work_amount=None)
+            ps.VariableDurationTask('vdt10', work_amount=None)
     #
     # Workers
     #
@@ -102,6 +102,7 @@ class TestFeatures(unittest.TestCase):
                               ps.AlternativeWorkers)
 
     def test_eq_overloading(self) -> None:
+        pb = ps.SchedulingProblem('EqOverloading')
         task_1 = ps.ZeroDurationTask('task1')
         task_2 = ps.ZeroDurationTask('task2')
         self.assertEqual(task_1, task_1)
@@ -138,9 +139,10 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(list(pb.context.resources), [worker_1])
 
     def test_resource_requirements(self) -> None:
+        pb = ps.SchedulingProblem('ResourceRequirements')
         task_1 = ps.FixedDurationTask('task1', duration=3)
         worker_1 = ps.Worker('Worker1')
-        worker_2 = ps.Worker('Worker1')
+        worker_2 = ps.Worker('Worker2')
         task_1.add_required_resource(worker_1)
         task_1.add_required_resources([worker_1, worker_2])
         with self.assertRaises(TypeError):
@@ -152,6 +154,7 @@ class TestFeatures(unittest.TestCase):
     # Single task constraints
     #
     def test_create_task_start_at(self) -> None:
+        pb = ps.SchedulingProblem('StartAt')
         task = ps.FixedDurationTask('task', 2)
         c = ps.TaskStartAt(task, 1)
         self.assertIsInstance(c, ps.TaskStartAt)
@@ -160,6 +163,7 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(c.value, 1)
 
     def test_create_task_start_after_strict(self) -> None:
+        pb = ps.SchedulingProblem('StartAfterStrict')
         task = ps.FixedDurationTask('task', 2)
         c = ps.TaskStartAfterStrict(task, 3)
         self.assertIsInstance(c, ps.TaskStartAfterStrict)
@@ -168,6 +172,7 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(c.value, 3)
 
     def test_create_task_start_after_lax(self) -> None:
+        pb = ps.SchedulingProblem('StartAfterLax')
         task = ps.FixedDurationTask('task', 2)
         c = ps.TaskStartAfterLax(task, 3)
         self.assertIsInstance(c, ps.TaskStartAfterLax)
@@ -176,6 +181,7 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(c.value, 3)
 
     def test_create_task_end_at(self) -> None:
+        pb = ps.SchedulingProblem('EndAt')
         task = ps.FixedDurationTask('task', 2)
         c = ps.TaskEndAt(task, 3)
         self.assertIsInstance(c, ps.TaskEndAt)
@@ -184,6 +190,7 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(c.value, 3)
 
     def test_create_task_before_strict(self) -> None:
+        pb = ps.SchedulingProblem('TaskBeforeStrict')
         task = ps.FixedDurationTask('task', 2)
         c = ps.TaskEndBeforeStrict(task, 3)
         self.assertIsInstance(c, ps.TaskEndBeforeStrict)
@@ -192,6 +199,7 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(c.value, 3)
 
     def test_create_task_before_lax(self) -> None:
+        pb = ps.SchedulingProblem('TaskBeforeLax')
         task = ps.FixedDurationTask('task', 2)
         constraint = ps.TaskEndBeforeLax(task, 3)
         self.assertIsInstance(constraint, ps.TaskEndBeforeLax)
@@ -203,18 +211,21 @@ class TestFeatures(unittest.TestCase):
     # Two tasks constraints
     #
     def test_tasks_dont_overlap(self) -> None:
+        pb = ps.SchedulingProblem('TasksDontOverlap')
         t_1 = ps.FixedDurationTask('t1', duration=2)
         t_2 = ps.FixedDurationTask('t2', duration=3)
         constraint = ps.TasksDontOverlap(t_1, t_2)
         self.assertIsInstance(constraint, ps.TasksDontOverlap)
 
     def test_tasks_start_sync(self) -> None:
+        pb = ps.SchedulingProblem('TasksStartSync')
         t_1 = ps.FixedDurationTask('t1', duration=2)
         t_2 = ps.FixedDurationTask('t2', duration=3)
         constraint = ps.TasksStartSynced(t_1, t_2)
         self.assertIsInstance(constraint, ps.TasksStartSynced)
 
     def test_tasks_end_sync(self) -> None:
+        pb = ps.SchedulingProblem('TasksEndSync')
         t_1 = ps.FixedDurationTask('t1', duration=2)
         t_2 = ps.FixedDurationTask('t2', duration=3)
         constraint = ps.TasksEndSynced(t_1, t_2)
@@ -224,29 +235,34 @@ class TestFeatures(unittest.TestCase):
     # Boolean operators
     #
     def test_operator_not_(self) -> None:
+        pb = ps.SchedulingProblem('OperatorNot_')
         t_1 = ps.FixedDurationTask('t1', duration=2)
         not_constraint = ps.not_(ps.TaskStartAt(t_1, 1))
         self.assertIsInstance(not_constraint, ps.BoolRef)
 
     def test_operator_or_(self) -> None:
+        pb = ps.SchedulingProblem('OperatorOr_')
         t_1 = ps.FixedDurationTask('t1', duration=2)
         or_constraint = ps.or_(ps.TaskStartAt(t_1, 1),
                                ps.TaskStartAt(t_1, 2))
         self.assertIsInstance(or_constraint, ps.BoolRef)
 
     def test_operator_xor_(self) -> None:
+        pb = ps.SchedulingProblem('OperatorXor_')
         t_1 = ps.FixedDurationTask('t1', duration=2)
         xor_constraint = ps.xor_(ps.TaskStartAt(t_1, 1),
                                  ps.TaskStartAt(t_1, 2))
         self.assertIsInstance(xor_constraint, ps.BoolRef)
 
     def test_operator_and_(self) -> None:
+        pb = ps.SchedulingProblem('OperatorAnd_')
         t_1 = ps.FixedDurationTask('t1', duration=2)
         and_constraint = ps.and_(ps.TaskStartAfterLax(t_1, 1),
                                  ps.TaskEndBeforeLax(t_1, 7))
         self.assertIsInstance(and_constraint, ps.BoolRef)
 
     def test_nested_boolean_operators(self) -> None:
+        pb = ps.SchedulingProblem('NestedBoolean')
         t_1 = ps.VariableDurationTask('t1')
         or_constraint_1 = ps.or_(ps.TaskStartAt(t_1, 1),
                                  ps.TaskStartAt(t_1, 2))
@@ -263,13 +279,14 @@ class TestFeatures(unittest.TestCase):
         not_constraint = ps.not_(ps.TaskEndAt(t_1, 5))
         self.assertIsInstance(or_constraint, ps.BoolRef)
         self.assertIsInstance(not_constraint, ps.BoolRef)
-        #pb.add_constraint(or_constraint)
-        #pb.add_constraint(not_constraint)
+        pb.add_constraint(or_constraint)
+        pb.add_constraint(not_constraint)
 
     #
     # Implies
     #
     def test_implies(self) -> None:
+        pb = ps.SchedulingProblem('Implies')
         t_1 = ps.FixedDurationTask('t1', 2)
         t_2 = ps.FixedDurationTask('t2', 2)
         implies_constraint = ps.implies(t_1.start==1, ps.TaskStartAt(t_2, 3))
@@ -279,6 +296,7 @@ class TestFeatures(unittest.TestCase):
     # If/Then/Else
     #
     def test_if_then_else(self) -> None:
+        pb = ps.SchedulingProblem('IfThenElse')
         t_1 = ps.FixedDurationTask('t1', 2)
         t_2 = ps.FixedDurationTask('t2', 2)
         ite_constraint = ps.if_then_else(t_1.start==1, # condition

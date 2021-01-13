@@ -87,7 +87,7 @@ class SchedulingProblem(_NamedUIDObject):
                     # should not be scheduled
                     resource_should_be_assigned = False
                 # add this resource to assigned resources, anytime
-                if resource_should_be_assigned and req_res not in task.assigned_resources:
+                if resource_should_be_assigned and (req_res not in task.assigned_resources):
                     task.assigned_resources.append(req_res)
 
         # set the horizon solution
@@ -178,6 +178,25 @@ class SchedulingProblem(_NamedUIDObject):
         MinimizeObjective('MakeSpan', self.horizon)
         return True
 
+    def add_indicator_resource_cost(self, list_of_resources):
+        """ compute the total cost of a set of resources """
+        partial_costs = []
+        for resource in list_of_resources:
+            for interv_low, interv_up in resource.busy_intervals.values():
+                partial_cost_contribution = resource.cost_per_period * (interv_up - interv_low)
+                partial_costs.append(partial_cost_contribution)
+        resource_names = ','.join([resource.name for resource in list_of_resources])
+        cost_indicator_variable = Sum(partial_costs)
+        cost_indicator = Indicator('Total Cost (%s)' % resource_names,
+                                                       cost_indicator_variable)
+        return cost_indicator
+
+    def add_objective_resource_cost(self, list_of_resources):
+        """ minimise the cost of selected resources
+        """
+        cost_indicator = self.add_indicator_resource_cost(list_of_resources)
+        MinimizeObjective('PriorityObjective', cost_indicator)
+
     def add_objective_priorities(self) -> None:
         """ optimize the solution such that all task with a higher
         priority value are scheduled before other tasks """
@@ -195,6 +214,12 @@ class SchedulingProblem(_NamedUIDObject):
             a.add_assertion(mini <= tsk.start)
         a.indicator_variable=mini
         MaximizeObjective('SmallestStartTime', mini)
+
+    def maximize_indicator(self, indicator):
+        MaximizeObjective('', indicator)
+
+    def minimize_indicator(self, indicator):
+        MinimizeObjective('', indicator)
 
     def add_objective_start_earliest(self) -> None:
         """ minimize the greatest start time, i.e. tasks are schedules
@@ -214,132 +239,131 @@ class SchedulingProblem(_NamedUIDObject):
         smallest_start_time_indicator = Indicator('FlowTime', flow_time_expr)
         MinimizeObjective('FlowTimeObjective', smallest_start_time_indicator)
 
-    def print_solution(self) -> None:
-        """ print solution to console """
-        print("Problem %s solution:" % self.name)
-        print("\thorizon: %i" % self.scheduled_horizon)
-        if self._solution is not None:
-            for task in self.context.tasks:
-                ress = task.assigned_resources
-                print("\t", task.name, ":", ress, end=";")
-                print('start:', task.scheduled_start, end=";")
-                print('end:', task.scheduled_end)
-        else:
-            warnings.warn("No solution to display.")
+    # def print_solution(self) -> None:
+    #     """ print solution to console """
+    #     print("Problem %s solution:" % self.name)
+    #     print("\thorizon: %i" % self.scheduled_horizon)
+    #     if self._solution is not None:
+    #         for task in self.context.tasks:
+    #             ress = task.assigned_resources
+    #             print("\t", task.name, ":", ress, end=";")
+    #             print('start:', task.scheduled_start, end=";")
+    #             print('end:', task.scheduled_end)
+    #     else:
+    #         warnings.warn("No solution to display.")
 
-    def render_gantt_matplotlib(self,
-                                fig_size:Optional[Tuple[int, int]] = (9,6),
-                                show_plot: Optional[Bool] = True,
-                                show_indicators: Optional[Bool] = True,
-                                render_mode: Optional[str] = 'Resources',
-                                fig_filename: Optional[str] = None) -> None:
-        """ generate a gantt diagram using matplotlib.
-        Inspired by
-        https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
-        """
-        if self._solution is None:
-            warnings.warn("No solution to plot.")
-            return None
-        try:
-            import matplotlib.pyplot as plt
-            from matplotlib.colors import LinearSegmentedColormap
-        except ImportError:
-            warnings.warn('matplotlib not installed')
-            return None
+    # def render_gantt_matplotlib(self,
+    #                             fig_size:Optional[Tuple[int, int]] = (9,6),
+    #                             show_plot: Optional[Bool] = True,
+    #                             show_indicators: Optional[Bool] = True,
+    #                             render_mode: Optional[str] = 'Resources',
+    #                             fig_filename: Optional[str] = None) -> None:
+    #     """ generate a gantt diagram using matplotlib.
+    #     Inspired by
+    #     https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
+    #     """
+    #     if self._solution is None:
+    #         warnings.warn("No solution to plot.")
+    #         return None
+    #     try:
+    #         import matplotlib.pyplot as plt
+    #         from matplotlib.colors import LinearSegmentedColormap
+    #     except ImportError:
+    #         warnings.warn('matplotlib not installed')
+    #         return None
 
-        if not self.context.resources:
-            render_mode = 'Tasks'
+    #     if not self.context.resources:
+    #         render_mode = 'Tasks'
 
-        # render mode is Resource by default, can be set to 'Task'
-        if render_mode == 'Resources':
-            plot_title = 'Resources schedule - %s' % self.name
-            plot_ylabel = 'Resources'
-            plot_ticklabels = map(str, self.context.resources)
-            nbr_y_values = len(self.context.resources)
-        elif render_mode == 'Tasks':
-            plot_title = 'Task schedule - %s' % self.name
-            plot_ylabel = 'Tasks'
-            plot_ticklabels = map(str, self.context.tasks)
-            nbr_y_values = len(self.context.tasks)
-        else:
-            raise ValueError("rendermode must be either 'Resources' or 'Tasks'")
+    #     # render mode is Resource by default, can be set to 'Task'
+    #     if render_mode == 'Resources':
+    #         plot_title = 'Resources schedule - %s' % self.name
+    #         plot_ylabel = 'Resources'
+    #         plot_ticklabels = map(str, self.context.resources)
+    #         nbr_y_values = len(self.context.resources)
+    #     elif render_mode == 'Tasks':
+    #         plot_title = 'Task schedule - %s' % self.name
+    #         plot_ylabel = 'Tasks'
+    #         plot_ticklabels = map(str, self.context.tasks)
+    #         nbr_y_values = len(self.context.tasks)
+    #     else:
+    #         raise ValueError("rendermode must be either 'Resources' or 'Tasks'")
 
-        gantt = plt.subplots(1, 1, figsize=fig_size)[1]
-        gantt.set_title(plot_title)
-        gantt.set_xlim(0, self.scheduled_horizon)
-        gantt.set_xticks(range(self.scheduled_horizon + 1))
-        # Setting labels for x-axis and y-axis
-        gantt.set_xlabel('Time (%i periods)' % self.scheduled_horizon, fontsize=12)
-        gantt.set_ylabel(plot_ylabel, fontsize=12)
+    #     gantt = plt.subplots(1, 1, figsize=fig_size)[1]
+    #     gantt.set_title(plot_title)
+    #     gantt.set_xlim(0, self.scheduled_horizon)
+    #     gantt.set_xticks(range(self.scheduled_horizon + 1))
+    #     # Setting labels for x-axis and y-axis
+    #     gantt.set_xlabel('Time (%i periods)' % self.scheduled_horizon, fontsize=12)
+    #     gantt.set_ylabel(plot_ylabel, fontsize=12)
 
-        # colormap definition
-        cmap = LinearSegmentedColormap.from_list('custom blue',
-                                                 ['#bbccdd','#ee3300'],
-                                                 N = len(self.context.tasks * 2)) # nbr of colors
-        # defined a mapping between the tasks and the colors, so that
-        # each task has the same color on both graphs
-        task_colors = {}
-        for i, task in enumerate(self.context.tasks):
-            task_colors[task.name] = cmap(i)
-        # the task color is defined from the task name, this way the task has
-        # already the same color, even if it is defined after
-        gantt.set_ylim(0, 2 * nbr_y_values)
-        gantt.set_yticks(range(1, 2 * nbr_y_values, 2))
-        gantt.set_yticklabels(plot_ticklabels)
-        # in Resources mode, create one line per resource on the y axis
-        gantt.grid(axis='x', linestyle='dashed')
+    #     # colormap definition
+    #     cmap = LinearSegmentedColormap.from_list('custom blue',
+    #                                              ['#bbccdd','#ee3300'],
+    #                                              N = len(self.context.tasks * 2)) # nbr of colors
+    #     # defined a mapping between the tasks and the colors, so that
+    #     # each task has the same color on both graphs
+    #     task_colors = {}
+    #     for i, task in enumerate(self.context.tasks):
+    #         task_colors[task.name] = cmap(i)
+    #     # the task color is defined from the task name, this way the task has
+    #     # already the same color, even if it is defined after
+    #     gantt.set_ylim(0, 2 * nbr_y_values)
+    #     gantt.set_yticks(range(1, 2 * nbr_y_values, 2))
+    #     gantt.set_yticklabels(plot_ticklabels)
+    #     # in Resources mode, create one line per resource on the y axis
+    #     gantt.grid(axis='x', linestyle='dashed')
 
-        def draw_broken_barh_with_text(start, length, bar_color, text):
-            # first compute the bar dimension
-            if length == 0:  # zero duration tasks, to be visible
-                bar_dimension = (start - 0.05, 0.1)
-            else:
-                bar_dimension = (start, length)
-            gantt.broken_barh([bar_dimension], (i * 2, 2),
-                              edgecolor='black', linewidth=1,
-                              facecolors=bar_color)
-            gantt.text(x=start + length / 2, y=i * 2 + 1,
-                       s=text, ha='center', va='center', color='black')
+    #     def draw_broken_barh_with_text(start, length, bar_color, text):
+    #         # first compute the bar dimension
+    #         if length == 0:  # zero duration tasks, to be visible
+    #             bar_dimension = (start - 0.05, 0.1)
+    #         else:
+    #             bar_dimension = (start, length)
+    #         gantt.broken_barh([bar_dimension], (i * 2, 2),
+    #                           edgecolor='black', linewidth=1,
+    #                           facecolors=bar_color)
+    #         gantt.text(x=start + length / 2, y=i * 2 + 1,
+    #                    s=text, ha='center', va='center', color='black')
 
-        # in Tasks mode, create one line per task on the y axis
-        if render_mode == 'Tasks':
-            for i, task in enumerate(self.context.tasks):
-                # build the bar text string
-                text = '%s' % task
-                if task.assigned_resources:
-                    resources_names = ['%s' % c for c in task.assigned_resources]
-                    resources_names.sort()  # alphabetical sort
-                    text += '(' + ','.join(resources_names) + ')'
-                else:
-                    text += r'($\emptyset$)'
-                draw_broken_barh_with_text(task.scheduled_start,
-                                           task.scheduled_duration,
-                                           task_colors[task.name],
-                                           text)
-        elif render_mode == 'Resources':
-            for i, ress in enumerate(self.context.resources):
-                #each interval from the busy_intervals list is rendered as a bar
-                for task in ress.busy_intervals.keys():
-                    task_name = task.name
-                    st_var, end_var = ress.busy_intervals[task]
-                    start = self._solution[st_var].as_long()
-                    end = self._solution[end_var].as_long()
-                    if start >= 0 and end >= 0:  # only assigned resource
-                        draw_broken_barh_with_text(start,
-                                                   end - start,
-                                                   task_colors[task_name],
-                                                   task_name)
-        # display indicator values in the legend area
-        if self.context.indicators and show_indicators:
-            for indicator in self.context.indicators:
-                gantt.plot([], [], ' ', label="%s: %i" % (indicator.name,
-                                                          indicator.scheduled_value))
-            gantt.legend(title='Indicators', title_fontsize='large')
+    #     # in Tasks mode, create one line per task on the y axis
+    #     if render_mode == 'Tasks':
+    #         for i, task in enumerate(self.context.tasks):
+    #             # build the bar text string
+    #             if task.assigned_resources:
+    #                 resources_names = ['%s' % c for c in task.assigned_resources]
+    #                 resources_names.sort()  # alphabetical sort
+    #                 text = ','.join(resources_names)
+    #             else:
+    #                 text = r'($\emptyset$)'
+    #             draw_broken_barh_with_text(task.scheduled_start,
+    #                                        task.scheduled_duration,
+    #                                        task_colors[task.name],
+    #                                        text)
+    #     elif render_mode == 'Resources':
+    #         for i, ress in enumerate(self.context.resources):
+    #             #each interval from the busy_intervals list is rendered as a bar
+    #             for task in ress.busy_intervals.keys():
+    #                 task_name = task.name
+    #                 st_var, end_var = ress.busy_intervals[task]
+    #                 start = self._solution[st_var].as_long()
+    #                 end = self._solution[end_var].as_long()
+    #                 if start >= 0 and end >= 0:  # only assigned resource
+    #                     draw_broken_barh_with_text(start,
+    #                                                end - start,
+    #                                                task_colors[task_name],
+    #                                                task_name)
+    #     # display indicator values in the legend area
+    #     if self.context.indicators and show_indicators:
+    #         for indicator in self.context.indicators:
+    #             gantt.plot([], [], ' ', label="%s: %i" % (indicator.name,
+    #                                                       indicator.scheduled_value))
+    #         gantt.legend(title='Indicators', title_fontsize='large')
 
-        if fig_filename is not None:
-            plt.savefig(fig_filename)
+    #     if fig_filename is not None:
+    #         plt.savefig(fig_filename)
 
-        if show_plot:
-            plt.show()
+    #     if show_plot:
+    #         plt.show()
 
-        return None
+    #     return None

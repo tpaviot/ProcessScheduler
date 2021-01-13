@@ -57,12 +57,15 @@ class _Resource(_NamedUIDObject):
 class Worker(_Resource):
     """ A worker is an atomic resource that cannot be split into smaller parts.
     Typical workers are human beings, machines etc. """
-    def __init__(self, name: str, productivity: Optional[int] = 0) -> None:
+    def __init__(self,
+                 name: str,
+                 productivity: Optional[int] = 1,
+                 cost_per_period: Optional[int] = 0) -> None:
         super().__init__(name)
         if not is_positive_integer(productivity):
             raise TypeError('productivity must be an integer >= 0')
         self.productivity = productivity
-
+        self.cost_per_period = cost_per_period
         # only worker are add to the main context, not AlternativeWorkers
         ps_context.main_context.add_resource(self)
 
@@ -90,7 +93,7 @@ class AlternativeWorkers(_Resource):
         # create as many booleans as resources in the list
         selection_list = []
         for wrkr in list_of_workers:
-            worker_is_selected = Bool('Selected_%i_%s' % (self.uid, wrkr.name))
+            worker_is_selected = Bool('Selected_%s_%i' % (wrkr.name, self.uid))
             selection_list.append(worker_is_selected)
             self.selection_dict[wrkr] = worker_is_selected
 
