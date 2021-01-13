@@ -17,7 +17,6 @@ from typing import Union
 from z3 import And, Xor, Or, Not, If, Implies, BoolRef
 
 from processscheduler.base import _NamedUIDObject
-#import processscheduler.context as ps_context
 
 #
 # Utility functions
@@ -67,7 +66,7 @@ def implies(constraint_1: Union[BoolRef, _NamedUIDObject],
     return Implies(And(_get_assertions(constraint_1)), And(_get_assertions(constraint_2)))
 
 #
-# ITE
+# If/then/else
 #
 def if_then_else(constraint_if: Union[BoolRef, _NamedUIDObject],
                  constraint_then: Union[BoolRef, _NamedUIDObject],

@@ -16,8 +16,6 @@ from z3 import Xor
 
 from processscheduler.base import _NamedUIDObject
 
-#import processscheduler.context as ps_context
-
 #
 # Generic _Constraint class definition.
 #
@@ -25,8 +23,6 @@ class _Constraint(_NamedUIDObject):
     """ abstract _Constraint class """
     def __init__(self):
         super().__init__(name='')
-
-        #ps_context.main_context.add_constraint(self)
 
 #
 # Task constraints base class

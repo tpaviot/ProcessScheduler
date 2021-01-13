@@ -26,22 +26,11 @@ class Task(_NamedUIDObject):
     """ a Task object """
     def __init__(self, name: str) -> None:
         super().__init__(name)
-        # scheduled start, end and duration set to 0 by default
-        # be set after the solver is called
-        self.scheduled_start = 0
-        self.scheduled_end = 0
-        self.scheduled_duration = 0
-        self.scheduled_flag = False
-
-        # attibutes set at __init__
         self.work_amount = 0
         self.priority = 1  # by default
 
         # required resources to perform the task
         self.required_resources = [] # type: List[_Resource]
-
-        # assigned resource names, after the resolution is completed
-        self.assigned_resources = [] # type: List[_Resource]
 
         # z3 Int variables
         self.start = Int('%s_start' % name)
@@ -73,8 +62,8 @@ class Task(_NamedUIDObject):
         if not isinstance(resource, _Resource):
             raise TypeError('you must pass a Resource instance')
         if resource in self.required_resources:
-            warnings.warn('This resource is already set as a required resource for this task')
-            return False
+            raise ValueError('resource %s already defined as a required resource for task %s' % (resource.name,
+                                                                                                 self.name))
         if isinstance(resource, AlternativeWorkers):
             # loop over each resource
             for worker in resource.list_of_workers:

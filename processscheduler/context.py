@@ -17,9 +17,6 @@ import warnings
 
 from z3 import BoolRef, ArithRef
 
-#from processscheduler.objective import Indicator, Objective
-#from processscheduler.task import Task
-#from processscheduler.resource import _Resource
 from processscheduler.task_constraint import _Constraint
 
 class SchedulingContext:
@@ -54,22 +51,12 @@ class SchedulingContext:
             raise ValueError('a task with the name %s already exists.' % task.name)
         self.tasks.append(task)
 
-    def add_tasks(self, list_of_tasks) -> None:
-        """ adds tasks to the problem """
-        for task in list_of_tasks:
-            self.add_task(task)
-
     def add_resource(self, resource) -> None:
         """ add a single resource to the problem """
         all_resource_names = [t.name for t in self.resources]
         if resource.name in all_resource_names:
             raise ValueError('a resource with the name %s already exists.' % resource.name)
         self.resources.append(resource)
-
-    def add_resources(self, list_of_resources) -> None:
-        """ add resources to the problem """
-        for resource in list_of_resources:
-            self.add_resource(resource)
 
     def add_constraint(self, constraint) -> None:
         """ add a constraint to the problem """
@@ -79,11 +66,6 @@ class SchedulingContext:
             self.constraints.append(constraint)
         else:
             raise TypeError("You must provide either a _Constraint or BoolRef instance.")
-
-    def add_constraints(self, list_of_constraints) -> None:
-        """ adds constraints to the problem """
-        for constraint in list_of_constraints:
-            self.add_constraint(constraint)
 
     def add_objective(self, objective) -> None:
         self.objectives.append(objective)

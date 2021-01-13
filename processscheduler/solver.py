@@ -96,10 +96,8 @@ class SchedulingSolver:
             if isinstance(obj, MaximizeObjective):
                 # look for the minimum horizon, i.e. the shortest
                 # time horizon to complete all tasks
-                print("Maximze !")
                 self._solver.maximize(obj.target)
             elif isinstance(obj, MinimizeObjective):
-                print("Minimize")
                 self._solver.minimize(obj.target)
 
     def process_work_amount(self) -> None:

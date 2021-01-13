@@ -34,9 +34,9 @@ def _get_big_random_problem(name:str, n: int) -> ps.SchedulingProblem:
 
     # for each task, add three single required workers
     for task in tasks:
-        task.add_required_resource(random.choice(workers))
-        task.add_required_resource(random.choice(workers))
-        task.add_required_resource(random.choice(workers))
+        random_workers = random.sample(workers, 3)
+        task.add_required_resources(random_workers)
+
     return problem
 
 def _solve_problem(problem, verbose=False):
@@ -217,7 +217,6 @@ class TestSolver(unittest.TestCase):
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         # display solution, using both ascii or matplotlib
-        #problem.print_solution()
         solution.render_gantt_matplotlib(render_mode='Resources',
                                         show_plot=False,
                                         fig_filename='test_render_resources.svg')
@@ -270,7 +269,7 @@ class TestSolver(unittest.TestCase):
     def test_start_latest_objective_big_problem(self):
         problem = _get_big_random_problem('SolveStartLatestObjective', 1000)
         problem.add_objective_start_latest()
-        self.assertTrue(_solve_problem(problem, verbose=True))
+        self.assertTrue(_solve_problem(problem))
 
     def test_start_earliest_objective_big_problem(self):
         problem = _get_big_random_problem('SolveStartEarliestObjective', 1000)
@@ -321,7 +320,7 @@ class TestSolver(unittest.TestCase):
         problem = ps.SchedulingProblem('OperatorNot', horizon=4)
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask('task1', duration=3)
-        #problem.add_task(task_1)
+
         problem.add_constraint(ps.not_(ps.TaskStartAt(task_1, 0)))
         solution = _solve_problem(problem)
         self.assertTrue(solution)
@@ -336,7 +335,7 @@ class TestSolver(unittest.TestCase):
         #problem.add_task(task_1)
         problem.add_constraint(ps.and_(ps.not_(ps.TaskStartAt(task_1, 0)),
                                        ps.not_(ps.TaskStartAt(task_1, 1))))
-        solution = _solve_problem(problem, verbose=True)
+        solution = _solve_problem(problem)
         self.assertTrue(solution)
         # the only solution is to start at 2
         self.assertTrue(solution.tasks[task_1.name].start == 2)
@@ -352,7 +351,7 @@ class TestSolver(unittest.TestCase):
         problem.add_constraint(ps.TaskStartAt(task_1, 1))
         problem.add_constraint(ps.implies(task_1.start == 1,
                                           ps.TaskStartAt(task_2, 4)))
-        solution = _solve_problem(problem, verbose=True)
+        solution = _solve_problem(problem)
         self.assertTrue(solution)
         # the only solution is to start at 2
         self.assertTrue(solution.tasks[task_1.name].start == 1)
@@ -365,12 +364,11 @@ class TestSolver(unittest.TestCase):
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask('task1', duration=2)
         task_2 = ps.FixedDurationTask('task2', duration=2)
-        #problem.add_tasks([task_1, task_2])
         problem.add_constraint(ps.TaskStartAt(task_1, 1))
         problem.add_constraint(ps.if_then_else(task_1.start == 0, # this condition is False
                                                ps.TaskStartAt(task_2, 4), # assertion not set
                                                ps.TaskStartAt(task_2, 2))) # this one
-        solution = _solve_problem(problem, verbose=True)
+        solution = _solve_problem(problem)
         self.assertTrue(solution)
         # the only solution is to start at 2
         self.assertTrue(solution.tasks[task_1.name].start == 1)
@@ -436,10 +434,17 @@ class TestSolver(unittest.TestCase):
     def test_export_to_smt2(self):
         problem = _get_big_random_problem('SolveExportToSMT2', 5000)
         solver = ps.SchedulingSolver(problem)
-        solution = _solve_problem(problem, verbose=True)
+        solution = _solve_problem(problem)
         self.assertTrue(solution)
         solver.export_to_smt2('big_random_problem.smt2')
         self.assertTrue(os.path.isfile('big_random_problem.smt2'))
+
+    def test_export_solution_to_json(self):
+        problem = _get_big_random_problem('SolutionExportToJson', 5000)
+        solver = ps.SchedulingSolver(problem)
+        solution = _solve_problem(problem)
+        self.assertTrue(solution)
+        solution.to_json_string()
 
     #
     # Indicators
@@ -454,6 +459,19 @@ class TestSolver(unittest.TestCase):
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[i_1.name], 4)
+
+    def test_cost_indicator(self) -> None:
+        problem = ps.SchedulingProblem('ComputeIndicator')
+        t_1 = ps.VariableDurationTask('t1', work_amount=100)
+        worker_1 = ps.Worker('Worker1', productivity=4, cost_per_period=10)
+        worker_2 = ps.Worker('Worker2', productivity=7, cost_per_period=20)
+        all_workers = [worker_1, worker_2]
+        problem.add_objective_makespan()
+        t_1.add_required_resources(all_workers)
+        cost_ind = problem.add_indicator_resource_cost(all_workers)
+        solution = _solve_problem(problem)
+        self.assertTrue(solution)
+        self.assertEqual(solution.indicators[cost_ind.name], 300)
 
 
 if __name__ == "__main__":

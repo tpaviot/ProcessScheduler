@@ -42,10 +42,12 @@ class TestFeatures(unittest.TestCase):
     # Tasks
     #
     def test_create_task_zero_duration(self) -> None:
+        pb = ps.SchedulingProblem('ProblemWithoutHorizon')
         task = ps.ZeroDurationTask('zdt')
         self.assertIsInstance(task, ps.ZeroDurationTask)
 
     def test_create_task_fixed_duration(self) -> None:
+        pb = ps.SchedulingProblem('ProblemWithoutHorizon')
         task = ps.FixedDurationTask('fdt', 1)
         self.assertIsInstance(task, ps.FixedDurationTask)
         with self.assertRaises(TypeError):
@@ -60,10 +62,14 @@ class TestFeatures(unittest.TestCase):
             ps.FixedDurationTask('NegativeWorkAmount', 2, work_amount=-3)
 
     def test_create_task_variable_duration(self) -> None:
+        pb = ps.SchedulingProblem('ProblemWithoutHorizon')
         ps.VariableDurationTask('vdt1')
         ps.VariableDurationTask('vdt2', length_at_most=4)
         ps.VariableDurationTask('vdt3', length_at_least=4)
         ps.VariableDurationTask('vdt4', work_amount=10)
+
+    def test_task_types(self) -> None:
+        pb = ps.SchedulingProblem('ProblemWithoutHorizon')
         with self.assertRaises(TypeError):
             ps.VariableDurationTask('vdt5', length_at_most=4.5)
         with self.assertRaises(TypeError):
@@ -76,6 +82,12 @@ class TestFeatures(unittest.TestCase):
             ps.VariableDurationTask('vdt9', work_amount=1.5)
         with self.assertRaises(TypeError):
             ps.VariableDurationTask('vdt10', work_amount=None)
+
+    def test_task_same_names(self) -> None:
+        pb = ps.SchedulingProblem('ProblemWithoutHorizon')
+        ps.VariableDurationTask('t1')
+        with self.assertRaises(ValueError):
+            ps.VariableDurationTask('t1')
     #
     # Workers
     #
@@ -88,6 +100,7 @@ class TestFeatures(unittest.TestCase):
             ps.Worker('WorkerFloatProductivity', productivity=3.14)
 
     def test_create_alternative_workers(self) -> None:
+        pb = ps.SchedulingProblem('ProblemWithoutHorizon')
         worker_1 = ps.Worker('wkr_1')
         worker_2 = ps.Worker('wkr_2')
         worker_3 = ps.Worker('wkr_3')
@@ -101,6 +114,12 @@ class TestFeatures(unittest.TestCase):
         self.assertIsInstance(double_alternative_workers,
                               ps.AlternativeWorkers)
 
+    def test_worker_same_name(self) -> None:
+        pb = ps.SchedulingProblem('ProblemWithoutHorizon')
+        worker_1 = ps.Worker('wkr_1')
+        with self.assertRaises(ValueError):
+            worker_12 = ps.Worker('wkr_1')
+        
     def test_eq_overloading(self) -> None:
         pb = ps.SchedulingProblem('EqOverloading')
         task_1 = ps.ZeroDurationTask('task1')
@@ -112,30 +131,11 @@ class TestFeatures(unittest.TestCase):
         pb = ps.SchedulingProblem('ProblemRedundantTaskResource')
         # we should not be able to add twice the same resource or task
         task_1 = ps.ZeroDurationTask('task1')
-        #pb.add_task(task_1)
-        #pb.add_task(task_1) # a warning should be raised
         self.assertEqual(list(pb.context.tasks), [task_1])
-        # objects that are not tasks should not be added to the problem
-        #with self.assertRaises(TypeError):
-            #pb.add_task(True)
-        #with self.assertRaises(TypeError):
-            #pb.add_task("gg")
-        #with self.assertRaises(TypeError):
-            #pb.add_task(3.14)
         self.assertEqual(list(pb.context.tasks), [task_1])
         # do the same for resources
         worker_1 = ps.Worker('Worker1')
-        #pb.add_resource(worker_1)
-        #pb.add_resource(worker_1)
         self.assertEqual(list(pb.context.resources), [worker_1])
-        # it might not be possible to add another kind
-        # of resource to a problem
-        #with self.assertRaises(TypeError):
-            #pb.add_resource(task_1)
-        #with self.assertRaises(TypeError):
-            #pb.add_resource(1)
-        #with self.assertRaises(TypeError):
-            #pb.add_resource(2.0)
         self.assertEqual(list(pb.context.resources), [worker_1])
 
     def test_resource_requirements(self) -> None:
@@ -143,12 +143,23 @@ class TestFeatures(unittest.TestCase):
         task_1 = ps.FixedDurationTask('task1', duration=3)
         worker_1 = ps.Worker('Worker1')
         worker_2 = ps.Worker('Worker2')
+        worker_3 = ps.Worker('Worker3')
+        worker_4 = ps.Worker('Worker4')
         task_1.add_required_resource(worker_1)
-        task_1.add_required_resources([worker_1, worker_2])
+        task_1.add_required_resource(worker_2)
+        task_1.add_required_resources([worker_3, worker_4])
+
+    def test_wrong_assignement(self) -> None:
+        pb = ps.SchedulingProblem('ResourceRequirements')
+        task_1 = ps.FixedDurationTask('task1', duration=3)
+        worker_1 = ps.Worker('Worker1')
+        task_1.add_required_resource(worker_1)
         with self.assertRaises(TypeError):
             task_1.add_required_resource(3)
         with self.assertRaises(TypeError):
             task_1.add_required_resources("a_string")
+        with self.assertRaises(ValueError):
+            task_1.add_required_resource(worker_1)
 
     #
     # Single task constraints
