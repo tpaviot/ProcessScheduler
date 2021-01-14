@@ -38,10 +38,11 @@ solution.render_gantt_matplotlib()
 
 ## Features
 
-*   tasks: ZeroDurationTask, FixedDurationTask, VariableDurationTask
-*   resources: Worker, AlternativeWorkers
+*   tasks: ZeroDurationTask, FixedDurationTask, VariableDurationTask, work amount
+*   resources: Worker, SelectWorkers, cost_per_period, productivity
 *   task constraints: TasksPrecedence, TasksStartSynced, TasksEndSynced, TaskStartAt, TaskEndAt, TaskStartAfterStrict, TaskStartAfterLax, TaskEndBeforeStrict, TaskEndBeforeLax
-*   nested boolean operators between task constraints: not, or, xor, and
+*   resource constraints: AllSameSelected, AllDifferentSelected
+*   first-order-logic operations (not, or, xor, and, implies, if/then/else) between task or resource constraints,
 *   objectives: makespan, flowtime, earliest, latest
 
 ## Installation
@@ -69,8 +70,13 @@ There are some [Jupypter notebooks](https://github.com/tpaviot/ProcessScheduler/
 
 ## Code quality
 
-ProcessScheduler code is unittested, covered (coverage.py, codecov.io), continuously-integrated at MS azure, analyzed (codacy).
+ProcessScheduler uses the following tools/methods to ensure code quality:
+
+-   unittested
+-   code coverage (coverage.py, codecov.io)
+-   continuous-integration at MS azure
+-   static code analysis (codacy).
 
 ## License/Author
 
-ProcessScheduler is distributed under the terms of the GNU General Public License v3 or (at your option) any later version. 
+ProcessScheduler is distributed under the terms of the GNU General Public License v3 or (at your option) any later version. It is currently developed and maitained by Thomas Paviot (tpaviot@gmail.com).
