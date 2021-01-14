@@ -23,8 +23,8 @@ class AllSameSelected(_Constraint):
     """
     def __init__(self, alternate_workers_1, alternate_workers_2):
         super().__init__()
-        # we ceck resources in alt work 1, if it is present in
-        # alterna worker 2 as well, then add a constraint
+        # we check resources in alt work 1, if it is present in
+        # Select worker 2 as well, then add a constraint
         for res_work_1 in alternate_workers_1.selection_dict:
             if res_work_1 in alternate_workers_2.selection_dict:
                 self.add_assertion(alternate_workers_1.selection_dict[res_work_1] == alternate_workers_2.selection_dict[res_work_1])
@@ -35,7 +35,7 @@ class AllDifferentSelected(_Constraint):
     """
     def __init__(self, alternate_workers_1, alternate_workers_2):
         super().__init__()
-        # we ceck resources in alt work 1, if it is present in
+        # we check resources in alt work 1, if it is present in
         # alterna worker 2 as well, then add a constraint
         for res_work_1 in alternate_workers_1.selection_dict:
             if res_work_1 in alternate_workers_2.selection_dict:

@@ -13,7 +13,6 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
 from typing import List, Optional
-import warnings
 
 from z3 import Bool, Int, And, If
 
@@ -51,7 +50,10 @@ class Task(_NamedUIDObject):
         self.optional = False
 
         # add this task to the current context
-        ps_context.main_context.add_task(self)
+        if ps_context.main_context is None:
+            raise AssertionError('No context available. First create a SchedlingProblem')
+        else:
+            ps_context.main_context.add_task(self)
 
     def set_optional(self):
         self.optional = True

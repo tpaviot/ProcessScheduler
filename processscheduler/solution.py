@@ -14,7 +14,7 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 
 import json
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 try:
     import matplotlib.pyplot as plt
@@ -43,8 +43,8 @@ class ResourceSolution:
     def __init__(self, name):
         self.name = name
         self.type = ''  # the name of the task type
-        # an assisnement is a list of tuples : [(Task_name, start, end), (task_2name, start2, end2) etc.]
-        self.assignements = []
+        # an assignment is a list of tuples : [(Task_name, start, end), (task_2name, start2, end2) etc.]
+        self.assignments = []
 
 class SchedulingSolution:
     """ A class that represent the solution of a scheduling problem. Can be rendered
@@ -152,8 +152,6 @@ class SchedulingSolution:
                 # build the bar text string
                 task_solution = self.tasks[task_name]
                 if task_solution.assigned_resources:
-                    #resources_names = ['%s' % c for c in task.assigned_resources]
-                    #resources_names.sort()  # alphabetical sort
                     text = ','.join(task_solution.assigned_resources)
                 else:
                     text = r'($\emptyset$)'
@@ -165,8 +163,8 @@ class SchedulingSolution:
             for i, resource_name in enumerate(self.resources):
                 ress = self.resources[resource_name]
 
-                #each interval from the busy_intervals list is rendered as a bar
-                for task_name, start, end in ress.assignements:
+                # each interval from the busy_intervals list is rendered as a bar
+                for task_name, start, end in ress.assignments:
                     draw_broken_barh_with_text(start,
                                                end - start,
                                                task_colors[task_name],

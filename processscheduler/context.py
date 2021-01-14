@@ -25,6 +25,10 @@ class SchedulingContext:
     The methods defined in this class ensures
     """
     def __init__(self):
+        # set and clear variables
+        self.clear()
+
+    def clear(self):
         # the list of tasks to be scheduled in this scenario
         self.tasks = [] # type: Dict[str, Task]
         # the list of resources available in this scenario
@@ -75,3 +79,6 @@ class SchedulingContext:
 # the scheduling problem will set
 # this variable
 main_context = None
+
+def clear_main_context() -> None:
+    main_context.clear()

@@ -155,7 +155,7 @@ class SchedulingSolver:
             new_task_solution.end = z3_sol[task.end].as_long()
             new_task_solution.duration = z3_sol[task.duration].as_long()
 
-            # process resource assignement
+            # process resource assignments
             for req_res in task.required_resources:
                 # by default, resource_should_be_assigned is set to True
                 # if will be set to False if the resource is an alternative worker
@@ -186,7 +186,7 @@ class SchedulingSolver:
                 start = z3_sol[st_var].as_long()
                 end = z3_sol[end_var].as_long()
                 if start >= 0 and end >= 0:
-                    new_resource_solution.assignements.append((task_name, start, end))
+                    new_resource_solution.assignments.append((task_name, start, end))
 
             solution.add_resource_solution(new_resource_solution)
 

@@ -49,7 +49,7 @@ class TestSolver(unittest.TestCase):
     def test_schedule_single_fixed_duration_task(self) -> None:
         problem = ps.SchedulingProblem('SingleFixedDurationTaskScheduling', horizon=2)
         task = ps.FixedDurationTask('task', duration=2)
-        
+
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         # task should have been scheduled with start at 0
@@ -256,7 +256,7 @@ class TestSolver(unittest.TestCase):
         # another solution
         solution_2 = _solve_problem(problem)
         self.assertTrue(solution_2)
-        
+
         horizon_with_optimization = solution_2.horizon
         # horizon_with_optimization should be less than horizon_without_optimization
         self.assertLess(horizon_with_optimization, horizon_without_optimization)
@@ -281,7 +281,7 @@ class TestSolver(unittest.TestCase):
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask('task1', duration=2)
         task_2 = ps.FixedDurationTask('task2', duration=3)
-        
+
         problem.add_constraint(ps.TaskPrecedence(task_1, task_2))
 
         problem.add_objective_start_latest()
@@ -297,7 +297,7 @@ class TestSolver(unittest.TestCase):
         task_1 = ps.FixedDurationTask('task1', duration=2, priority=1)
         task_2 = ps.FixedDurationTask('task2', duration=2, priority=10)
         task_3 = ps.FixedDurationTask('task3', duration=2, priority=100)
-        
+
         problem.add_constraint(ps.TasksDontOverlap(task_1, task_2))
         problem.add_constraint(ps.TasksDontOverlap(task_2, task_3))
         problem.add_constraint(ps.TasksDontOverlap(task_1, task_3))
@@ -441,7 +441,6 @@ class TestSolver(unittest.TestCase):
 
     def test_export_solution_to_json(self):
         problem = _get_big_random_problem('SolutionExportToJson', 5000)
-        solver = ps.SchedulingSolver(problem)
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         solution.to_json_string()

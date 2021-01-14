@@ -12,15 +12,14 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 import warnings
 
-from z3 import Bool, BoolRef, Int, ModelRef, Or, Sum
+from z3 import Bool, Int, ModelRef, Or, Sum
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
 from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective, BuiltinIndicator
-from processscheduler.resource import _Resource
-from processscheduler.task import Task
+
 import processscheduler.context as ps_context
 
 class SchedulingProblem(_NamedUIDObject):

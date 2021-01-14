@@ -33,7 +33,7 @@ class _NamedUIDObject:
     """ The base object for most ProcessScheduler classes"""
     def __init__(self, name: str) -> None:
         """
-        Instanciation of a _NamedUIDObject
+        Instantiation of a _NamedUIDObject
 
         :param name: the instance name, provided as a string.
         """
