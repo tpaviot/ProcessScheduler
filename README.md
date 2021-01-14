@@ -20,19 +20,18 @@ pb = ps.SchedulingProblem('HelloWorldProcessScheduler')
 # add two tasks
 task_hello = ps.FixedDurationTask('Process', duration=2)
 task_world = ps.FixedDurationTask('Scheduler', duration=2)
-pb.add_tasks([task_hello, task_world])
 
 # precedence constraint: task_world must be scheduled
 # after task_hello
 c1 = ps.TaskPrecedence(task_hello, task_world, offset=0)
-pb.add_constraint(c1)
+pb.add_constraint(c1) # explicitly add this constraint to the problem
 
 # solve
 solver = ps.SchedulingSolver(pb)
-solver.solve()
+solution = solver.solve()
 
 # displays solution, ascii or matplotlib gantt diagram
-pb.render_gantt_matplotlib()
+solution.render_gantt_matplotlib()
 ```
 
 ![png](examples-notebooks/pics/hello_world_gantt.svg)
