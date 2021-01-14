@@ -506,6 +506,19 @@ class TestSolver(unittest.TestCase):
         self.assertTrue(solution)
         self.assertEqual(solution.horizon, 4)
 
+    def test_resource_unavailable(self) -> None:
+        pb = ps.SchedulingProblem('ResourceUnavailable', horizon=10)
+        task_1 = ps.FixedDurationTask('task1', duration = 3)
+        worker_1 = ps.Worker('Worker1')
+        task_1.add_required_resource(worker_1)
+        c1 = ps.ResourceUnavailable(worker_1, [(1, 3), (6, 8)])
+        pb.add_constraint(c1)
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertEqual(solution.tasks[task_1.name].start, 3)
+        self.assertEqual(solution.tasks[task_1.name].end, 6)
+
 
 if __name__ == "__main__":
     unittest.main()

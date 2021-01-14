@@ -134,7 +134,7 @@ class SchedulingSolution:
         # in Resources mode, create one line per resource on the y axis
         gantt.grid(axis='x', linestyle='dashed')
 
-        def draw_broken_barh_with_text(start, length, bar_color, text):
+        def draw_broken_barh_with_text(start, length, bar_color, text, hatch=None):
             # first compute the bar dimension
             if length == 0:  # zero duration tasks, to be visible
                 bar_dimension = (start - 0.05, 0.1)
@@ -142,7 +142,7 @@ class SchedulingSolution:
                 bar_dimension = (start, length)
             gantt.broken_barh([bar_dimension], (i * 2, 2),
                               edgecolor='black', linewidth=1,
-                              facecolors=bar_color)
+                              facecolors=bar_color, hatch=hatch)
             gantt.text(x=start + length / 2, y=i * 2 + 1,
                        s=text, ha='center', va='center', color='black')
 
@@ -162,13 +162,22 @@ class SchedulingSolution:
         elif render_mode == 'Resources':
             for i, resource_name in enumerate(self.resources):
                 ress = self.resources[resource_name]
-
                 # each interval from the busy_intervals list is rendered as a bar
                 for task_name, start, end in ress.assignments:
+                    # unavailabilities are rendered with a grey dashed bar
+                    if 'NotAvailable' in task_name:
+                        hatch = '//'
+                        bar_color = 'white'
+                        text_to_display =''
+                    else:
+                        hatch = None
+                        bar_color = task_colors[task_name]
+                        text_to_display = task_name
                     draw_broken_barh_with_text(start,
                                                end - start,
-                                               task_colors[task_name],
-                                               task_name)
+                                               bar_color,
+                                               text_to_display,
+                                               hatch)
         # display indicator values in the legend area
         if self.indicators and show_indicators:
             for indicator_name in self.indicators:

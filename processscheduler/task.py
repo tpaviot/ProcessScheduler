@@ -134,6 +134,12 @@ class FixedDurationTask(Task):
         self.add_assertion(self.start + self.duration == self.end)
         self.add_assertion(self.duration == duration)
 
+class UnavailabilityTask(FixedDurationTask):
+    """ a task that tells that a resource is unavailable during this period. This
+    task is not publicly exposed, it is used by the resource constraint ResourceUnavailability """
+    def __init__(self, name: str, duration: int) -> None:
+        super().__init__(name, duration)
+
 class VariableDurationTask(Task):
     """ Tasj with a priori unknown duration. its duration is computed by the solver """
     def __init__(self, name: str,

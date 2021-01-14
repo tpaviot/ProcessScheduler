@@ -12,6 +12,9 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
+from z3 import Int
+
+from processscheduler.task import UnavailabilityTask
 from processscheduler.base import _Constraint
 
 #
@@ -40,3 +43,28 @@ class AllDifferentSelected(_Constraint):
         for res_work_1 in alternate_workers_1.selection_dict:
             if res_work_1 in alternate_workers_2.selection_dict:
                 self.add_assertion(alternate_workers_1.selection_dict[res_work_1] != alternate_workers_2.selection_dict[res_work_1])
+
+class ResourceUnavailable(_Constraint):
+    """ set unavailablity or a resource, in terms of busy intervals
+    """
+    def __init__(self, resource, list_of_intervals):
+        """__init__
+
+        :param resource: the resource
+        :list_of_intervals: periods for which the resource is unavailable for any task.
+        for example [(0, 2), (5, 8)]
+        """
+        super().__init__()
+        # we check resources in alt work 1, if it is present in
+        # alterna worker 2 as well, then add a constraint
+
+        # for each interval we create a task 'UnavailableResource%i'
+        for i, interval in enumerate(list_of_intervals):
+            interval_lower_bound = interval[0]
+            interval_upper_bound = interval[1]
+            new_t = UnavailabilityTask('%sNotAvailable%i' % (resource.name, i),
+                                       duration = interval_upper_bound - interval_lower_bound)
+            # add this resource to the task
+            self.add_assertion(new_t.start == interval_lower_bound)
+            self.add_assertion(new_t.end == interval_upper_bound)
+            new_t.add_required_resource(resource)
