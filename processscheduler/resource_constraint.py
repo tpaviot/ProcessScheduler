@@ -12,6 +12,7 @@ You should have received a copy of the GNU General Public License along with
 this program. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import uuid
 from z3 import Int
 
 from processscheduler.task import UnavailabilityTask
@@ -48,21 +49,16 @@ class ResourceUnavailable(_Constraint):
     """ set unavailablity or a resource, in terms of busy intervals
     """
     def __init__(self, resource, list_of_intervals):
-        """__init__
+        """
 
         :param resource: the resource
-        :list_of_intervals: periods for which the resource is unavailable for any task.
+        :param list_of_intervals: periods for which the resource is unavailable for any task.
         for example [(0, 2), (5, 8)]
         """
         super().__init__()
-        # we check resources in alt work 1, if it is present in
-        # alterna worker 2 as well, then add a constraint
-
         # for each interval we create a task 'UnavailableResource%i'
-        for i, interval in enumerate(list_of_intervals):
-            interval_lower_bound = interval[0]
-            interval_upper_bound = interval[1]
-            new_t = UnavailabilityTask('%sNotAvailable%i' % (resource.name, i),
+        for interval_lower_bound, interval_upper_bound in list_of_intervals:
+            new_t = UnavailabilityTask('%sNotAvailable%i' % (resource.name, uuid.uuid4().int),
                                        duration = interval_upper_bound - interval_lower_bound)
             # add this resource to the task
             self.add_assertion(new_t.start == interval_lower_bound)

@@ -519,6 +519,23 @@ class TestSolver(unittest.TestCase):
         self.assertEqual(solution.tasks[task_1.name].start, 3)
         self.assertEqual(solution.tasks[task_1.name].end, 6)
 
+    def test_resource_unavailable_2(self) -> None:
+        pb = ps.SchedulingProblem('ResourceUnavailable2', horizon=10)
+        task_1 = ps.FixedDurationTask('task1', duration = 3)
+        worker_1 = ps.Worker('Worker1')
+        task_1.add_required_resource(worker_1)
+        # difference with the first one: build 2 constraints
+        # merged using a and_
+        c1 = ps.ResourceUnavailable(worker_1, [(1, 3)])
+        c2 = ps.ResourceUnavailable(worker_1, [(6, 8)])
+        pb.add_constraint(ps.and_(c1, c2))
+        # that should not change the problem solution
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertEqual(solution.tasks[task_1.name].start, 3)
+        self.assertEqual(solution.tasks[task_1.name].end, 6)
+
 
 if __name__ == "__main__":
     unittest.main()
