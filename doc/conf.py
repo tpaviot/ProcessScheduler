@@ -7,7 +7,7 @@
 # -- Path setup --------------------------------------------------------------
 
 import os
-import pkg_resources
+import sys
 
 # -- Project information -----------------------------------------------------
 

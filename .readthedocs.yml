@@ -1,0 +1,8 @@
+version: 2
+formats:
+  - htmlzip
+python:
+  version: 3.8
+  install:
+    - requirements: doc/requirements.txt
+  system_packages: true

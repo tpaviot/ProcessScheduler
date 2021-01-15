@@ -1,5 +1,6 @@
-sphinx >= 3.0
-sphinx-rtd-theme
+z3-solver
+matplotlib
 sphinx-autodoc-typehints
-nbsphinx
 ipykernel
+nbsphinx
+-e .
