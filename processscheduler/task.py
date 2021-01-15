@@ -46,21 +46,18 @@ class Task(_NamedUIDObject):
         # idem for the upper bound: no need to assert task.end <= horizon
         self.upper_bounded = False
 
-        # optional flag, set to True if this task is optional, else True
-        self.optional = False
-
         # add this task to the current context
         if ps_context.main_context is None:
             raise AssertionError('No context available. First create a SchedlingProblem')
-        else:
-            ps_context.main_context.add_task(self)
+        ps_context.main_context.add_task(self)
 
-    def set_optional(self):
-        self.optional = True
+    def add_required_resource(self, resource: _Resource) -> None:
+        """
+        Add a required resource to the current task.
 
-    def add_required_resource(self, resource: _Resource) -> bool:
-        """ add a required resource to the current task, required does not
-        mean it actually will be assigned """
+        Args:
+            resource: any of one of the _Resource derivatives class (Worker, SelectWorkers etc.)
+        """
         if not isinstance(resource, _Resource):
             raise TypeError('you must pass a Resource instance')
         if resource in self.required_resources:
@@ -102,15 +99,28 @@ class Task(_NamedUIDObject):
             self.add_assertion(resource_busy_start ==  self.start)
             # finally, store this resource into the resource list
             self.required_resources.append(resource)
-        return True
 
-    def add_required_resources(self, list_of_resources):
+    def add_required_resources(self, list_of_resources: List[_Resource]) -> None:
+        """
+        Add a set of required resources to the current task.
+
+        This method calls the add_required_resource method for each resource of the list.
+        As a consequence, be aware this is not an atomic transaction.
+
+        Args:
+            list_of_resources: the list of resources to add.
+        """
         for resource in list_of_resources:
             self.add_required_resource(resource)
 
 class ZeroDurationTask(Task):
-    """ Task with a duration of 0, i.e. start==end. A ZeroDurationTask
-    can have some resources required """
+    """ Task with zero duration, an instant in the schedule.
+
+    The task end and start are constrained to be equal.
+
+    Args:
+        name: the task name. It must be unique
+    """
     def __init__(self, name: str) -> None:
         super().__init__(name)
         # add an assertion: end = start because the duration is zero
@@ -118,11 +128,18 @@ class ZeroDurationTask(Task):
         self.add_assertion(self.duration == 0)
 
 class FixedDurationTask(Task):
-    """ Task with constant duration """
+    """ Task with constant duration.
+
+    Args:
+        name: the task name. It must be unique
+        duration: the task duration as a number of periods
+        work_amount: represent the quantity of work this task must produce
+        priority: the task priority. The greater the priority, the sooner it will be scheduled
+    """
     def __init__(self, name: str,
                  duration: int,
                  work_amount: Optional[int] = 0,
-                 priority: Optional[int] = 1):
+                 priority: Optional[int] = 1) -> None:
         super().__init__(name)
         if not is_strict_positive_integer(duration):
             raise TypeError('duration must be a strict positive integer')

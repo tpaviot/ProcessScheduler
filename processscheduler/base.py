@@ -21,9 +21,11 @@ from z3 import BoolRef
 # Utility functions
 #
 def is_strict_positive_integer(value: int) -> bool:
+    """ Return True if the parameter value is an integer > 0 """
     return isinstance(value, int) and value > 0
 
 def is_positive_integer(value: int) -> bool:
+    """ Return True if the parameter value is an integer >= 0 """
     return isinstance(value, int) and value >= 0
 
 #
@@ -32,10 +34,12 @@ def is_positive_integer(value: int) -> bool:
 class _NamedUIDObject:
     """ The base object for most ProcessScheduler classes"""
     def __init__(self, name: str) -> None:
-        """
-        Instantiation of a _NamedUIDObject
+        """ The base name for all ProcessScheduler objects.
 
-        :param name: the instance name, provided as a string.
+        Provides an assertions list, a uniqueid.
+
+        Args:
+            name: the object name. It must be unique
         """
         # check name type
         if not isinstance(name, str):
@@ -59,19 +63,20 @@ class _NamedUIDObject:
     def __repr__(self) -> str:
         return self.name
 
-    def add_assertion(self, z3_assertion: BoolRef):
-        """ add a z3 assertion to be satisfied """
+    def add_assertion(self, z3_assertion: BoolRef) -> None:
+        """
+        Add a z3 assertion to the list of assertions to be satisfied.
+
+        Args:
+            z3_assertion: the z3 assertion
+        """
         self.assertions.append(z3_assertion)
 
     def get_assertions(self) -> List[BoolRef]:
-        """ return the assertions list """
+        """ Return the assertions list """
         return self.assertions
 
-#
-# Generic _Constraint class definition.
-# Used by both task and resource constraints
-#
 class _Constraint(_NamedUIDObject):
-    """ abstract _Constraint class """
+    """ The base class for all constraints """
     def __init__(self):
         super().__init__(name='')

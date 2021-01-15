@@ -10,15 +10,15 @@ A :class:`SchedulingProblem` instance holds a *time* interval: the lower bound o
 
     problem_modeling = SchedulingProblem('MySchedulingProblem', horizon=20)
  
-The time interval is divided into a finite number of *periods*. Each period has a duration of 1. Let :math:`horizon` be the horizon, then the number of periods is :math:`horizon` as well, and the number of points in the interval :math:`[0;horizon]` is :math:`horizon+1`.
+The time interval is divided into a finite number of *periods*. Each period has a duration of 1. If :math:`horizon` is the horizon, then the number of periods is :math:`horizon` as well, and the number of points in the interval :math:`[0;horizon]` is :math:`horizon+1`.
 
 .. image:: img/TimeLineHorizon.svg
     :align: center
     :width: 90%
 
-A period is the finest granularity that describes the time line, the task durations, and the schedule itself. The time line is dimensionless. It is up to you to map one period to the desired duration, in seconds/minutes/hours. For example:
+A period is the finest granularity level that describes the time line, the task durations, and the schedule itself. The time line is dimensionless. It is up to you to map one period to the desired duration, in seconds/minutes/hours. For example:
 
-- you need to schedule a set of tasks in a single day, let's say from 8 am to 6pm (office hours). The time interval is 10 hours length. If you plan to schedule tasks with a granularity of 1 hour, then the horizon value will be 10:
+- you need to schedule a set of tasks in a single day, let's say from 8 am to 6pm (office hours). The time interval is then 10 hours length. If you plan to schedule tasks with a granularity of 1 hour, then the horizon value will be 10 in order to get the desired number of periods:
 
 .. math:: horizon = \frac{18-8}{1}=10
 
@@ -27,4 +27,4 @@ A period is the finest granularity that describes the time line, the task durati
 .. math:: horizon = \frac{12-8}{1/60}=240
 
 .. note::
-   The :attr:`horizon` attribute is optional. If its not passed to the :class:`SchedulingProblem` instantiation, the solver will later find an horizon value compliant with the set of constraints. In the case where your scheduling problem aims at optimizing the horizon (e.g. a makespan objective), then don't set the horizon at startup.
+   The :attr:`horizon` attribute is optional. If it is not passed to the :class:`SchedulingProblem` instantiation method, the solver will later find an horizon value compliant with the set of constraints. In the case where the scheduling problem aims at optimizing the horizon (e.g. a makespan objective), the horizon should not be set manually.

@@ -10,6 +10,7 @@ Task API
    :members:
    :show-inheritance:
    :inherited-members:
+   :exclude-members: Task, UnavailabilityTask
  
 Resource API
 ------------
