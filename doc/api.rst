@@ -10,9 +10,7 @@ Task API
    :members:
    :show-inheritance:
    :inherited-members:
-   :autodoc_typehints:
-
-
+ 
 Resource API
 ------------
 .. automodule:: processscheduler.resource
