@@ -1,9 +1,7 @@
 Introduction
 ============
 
-ProcessScheduler is a 100% pure python library to compute resource-constrained task schedules. It is distributed under the terms of the `GNU General Public License v3 <https://www.gnu.org/licenses/gpl-3.0.txt>`_ or later.
-
-It is mostly intended to be used in an industrial context (manufacturing, building industry) but can be used for any related scheduling problem. It targets complex problems for which an obvious solution can not be found.
+ProcessScheduler is intended to be used in an industrial context (manufacturing, building industry, healthcare), and can be used for any related scheduling problem. It targets complex problems for which an obvious solution can not be found.
 
 Features
 --------

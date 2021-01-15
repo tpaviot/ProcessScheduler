@@ -9,6 +9,9 @@ According to the `APICS dictionary <http://www.apics.org/>`_, a task may either 
 
 In the context of this software library, the concept of task reflects the first point. The purpose of ProcessScheduler is to compute a sequence (a temporal ordering) of a collection of tasks that satisfy a set of constraints.
 
+Start/end/duration
+------------------
+
 The :class:`Task` class and its derivatives represent any task. A :class:`Task` instance is defined by the three following parameters:
 
 - :attr:`start`: a point in the :math:`[0, horizon]` integer interval. If the task is scheduled, then :math:`start>=0`
@@ -32,6 +35,10 @@ Three :class:`Task` derivative classes can be used to represent a task:
 
     project_kickup = ZeroDurationTask('KickUp')
 
+.. warning::
+
+	Each :class:`Task` instance must have a unique name in the scheduling problem. To prevent that two tasks have the same name, ProcessScheduler raises an exception if ever a task with an existing name is created.
+
 - a :class:`FixedDurationTask`: the task duration is known *a priori*, it will not be changed by the solver. In that case, you must pass the :attr:`duration` parameter when creating the instance:
 
 .. code-block:: python
@@ -48,3 +55,9 @@ Three :class:`Task` derivative classes can be used to represent a task:
 
 .. note::
   A :class:`VariableDurationTask` duration can be bounded by lower and upper values (a number of periods).
+
+Work amount
+-----------
+The :attr:`work_amount` is the total amount of work that must be produced by the :class:`Task`. It is set to :const:`0` by default.
+
+In a Formula 1 race, the 

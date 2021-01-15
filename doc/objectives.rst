@@ -19,6 +19,9 @@ Indicator values are computed by the solver, and are available after a solution 
 
 	You can add any number of Indicators. The mathematical expression must be expressed in a polynomial formalism, i.e. you can't use advanced mathematical functions such as :func:`sqrt`, :func:`sin` or whatever.
 
+Builtin objectives
+------------------
+
 Objective
 ---------
 
@@ -26,4 +29,4 @@ An objective is a target value for an :class:`Indicator` or any of the variables
 
 - if the target value is known, then the objective can either be :class:`EqualObjective`, :class:`AtLeastObjective` or :class:`AtMostObjective`
 
-- it the target value is unknwon but you want to find a minimal or maximal value, the the objective can be a :class:`MaximizeObjective` or :class:`MinimizeObjective`. This turns the scheduling problem into an optimization problem: the solver finds the best possible solution among many.
+- it the target value is unknown but you want to find a minimal or maximal value, the the objective can be a :class:`MaximizeObjective` or :class:`MinimizeObjective`. This turns the scheduling problem into an optimization problem: the solver finds the best possible solution among many.
