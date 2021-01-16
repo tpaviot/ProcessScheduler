@@ -1,8 +1,7 @@
+Resource Constraints
+====================
 
-Built-in Resource Constraints
-=============================
-
-ProcessScheduler provides a set of ready-to-use resource constraints. They allow expressing common rules such as "the resource A is avaiable only from 8 am to 12" etc.
+ProcessScheduler provides a set of ready-to-use resource constraints. They allow expressing common rules such as "the resource A is available only from 8 am to 12" etc.
 
 There are a set of builtin ready-to-use constraints, listed below.
 
@@ -13,3 +12,5 @@ There are a set of builtin ready-to-use constraints, listed below.
 - :class:`AllDifferentWorkers`
 
 - :class:`AllSameWorkers`
+
+- :class:`ResourceUnavailable`

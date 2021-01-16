@@ -26,18 +26,22 @@ This document explains how to write the model, run the solver, and finally analy
 
 	ProcessScheduler was inspired by the fantastic `pyschdedule <https://github.com/timnon/pyschedule>`_ library by Tim Nonner. By choosing to rely on an SMT solver rather than a MIP solver such as CBC/Gurobi/SCIP, ProcessScheduler strongly diverges from its predecessor.
 
+.. warning::
+
+	ProcessScheduler handles variables represented by **integer** values. There is currently no planned support for floating numbers.
+
 What's inside
 -------------
 
 ProcessScheduler processes a model written using the Python programming language. It produces a schedule compliant with a set of constraints over tasks and/or resources.
 
-The scheduling problem is solved using the Microsfot `Z3 Prover <https://github.com/Z3Prover/z3>`_, a MIT licensed `SMT solver <https://en.wikipedia.org/wiki/Satisfiability_modulo_theories>`_. A good introduction to programming Z3 with Python can be read at `z3-py-tutorial <https://ericpony.github.io/z3py-tutorial/guide-examples.htm>`_. Z3 is the only mandatory dependency of ProcessScheduler.
+The scheduling problem is solved using the Microsfot `Z3 Prover <https://github.com/Z3Prover/z3>`_, a MIT licensed `SMT solver <https://en.wikipedia.org/wiki/Satisfiability_modulo_theories>`_. The optimization part of the solver is described in this paper: `Bjorner et al. νZ - An Optimizing SMT Solver (2016) <https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/nbjorner-nuz.pdf>`_. A good introduction to programming Z3 with Python can be read at `z3-py-tutorial <https://ericpony.github.io/z3py-tutorial/guide-examples.htm>`_. Z3 is the only mandatory dependency of ProcessScheduler.
 
 The solution of a scheduling problem can be rendered to a Gantt chart using the `matplotlib <https://www.matplotlib.org>`_ library, and exported to any of the common jpg, png, pdf or svg formats. matplotlib is an optional dependency of ProcessScheduler.
 
 Download/install
 ----------------
-Use ``pip`` to install the package on your machine:
+Use ``pip`` to install the package and the required dependencies (Z3) on your machine:
 
 .. code-block:: bash
 

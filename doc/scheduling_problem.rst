@@ -27,4 +27,4 @@ A period is the finest granularity level that describes the time line, the task 
 .. math:: horizon = \frac{12-8}{1/60}=240
 
 .. note::
-   The :attr:`horizon` attribute is optional. If it is not passed to the :class:`SchedulingProblem` instantiation method, the solver will later find an horizon value compliant with the set of constraints. In the case where the scheduling problem aims at optimizing the horizon (e.g. a makespan objective), the horizon should not be set manually.
+   The :attr:`horizon` attribute is optional. If it is not passed to the :meth:`__init__` method, the solver will search an horizon value compliant with the set of constraints. In the case where the scheduling problem aims at optimizing the horizon (e.g. a makespan objective), the horizon should not be set manually.
