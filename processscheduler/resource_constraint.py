@@ -16,7 +16,6 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
-from z3 import Int
 
 from processscheduler.task import UnavailabilityTask
 from processscheduler.base import _Constraint

@@ -15,13 +15,14 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional
 import warnings
 
-from z3 import Bool, Int, ModelRef, Or, Sum
+from z3 import BoolRef, Int, Or, Sum
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
 from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective, BuiltinIndicator
+from processscheduler.resource import _Resource
 
 import processscheduler.context as ps_context
 
@@ -48,10 +49,10 @@ class SchedulingProblem(_NamedUIDObject):
         elif horizon is not None:
             raise TypeError('horizon must either be a strict positive integer or None')
 
-    def add_constraint(self, constraint):
+    def add_constraint(self, constraint: BoolRef) -> None:
         self.context.add_constraint(constraint)
 
-    def add_constraints(self, list_of_constraints) -> None:
+    def add_constraints(self, list_of_constraints: List[BoolRef]) -> None:
         """ adds constraints to the problem """
         for cstr in list_of_constraints:
             self.context.add_constraint(cstr)
@@ -65,7 +66,7 @@ class SchedulingProblem(_NamedUIDObject):
         MinimizeObjective('MakeSpan', self.horizon)
         return True
 
-    def add_indicator_resource_cost(self, list_of_resources):
+    def add_indicator_resource_cost(self, list_of_resources: List[_Resource]) -> Indicator:
         """ compute the total cost of a set of resources """
         partial_costs = []
         for resource in list_of_resources:
@@ -78,20 +79,20 @@ class SchedulingProblem(_NamedUIDObject):
                                                        cost_indicator_variable)
         return cost_indicator
 
-    def add_objective_resource_cost(self, list_of_resources):
+    def add_objective_resource_cost(self, list_of_resources: List[_Resource]) -> MinimizeObjective:
         """ minimise the cost of selected resources
         """
         cost_indicator = self.add_indicator_resource_cost(list_of_resources)
-        MinimizeObjective('PriorityObjective', cost_indicator)
+        return MinimizeObjective('PriorityObjective', cost_indicator)
 
-    def add_objective_priorities(self) -> None:
+    def add_objective_priorities(self) -> MinimizeObjective:
         """ optimize the solution such that all task with a higher
         priority value are scheduled before other tasks """
         priority_sum = Sum([task.end  * task.priority for task in self.context.tasks])
         priority_indicator = Indicator('PriorityTotal', priority_sum)
-        MinimizeObjective('PriorityObjective', priority_indicator)
+        return MinimizeObjective('PriorityObjective', priority_indicator)
 
-    def add_objective_start_latest(self) -> None:
+    def add_objective_start_latest(self) -> MaximizeObjective:
         """ maximize the minimum start time, i.e. all the tasks
         are scheduled as late as possible """
         mini = Int('SmallestStartTime')
@@ -100,15 +101,17 @@ class SchedulingProblem(_NamedUIDObject):
         for tsk in self.context.tasks:
             a.add_assertion(mini <= tsk.start)
         a.indicator_variable=mini
-        MaximizeObjective('SmallestStartTime', mini)
+        return MaximizeObjective('SmallestStartTime', mini)
 
-    def maximize_indicator(self, indicator):
-        MaximizeObjective('', indicator)
+    def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:
+        """Maximize indicator """
+        return MaximizeObjective('', indicator)
 
-    def minimize_indicator(self, indicator):
-        MinimizeObjective('', indicator)
+    def minimize_indicator(self, indicator: Indicator) -> MinimizeObjective:
+        """Minimize indicator"""
+        return MinimizeObjective('', indicator)
 
-    def add_objective_start_earliest(self) -> None:
+    def add_objective_start_earliest(self) -> MinimizeObjective:
         """ minimize the greatest start time, i.e. tasks are schedules
         as early as possible """
         maxi = Int('GreatestStartTime')
@@ -117,11 +120,11 @@ class SchedulingProblem(_NamedUIDObject):
         for tsk in self.context.tasks:
             a.add_assertion(maxi >= tsk.start)
         a.indicator_variable=maxi
-        MinimizeObjective('GreatestStartTimeObjective', maxi)
+        return MinimizeObjective('GreatestStartTimeObjective', maxi)
 
-    def add_objective_flowtime(self) -> None:
+    def add_objective_flowtime(self) -> MinimizeObjective:
         """ the flowtime is the sum of all ends, minimize. Be carful that
         it is contradictory with makespan """
         flow_time_expr = Sum([task.end for task in self.context.tasks])
         smallest_start_time_indicator = Indicator('FlowTime', flow_time_expr)
-        MinimizeObjective('FlowTimeObjective', smallest_start_time_indicator)
+        return MinimizeObjective('FlowTimeObjective', smallest_start_time_indicator)

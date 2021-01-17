@@ -17,7 +17,7 @@
 
 import json
 
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Tuple
 
 try:
     import matplotlib.pyplot as plt
@@ -32,7 +32,7 @@ class SolutionJSONEncoder(json.JSONEncoder):
 
 class TaskSolution:
     """ a name, a start, a duration, an end, a list of assigned resources """
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
         self.type = ''  # the name of the task type
         self.start = 0
@@ -43,7 +43,7 @@ class TaskSolution:
 
 class ResourceSolution:
     """ a name, a list of tasks, start, end. """
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
         self.type = ''  # the name of the task type
         # an assignment is a list of tuples : [(Task_name, start, end), (task_2name, start2, end2) etc.]
@@ -53,7 +53,7 @@ class SchedulingSolution:
     """ A class that represent the solution of a scheduling problem. Can be rendered
     to a matplotlib Gannt chart, or exported to json
     """
-    def __init__(self, problem_name):
+    def __init__(self, problem_name: str):
         self.problem_name = problem_name
         self.horizon = 0
         self.tasks = {} # the dict of tasks
@@ -63,11 +63,11 @@ class SchedulingSolution:
     def __repr__(self):
         return self.to_string()
 
-    def to_string(self):
+    def to_string(self) -> str:
         """ displays the result as an ascii string """
         return str(self.tasks)
 
-    def to_json_string(self):
+    def to_json_string(self) -> str:
         """ export the solution to a json string """
         d = {}
         d['horizon'] = self.horizon
@@ -76,13 +76,16 @@ class SchedulingSolution:
         d['indicators'] = self.indicators
         return json.dumps(d, indent=4, sort_keys=True, cls=SolutionJSONEncoder)
 
-    def add_indicator_solution(self, indicator_name, indicator_value):
+    def add_indicator_solution(self, indicator_name: str, indicator_value: int) -> None:
+        """Add indicator solution."""
         self.indicators[indicator_name] = indicator_value
 
-    def add_task_solution(self, task_solution):
+    def add_task_solution(self, task_solution: TaskSolution) -> None:
+        """Add task solution."""
         self.tasks[task_solution.name] = task_solution
 
-    def add_resource_solution(self, resource_solution):
+    def add_resource_solution(self, resource_solution: ResourceSolution) -> None:
+        """Add resource solution."""
         self.resources[resource_solution.name] = resource_solution
 
     def render_gantt_matplotlib(self,
@@ -193,5 +196,3 @@ class SchedulingSolution:
 
         if show_plot:
             plt.show()
-
-        return None

@@ -20,7 +20,8 @@ import warnings
 
 from z3 import ArithRef, Bool, PbEq, PbGe, PbLe, Xor
 
-from processscheduler.base import _NamedUIDObject, is_positive_integer
+from processscheduler.base import (_NamedUIDObject, is_positive_integer,
+                                   is_strict_positive_integer)
 import processscheduler.context as ps_context
 
 #
@@ -86,6 +87,12 @@ class SelectWorkers(_Resource):
 
         if kind not in problem_function:
             raise ValueError("kind must be either 'exact', 'atleast' or 'atmost'")
+
+        if not is_strict_positive_integer(nb_workers):
+            raise TypeError('nb_workers must be an integer > 0')
+
+        if nb_workers > len(list_of_workers):
+            raise ValueError('nb_workers must be <= the number of workers provided in list_of_workers.')
 
         self.list_of_workers = list_of_workers
         self.nb_workers = nb_workers

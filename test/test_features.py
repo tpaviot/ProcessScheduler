@@ -112,7 +112,7 @@ class TestFeatures(unittest.TestCase):
         with self.assertRaises(TypeError):
             ps.Worker('WorkerFloatProductivity', productivity=3.14)
 
-    def test_create_alternative_workers(self) -> None:
+    def test_create_select_workers(self) -> None:
         new_problem_or_clear()
         worker_1 = ps.Worker('wkr_1')
         worker_2 = ps.Worker('wkr_2')
@@ -126,6 +126,17 @@ class TestFeatures(unittest.TestCase):
                                                             worker_3], 2)
         self.assertIsInstance(double_alternative_workers,
                               ps.SelectWorkers)
+
+    def test_worker_wrong_number_of_workers(self) -> None:
+        new_problem_or_clear()
+        worker_1 = ps.Worker('wkr_1')
+        worker_2 = ps.Worker('wkr_2')
+        ps.SelectWorkers([worker_1, worker_2], 2)
+        ps.SelectWorkers([worker_1, worker_2], 1)
+        with self.assertRaises(ValueError):
+            ps.SelectWorkers([worker_1, worker_2], 3)
+        with self.assertRaises(TypeError):
+            ps.SelectWorkers([worker_1, worker_2], -1)
 
     def test_worker_same_name(self) -> None:
         new_problem_or_clear()
