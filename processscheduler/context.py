@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List, Union
+from typing import Dict, List, Union
 import warnings
 
 from z3 import BoolRef, ArithRef
@@ -76,6 +76,7 @@ class SchedulingContext:
 
     def add_objective(self, objective) -> None:
         self.objectives.append(objective)
+
 
 # Define a global context
 # None by default

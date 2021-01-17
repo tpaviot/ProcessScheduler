@@ -72,10 +72,10 @@ There are some [Jupypter notebooks](https://github.com/tpaviot/ProcessScheduler/
 
 ProcessScheduler uses the following tools/methods to ensure code quality:
 
--   unittested
--   code coverage (coverage.py, codecov.io)
--   continuous-integration at MS azure
--   static code analysis (codacy).
+*   unittests suite,
+*   code coverage (coverage.py, codecov.io),
+*   continuous-integration at MS azure,
+*   static code analysis (codacy).
 
 ## License/Author
 
