@@ -90,3 +90,8 @@ Then, we can request for another solution:
    Solution for task_1.start: 1
 
 You can recursively call :func:`find_another_solution` to find all possible solutions, until the solver fails to return a new one.
+
+Debug solver
+------------
+
+todo

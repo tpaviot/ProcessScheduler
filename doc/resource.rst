@@ -19,7 +19,7 @@ A Worker is created as follows:
     john = Worker('JohnBenis')
 
 Worker productivity
--------------------
+^^^^^^^^^^^^^^^^^^^
 The worker :attr:`productivity` is the quantity of work the worker can produce per period. The default productivity for a worker is :const:`0`.
 
 For example, if two drillers are available, the first one with a producvity of 3 holes per period, the second one with a productivity of 9 holes per period, then will be defined as:
@@ -34,7 +34,7 @@ For example, if two drillers are available, the first one with a producvity of 3
   The workers :const:`productivity` is used by the solver to satisfy the targeted task :attr:`work_amount`.
 
 Worker cost per period
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 The worker :attr:`cost_per_period` is set to :const:`0` by default, and can bet set at the Worker instantiation.
 
 In the case where a Senior developer is charged 750$/hour and a junior dev 250$/hour, then if one period is mapped to one hour:
@@ -49,7 +49,7 @@ In the case where a Senior developer is charged 750$/hour and a junior dev 250$/
   The worker :attr:`cost_per_period` is useful to measure the total cost of a resource/a set of resources/a schedule, or to find the schedule that minimizes the total cost of a resource/a set of resources/ a schedule.
 
 Resource assignment
--------------------
+^^^^^^^^^^^^^^^^^^^
 Resources are assigned to tasks in two steps:
 
 1. Tell the task that it requires a set of resources to be processed
@@ -67,9 +67,11 @@ Resources are assigned to tasks in two steps:
 
 .. _alternative-workers:
 
-Alternative Workers
--------------------
-:class:`SelectWorkers` is a collection of workers that have the ability to process a task. For example, if 3 drillers are available, and if a drilling task can be processed by any of one of these drillers, it is specified as following:
+Workers selection
+-----------------
+The :class:`SelectWorkers` let the solver decide which resources to assign to a task, among a collection of workers that  have the ability to process the task. :class:`SelectWorkers` can decide to assign exactly :math:`n` resources, **at most** :math:`n` or **at least** :math:`n`.
+
+For example, if 3 drillers are available, and if a drilling task can be processed by any of one of these 3 drillers, it is specified as following:
 maybe performed either by:
 
 .. code-block:: python
