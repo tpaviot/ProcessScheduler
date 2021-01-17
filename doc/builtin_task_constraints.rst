@@ -10,7 +10,15 @@ There are a set of builtin ready-to-use constraints, listed below.
 
 	Naming convention: if the class name starts with *Task** then the constraint applies to one single task, if the class name starts with *Tasks** it applies to 2 or more task instances.
 
-- :class:`TaskPrecedence`
+- :class:`TaskPrecedence`: takes two parameters :attr:`task_1` and :attr:`task_2` and constraints :attr:`task_2` to be scheduled after :attr:`task_1` is completed. The precedence type can either be :const:`'lax'` (default, :attr:`task_2.start` >= :attr:`task_1.end`)), :const:`'strict'` (:attr:`task_2.start` >= :attr:`task_1.end`)) or :const:`'tight'` (:attr:`task_2.start` >= :attr:`task_1.end`, task_2 starts immediately after task_1 is completed). An optional parameter :attr:`offset` can be additionnaly set.
+
+.. code-block:: python
+
+	task_1 = ps.FixedDurationTask('Task1', duration=3)
+	task_2 = ps.FixedVariableTask('Task2')
+	pc = TaskPrecedence(task1, task2, kind='tight', offset=2)
+
+constraints the solver to schedule task_2 start exactly 2 periods after task_1 is completed.
 
 - :class:`TasksStartSynced`: takes two parameters :attr:`task_1` and :attr:`task_2` such as the schedule must satisfy the constraint :math:`task_1.start = task_2.start`
 

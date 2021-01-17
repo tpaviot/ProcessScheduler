@@ -8,9 +8,9 @@ Use our [issue tracker](https://github.com/tpaviot/ProcessScheduler/issues) to r
 
 A *bug* is either: an unexpected result or an unexpected exception raised by Python. It can't be anything else.
 
-*  choose an *explicit title* that starts with "Bug: " or "Error: "
-*  the title is not enough: *always* insert a short and explicit description of what's going wrong,
-*  the description *must* be followed by the short python script that reproduces the issue. The script must be self-contained, i.e. it can just be copied/pasted in a text editor and be executed, no need for additional imports or tweaks,
+*   choose an *explicit title* that starts with "Bug: " or "Error: "
+*   the title is not enough: *always* insert a short and explicit description of what's going wrong,
+*   the description *must* be followed by the short python script that reproduces the issue. The script must be self-contained, i.e. it can just be copied/pasted in a text editor and be executed, no need for additional imports or tweaks,
 *   use the correct [markdown directives](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#code) to insert your syntax highlighted python code,
 *   set the "bug" label to the issue, so that the ticket can quickly be identified as a bug.
 
