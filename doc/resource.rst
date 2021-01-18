@@ -63,28 +63,24 @@ Resources are assigned to tasks in two steps:
 .. note::
    You can add any number of required resources to a task, but they all have to be different instances.
 
-2. After the solver has found a solution, resources are assigned to tasks. In the former case, it is obvious that JohnBenis will actually be assigned to the task AssembleCarEngine. There can be cases where it is not possible to guess which resource will be assigned by the solver, especially if many different resources can be used to perform one specific task. In that case, we let the solver decides which resource(s) to assign by defining :ref:`alternative-workers` (see below).
+2. After the solver has found a solution, resources are assigned to tasks. In the case above, it is obvious that JohnBenis will actually be assigned to the task :const:`AssembleCarEngine`. There can be cases where it is not possible to guess which resource will be assigned by the solver, especially if many different resources can be used to perform one specific task. In that case, let the solver decides which resource(s) to assign by defining :ref:`alternative-workers` (see below).
 
 .. _alternative-workers:
 
 Workers selection
 -----------------
-The :class:`SelectWorkers` let the solver decide which resources to assign to a task, among a collection of workers that  have the ability to process the task. :class:`SelectWorkers` can decide to assign exactly :math:`n` resources, **at most** :math:`n` or **at least** :math:`n`.
-
-For example, if 3 drillers are available, and if a drilling task can be processed by any of one of these 3 drillers, it is specified as following:
-maybe performed either by:
+The :class:`SelectWorkers` class let the solver decide which resource(s) to assign to a task, among a collection of workers that have the ability to process the task. :class:`SelectWorkers` can decide to assign exactly :math:`n` resources, **at most** :math:`n` or **at least** :math:`n`. For example, if 3 drillers are available, and if a drilling task can be processed by any of one of these 3 drillers, it is defined as:
 
 .. code-block:: python
 
-    drilling_hole = FixedDurationTask('DrillHolePhi10mm', 3)
+    drilling_hole = FixedDurationTask('DrillHolePhi10mm', duration=10)
     driller_1 = Worker('Driller1')
     driller_2 = Worker('Driller2')
     driller_3 = Worker('Driller3')
-    drilling_hole.ad_required_resource(SelectWorkers([driller_1, driller_2, driller_3],
-                                       nb_workers=1,
-                                       kind='exact'))
+    drilling_hole.add_required_resource(SelectWorkers([driller_1, driller_2, driller_3],
+                                        nb_workers=1,
+                                        kind='exact'))
 
-This tells the solver to select *exactly 1* resource among the list of workers able to process the task. The :attr:`kind` parameter can take either :const:`'exact'` (default value), :const:`'atleast'` or :const:`'atmost'` values.
+This tells the solver to select *exactly 1* resource among the list of three workers able to process the task. The :attr:`kind` parameter can take either :const:`'exact'` (default value), :const:`'atleast'` or :const:`'atmost'` values.
 
-
-:const:`nb_workers` can take any integer between 1 (default value) and the number of capable workers in the list.
+:const:`nb_workers` can take any integer between 1 (default value) and the number of capable workers in the list. Passing a value out of these bounds will raise an exception.
