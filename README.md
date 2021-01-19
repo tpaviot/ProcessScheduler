@@ -66,7 +66,7 @@ Then install the development version:
 
 ```bash
 cd ProcessScheduler
-pip install ./src
+pip install -e .
 ```
 
 ## Documentation
