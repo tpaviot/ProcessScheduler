@@ -63,6 +63,14 @@ class SchedulingSolution:
     def __repr__(self):
         return self.to_string()
 
+    def get_all_tasks_but_unavailable(self):
+        """Return all tasks except those of the type UnavailebleResource."""
+        tasks_to_return = {}
+        for task in self.tasks:
+            if not "NotAvailable" in task:
+                tasks_to_return[task] = self.tasks[task]
+        return tasks_to_return
+
     def to_string(self) -> str:
         """ displays the result as an ascii string """
         return str(self.tasks)
@@ -101,6 +109,12 @@ class SchedulingSolution:
         if not self.resources:
             render_mode = 'Tasks'
 
+        # tasks to render
+        if render_mode == 'Tasks':
+            tasks_to_render = self.get_all_tasks_but_unavailable()
+        else:
+            tasks_to_render = self.tasks
+
         # render mode is Resource by default, can be set to 'Task'
         if render_mode == 'Resources':
             plot_title = 'Resources schedule - %s' % self.problem_name
@@ -110,8 +124,8 @@ class SchedulingSolution:
         elif render_mode == 'Tasks':
             plot_title = 'Task schedule - %s' % self.problem_name
             plot_ylabel = 'Tasks'
-            plot_ticklabels = list(self.tasks.keys())
-            nbr_y_values = len(self.tasks)
+            plot_ticklabels = list(tasks_to_render.keys())
+            nbr_y_values = len(tasks_to_render)
         else:
             raise ValueError("rendermode must be either 'Resources' or 'Tasks'")
 
