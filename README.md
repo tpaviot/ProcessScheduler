@@ -47,13 +47,22 @@ solution.render_gantt_matplotlib()
 
 ## Installation
 
-ProcessScheduler has not any release yet. You have to download/test the development version from the git repository.
+Using pip
+---------
 
-Fist create a local copy of this repository:
+```bash
+pip install ProcessScheduler
+```
+
+Development version
+-------------------
+
+Create a local copy of this repository:
 ```bash
 git clone https://github.com/tpaviot/ProcessScheduler
 ```
-then install the development version:
+
+Then install the development version:
 
 ```bash
 cd ProcessScheduler
