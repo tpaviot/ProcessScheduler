@@ -16,7 +16,6 @@ A a 100% pure python library to compute resource-constrained task schedules. It 
    first_order_logic_constraints
    objectives
    solving
-   gantt
    use-case-formula-one-change-tires
    use-case-software-developmenet
    api

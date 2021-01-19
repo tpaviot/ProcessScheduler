@@ -21,13 +21,13 @@ It takes three optional arguments:
 
 Solve
 -----
-Just call the :func:`solve` method.
+Just call the :func:`solve` method. This method returns a :class:`Solution` instance.
 
 .. code-block:: python
 
-    solver.solve()
+    solution = solver.solve()
 
-The :func:`solve` method returns a boolean, True if a solution was found, False otherwise. There are four cases:
+Running the :func:`solve` method returns can either fail or succeed, according to the 4 following cases:
 
 1. The problem cannot be solved because some constraints are contradictory. It is called "Unsatisfiable". The :func:`solve` method returns False. For example:
 
@@ -45,13 +45,13 @@ It is obvious that these constraints cannot be both satisfied.
 4. The solver successes in finding a schedule that satisfies all the constraints. The :func:`solve` method returns True.
 
 .. note::
-   If the solver fails to give a solution, increase the :attr:`max_time` (case 3) or remove some constraints (cases 1 and 2). In most cases, the solver does find a solution.
+   If the solver fails to give a solution, increase the :attr:`max_time` (case 3) or remove some constraints (cases 1 and 2).
 
 Find another solution
 ---------------------
-The solver may return:
+The solver may shcedule:
 
-- one schedule among many, in the case where there is no optimization
+- one solution among many, in the case where there is no optimization,
 
 - the best possible schedule in case of an optimization issue.
 
@@ -71,7 +71,7 @@ For example, there are 5 different ways to schedule a FixedDurationTask with a d
     task_1 = ps.FixedDurationTask('task1', duration=2)
     problem.add_task(task_1)
     solver = ps.SchedulingSolver(problem)
-    success = solver.solve()
+    solution = solver.solve()
     print("Solution for task_1.start:", task_1.scheduled_start)
 
 .. code-block:: console
@@ -82,8 +82,8 @@ Then, we can request for another solution:
 
 .. code-block:: python
 
-    success = solver.find_another_solution(task_1.start)
-    if success:
+    solution = solver.find_another_solution(task_1.start)
+    if solution is not None:
         print("New solution for task_1.start:", task_1.scheduled_start)
 .. code-block:: console
 
