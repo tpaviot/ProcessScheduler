@@ -33,7 +33,8 @@ class SchedulingSolver:
     def __init__(self, problem,
                  verbosity: Optional[bool] = False,
                  max_time: Optional[int] = 60,
-                 parallel: Optional[bool] = False):
+                 parallel: Optional[bool] = False,
+                 logic: Optional[str] = 'QF_LIA'):
         """ Scheduling Solver
 
         verbosity: True or False, False by default
@@ -58,7 +59,7 @@ class SchedulingSolver:
         else:
             # see this url for a documentation about logics
             # http://smtlib.cs.uiowa.edu/logics.shtml
-            self._solver = SolverFor('QF_IDL')  # SMT without optimization
+            self._solver = SolverFor(logic)  # SMT without optimization
             if verbosity:
                 print("Solver without optimization enabled")
 
