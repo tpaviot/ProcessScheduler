@@ -56,7 +56,9 @@ class SchedulingSolver:
             if verbosity:
                 print("Solver with optimization enabled")
         else:
-            self._solver = SolverFor('QF_LIA')  # SMT without optimization
+            # see this url for a documentation about logics
+            # http://smtlib.cs.uiowa.edu/logics.shtml
+            self._solver = SolverFor('QF_IDL')  # SMT without optimization
             if verbosity:
                 print("Solver without optimization enabled")
 

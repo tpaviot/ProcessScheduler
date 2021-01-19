@@ -1,2 +1,0 @@
-Render a Gantt chart
-====================
