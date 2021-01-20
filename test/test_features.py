@@ -194,8 +194,6 @@ class TestFeatures(unittest.TestCase):
         task = ps.FixedDurationTask('task', 2)
         c = ps.TaskStartAt(task, 1)
         self.assertIsInstance(c, ps.TaskStartAt)
-        self.assertFalse(task.lower_bounded)
-        self.assertFalse(task.upper_bounded)
         self.assertEqual(c.value, 1)
 
     def test_create_task_start_after_strict(self) -> None:
@@ -203,8 +201,6 @@ class TestFeatures(unittest.TestCase):
         task = ps.FixedDurationTask('task', 2)
         c = ps.TaskStartAfterStrict(task, 3)
         self.assertIsInstance(c, ps.TaskStartAfterStrict)
-        self.assertTrue(task.lower_bounded)
-        self.assertFalse(task.upper_bounded)
         self.assertEqual(c.value, 3)
 
     def test_create_task_start_after_lax(self) -> None:
@@ -212,8 +208,6 @@ class TestFeatures(unittest.TestCase):
         task = ps.FixedDurationTask('task', 2)
         c = ps.TaskStartAfterLax(task, 3)
         self.assertIsInstance(c, ps.TaskStartAfterLax)
-        self.assertTrue(task.lower_bounded)
-        self.assertFalse(task.upper_bounded)
         self.assertEqual(c.value, 3)
 
     def test_create_task_end_at(self) -> None:
@@ -221,8 +215,6 @@ class TestFeatures(unittest.TestCase):
         task = ps.FixedDurationTask('task', 2)
         c = ps.TaskEndAt(task, 3)
         self.assertIsInstance(c, ps.TaskEndAt)
-        self.assertFalse(task.lower_bounded)
-        self.assertFalse(task.upper_bounded)
         self.assertEqual(c.value, 3)
 
     def test_create_task_before_strict(self) -> None:
@@ -230,8 +222,6 @@ class TestFeatures(unittest.TestCase):
         task = ps.FixedDurationTask('task', 2)
         c = ps.TaskEndBeforeStrict(task, 3)
         self.assertIsInstance(c, ps.TaskEndBeforeStrict)
-        self.assertFalse(task.lower_bounded)
-        self.assertTrue(task.upper_bounded)
         self.assertEqual(c.value, 3)
 
     def test_create_task_before_lax(self) -> None:
@@ -239,8 +229,6 @@ class TestFeatures(unittest.TestCase):
         task = ps.FixedDurationTask('task', 2)
         constraint = ps.TaskEndBeforeLax(task, 3)
         self.assertIsInstance(constraint, ps.TaskEndBeforeLax)
-        self.assertFalse(task.lower_bounded)
-        self.assertTrue(task.upper_bounded)
         self.assertEqual(constraint.value, 3)
 
     #
