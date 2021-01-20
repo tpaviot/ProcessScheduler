@@ -38,6 +38,8 @@ class TaskSolution:
         self.start = 0
         self.end = 0
         self.duration = 0
+        self.optional = False
+        self.scheduled = False
         # the name of assigned resources
         self.assigned_resources = []
 

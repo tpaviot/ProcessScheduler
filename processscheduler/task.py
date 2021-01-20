@@ -17,7 +17,7 @@
 
 from typing import List, Optional
 
-from z3 import Bool, Int, And, If
+from z3 import Bool, Int, And, If, Implies
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer, is_positive_integer
 from processscheduler.resource import _Resource, Worker, SelectWorkers
@@ -37,8 +37,10 @@ class Task(_NamedUIDObject):
         # z3 Int variables
         self.start = Int('%s_start' % name)
         self.end = Int('%s_end' % name)
-        self.scheduled = Bool('t%s_scheduled' % name)
         self.duration = Int('%s_duration' % name)
+
+        # by default, this task has to be scheduled
+        self.optional = False
 
         # these two flags are set to True is there is a constraint
         # that set a lower or upper bound (e.g. a Precedence)
@@ -142,7 +144,8 @@ class FixedDurationTask(Task):
     def __init__(self, name: str,
                  duration: int,
                  work_amount: Optional[int] = 0,
-                 priority: Optional[int] = 1) -> None:
+                 priority: Optional[int] = 1,
+                 optional: Optional[bool] = False) -> None:
         super().__init__(name)
         if not is_strict_positive_integer(duration):
             raise TypeError('duration must be a strict positive integer')
@@ -150,9 +153,21 @@ class FixedDurationTask(Task):
             raise TypeError('work_amount me be a positive integer')
         self.work_amount = work_amount
         self.priority = priority
-        # add an assertion: end = start + duration
-        self.add_assertion(self.start + self.duration == self.end)
-        self.add_assertion(self.duration == duration)
+        self.optional = optional
+        # define the two base assertions
+        # if the task must be scheduled (optional=False)
+        scheduled_assertions = And(self.start + self.duration == self.end,
+                                   self.duration == duration,
+                                   self.start >= 0)
+        if self.optional: # in this case the previous assertions maybe skipped
+            self.scheduled = Bool('%s_scheduled' % name)
+            not_scheduled_assertion = And(self.start <= -1, # to past
+                                          self.end <= -1,
+                                          self.duration == 0)
+            self.add_assertion(If(self.scheduled, scheduled_assertions, not_scheduled_assertion))
+        else:
+            self.scheduled = True
+            self.add_assertion(scheduled_assertions)
 
 class UnavailabilityTask(FixedDurationTask):
     """ a task that tells that a resource is unavailable during this period. This
@@ -166,7 +181,8 @@ class VariableDurationTask(Task):
                  length_at_least: Optional[int] = 0,
                  length_at_most: Optional[int] = None,
                  work_amount: Optional[int] = 0,
-                 priority: Optional[int] = 1):
+                 priority: Optional[int] = 1,
+                 optional: Optional[bool] = False):
         super().__init__(name)
 
         if is_positive_integer(length_at_most):
@@ -184,6 +200,7 @@ class VariableDurationTask(Task):
         self.length_at_most = length_at_most
         self.work_amount = work_amount
         self.priority = priority
+        self.optional = optional
         # set minimal duration
         self.add_assertion(self.duration >= length_at_least)
         # add an assertion: end = start + duration
