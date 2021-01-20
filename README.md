@@ -10,6 +10,8 @@ A python library to compute resource-constrained task schedules.
 ## About
 The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the [Z3Prover](https://github.com/Z3Prover/z3).
 
+This project was inspired by the work form Tim Nonner at https://github.com/timnon/pyschedule.
+
 ## Helloworld
 
 ```python
