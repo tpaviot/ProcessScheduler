@@ -17,7 +17,7 @@ A a 100% pure python library to compute resource-constrained task schedules. It 
    objectives
    solving
    use-case-formula-one-change-tires
-   use-case-software-developmenet
+   use-case-software-development
    api
 
 
