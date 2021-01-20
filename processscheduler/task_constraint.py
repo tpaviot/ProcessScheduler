@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from z3 import And, Implies, Xor
+from z3 import And, BoolRef, Implies, Xor
 
 from processscheduler.base import _Constraint
 
@@ -211,3 +211,27 @@ class TaskEndBeforeLax(_TaskConstraint):
             self.add_assertion(Implies(task.scheduled, scheduled_assertion))
         else:
             self.add_assertion(scheduled_assertion)
+#
+# Optional classes only constraints
+#
+class OptionalTaskConditionSchedule(_TaskConstraint):
+    """An optional task that is schedule only a certain condition is fullfilled."""
+    def __init__(self, task, condition: BoolRef) -> None:
+        super().__init__()
+
+        if not task.optional:
+            raise ValueError('Task %s must be optional.' % task.name)
+
+        self.task = task
+
+        self.add_assertion(Implies(condition, task.scheduled))
+
+class OptionalTasksDependency(_TaskConstraint):
+    """task_2 is scheduled if and only if task_1 is scheduled"""
+    def __init__(self, task_1, task_2) -> None:
+        super().__init__()
+
+        if not task_2.optional:
+            raise ValueError('Task %s must be optional.' % task_2.name)
+
+        self.add_assertion(Implies(task_1.scheduled, task_2.scheduled))
