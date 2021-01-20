@@ -45,10 +45,6 @@ Constraints
    :show-inheritance:
    :inherited-members:
 
-   :members:
-   :show-inheritance:
-   :inherited-members:
-
 Solver
 ------
 .. automodule:: processscheduler.solver

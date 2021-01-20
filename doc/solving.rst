@@ -49,7 +49,7 @@ It is obvious that these constraints cannot be both satisfied.
 
 Find another solution
 ---------------------
-The solver may shcedule:
+The solver may schedule:
 
 - one solution among many, in the case where there is no optimization,
 
@@ -84,14 +84,26 @@ Then, we can request for another solution:
 
     solution = solver.find_another_solution(task_1.start)
     if solution is not None:
-        print("New solution for task_1.start:", task_1.scheduled_start)
+        print("New solution for task_1.start:", solution.tasks[task_1.name].start)
 .. code-block:: console
 
    Solution for task_1.start: 1
 
 You can recursively call :func:`find_another_solution` to find all possible solutions, until the solver fails to return a new one.
 
-Debug solver
-------------
+Render a Gantt chart
+--------------------
 
-todo
+Call the :func:`render_gantt_matplotlib` to render the solution as a Gantt chart. The time line is from 0 to :attr:`horizon` value, you can choose to render either Tasks or Resources (default).
+
+.. code-block:: python
+
+    solution = solver.solve()
+    if solution is not None:
+        solution.render_gantt_matplotlib()  # default render_mode is 'Resources'
+        # a second gantt chart, in 'Tasks' mode
+        solution.render_gantt_matplotlib(render_mode='Tasks')
+
+
+
+
