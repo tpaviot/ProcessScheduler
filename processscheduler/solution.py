@@ -144,7 +144,7 @@ class SchedulingSolution:
         # defined a mapping between the tasks and the colors, so that
         # each task has the same color on both graphs
         task_colors = {}
-        for i, task_name in enumerate(self.tasks):
+        for i, task_name in enumerate(tasks_to_render):
             task_colors[task_name] = cmap(i)
         # the task color is defined from the task name, this way the task has
         # already the same color, even if it is defined after
@@ -168,7 +168,7 @@ class SchedulingSolution:
 
         # in Tasks mode, create one line per task on the y axis
         if render_mode == 'Tasks':
-            for i, task_name in enumerate(self.tasks):
+            for i, task_name in enumerate(tasks_to_render):
                 # build the bar text string
                 task_solution = self.tasks[task_name]
                 if task_solution.assigned_resources:
