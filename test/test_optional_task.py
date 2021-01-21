@@ -17,8 +17,6 @@
 #specific language governing permissions and limitations
 #under the License.
 
-import os
-import random
 import unittest
 
 import processscheduler as ps
@@ -253,9 +251,9 @@ class TestOptionalTask(unittest.TestCase):
         self.assertTrue(solution.tasks[task_1.name].scheduled)
         self.assertTrue(solution.tasks[task_2.name].scheduled)
 
-    def test_optional_condition_1(self) -> None:
+    def test_optional_condition_2(self) -> None:
         """A task scheduled only if the horizon is > 10."""
-        pb = ps.SchedulingProblem('OptionalCondition1', horizon=9)
+        pb = ps.SchedulingProblem('OptionalCondition2', horizon=9)
         task_1 = ps.FixedDurationTask('task1', duration = 9)  # mandatory
         task_2 = ps.FixedDurationTask('task2', duration = 4, optional=True) # optional
 
@@ -303,8 +301,8 @@ class TestOptionalTask(unittest.TestCase):
         self.assertFalse(solution.tasks[task_2.name].scheduled)
         self.assertFalse(solution.tasks[task_3.name].scheduled)
 
-    def test_optional_task_worker_1(self) -> None:
-        pb = ps.SchedulingProblem('OptionalTaskWorker1', horizon=6)
+    def test_optional_task_single_worker_1(self) -> None:
+        pb = ps.SchedulingProblem('OptionalTaskSingleWorker1', horizon=6)
         task_1 = ps.FixedDurationTask('task1', duration = 3, optional=True)
         pb.add_constraint(ps.TaskStartAt(task_1, 1))
         worker_1 = ps.Worker('Worker1')
@@ -316,8 +314,8 @@ class TestOptionalTask(unittest.TestCase):
         self.assertTrue(solution)
         self.assertTrue(solution.tasks[task_1.name].scheduled)
 
-    def test_optional_task_worker_2(self) -> None:
-        pb = ps.SchedulingProblem('OptionalTaskWorker2', horizon=6)
+    def test_optional_task_singleworker_2(self) -> None:
+        pb = ps.SchedulingProblem('OptionalTaskSingleWorker2', horizon=6)
         task_1 = ps.FixedDurationTask('task1', duration = 3, optional=True)
         pb.add_constraint(ps.TaskStartAt(task_1, 1))
         worker_1 = ps.Worker('Worker1')
@@ -343,10 +341,10 @@ class TestOptionalTask(unittest.TestCase):
         self.assertTrue(solution)
         self.assertTrue(solution.tasks[task_1.name].scheduled)
 
-    def test_optional_task_two_workers_1(self) -> None:
-        pb = ps.SchedulingProblem('OptionalTaskTwoWorkers1')
+    def test_optional_task_two_workers_2(self) -> None:
+        pb = ps.SchedulingProblem('OptionalTaskTwoWorkers2')
         task_1 = ps.FixedDurationTask('task1', duration = 3, optional=True)
-        
+
         worker_1 = ps.Worker('Worker1')
         worker_2 = ps.Worker('Worker2')
         task_1.add_required_resources([worker_1, worker_2])
@@ -357,7 +355,7 @@ class TestOptionalTask(unittest.TestCase):
         self.assertTrue(solution)
         self.assertFalse(solution.tasks[task_1.name].scheduled)
 
-    def test_optional_task_select_workers(self) -> None:
+    def test_optional_task_select_workers_1(self) -> None:
         pb = ps.SchedulingProblem('OptionalTaskSelectWorkers1')
         task_1 = ps.FixedDurationTask('task1', duration = 3, optional=True)
         pb.add_constraint(ps.TaskStartAt(task_1, 1))
@@ -371,6 +369,21 @@ class TestOptionalTask(unittest.TestCase):
         self.assertTrue(solution)
         self.assertTrue(solution.tasks[task_1.name].scheduled)
         self.assertEqual(len(solution.tasks[task_1.name].assigned_resources), 1)
+
+    def test_optional_task_select_workers_2(self) -> None:
+        pb = ps.SchedulingProblem('OptionalTaskSelectWorkers2')
+        task_1 = ps.FixedDurationTask('task1', duration = 3, optional=True)
+        pb.add_constraint(ps.TaskStartAt(task_1, 1))
+        worker_1 = ps.Worker('Worker1')
+        worker_2 = ps.Worker('Worker2')
+        task_1.add_required_resource(ps.SelectWorkers([worker_1, worker_2], 1))
+        # Force schedule False
+        pb.add_constraint(task_1.scheduled == False)
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertFalse(solution.tasks[task_1.name].scheduled)
+        self.assertEqual(len(solution.tasks[task_1.name].assigned_resources), 0)
 
 
 if __name__ == "__main__":
