@@ -53,8 +53,6 @@ class TaskPrecedence(_TaskConstraint):
         if not isinstance(offset, int) or offset < 0:
             raise ValueError('offset must be a positive integer')
 
-        self.task_before = task_before
-        self.task_after = task_after
         self.offset = offset
         self.kind = kind
 
@@ -81,8 +79,6 @@ class TasksStartSynced(_TaskConstraint):
     """ Two tasks that must start at the same time """
     def __init__(self, task_1, task_2) -> None:
         super().__init__()
-        self.task_1 = task_1
-        self.task_2 = task_2
 
         scheduled_assertion = task_1.start == task_2.start
         
@@ -97,8 +93,6 @@ class TasksEndSynced(_TaskConstraint):
     """ Two tasks that must complete at the same time """
     def __init__(self, task_1, task_2) -> None:
         super().__init__()
-        self.task_1 = task_1
-        self.task_2 = task_2
 
         scheduled_assertion = task_1.end == task_2.end
         
@@ -113,8 +107,6 @@ class TasksDontOverlap(_TaskConstraint):
     the other can be processed """
     def __init__(self, task_1, task_2) -> None:
         super().__init__()
-        self.task_1 = task_1
-        self.task_2 = task_2
 
         scheduled_assertion = Xor(task_2.start >= task_1.end,
                                   task_1.start >= task_2.end)
@@ -132,7 +124,6 @@ class TaskStartAt(_TaskConstraint):
     """ One task must start at the desired time """
     def __init__(self, task, value: int) -> None:
         super().__init__()
-        self.task = task
         self.value = value
 
         scheduled_assertion = task.start == value
@@ -146,7 +137,6 @@ class TaskStartAfterStrict(_TaskConstraint):
     """ task.start > value """
     def __init__(self, task, value: int) -> None:
         super().__init__()
-        self.task = task
         self.value = value
 
         scheduled_assertion = task.start > value
@@ -160,7 +150,6 @@ class TaskStartAfterLax(_TaskConstraint):
     """  task.start >= value  """
     def __init__(self, task, value: int) -> None:
         super().__init__()
-        self.task = task
         self.value = value
 
         scheduled_assertion = task.start >= value
@@ -174,7 +163,6 @@ class TaskEndAt(_TaskConstraint):
     """ On task must complete at the desired time """
     def __init__(self, task, value: int) -> None:
         super().__init__()
-        self.task = task
         self.value = value
 
         scheduled_assertion = task.end == value
@@ -188,7 +176,6 @@ class TaskEndBeforeStrict(_TaskConstraint):
     """ task.end < value """
     def __init__(self, task, value: int) -> None:
         super().__init__()
-        self.task = task
         self.value = value
 
         scheduled_assertion = task.end < value
@@ -202,7 +189,6 @@ class TaskEndBeforeLax(_TaskConstraint):
     """ task.end <= value """
     def __init__(self, task, value: int) -> None:
         super().__init__()
-        self.task = task
         self.value = value
 
         scheduled_assertion = task.end <= value
@@ -221,8 +207,6 @@ class OptionalTaskConditionSchedule(_TaskConstraint):
 
         if not task.optional:
             raise ValueError('Task %s must be optional.' % task.name)
-
-        self.task = task
 
         self.add_assertion(Implies(condition, task.scheduled))
 
