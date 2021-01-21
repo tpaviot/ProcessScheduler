@@ -20,7 +20,7 @@ CLASSIFIERS = [
 ]
 
 setup(name='ProcessScheduler',
-      version='0.1.0',
+      version='0.2.0-dev',
       description=DESCRIPTION,
       long_description=open("README.md").read(),
       long_description_content_type="text/markdown",
@@ -30,6 +30,6 @@ setup(name='ProcessScheduler',
       license='GPLv3',
       platforms="Platform Independent",
       packages=find_packages(),
-      install_requires=['z3-solver'],
+      install_requires=['z3-solver==4.8.10.0'],
       classifiers=CLASSIFIERS,
       zip_safe=True)
