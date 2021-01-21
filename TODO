@@ -1,6 +1,6 @@
 [ ] Cumulative resources: resources that can process multiple tasks at the same time
 
-[ ] Optional tasks: tasks that may or may not be scheduled
+[X] Optional tasks: tasks that may or may not be scheduled
 
 [ ] Automatic logic: sometimes IDL is better than QF_LIA but fail to find a solution
 

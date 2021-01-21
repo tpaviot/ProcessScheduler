@@ -40,12 +40,14 @@ solution.render_gantt_matplotlib()
 
 ## Features
 
-*   tasks: ZeroDurationTask, FixedDurationTask, VariableDurationTask, work amount
-*   resources: Worker, SelectWorkers, cost_per_period, productivity
-*   task constraints: TasksPrecedence, TasksStartSynced, TasksEndSynced, TaskStartAt, TaskEndAt, TaskStartAfterStrict, TaskStartAfterLax, TaskEndBeforeStrict, TaskEndBeforeLax
-*   resource constraints: AllSameSelected, AllDifferentSelected
+*   tasks: zero duration task, fixed duration task, variable duration task, work amount, optional task,
+*   resources: worker, welectWorkers, cost_per_period and productivity attributes,
+*   task constraints: precedence, start synced, end synced, start at, end at, start after, end before,
+*   optional task constraints: task schedule condition, tasks schedule dependencies,
+*   resource constraints: AllSameSelected, AllDifferentSelected,
 *   first-order-logic operations (not, or, xor, and, implies, if/then/else) between task or resource constraints,
-*   objectives: makespan, flowtime, earliest, latest
+*   customized indicators,
+*   builtin objectives (makespan, flowtime, earliest, latest, resource cost) and customized.
 
 ## Installation
 

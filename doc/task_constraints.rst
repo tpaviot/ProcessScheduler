@@ -1,4 +1,3 @@
-
 Task Constraints
 ================
 
@@ -49,3 +48,14 @@ constraints the solver to schedule task_2 start exactly 2 periods after task_1 i
 - :class:`TaskEndBeforeStrict`: the constraint :math:`task.end < value`
 
 - :class:`TaskEndBeforeLax`: the constraint :math:`task.end <= value`
+
+.. warning::
+
+    If the task(s) is (are) optional(s), all these constraints apply only if the task is scheduled. If the solver does not schedule the task, these constraints does not apply.
+
+Optional tasks constraints
+==========================
+
+- :class:`OptionalTaskConditionSchedule` creates a constraint that adds a condition for the task to be schdeuled. The condition is a z3 BoolRef
+
+- the :class:`OptionalTasksDependency` takes two optional tasks :attr:`task_1` and :attr:`task_2`, and ensures that task_1 is schdeuld implies that task_2 is scheduled as well.

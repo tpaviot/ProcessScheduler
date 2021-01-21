@@ -66,3 +66,7 @@ The :attr:`work_amount` is the total amount of work that the :class:`Task` must 
 Priority
 --------
 The :attr:`priority` of a task is a positive integer that can take any value. It is not bounded. A task with a higher priority will be scheduled earlier than a task with a lower priority. If the solver is requested to optimize the global schedule in terms of task priorities (a "priority objective") then a task with a high priority *may* be scheduled before a task with a lower priority.
+
+Optional
+--------
+The :attr:`optional` attribute of a task is a boolean. It is set to :const:`False` by default. If set to :const:`True` the solver may, or may not, schedule the task.

@@ -70,12 +70,7 @@ class SchedulingSolver:
         # add all tasks assertions to the solver
         for task in self.problem_context.tasks:
             self._solver.add(task.get_assertions())
-            # bound start and end
-            self._solver.add(task.end >= 0)
-            if not task.lower_bounded:
-                self._solver.add(task.start >= 0)
-            if not task.upper_bounded:
-                self._solver.add(task.end <= self._problem.horizon)
+            self._solver.add(task.end <= self._problem.horizon)
 
         # then process tasks constraints
         for constraint in self.problem_context.constraints:
@@ -160,6 +155,11 @@ class SchedulingSolver:
             new_task_solution.start = z3_sol[task.start].as_long()
             new_task_solution.end = z3_sol[task.end].as_long()
             new_task_solution.duration = z3_sol[task.duration].as_long()
+            new_task_solution.optional = task.optional
+            if task.optional:
+                new_task_solution.scheduled = ("%s" % z3_sol[task.scheduled] == 'True')  # ugly hack
+            else:
+                new_task_solution.scheduled = True
 
             # process resource assignments
             for req_res in task.required_resources:
