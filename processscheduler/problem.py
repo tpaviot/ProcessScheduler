@@ -57,14 +57,12 @@ class SchedulingProblem(_NamedUIDObject):
         for cstr in list_of_constraints:
             self.context.add_constraint(cstr)
 
-    def add_objective_makespan(self) -> bool:
+    def add_objective_makespan(self) -> MinimizeObjective:
         """ makespan objective
         """
         if self.fixed_horizon:
-            warnings.warn('Horizon constrained to be fixed, no horizon optimization possible.')
-            return False
-        MinimizeObjective('MakeSpan', self.horizon)
-        return True
+            raise ValueError('Horizon constrained to be fixed, no horizon optimization possible.')
+        return MinimizeObjective('MakeSpan', self.horizon)
 
     def add_indicator_resource_cost(self, list_of_resources: List[_Resource]) -> Indicator:
         """ compute the total cost of a set of resources """
