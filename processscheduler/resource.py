@@ -94,6 +94,9 @@ class SelectWorkers(_Resource):
         if nb_workers > len(list_of_workers):
             raise ValueError('nb_workers must be <= the number of workers provided in list_of_workers.')
 
+        if len(list_of_workers) < 1:
+            raise ValueError('At least 2 workers should be in the list_of_workers.')
+
         self.list_of_workers = list_of_workers
         self.nb_workers = nb_workers
 
