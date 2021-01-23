@@ -267,39 +267,39 @@ class TestFeatures(unittest.TestCase):
     def test_operator_or_(self) -> None:
         new_problem_or_clear()
         t_1 = ps.FixedDurationTask('t1', duration=2)
-        or_constraint = ps.or_(ps.TaskStartAt(t_1, 1),
-                               ps.TaskStartAt(t_1, 2))
+        or_constraint = ps.or_([ps.TaskStartAt(t_1, 1),
+                                ps.TaskStartAt(t_1, 2)])
         self.assertIsInstance(or_constraint, ps.BoolRef)
 
     def test_operator_xor_(self) -> None:
         new_problem_or_clear()
         t_1 = ps.FixedDurationTask('t1', duration=2)
-        xor_constraint = ps.xor_(ps.TaskStartAt(t_1, 1),
-                                 ps.TaskStartAt(t_1, 2))
+        xor_constraint = ps.xor_([ps.TaskStartAt(t_1, 1),
+                                  ps.TaskStartAt(t_1, 2)])
         self.assertIsInstance(xor_constraint, ps.BoolRef)
 
     def test_operator_and_(self) -> None:
         new_problem_or_clear()
         t_1 = ps.FixedDurationTask('t1', duration=2)
-        and_constraint = ps.and_(ps.TaskStartAfterLax(t_1, 1),
-                                 ps.TaskEndBeforeLax(t_1, 7))
+        and_constraint = ps.and_([ps.TaskStartAfterLax(t_1, 1),
+                                  ps.TaskEndBeforeLax(t_1, 7)])
         self.assertIsInstance(and_constraint, ps.BoolRef)
 
     def test_nested_boolean_operators(self) -> None:
         new_problem_or_clear()
         t_1 = ps.VariableDurationTask('t1')
-        or_constraint_1 = ps.or_(ps.TaskStartAt(t_1, 1),
-                                 ps.TaskStartAt(t_1, 2))
-        or_constraint_2 = ps.or_(ps.TaskStartAt(t_1, 4),
-                                 ps.TaskStartAt(t_1, 5))
-        and_constraint = ps.and_(or_constraint_1, or_constraint_2)
+        or_constraint_1 = ps.or_([ps.TaskStartAt(t_1, 1),
+                                  ps.TaskStartAt(t_1, 2)])
+        or_constraint_2 = ps.or_([ps.TaskStartAt(t_1, 4),
+                                  ps.TaskStartAt(t_1, 5)])
+        and_constraint = ps.and_([or_constraint_1, or_constraint_2])
         self.assertIsInstance(and_constraint, ps.BoolRef)
 
     def test_add_constraint(self) -> None:
         pb = ps.SchedulingProblem('AddConstraint')
         t_1 = ps.FixedDurationTask('t1', duration=2)
-        or_constraint = ps.or_(ps.TaskStartAt(t_1, 1),
-                               ps.TaskStartAt(t_1, 2))
+        or_constraint = ps.or_([ps.TaskStartAt(t_1, 1),
+                               ps.TaskStartAt(t_1, 2)])
         not_constraint = ps.not_(ps.TaskEndAt(t_1, 5))
         self.assertIsInstance(or_constraint, ps.BoolRef)
         self.assertIsInstance(not_constraint, ps.BoolRef)
@@ -313,7 +313,7 @@ class TestFeatures(unittest.TestCase):
         new_problem_or_clear()
         t_1 = ps.FixedDurationTask('t1', 2)
         t_2 = ps.FixedDurationTask('t2', 2)
-        implies_constraint = ps.implies(t_1.start==1, ps.TaskStartAt(t_2, 3))
+        implies_constraint = ps.implies(t_1.start==1, [ps.TaskStartAt(t_2, 3)])
         self.assertIsInstance(implies_constraint, ps.BoolRef)
 
     #
@@ -324,8 +324,8 @@ class TestFeatures(unittest.TestCase):
         t_1 = ps.FixedDurationTask('t1', 2)
         t_2 = ps.FixedDurationTask('t2', 2)
         ite_constraint = ps.if_then_else(t_1.start==1, # condition
-                                         ps.TaskStartAt(t_2, 3), # then
-                                         ps.TaskStartAt(t_2, 6)) # else
+                                         [ps.TaskStartAt(t_2, 3)], # then
+                                         [ps.TaskStartAt(t_2, 6)]) # else
         self.assertIsInstance(ite_constraint, ps.BoolRef)
 
     #

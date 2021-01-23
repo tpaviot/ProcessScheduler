@@ -333,8 +333,8 @@ class TestSolver(unittest.TestCase):
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask('task1', duration=2)
         #problem.add_task(task_1)
-        problem.add_constraint(ps.and_(ps.not_(ps.TaskStartAt(task_1, 0)),
-                                       ps.not_(ps.TaskStartAt(task_1, 1))))
+        problem.add_constraint(ps.and_([ps.not_(ps.TaskStartAt(task_1, 0)),
+                                        ps.not_(ps.TaskStartAt(task_1, 1))]))
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         # the only solution is to start at 2
@@ -350,7 +350,7 @@ class TestSolver(unittest.TestCase):
         task_2 = ps.FixedDurationTask('task2', duration=2)
         problem.add_constraint(ps.TaskStartAt(task_1, 1))
         problem.add_constraint(ps.implies(task_1.start == 1,
-                                          ps.TaskStartAt(task_2, 4)))
+                                          [ps.TaskStartAt(task_2, 4)]))
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         # the only solution is to start at 2
@@ -366,8 +366,8 @@ class TestSolver(unittest.TestCase):
         task_2 = ps.FixedDurationTask('task2', duration=2)
         problem.add_constraint(ps.TaskStartAt(task_1, 1))
         problem.add_constraint(ps.if_then_else(task_1.start == 0, # this condition is False
-                                               ps.TaskStartAt(task_2, 4), # assertion not set
-                                               ps.TaskStartAt(task_2, 2))) # this one
+                                               [ps.TaskStartAt(task_2, 4)], # assertion not set
+                                               [ps.TaskStartAt(task_2, 2)])) # this one
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         # the only solution is to start at 2
@@ -528,7 +528,7 @@ class TestSolver(unittest.TestCase):
         # merged using a and_
         c1 = ps.ResourceUnavailable(worker_1, [(1, 3)])
         c2 = ps.ResourceUnavailable(worker_1, [(6, 8)])
-        pb.add_constraint(ps.and_(c1, c2))
+        pb.add_constraint(ps.and_([c1, c2]))
         # that should not change the problem solution
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
