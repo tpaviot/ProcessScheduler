@@ -1,0 +1,17 @@
+RELEASE NOTES
+
+Version 0.2.0
+=============
+New features:
+  - optional tasks (optional flag,  OptionalTaskConditionSchedule and OptionalTasksDependency constraints)
+  - resource utilization indicator
+  - boolean ops and implies/ite can take lists of constraints
+
+Misc:
+  - extend coverage and test suite
+  - add a new notebook to the documentation: Flow Shop scheduling example.
+  - bump z3 solver dependency up to 4.8.10.0
+
+Version 0.1.0
+=============
+  - First public release.
