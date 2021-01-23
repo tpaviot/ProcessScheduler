@@ -74,8 +74,22 @@ class SchedulingProblem(_NamedUIDObject):
         resource_names = ','.join([resource.name for resource in list_of_resources])
         cost_indicator_variable = Sum(partial_costs)
         cost_indicator = Indicator('Total Cost (%s)' % resource_names,
-                                                       cost_indicator_variable)
+                                   cost_indicator_variable)
         return cost_indicator
+
+    def add_indicator_resource_utilization(self, resource: _Resource) -> Indicator:
+        """Compute the total utilization of a single resource.
+
+        The percentage is rounded to an int value.
+        """
+        durations = []
+        for interv_low, interv_up in resource.busy_intervals.values():
+            duration = interv_up - interv_low
+            durations.append(duration)
+        utilization = (Sum(durations) * 100) / self.horizon  # in percentage
+        utilization_indicator = Indicator('Uilization (%s)' % resource.name,
+                                           utilization)
+        return utilization_indicator
 
     def add_objective_resource_cost(self, list_of_resources: List[_Resource]) -> MinimizeObjective:
         """ minimise the cost of selected resources

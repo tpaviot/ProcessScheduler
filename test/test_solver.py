@@ -446,33 +446,6 @@ class TestSolver(unittest.TestCase):
         solution.to_json_string()
 
     #
-    # Indicators
-    #
-    def test_compute_indicator(self) -> None:
-        problem = ps.SchedulingProblem('ComputeIndicator', horizon=2)
-        t_1 = ps.FixedDurationTask('t1', 2)
-        t_2 = ps.FixedDurationTask('t2', 2)
-
-        i_1 = ps.Indicator('FlowTime', t_1.end + t_2.end)
-
-        solution = _solve_problem(problem)
-        self.assertTrue(solution)
-        self.assertEqual(solution.indicators[i_1.name], 4)
-
-    def test_cost_indicator(self) -> None:
-        problem = ps.SchedulingProblem('ComputeIndicator')
-        t_1 = ps.VariableDurationTask('t1', work_amount=100)
-        worker_1 = ps.Worker('Worker1', productivity=4, cost_per_period=10)
-        worker_2 = ps.Worker('Worker2', productivity=7, cost_per_period=20)
-        all_workers = [worker_1, worker_2]
-        problem.add_objective_makespan()
-        t_1.add_required_resources(all_workers)
-        cost_ind = problem.add_indicator_resource_cost(all_workers)
-        solution = _solve_problem(problem)
-        self.assertTrue(solution)
-        self.assertEqual(solution.indicators[cost_ind.name], 300)
-
-    #
     # Resource constraints
     #
     def test_all_same_different_workers(self):
