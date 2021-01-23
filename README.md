@@ -92,4 +92,4 @@ ProcessScheduler uses the following tools/methods to ensure code quality:
 
 ## License/Author
 
-ProcessScheduler is distributed under the terms of the GNU General Public License v3 or (at your option) any later version. It is currently developed and maitained by Thomas Paviot (tpaviot@gmail.com).
+ProcessScheduler is distributed under the terms of the GNU General Public License v3 or (at your option) any later version. It is currently developed and maintained by Thomas Paviot (tpaviot@gmail.com).
