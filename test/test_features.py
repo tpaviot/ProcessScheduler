@@ -80,7 +80,7 @@ class TestFeatures(unittest.TestCase):
         ps.VariableDurationTask('vdt1')
         vdt_2 = ps.VariableDurationTask('vdt2', length_at_most=4)
         vdt_3 = ps.VariableDurationTask('vdt3', length_at_least=5)
-        vdt_4 = ps.VariableDurationTask('vdt4', work_amount=10)
+        ps.VariableDurationTask('vdt4', work_amount=10)
         self.assertEqual(vdt_2.length_at_most, 4)
         self.assertEqual(vdt_3.length_at_least, 5)
 
