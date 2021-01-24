@@ -69,7 +69,7 @@ class SchedulingSolution:
         """Return all tasks except those of the type UnavailebleResource."""
         tasks_to_return = {}
         for task in self.tasks:
-            if not "NotAvailable" in task:
+            if "NotAvailable" not in task:
                 tasks_to_return[task] = self.tasks[task]
         return tasks_to_return
 

@@ -16,7 +16,6 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 from typing import List, Optional
-import warnings
 
 from z3 import BoolRef, Int, Or, Sum
 

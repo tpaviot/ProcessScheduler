@@ -52,15 +52,13 @@ solution.render_gantt_matplotlib()
 
 ## Installation
 
-Using pip
----------
+### Using pip
 
 ```bash
 pip install ProcessScheduler
 ```
 
-Development version
--------------------
+### Development version
 
 Create a local copy of this repository:
 ```bash

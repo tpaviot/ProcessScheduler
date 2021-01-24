@@ -17,7 +17,7 @@
 
 from typing import List, Optional
 
-from z3 import Bool, BoolRef, Int, And, If, Implies
+from z3 import Bool, BoolRef, Int, And, If
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer, is_positive_integer
 from processscheduler.resource import _Resource, Worker, SelectWorkers
@@ -41,6 +41,7 @@ class Task(_NamedUIDObject):
 
         # by default, this task has to be scheduled
         self.optional = False
+        self.scheduled = True
 
         # add this task to the current context
         if ps_context.main_context is None:

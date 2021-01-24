@@ -49,14 +49,16 @@ class TestFeatures(unittest.TestCase):
             ps.SchedulingProblem('NegativeIntegerHorizon', horizon=-2)
 
     def test_create_problem_without_horizon(self) -> None:
-        ps.SchedulingProblem('ProblemWithoutHorizon')
+        pb = ps.SchedulingProblem('ProblemWithoutHorizon')
+        self.assertIsInstance(pb, ps.SchedulingProblem)
 
     #
     # Tasks
     #
     def test_create_task_zero_duration(self) -> None:
         ps.SchedulingProblem('ProblemWithoutHorizon')
-        ps.ZeroDurationTask('zdt')
+        task = ps.ZeroDurationTask('zdt')
+        self.assertIsInstance(task, ps.ZeroDurationTask)
 
     def test_create_task_fixed_duration(self) -> None:
         new_problem_or_clear()
@@ -76,9 +78,11 @@ class TestFeatures(unittest.TestCase):
     def test_create_task_variable_duration(self) -> None:
         new_problem_or_clear()
         ps.VariableDurationTask('vdt1')
-        ps.VariableDurationTask('vdt2', length_at_most=4)
-        ps.VariableDurationTask('vdt3', length_at_least=4)
-        ps.VariableDurationTask('vdt4', work_amount=10)
+        vdt_2 = ps.VariableDurationTask('vdt2', length_at_most=4)
+        vdt_3 = ps.VariableDurationTask('vdt3', length_at_least=5)
+        vdt_4 = ps.VariableDurationTask('vdt4', work_amount=10)
+        self.assertEqual(vdt_2.length_at_most, 4)
+        self.assertEqual(vdt_3.length_at_least, 5)
 
     def test_task_types(self) -> None:
         new_problem_or_clear()
@@ -173,6 +177,7 @@ class TestFeatures(unittest.TestCase):
         task_1.add_required_resource(worker_1)
         task_1.add_required_resource(worker_2)
         task_1.add_required_resources([worker_3, worker_4])
+        self.assertEqual(len(task_1.required_resources), 4)
 
     def test_wrong_assignement(self) -> None:
         new_problem_or_clear()

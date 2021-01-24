@@ -81,7 +81,7 @@ class TasksStartSynced(_TaskConstraint):
         super().__init__()
 
         scheduled_assertion = task_1.start == task_2.start
-        
+
         if task_1.optional or task_2.optional:
             # both tasks must be scheduled so that the startsynced constraint applies
             self.add_assertion(Implies(And(task_1.scheduled, task_2.scheduled)
@@ -157,7 +157,7 @@ class TaskStartAfterLax(_TaskConstraint):
         if task.optional:
             self.add_assertion(Implies(task.scheduled, scheduled_assertion))
         else:
-            self.add_assertion(scheduled_assertion) 
+            self.add_assertion(scheduled_assertion)
 
 class TaskEndAt(_TaskConstraint):
     """ On task must complete at the desired time """
