@@ -64,7 +64,10 @@ class _NamedUIDObject:
         return self.uid == other.uid
 
     def __repr__(self) -> str:
-        return self.name
+        """Print the object name, its uid and the assertions."""
+        str_to_return = '%s(%s)\n%i assertion(s):\n' % (self.name, type(self), len(self.assertions))
+        assertions_str = ''.join(["%s" % ass for ass in self.assertions])
+        return str_to_return + assertions_str
 
     def add_assertion(self, z3_assertion: BoolRef) -> None:
         """

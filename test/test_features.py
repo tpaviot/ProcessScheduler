@@ -345,6 +345,18 @@ class TestFeatures(unittest.TestCase):
         with self.assertRaises(TypeError):
             ps.Indicator('foo', 4)
 
+    #
+    # Print _NamedUIDObject
+    #
+    def test_print_objects(self) -> None:
+        pb = ps.SchedulingProblem('TestPrint')
+        t1 = ps.FixedDurationTask('task_1', duration=1)
+        t2 = ps.VariableDurationTask('task_2')
+        worker_1 = ps.Worker('W1')
+        self.assertTrue('task_1' in "%s" % t1)
+        self.assertTrue('task_2' in "%s" % t2)
+        self.assertTrue('W1' in "%s" % worker_1)
+
 
 if __name__ == "__main__":
     unittest.main()
