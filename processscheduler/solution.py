@@ -110,6 +110,8 @@ class SchedulingSolution:
         """
         if not self.resources:
             render_mode = 'Tasks'
+        elif render_mode not in ['Resources', 'Tasks']:
+            raise ValueError("render_mode must either be 'Resources' or 'Tasks")
 
         # tasks to render
         if render_mode == 'Tasks':
@@ -128,8 +130,6 @@ class SchedulingSolution:
             plot_ylabel = 'Tasks'
             plot_ticklabels = list(tasks_to_render.keys())
             nbr_y_values = len(tasks_to_render)
-        else:
-            raise ValueError("rendermode must be either 'Resources' or 'Tasks'")
 
         gantt = plt.subplots(1, 1, figsize=fig_size)[1]
         gantt.set_title(plot_title)

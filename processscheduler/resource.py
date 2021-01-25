@@ -29,9 +29,8 @@ import processscheduler.context as ps_context
 #
 class _Resource(_NamedUIDObject):
     """ base class for the representation of a resource """
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         super().__init__(name)
-
         # for each resource, we define a dict that stores
         # all tasks and busy intervals of the resource.
         # busy intervals can be for example [(1,3), (5, 7)]
@@ -39,10 +38,6 @@ class _Resource(_NamedUIDObject):
 
     def add_busy_interval(self, task, interval: Tuple[ArithRef, ArithRef]) -> None:
         """ add an interval in which the resource is busy """
-        if task in self.busy_intervals:
-            warnings.warn('%s is already defined as a required resource for task %s' % (self.name,
-                                                                                        task.name))
-            return False
         # add the assertions: this new interval must not overlap with all the
         # intervals already defined
         start, end = interval
@@ -51,8 +46,6 @@ class _Resource(_NamedUIDObject):
 
         # finally add this interval to the dict
         self.busy_intervals[task] = interval
-
-        return True
 
     def get_busy_intervals(self) -> List[Tuple[ArithRef, ArithRef]]:
         """ returns the list of all busy intervals """
@@ -93,9 +86,6 @@ class SelectWorkers(_Resource):
 
         if nb_workers > len(list_of_workers):
             raise ValueError('nb_workers must be <= the number of workers provided in list_of_workers.')
-
-        if len(list_of_workers) < 1:
-            raise ValueError('At least 2 workers should be in the list_of_workers.')
 
         self.list_of_workers = list_of_workers
         self.nb_workers = nb_workers

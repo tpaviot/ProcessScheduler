@@ -131,7 +131,7 @@ class TestFeatures(unittest.TestCase):
         self.assertIsInstance(double_alternative_workers,
                               ps.SelectWorkers)
 
-    def test_worker_wrong_number_of_workers(self) -> None:
+    def test_select_worker_wrong_number_of_workers(self) -> None:
         new_problem_or_clear()
         worker_1 = ps.Worker('wkr_1')
         worker_2 = ps.Worker('wkr_2')
@@ -141,6 +141,15 @@ class TestFeatures(unittest.TestCase):
             ps.SelectWorkers([worker_1, worker_2], 3)
         with self.assertRaises(TypeError):
             ps.SelectWorkers([worker_1, worker_2], -1)
+
+    def test_select_worker_bad_type(self) -> None:
+        new_problem_or_clear()
+        worker_1 = ps.Worker('wkr_1')
+        self.assertIsInstance(worker_1, ps.Worker)
+        worker_2 = ps.Worker('wkr_2')
+        with self.assertRaises(ValueError):
+            ps.SelectWorkers([worker_1, worker_2], 1, kind='ee')
+        
 
     def test_worker_same_name(self) -> None:
         new_problem_or_clear()
