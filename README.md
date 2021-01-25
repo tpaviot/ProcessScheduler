@@ -76,7 +76,7 @@ pip install -e .
 
 Documentation can be found at https://processscheduler.readthedocs.io/
 
-## Jypter notebooks
+## Jupyter notebooks
 
 There are some [Jupypter notebooks](https://github.com/tpaviot/ProcessScheduler/tree/master/example-notebooks). They can be executed online at [myBinder.org](https://mybinder.org/v2/gh/tpaviot/ProcessScheduler/HEAD?filepath=example-notebooks)
 

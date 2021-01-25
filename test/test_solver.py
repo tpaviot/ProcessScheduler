@@ -178,7 +178,7 @@ class TestSolver(unittest.TestCase):
         w5 = ps.SelectWorkers([w1, w2, w3], nb_workers=2, kind='atmost')
         w6 = ps.SelectWorkers([w1, w2, w3], nb_workers=3, kind='atleast')
 
-        # resource assignement
+        # resource assignment
         t1.add_required_resource(w1)  # t1 only needs w1
         t2.add_required_resource(w2)  # t2 only needs w2
         t3.add_required_resource(w4)  # t3 needs one of w1, 2 or 3
@@ -380,7 +380,7 @@ class TestSolver(unittest.TestCase):
     def test_find_another_solution(self):
         problem = ps.SchedulingProblem('FindAnotherSolution', horizon=6)
         solutions =[]
-        # only one task, there are many diffrent solutions
+
         task_1 = ps.FixedDurationTask('task1', duration=2)
         solver = ps.SchedulingSolver(problem)
         solution = solver.solve()
@@ -393,7 +393,7 @@ class TestSolver(unittest.TestCase):
 
     def test_find_another_solution_solve_before(self):
         problem = ps.SchedulingProblem('FindAnotherSolutionSolveBefore', horizon=6)
-        # only one task, there are many diffrent solutions
+
         task_1 = ps.FixedDurationTask('task1', duration=2)
         solver = ps.SchedulingSolver(problem)
         result = solver.find_another_solution(task_1.start) # error, first have to solve
@@ -404,7 +404,7 @@ class TestSolver(unittest.TestCase):
     #
     def test_work_amount_1(self):
         problem = ps.SchedulingProblem('WorkAmount')
-        # only one task, there are many diffrent solutions
+
         task_1 = ps.VariableDurationTask('task1', work_amount=11)
         # create one worker with a productivity of 2
         worker_1 = ps.Worker('Worker1', productivity=2)
@@ -419,7 +419,7 @@ class TestSolver(unittest.TestCase):
         # try the same problem than above, but with one more resource
         # check that the task duration is lower
         problem = ps.SchedulingProblem('WorkAmount', horizon=4)
-        # only one task, there are many diffrent solutions
+
         task_1 = ps.VariableDurationTask('task1', work_amount=11)
         # create two workers
         worker_1 = ps.Worker('Worker1', productivity=2)

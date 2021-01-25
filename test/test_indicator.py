@@ -87,7 +87,7 @@ class TestIndicator(unittest.TestCase):
         self.assertEqual(result_res_1 + result_res_2, 100)
 
     def test_resource_utilization_indicator_3(self) -> None:
-        """Same as above, but bothe workers are selectable. Force one with resource
+        """Same as above, but both workers are selectable. Force one with resource
         utilization maximization objective."""
         problem = ps.SchedulingProblem('IndicatorUtilization3', horizon = 10)
 
