@@ -206,26 +206,6 @@ class TestSolver(unittest.TestCase):
 
         self.assertFalse(_solve_problem(problem))
 
-    def test_render_solution(self):
-        """ take the single task/single resource and display output """
-        problem = ps.SchedulingProblem('RenderSolution', horizon=7)
-        task = ps.FixedDurationTask('task', duration=7)
-        #problem.add_task(task)
-        worker = ps.Worker('worker')
-        #problem.add_resource(worker)
-        task.add_required_resource(worker)
-        solution = _solve_problem(problem)
-        self.assertTrue(solution)
-        # display solution, using both ascii or matplotlib
-        solution.render_gantt_matplotlib(render_mode='Resources',
-                                        show_plot=False,
-                                        fig_filename='test_render_resources.svg')
-        solution.render_gantt_matplotlib(render_mode='Tasks',
-                                        show_plot=False,
-                                        fig_filename='test_render_tasks.svg')
-        self.assertTrue(os.path.isfile('test_render_resources.svg'))
-        self.assertTrue(os.path.isfile('test_render_tasks.svg'))
-
     def test_solve_parallel(self):
         """ a stress test with parallel mode solving """
         problem = _get_big_random_problem('SolveParallel', 5000)
