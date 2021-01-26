@@ -66,12 +66,25 @@ class Worker(_Resource):
         # only worker are add to the main context, not SelectWorkers
         ps_context.main_context.add_resource(self)
 
+class CumulativeWorker(_Resource):
+    """ A cumulative worker can process multiple tasks in parallel."""
+    def __init__(self,
+                 name: str,
+                 size: int) -> None:
+        super().__init__(name)
+
+        if not (isinstance(size, int) and size >= 2):
+            raise ValueError("CumulativeWorker 'size' attribute must be >=2.")
+
+        # we create as much elementary workers as the cumulative size
+        self.cumulative_workers = [Worker('%s_CumulativeWorker_%i' % (name, i)) for i in range(1, size+1)]
+
 class SelectWorkers(_Resource):
     """ Class representing the selection of n workers chosen among a list
     of possible workers """
     def __init__(self,
                  list_of_workers: List[_Resource],
-                 nb_workers: Optional[int] = 1,
+                 nb_workers_to_select: Optional[int] = 1,
                  kind: Optional[str] = 'exact'):
         """ create an instance of the SelectWorkers class. """
         super().__init__('')
@@ -81,20 +94,28 @@ class SelectWorkers(_Resource):
         if kind not in problem_function:
             raise ValueError("kind must be either 'exact', 'atleast' or 'atmost'")
 
-        if not is_strict_positive_integer(nb_workers):
+        if not is_strict_positive_integer(nb_workers_to_select):
             raise TypeError('nb_workers must be an integer > 0')
 
-        if nb_workers > len(list_of_workers):
+        if nb_workers_to_select > len(list_of_workers):
             raise ValueError('nb_workers must be <= the number of workers provided in list_of_workers.')
 
-        self.list_of_workers = list_of_workers
-        self.nb_workers = nb_workers
+        # build the list of workers that will be the base of the selection
+        # instances from this list mght either be Workers or CumulativeWorkers. If
+        # this is a cumulative, then we add the list of all workers from the cumulative
+        # into this list.
+        self.list_of_workers = []
+        for worker in list_of_workers:
+            if isinstance(worker, CumulativeWorker):
+                self.list_of_workers.extend(worker.cumulative_workers)
+            else:
+                self.list_of_workers.append(worker)
 
         # a dict that maps workers and selected boolean
         self.selection_dict = {}
 
         # create as many booleans as resources in the list
-        for worker in list_of_workers:
+        for worker in self.list_of_workers:
             worker_is_selected = Bool('Selected_%s_%i' % (worker.name, self.uid))
             self.selection_dict[worker] = worker_is_selected
 
@@ -104,4 +125,4 @@ class SelectWorkers(_Resource):
         # and https://stackoverflow.com/questions/43081929/k-out-of-n-constraint-in-z3py
         selection_list = list(self.selection_dict.values())
         self.selection_assertion = problem_function[kind]([(selected, True) for selected in selection_list],
-                                                          nb_workers)
+                                                          nb_workers_to_select)

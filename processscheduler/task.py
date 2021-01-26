@@ -20,7 +20,7 @@ from typing import List, Optional
 from z3 import Bool, BoolRef, Int, And, If
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer, is_positive_integer
-from processscheduler.resource import _Resource, Worker, SelectWorkers
+from processscheduler.resource import _Resource, Worker, CumulativeWorker, SelectWorkers
 
 import processscheduler.context as ps_context
 
@@ -57,9 +57,14 @@ class Task(_NamedUIDObject):
         """
         if not isinstance(resource, _Resource):
             raise TypeError('you must pass a Resource instance')
+
         if resource in self.required_resources:
             raise ValueError('resource %s already defined as a required resource for task %s' % (resource.name,
                                                                                                  self.name))
+
+        if isinstance(resource, CumulativeWorker):
+            resource = SelectWorkers(resource.cumulative_workers)
+
         if isinstance(resource, SelectWorkers):
             # loop over each resource
             for worker in resource.list_of_workers:

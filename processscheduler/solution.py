@@ -63,7 +63,7 @@ class SchedulingSolution:
         self.indicators = {}  # the dict of inicators values
 
     def __repr__(self):
-        return self.to_string()
+        return self.to_json_string()
 
     def get_all_tasks_but_unavailable(self):
         """Return all tasks except those of the type UnavailebleResource."""
@@ -72,10 +72,6 @@ class SchedulingSolution:
             if "NotAvailable" not in task:
                 tasks_to_return[task] = self.tasks[task]
         return tasks_to_return
-
-    def to_string(self) -> str:
-        """ displays the result as an ascii string """
-        return str(self.tasks)
 
     def to_json_string(self) -> str:
         """ export the solution to a json string """
@@ -142,7 +138,7 @@ class SchedulingSolution:
         # colormap definition
         cmap = LinearSegmentedColormap.from_list('custom blue',
                                                  ['#bbccdd','#ee3300'],
-                                                 N = len(self.tasks) * 2) # nbr of colors
+                                                 N = len(self.tasks) ) # nbr of colors
         # defined a mapping between the tasks and the colors, so that
         # each task has the same color on both graphs
         task_colors = {}
@@ -163,8 +159,9 @@ class SchedulingSolution:
             else:
                 bar_dimension = (start, length)
             gantt.broken_barh([bar_dimension], (i * 2, 2),
-                              edgecolor='black', linewidth=1,
-                              facecolors=bar_color, hatch=hatch)
+                              edgecolor='black', linewidth=2,
+                              facecolors=bar_color, hatch=hatch,
+                              alpha=0.5)
             gantt.text(x=start + length / 2, y=i * 2 + 1,
                        s=text, ha='center', va='center', color='black')
 
