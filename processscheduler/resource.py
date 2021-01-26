@@ -25,6 +25,16 @@ from processscheduler.base import (_NamedUIDObject, is_positive_integer,
 import processscheduler.context as ps_context
 
 #
+# Utilisy functions
+#
+def _distribute_p_over_n(p, n):
+    """Returns a list of integer p distributed over n values."""
+    int_div = p // n
+    to_return = [int_div + p % n]
+    for i in range(n-1):
+        to_return.append(int_div)
+    return to_return
+#
 # Resources class definition
 #
 class _Resource(_NamedUIDObject):
@@ -70,14 +80,26 @@ class CumulativeWorker(_Resource):
     """ A cumulative worker can process multiple tasks in parallel."""
     def __init__(self,
                  name: str,
-                 size: int) -> None:
+                 size: int,
+                 productivity: Optional[int] = 1,
+                 cost_per_period: Optional[int] = 0) -> None:
         super().__init__(name)
 
         if not (isinstance(size, int) and size >= 2):
             raise ValueError("CumulativeWorker 'size' attribute must be >=2.")
 
+        # productivity and cost_per_period are distributed over
+        # indiviual workers
+        # for example, a productivty of 7 for a size of 3 will be distributed
+        # as 3 on worker 1, 2 on worker 2 and 2 on worker 3. Same for cost_per_periods
+        productivities = _distribute_p_over_n(productivity, size)
+        costs_per_period = _distribute_p_over_n(cost_per_period, size)
+
         # we create as much elementary workers as the cumulative size
-        self.cumulative_workers = [Worker('%s_CumulativeWorker_%i' % (name, i)) for i in range(1, size+1)]
+        self.cumulative_workers = [Worker('%s_CumulativeWorker_%i' % (name, i+1),
+                                          productivity=productivities[i],
+                                          cost_per_period=costs_per_period[i])
+                                   for i in range(size)]
 
 class SelectWorkers(_Resource):
     """ Class representing the selection of n workers chosen among a list

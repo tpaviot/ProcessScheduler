@@ -21,12 +21,22 @@ import os
 import unittest
 
 import processscheduler as ps
+from processscheduler.resource import _distribute_p_over_n
 
 class TestCumulative(unittest.TestCase):
+    def test_distribute_p_over_n(self):
+        res1 = _distribute_p_over_n(7, 3)
+        self.assertEqual(res1, [3, 2, 2])
+        res2 = _distribute_p_over_n(6, 2)
+        self.assertEqual(res2, [3, 3])
+        res3 = _distribute_p_over_n(9, 3)
+        self.assertEqual(res3, [3, 3, 3])
+        res4 = _distribute_p_over_n(1, 5)
+        self.assertEqual(res4, [1, 0, 0, 0, 0])
+
     def test_create_cumulative(self):
         """ take the single task/single resource and display output """
         ps.SchedulingProblem('CreateCumulative', horizon=10)
-        #problem.add_task(task)
         cumulative_worker = ps.CumulativeWorker('MachineA', size=4)
         self.assertEqual(len(cumulative_worker.cumulative_workers), 4)
 
