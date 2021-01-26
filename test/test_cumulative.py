@@ -109,6 +109,21 @@ class TestCumulative(unittest.TestCase):
         solution = solver.solve()
         self.assertTrue(solution)
 
+    def test_cumulative_hosp(self):
+        n = 25
+        capa = 5
+        pb_bs = ps.SchedulingProblem("Hospital", horizon= int(n / capa))
+        # workers
+        r1 = ps.CumulativeWorker('Room', size=capa)
+
+        for i in range(n):
+            t = ps.FixedDurationTask('T%i' % (i+1), duration=1)
+            t.add_required_resource(r1)
+
+        solver = ps.SchedulingSolver(pb_bs, logic='QF_IDL')
+        solution = solver.solve()
+        self.assertTrue(solution)
+
 
 if __name__ == "__main__":
     unittest.main()
