@@ -95,7 +95,7 @@ class TasksEndSynced(_TaskConstraint):
         super().__init__()
 
         scheduled_assertion = task_1.end == task_2.end
-        
+
         if task_1.optional or task_2.optional:
             # both tasks must be scheduled so that the endsynced constraint applies
             self.add_assertion(Implies(And(task_1.scheduled, task_2.scheduled) , scheduled_assertion))
@@ -170,7 +170,7 @@ class TaskEndAt(_TaskConstraint):
         if task.optional:
             self.add_assertion(Implies(task.scheduled, scheduled_assertion))
         else:
-            self.add_assertion(scheduled_assertion) 
+            self.add_assertion(scheduled_assertion)
 
 class TaskEndBeforeStrict(_TaskConstraint):
     """ task.end < value """

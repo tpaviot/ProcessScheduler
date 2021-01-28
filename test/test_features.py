@@ -149,7 +149,6 @@ class TestFeatures(unittest.TestCase):
         worker_2 = ps.Worker('wkr_2')
         with self.assertRaises(ValueError):
             ps.SelectWorkers([worker_1, worker_2], 1, kind='ee')
-        
 
     def test_worker_same_name(self) -> None:
         new_problem_or_clear()
