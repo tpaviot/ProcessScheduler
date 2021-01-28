@@ -16,7 +16,6 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Dict, List, Optional, Tuple
-import warnings
 
 from z3 import ArithRef, Bool, PbEq, PbGe, PbLe, Xor
 
@@ -31,7 +30,7 @@ def _distribute_p_over_n(p, n):
     """Returns a list of integer p distributed over n values."""
     int_div = p // n
     to_return = [int_div + p % n]
-    for i in range(n-1):
+    for _ in range(n-1):
         to_return.append(int_div)
     return to_return
 #
@@ -75,31 +74,6 @@ class Worker(_Resource):
         self.cost_per_period = cost_per_period
         # only worker are add to the main context, not SelectWorkers
         ps_context.main_context.add_resource(self)
-
-class CumulativeWorker(_Resource):
-    """ A cumulative worker can process multiple tasks in parallel."""
-    def __init__(self,
-                 name: str,
-                 size: int,
-                 productivity: Optional[int] = 1,
-                 cost_per_period: Optional[int] = 0) -> None:
-        super().__init__(name)
-
-        if not (isinstance(size, int) and size >= 2):
-            raise ValueError("CumulativeWorker 'size' attribute must be >=2.")
-
-        # productivity and cost_per_period are distributed over
-        # indiviual workers
-        # for example, a productivty of 7 for a size of 3 will be distributed
-        # as 3 on worker 1, 2 on worker 2 and 2 on worker 3. Same for cost_per_periods
-        productivities = _distribute_p_over_n(productivity, size)
-        costs_per_period = _distribute_p_over_n(cost_per_period, size)
-
-        # we create as much elementary workers as the cumulative size
-        self.cumulative_workers = [Worker('%s_CumulativeWorker_%i' % (name, i+1),
-                                          productivity=productivities[i],
-                                          cost_per_period=costs_per_period[i])
-                                   for i in range(size)]
 
 class SelectWorkers(_Resource):
     """ Class representing the selection of n workers chosen among a list
@@ -148,3 +122,37 @@ class SelectWorkers(_Resource):
         selection_list = list(self.selection_dict.values())
         self.selection_assertion = problem_function[kind]([(selected, True) for selected in selection_list],
                                                           nb_workers_to_select)
+
+class CumulativeWorker(_Resource):
+    """ A cumulative worker can process multiple tasks in parallel."""
+    def __init__(self,
+                 name: str,
+                 size: int,
+                 productivity: Optional[int] = 1,
+                 cost_per_period: Optional[int] = 0) -> None:
+        super().__init__(name)
+
+        if not (isinstance(size, int) and size >= 2):
+            raise ValueError("CumulativeWorker 'size' attribute must be >=2.")
+
+        self.size = size
+        # productivity and cost_per_period are distributed over
+        # indiviual workers
+        # for example, a productivty of 7 for a size of 3 will be distributed
+        # as 3 on worker 1, 2 on worker 2 and 2 on worker 3. Same for cost_per_periods
+        productivities = _distribute_p_over_n(productivity, size)
+
+        costs_per_period = _distribute_p_over_n(cost_per_period, size)
+
+        # we create as much elementary workers as the cumulative size
+        self.cumulative_workers = [Worker('%s_CumulativeWorker_%i' % (name, i+1),
+                                          productivity=productivities[i],
+                                          cost_per_period=costs_per_period[i])
+                                   for i in range(size)]
+
+    def get_select_workers(self):
+        """Each time the cumulative resource is assigned to a task, a SelectWorker
+        is instance to ba passed to the task."""
+        return SelectWorkers(self.cumulative_workers,
+                             nb_workers_to_select=1,
+                             kind='atleast')

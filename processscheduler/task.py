@@ -63,7 +63,8 @@ class Task(_NamedUIDObject):
                                                                                                  self.name))
 
         if isinstance(resource, CumulativeWorker):
-            resource = SelectWorkers(resource.cumulative_workers)
+            # in the case for a CumulativeWorker, select at least one worker
+            resource = resource.get_select_workers()
 
         if isinstance(resource, SelectWorkers):
             # loop over each resource

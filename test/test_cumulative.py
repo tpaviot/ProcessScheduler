@@ -17,7 +17,6 @@
 #specific language governing permissions and limitations
 #under the License.
 
-import os
 import unittest
 
 import processscheduler as ps
@@ -33,6 +32,8 @@ class TestCumulative(unittest.TestCase):
         self.assertEqual(res3, [3, 3, 3])
         res4 = _distribute_p_over_n(1, 5)
         self.assertEqual(res4, [1, 0, 0, 0, 0])
+        res4 = _distribute_p_over_n(29, 3)
+        self.assertEqual(res4, [11, 9, 9])
 
     def test_create_cumulative(self):
         """ take the single task/single resource and display output """
@@ -44,9 +45,9 @@ class TestCumulative(unittest.TestCase):
         """ take the single task/single resource and display output """
         ps.SchedulingProblem('CreateCumulativeWrongType', horizon=10)
         with self.assertRaises(ValueError):
-            cumulative_worker = ps.CumulativeWorker('MachineA', size=1)
+            ps.CumulativeWorker('MachineA', size=1)
         with self.assertRaises(ValueError):
-            cumulative_worker = ps.CumulativeWorker('MachineA', size=2.5)               
+            ps.CumulativeWorker('MachineA', size=2.5)
 
     def test_cumulative_1(self):
         pb_bs = ps.SchedulingProblem("Cumulative1", 3)
@@ -96,7 +97,7 @@ class TestCumulative(unittest.TestCase):
         # tasks
         t1 = ps.FixedDurationTask('T1', duration=2)
         t2 = ps.FixedDurationTask('T2', duration=2)
-        
+
         # workers
         r1 = ps.CumulativeWorker('Machine1', size=2)
         r2 = ps.CumulativeWorker('Machine2', size=2)
@@ -110,8 +111,8 @@ class TestCumulative(unittest.TestCase):
         self.assertTrue(solution)
 
     def test_cumulative_hosp(self):
-        n = 25
-        capa = 5
+        n = 16
+        capa = 4
         pb_bs = ps.SchedulingProblem("Hospital", horizon= int(n / capa))
         # workers
         r1 = ps.CumulativeWorker('Room', size=capa)
@@ -122,6 +123,35 @@ class TestCumulative(unittest.TestCase):
 
         solver = ps.SchedulingSolver(pb_bs, logic='QF_IDL')
         solution = solver.solve()
+        self.assertTrue(solution)
+
+    def test_cumulative_productivity(self):
+        """Horizon should be 4, 100/29=3.44."""
+        problem = ps.SchedulingProblem("CumulativeProductivity")
+        t_1 = ps.VariableDurationTask('t1', work_amount=100)
+
+        worker_1 = ps.CumulativeWorker('CumulWorker', size=3, productivity=29)
+        t_1.add_required_resource(worker_1)
+
+        problem.add_objective_makespan()
+        solution = ps.SchedulingSolver(problem).solve()
+        self.assertTrue(solution)
+        self.assertEqual(solution.horizon, 4)
+
+    def test_cumulative_cost(self):
+        problem = ps.SchedulingProblem("CumulativeCost", horizon=5)
+        t_1 = ps.FixedDurationTask('t1', duration=5)
+
+        worker_1 = ps.CumulativeWorker('CumulWorker', size=3, cost_per_period=5)
+        t_1.add_required_resource(worker_1)
+
+        cost_ind = problem.add_indicator_resource_cost([worker_1])
+
+        solution = ps.SchedulingSolver(problem).solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(solution.indicators[cost_ind.name], 25)
+        solution = ps.SchedulingSolver(problem).solve()
         self.assertTrue(solution)
 
 
