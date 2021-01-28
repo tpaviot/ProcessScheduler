@@ -84,7 +84,6 @@ class SchedulingProblem(_NamedUIDObject):
 
         resource_names = ','.join([resource.name for resource in list_of_resources])
         cost_indicator_variable = Sum(partial_costs)
-        print(cost_indicator_variable, type(cost_indicator_variable))
         cost_indicator = Indicator('Total Cost (%s)' % resource_names,
                                    cost_indicator_variable)
         return cost_indicator

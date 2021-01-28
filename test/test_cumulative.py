@@ -177,7 +177,7 @@ class TestCumulative(unittest.TestCase):
         solution = ps.SchedulingSolver(problem).solve()
 
         self.assertTrue(solution)
-        self.assertEqual(solution.indicators[cost_ind.name], 25)
+        self.assertEqual(solution.indicators[cost_ind.name], 15)
         solution = ps.SchedulingSolver(problem).solve()
         self.assertTrue(solution)
 
