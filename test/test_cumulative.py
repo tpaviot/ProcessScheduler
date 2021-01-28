@@ -92,6 +92,33 @@ class TestCumulative(unittest.TestCase):
         solution = solver.solve()
         self.assertTrue(solution)
 
+    def test_optional_cumulative(self):
+        """Same as above, but with an optional taskand an horizon of 2.
+        t2 should not be scheduled."""
+        pb_bs = ps.SchedulingProblem("OptionalCumulative", 2)
+        # tasks
+        t1 = ps.FixedDurationTask('T1', duration=2)
+        t2 = ps.FixedDurationTask('T2', duration=2, optional=True)
+        t3 = ps.FixedDurationTask('T3', duration=2)
+
+        # workers
+        r1 = ps.CumulativeWorker('Machine1', size=2)
+        # resource assignment
+        t1.add_required_resource(r1)
+        t2.add_required_resource(r1)
+
+        # constraints
+        pb_bs.add_constraint(ps.TaskStartAt(t2, 1))
+
+        # plot solution
+        solver = ps.SchedulingSolver(pb_bs, verbosity=False)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertTrue(solution.tasks[t1.name].scheduled)
+        self.assertTrue(solution.tasks[t3.name].scheduled)
+        self.assertFalse(solution.tasks[t2.name].scheduled)
+        
+
     def test_cumulative_select_worker_1(self):
         pb_bs = ps.SchedulingProblem("CumulativeSelectWorker", 2)
         # tasks
