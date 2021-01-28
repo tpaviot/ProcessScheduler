@@ -176,14 +176,24 @@ class SchedulingSolver:
                     resource_is_assigned = False
                 # add this resource to assigned resources, anytime
                 if resource_is_assigned and (req_res.name not in new_task_solution.assigned_resources):
-                    new_task_solution.assigned_resources.append(req_res.name)
+                    # if it is a cumulative resource, then we transform the resource name
+                    resource_name = req_res.name.split('_CumulativeWorker_')[0]
+                    new_task_solution.assigned_resources.append(resource_name)
 
             solution.add_task_solution(new_task_solution)
 
         # process resources
         for resource in self._problem.context.resources:
             # for each task, create a TaskSolution instance
-            new_resource_solution = ResourceSolution(resource.name)
+            # for cumulative workers, we append the current work
+            if '_CumulativeWorker_' in resource.name:
+                cumulative_worker_name = resource.name.split('_CumulativeWorker_')[0]
+                if cumulative_worker_name not in solution.resources:
+                    new_resource_solution = ResourceSolution(cumulative_worker_name)
+                else:
+                    new_resource_solution = solution.resources[cumulative_worker_name]
+            else:
+                new_resource_solution = ResourceSolution(resource.name)
             new_resource_solution.type = type(resource).__name__
             # check for task processed by this resource
             for task in resource.busy_intervals.keys():
@@ -194,7 +204,12 @@ class SchedulingSolver:
                 if start >= 0 and end >= 0:
                     new_resource_solution.assignments.append((task_name, start, end))
 
-            solution.add_resource_solution(new_resource_solution)
+            if '_CumulativeWorker_' in resource.name:
+                cumulative_worker_name = resource.name.split('_CumulativeWorker_')[0]
+                if cumulative_worker_name not in solution.resources:
+                    solution.add_resource_solution(new_resource_solution)
+            else:
+                solution.add_resource_solution(new_resource_solution)
 
         # process indicators
         for indicator in self._problem.context.indicators:

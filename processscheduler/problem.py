@@ -20,8 +20,9 @@ from typing import List, Optional
 from z3 import BoolRef, Int, Or, Sum
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
-from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective, BuiltinIndicator
-from processscheduler.resource import _Resource
+from processscheduler.objective import (Indicator, MaximizeObjective,
+                                        MinimizeObjective, BuiltinIndicator)
+from processscheduler.resource import _Resource, CumulativeWorker
 
 import processscheduler.context as ps_context
 
@@ -66,12 +67,24 @@ class SchedulingProblem(_NamedUIDObject):
     def add_indicator_resource_cost(self, list_of_resources: List[_Resource]) -> Indicator:
         """ compute the total cost of a set of resources """
         partial_costs = []
+
+        def get_resource_cost(res):
+            p = []
+            for interv_low, interv_up in res.busy_intervals.values():
+                partial_cost_contribution = res.cost_per_period * (interv_up - interv_low)
+                p.append(partial_cost_contribution)
+            return p
+
         for resource in list_of_resources:
-            for interv_low, interv_up in resource.busy_intervals.values():
-                partial_cost_contribution = resource.cost_per_period * (interv_up - interv_low)
-                partial_costs.append(partial_cost_contribution)
+            if isinstance(resource, CumulativeWorker):
+                for res in resource.cumulative_workers:
+                    partial_costs.extend(get_resource_cost(res))
+            else: # for a single worker
+                partial_costs.extend(get_resource_cost(resource))
+
         resource_names = ','.join([resource.name for resource in list_of_resources])
         cost_indicator_variable = Sum(partial_costs)
+        print(cost_indicator_variable, type(cost_indicator_variable))
         cost_indicator = Indicator('Total Cost (%s)' % resource_names,
                                    cost_indicator_variable)
         return cost_indicator
