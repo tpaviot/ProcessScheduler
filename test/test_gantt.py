@@ -76,6 +76,24 @@ class TestGantt(unittest.TestCase):
         solution.render_gantt_matplotlib(render_mode='Resources',
                                          show_plot=False)
 
+    def test_gantt_no_resource(self):
+        pb = ps.SchedulingProblem('GanttNoResource', horizon=10)
+        task_1 = ps.FixedDurationTask('task1', duration = 3)
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        solution.render_gantt_matplotlib(show_plot=False)
+
+    def test_gantt_wrong_render_mode(self):
+        pb = ps.SchedulingProblem('GanttWrongRenderMode', horizon=10)
+        task_1 = ps.FixedDurationTask('task1', duration = 3)
+        worker_1 = ps.Worker('Worker1')
+        task_1.add_required_resource(worker_1)
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        with self.assertRaises(ValueError):
+            solution.render_gantt_matplotlib(render_mode='foo', show_plot=False)
 
 if __name__ == "__main__":
     unittest.main()

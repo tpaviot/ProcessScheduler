@@ -106,7 +106,8 @@ class SchedulingSolution:
         """
         if not self.resources:
             render_mode = 'Tasks'
-        elif render_mode not in ['Resources', 'Tasks']:
+
+        if render_mode not in ['Resources', 'Tasks']:
             raise ValueError("render_mode must either be 'Resources' or 'Tasks")
 
         # tasks to render
