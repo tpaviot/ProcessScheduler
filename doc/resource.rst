@@ -48,6 +48,15 @@ In the case where a Senior developer is charged 750$/hour and a junior dev 250$/
 
   The worker :attr:`cost_per_period` is useful to measure the total cost of a resource/a set of resources/a schedule, or to find the schedule that minimizes the total cost of a resource/a set of resources/ a schedule.
 
+CumulativeWorker
+----------------
+A cumulative worker can process several tasks in parallel. The maximal number of simultaneous tasks the worker can process is defined by the :attr:`size` parameter.
+
+.. code-block:: python
+
+    # the machine A can process up to 4 tasks at the same time
+    machine_A = CumulativeWorker('MachineA', size=4)
+
 Resource assignment
 ^^^^^^^^^^^^^^^^^^^
 Resources are assigned to tasks in two steps:
