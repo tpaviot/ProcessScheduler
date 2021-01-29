@@ -24,11 +24,7 @@ This document explains how to write the model, run the solver, and finally analy
 
 .. note::
 
-	ProcessScheduler was inspired by the fantastic `pyschdedule <https://github.com/timnon/pyschedule>`_ library by Tim Nonner. By choosing to rely on an SMT solver rather than a MIP solver such as CBC/Gurobi/SCIP, ProcessScheduler strongly diverges from its predecessor.
-
-.. warning::
-
-	ProcessScheduler handles variables represented by **integer** values. There is currently no planned support for floating numbers.
+    ProcessScheduler was inspired by the `pyschdedule <https://github.com/timnon/pyschedule>`_ library by Tim Nonner. By choosing to rely on an SMT solver rather than a MIP solver such as CBC/Gurobi/SCIP, ProcessScheduler strongly diverges from its predecessor.
 
 What's inside
 -------------
@@ -45,11 +41,25 @@ Use ``pip`` to install the package and the required dependencies (Z3) on your ma
 
 .. code-block:: bash
 
-	pip install processscheduler
+    pip install ProcessScheduler
 
 and check the installation from a python3 prompt:
 
 .. code-block:: bash
 
-	>>> import processscheduler as ps
+    >>> import processscheduler as ps
 
+Development version
+-------------------
+Create a local copy of the `github <https://github.com/tpaviot/ProcessScheduler>`_ repository:
+
+.. code-block:: bash
+
+    git clone https://github.com/tpaviot/ProcessScheduler
+
+Then install the development version:
+
+.. code-block:: bash
+
+    cd ProcessScheduler
+    pip install -e .

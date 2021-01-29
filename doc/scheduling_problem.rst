@@ -3,6 +3,10 @@ SchedulingProblem
 
 The :class:`SchedulingProblem` class is the container for all modeling objects, such as tasks, resources and constraints.
 
+.. warning::
+
+    ProcessScheduler handles variables represented by **integer** values.
+
 A :class:`SchedulingProblem` instance holds a *time* interval: the lower bound of this interval (the *initial time*) is always 0, the upper bound (the *final time*) can be set by passing the :attr:`horizon` attribute to the
 :func:`__init__` method:
 
