@@ -1,7 +1,11 @@
-[ ] Cumulative resources: resources that can process multiple tasks at the same time
+[X] Cumulative resources: resources that can process multiple tasks at the same time
 
 [X] Optional tasks: tasks that may or may not be scheduled
 
 [ ] Automatic logic: sometimes IDL is better than QF_LIA but fail to find a solution
 
 [ ] Inventories: input/output for tasks
+
+[ ] Add a plotly/pandas gantt renderer with real datetimes
+
+[ ] Performance benchmark
