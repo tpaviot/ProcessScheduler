@@ -4,17 +4,16 @@
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tpaviot/ProcessScheduler/HEAD?filepath=examples-notebooks)
 [![Documentation Status](https://readthedocs.org/projects/processscheduler/badge/?version=latest)](https://processscheduler.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/ProcessScheduler.svg)](https://badge.fury.io/py/ProcessScheduler)
-[![HitCount](http://hits.dwyl.com/tpaviot/ProcessScheduler.svg)](http://hits.dwyl.com/tpaviot/ProcessScheduler)
 
 # ProcessScheduler
 A python library to compute resource-constrained task schedules.
 
+Documentation at https://processscheduler.readthedocs.io/
+
 ## About
-The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the [Z3Prover](https://github.com/Z3Prover/z3).
+The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the SMT [Z3Prover](https://github.com/Z3Prover/z3).
 
 This project was inspired by the work form Tim Nonner at https://github.com/timnon/pyschedule.
-
-## Helloworld
 
 ```python
 import processscheduler as ps
@@ -43,39 +42,13 @@ solution.render_gantt_matplotlib()
 ## Features
 
 *   tasks: zero duration task, fixed duration task, variable duration task, work amount, optional task,
-*   resources: worker, welectWorkers, cost_per_period and productivity attributes,
+*   resources: worker, cumulative workers, workers selection, cost_per_period and productivity attributes,
 *   task constraints: precedence, start synced, end synced, start at, end at, start after, end before,
 *   optional task constraints: task schedule condition, tasks schedule dependencies,
 *   resource constraints: AllSameSelected, AllDifferentSelected,
 *   first-order-logic operations (not, or, xor, and, implies, if/then/else) between task or resource constraints,
 *   customized indicators,
 *   builtin objectives (makespan, flowtime, earliest, latest, resource cost) and customized.
-
-## Installation
-
-### Using pip
-
-```bash
-pip install ProcessScheduler
-```
-
-### Development version
-
-Create a local copy of this repository:
-```bash
-git clone https://github.com/tpaviot/ProcessScheduler
-```
-
-Then install the development version:
-
-```bash
-cd ProcessScheduler
-pip install -e .
-```
-
-## Documentation
-
-Documentation can be found at https://processscheduler.readthedocs.io/
 
 ## Jupyter notebooks
 
@@ -85,10 +58,11 @@ There are some [Jupypter notebooks](https://github.com/tpaviot/ProcessScheduler/
 
 ProcessScheduler uses the following tools/methods to ensure code quality:
 
-*   unittests suite,
+*   unittests,
 *   code coverage (coverage.py, codecov.io),
 *   continuous-integration at MS azure,
-*   static code analysis (codacy).
+*   static code analysis (codacy),
+*   spelling mistakes tracking (codespell)
 
 ## License/Author
 
