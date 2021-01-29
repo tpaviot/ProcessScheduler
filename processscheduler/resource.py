@@ -137,7 +137,7 @@ class CumulativeWorker(_Resource):
 
         self.size = size
         # productivity and cost_per_period are distributed over
-        # indiviual workers
+        # individual workers
         # for example, a productivty of 7 for a size of 3 will be distributed
         # as 3 on worker 1, 2 on worker 2 and 2 on worker 3. Same for cost_per_periods
         productivities = _distribute_p_over_n(productivity, size)
@@ -152,7 +152,7 @@ class CumulativeWorker(_Resource):
 
     def get_select_workers(self):
         """Each time the cumulative resource is assigned to a task, a SelectWorker
-        is instance to ba passed to the task."""
+        is instance to be passed to the task."""
         return SelectWorkers(self.cumulative_workers,
                              nb_workers_to_select=1,
                              kind='atleast')

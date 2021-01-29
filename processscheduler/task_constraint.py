@@ -201,7 +201,7 @@ class TaskEndBeforeLax(_TaskConstraint):
 # Optional classes only constraints
 #
 class OptionalTaskConditionSchedule(_TaskConstraint):
-    """An optional task that is schedule only a certain condition is fullfilled."""
+    """An optional task that is schedule only a certain condition is fulfilled."""
     def __init__(self, task, condition: BoolRef) -> None:
         super().__init__()
 
