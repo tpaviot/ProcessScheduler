@@ -1,5 +1,10 @@
 RELEASE NOTES
 
+Version 0.3.0
+=============
+New features:
+  - cumulative worker
+
 Version 0.2.0
 =============
 New features:

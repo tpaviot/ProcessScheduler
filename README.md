@@ -6,14 +6,14 @@
 [![PyPI version](https://badge.fury.io/py/ProcessScheduler.svg)](https://badge.fury.io/py/ProcessScheduler)
 
 # ProcessScheduler
-A python library to compute resource-constrained task schedules.
+A python library to compute resource-constrained task schedules. Documentation at https://processscheduler.readthedocs.io/
 
-Documentation at https://processscheduler.readthedocs.io/
+```bash
+pip install ProcessScheduler
+```
 
 ## About
-The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the SMT [Z3Prover](https://github.com/Z3Prover/z3).
-
-This project was inspired by the work form Tim Nonner at https://github.com/timnon/pyschedule.
+The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the SMT [Z3Prover](https://github.com/Z3Prover/z3). This project was inspired by the work form Tim Nonner at https://github.com/timnon/pyschedule.
 
 ```python
 import processscheduler as ps
@@ -48,7 +48,8 @@ solution.render_gantt_matplotlib()
 *   resource constraints: AllSameSelected, AllDifferentSelected,
 *   first-order-logic operations (not, or, xor, and, implies, if/then/else) between task or resource constraints,
 *   customized indicators,
-*   builtin objectives (makespan, flowtime, earliest, latest, resource cost) and customized.
+*   SAT/SMT solver with or without optimization,
+*   objective (makespan, flowtime, earliest, latest, resource cost).
 
 ## Jupyter notebooks
 

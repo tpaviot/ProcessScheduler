@@ -1,11 +1,11 @@
 from setuptools import find_packages, setup
 
 DESCRIPTION = (
-      'A python package to formulate and solve resource-constrained scheduling problems'
+      'A package to solve resource-constrained scheduling problems using SMT theory/solver.'
 )
 
 CLASSIFIERS = [
-      'Development Status :: 3 - Alpha',
+      'Development Status :: 4 - Beta',
       'Intended Audience :: Developers',
       'Intended Audience :: Manufacturing',
       'Intended Audience :: Financial and Insurance Industry',
