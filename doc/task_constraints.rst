@@ -59,3 +59,5 @@ Optional tasks constraints
 - :class:`OptionalTaskConditionSchedule` creates a constraint that adds a condition for the task to be schdeuled. The condition is a z3 BoolRef
 
 - the :class:`OptionalTasksDependency` takes two optional tasks :attr:`task_1` and :attr:`task_2`, and ensures that task_1 is schdeuld implies that task_2 is scheduled as well.
+
+- the :class:`ForceScheduleNOptionalTasks` forces :math:`m` optional tasks among :math:`n` to be scheduled, with :math:`m \leq n`.

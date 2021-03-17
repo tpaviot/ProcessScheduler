@@ -15,7 +15,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from z3 import And, BoolRef, Implies, Xor
+from typing import Optional
+
+from z3 import And, BoolRef, Implies, Xor, PbEq, PbGe, PbLe
 
 from processscheduler.base import _Constraint
 
@@ -26,10 +28,11 @@ class _TaskConstraint(_Constraint):
     """ abstract class for task constraint.
 
     Task constraints only apply for scheduled tasks. If an optional
-    tak is not schedules, then the constraint does not apply.
+    tak is not scheduled, then the constraint does not apply.
     """
-    def __init__(self):
-        super().__init__()
+    pass
+    #def __init__(self):
+    #    super().__init__()
 
 #
 # Tasks constraints for two or more classes
@@ -110,7 +113,7 @@ class TasksDontOverlap(_TaskConstraint):
 
         scheduled_assertion = Xor(task_2.start >= task_1.end,
                                   task_1.start >= task_2.end)
-        
+
         if task_1.optional or task_2.optional:
             # if one task is not scheduledboth tasks must be scheduled so that the not overlap constraint applies
             self.add_assertion(Implies(And(task_1.scheduled, task_2.scheduled) , scheduled_assertion))
@@ -219,3 +222,27 @@ class OptionalTasksDependency(_TaskConstraint):
             raise ValueError('Task %s must be optional.' % task_2.name)
 
         self.add_assertion(Implies(task_1.scheduled, task_2.scheduled))
+
+class ForceScheduleNOptionalTasks(_TaskConstraint):
+    """Given a set of m different optional tasks, force the solver to schedule
+    at at least/at most/exactly n tasks, with 0 < n <= m."""
+    def __init__(self, list_of_optional_tasks,
+                       nb_tasks_to_schedule: Optional[int] = 1,
+                       kind: Optional[str] = 'exact') -> None:
+        super().__init__()
+
+        problem_function = {'atleast': PbGe, 'atmost': PbLe, 'exact': PbEq}
+
+        # first check that all tasks from the list_of_optional_tasks are
+        # actually optional
+        for task in list_of_optional_tasks:
+            if not task.optional:
+                raise TypeError('This class %s must excplicitly be set as optional.' % task.name)
+        # all scheduled variables to take into account
+        sched_vars = []
+        for task in list_of_optional_tasks:
+            sched_vars.append(task.scheduled)
+
+        asst = problem_function[kind]([(scheduled, True) for scheduled in sched_vars],
+                                      nb_tasks_to_schedule)
+        self.add_assertion(asst)

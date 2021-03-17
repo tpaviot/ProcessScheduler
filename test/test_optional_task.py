@@ -239,9 +239,6 @@ class TestOptionalTask(unittest.TestCase):
         task_1 = ps.FixedDurationTask('task1', duration = 13)  # mandatory
         task_2 = ps.FixedDurationTask('task2', duration = 4, optional=True) # optional
 
-        # Force schedule, otherwise by default it is not scheduled
-        pb.add_constraint(task_2.scheduled == True)
-
         cond = ps.OptionalTaskConditionSchedule(task_2, pb.horizon > 10)
         pb.add_constraint(cond)
 
@@ -384,6 +381,55 @@ class TestOptionalTask(unittest.TestCase):
         self.assertTrue(solution)
         self.assertFalse(solution.tasks[task_1.name].scheduled)
         self.assertEqual(len(solution.tasks[task_1.name].assigned_resources), 0)
+
+    def test_force_schedule_optional_tasks(self) -> None:
+        """task_3 is not scheduled, because task_2 should not."""
+        pb = ps.SchedulingProblem('ForceScheduleOptionalTasks', horizon=9)
+        task_1 = ps.VariableDurationTask('task1', optional=True)
+        task_2 = ps.FixedDurationTask('task2', duration = 4, optional=True)
+        task_3 = ps.FixedDurationTask('task3', duration = 1, optional=True)
+
+        cond = ps.ForceScheduleNOptionalTasks([task_1, task_2, task_3], 1)
+        pb.add_constraint(cond)
+
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+
+        results = [solution.tasks[task_1.name].scheduled, 
+                   solution.tasks[task_2.name].scheduled,
+                   solution.tasks[task_3.name].scheduled]
+
+        self.assertEqual(results.count(True), 1)
+
+    def test_force_schedule_optional_tasks_2(self) -> None:
+        """Just change the number of tasks to be scheduled."""
+        pb = ps.SchedulingProblem('ForceScheduleOptionalTasks2', horizon=14)
+        task_1 = ps.VariableDurationTask('task1', optional=True)
+        task_2 = ps.FixedDurationTask('task2', duration = 7, optional=True)
+        task_3 = ps.FixedDurationTask('task3', duration = 2, optional=True)
+
+        cond = ps.ForceScheduleNOptionalTasks([task_1, task_2, task_3], 2)
+        pb.add_constraint(cond)
+
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+
+        results = [solution.tasks[task_1.name].scheduled, 
+                   solution.tasks[task_2.name].scheduled,
+                   solution.tasks[task_3.name].scheduled]
+
+        self.assertEqual(results.count(True), 2)
+
+    def test_force_schedule_optional_tasks_3(self) -> None:
+        """Check an error is raised if ever one of the task is not optional."""
+        pb = ps.SchedulingProblem('ForceScheduleOptionalTasks3', horizon=14)
+        task_1 = ps.VariableDurationTask('task1')  # this one is not optional
+        task_2 = ps.FixedDurationTask('task2', duration = 7, optional=True)
+
+        with self.assertRaises(TypeError):
+            cond = ps.ForceScheduleNOptionalTasks([task_1, task_2], 2)
 
 
 if __name__ == "__main__":
