@@ -215,7 +215,7 @@ class TaskEndBeforeLax(_TaskConstraint):
         scheduled_assertion = task.end <= value
 
         if task.optional:
-            self.add_assset_applied_not_applied_assertionsertion(Implies(task.scheduled, scheduled_assertion))
+            self.set_applied_not_applied_assertions(Implies(task.scheduled, scheduled_assertion))
         else:
             self.set_applied_not_applied_assertions(scheduled_assertion)
 #
