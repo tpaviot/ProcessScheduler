@@ -15,10 +15,10 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List
+from typing import List, Optional
 import uuid
 
-from z3 import BoolRef
+from z3 import BoolRef, Bool, Implies, PbGe, PbEq, PbLe
 
 #
 # Utility functions
@@ -83,6 +83,51 @@ class _NamedUIDObject:
         return self.assertions
 
 class _Constraint(_NamedUIDObject):
-    """ The base class for all constraints """
+    """ The base class for all constraints, including Task and Resource constraints. """
     def __init__(self):
         super().__init__(name='')
+
+        # by default, this constraint has to be applied
+        self.optional = False
+        self.applied = True
+
+    def set_applied_not_applied_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
+        """Take a list of constraint to satisfy. If the constraint is optional then
+        the list of z3 assertions apply under the condition that the applied flag
+        is set to True.
+        """
+        if self.optional:
+            self.applied = Bool('%s_applied' % self.name)
+            self.add_assertion(Implies(self.applied, list_of_z3_assertions))
+        else:
+            self.applied = True
+            self.add_assertion(list_of_z3_assertions)
+
+
+class ForceApplyNOptionalConstraints(_Constraint):
+    """Given a set of m different optional constraints, force the solver to apply
+    at at least/at most/exactly n tasks, with 0 < n <= m. Work for both
+    Task and/or Resource constraints."""
+    def __init__(self, list_of_optional_constraints,
+                       nb_constraints_to_apply: Optional[int] = 1,
+                       kind: Optional[str] = 'exact',
+                       optional: Optional[bool] = False) -> None:
+        super().__init__()
+
+        self.optional = optional
+
+        problem_function = {'atleast': PbGe, 'atmost': PbLe, 'exact': PbEq}
+
+        # first check that all tasks from the list_of_optional_tasks are
+        # actually optional
+        for constraint in list_of_optional_constraints:
+            if not constraint.optional:
+                raise TypeError('This class %s must explicitly be set as optional.' % constraint.name)
+        # all scheduled variables to take into account
+        applied_vars = []
+        for constraint in list_of_optional_constraints:
+            applied_vars.append(constraint.applied)
+
+        asst = problem_function[kind]([(applied, True) for applied in applied_vars],
+                                      nb_constraints_to_apply)
+        self.set_applied_not_applied_assertions(asst)
