@@ -206,11 +206,11 @@ class TaskEndBeforeStrict(_TaskConstraint):
 
 class TaskEndBeforeLax(_TaskConstraint):
     """ task.end <= value """
-    def __init__(self, task, value: int) -> None:
+    def __init__(self, task, value: int, optional: Optional[bool] = False) -> None:
         super().__init__()
         self.value = value
 
-        self.optional = Optional
+        self.optional = optional
 
         scheduled_assertion = task.end <= value
 
