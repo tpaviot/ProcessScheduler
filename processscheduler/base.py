@@ -97,7 +97,7 @@ class _Constraint(_NamedUIDObject):
         is set to True.
         """
         if self.optional:
-            self.applied = Bool('%s_applied' % self.name)
+            self.applied = Bool('constraint_%s_applied' % self.uid)
             self.add_assertion(Implies(self.applied, list_of_z3_assertions))
         else:
             self.applied = True
@@ -122,7 +122,8 @@ class ForceApplyNOptionalConstraints(_Constraint):
         # actually optional
         for constraint in list_of_optional_constraints:
             if not constraint.optional:
-                raise TypeError('This class %s must explicitly be set as optional.' % constraint.name)
+                raise TypeError('The constraint %s must explicitly be set as optional.' % constraint.name)
+
         # all scheduled variables to take into account
         applied_vars = []
         for constraint in list_of_optional_constraints:

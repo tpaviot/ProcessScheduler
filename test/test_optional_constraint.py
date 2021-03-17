@@ -41,12 +41,14 @@ class TestOptionalConstraint(unittest.TestCase):
         cstr1 = ps.TaskStartAt(task_1, 1, optional=True)
         cstr2 = ps.TaskStartAt(task_1, 2, optional=True)
         cstr3 = ps.TaskEndAt(task_1, 3, optional=True)
-
         # force to apply exactly one constraint
         cstr4 = ps.ForceApplyNOptionalConstraints([cstr1, cstr2, cstr3], 1)
-        pb.add_constraints([cstr1, cstr2, cstr3])
+        # if we force 2 constraints, there should not be any solution
+        
+        pb.add_constraints([cstr1, cstr2, cstr3, cstr4])
 
         solver = ps.SchedulingSolver(pb)
+
         solution = solver.solve()
         self.assertTrue(solution)
 
