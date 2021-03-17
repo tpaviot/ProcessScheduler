@@ -111,6 +111,24 @@ class TestIndicator(unittest.TestCase):
         self.assertEqual(solution.indicators[utilization_res_1.name], 100)
         self.assertEqual(solution.indicators[utilization_res_2.name], 0)
 
+    def test_resource_utilization_indicator_4(self) -> None:
+        """20 optional tasks, one worker. Force resource utilization maximization objective."""
+        problem = ps.SchedulingProblem('IndicatorUtilization4', horizon = 20)
+        
+        worker = ps.Worker('Worker')
+        
+        for i in range(20):
+            t = ps.FixedDurationTask(f'T{i+1}', duration = 1, optional = True)
+            t.add_required_resource(worker)
+
+        utilization_res = problem.add_indicator_resource_utilization(worker)
+        problem.maximize_indicator(utilization_res)
+        #ps.MaximizeObjective('MaximizeResourceUtilization', utilization_res)
+
+        solution = ps.SchedulingSolver(problem).solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(solution.indicators[utilization_res.name], 100)
 
 if __name__ == "__main__":
     unittest.main()
