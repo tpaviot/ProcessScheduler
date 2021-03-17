@@ -178,13 +178,15 @@ class FixedDurationTask(Task):
         self.set_scheduled_unscheduled_assertions(scheduled_assertions)
 
 class UnavailabilityTask(FixedDurationTask):
-    """ a task that tells that a resource is unavailable during this period. This
-    task is not publicly exposed, it is used by the resource constraint ResourceUnavailability """
+    """ A task that tells that a resource is unavailable during this period. This
+    task is not publicly exposed, it is used by the resource constraint
+    ResourceUnavailability.
+    """
     def __init__(self, name: str, duration: int) -> None:
         super().__init__(name, duration, work_amount=0, priority=0)
 
 class VariableDurationTask(Task):
-    """ Tasj with a priori unknown duration. its duration is computed by the solver """
+    """ Task with a priori unknown duration. its duration is computed by the solver """
     def __init__(self, name: str,
                  length_at_least: Optional[int] = 0,
                  length_at_most: Optional[int] = None,

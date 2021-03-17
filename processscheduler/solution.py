@@ -31,7 +31,7 @@ class SolutionJSONEncoder(json.JSONEncoder):
         return o.__dict__
 
 class TaskSolution:
-    """ a name, a start, a duration, an end, a list of assigned resources """
+    """Class to represent the solution for a scheduled Task."""
     def __init__(self, name: str):
         self.name = name
         self.type = ''  # the name of the task type
@@ -44,7 +44,7 @@ class TaskSolution:
         self.assigned_resources = []
 
 class ResourceSolution:
-    """ a name, a list of tasks, start, end. """
+    """Class to represent the solution for the resource assignements."""
     def __init__(self, name: str):
         self.name = name
         self.type = ''  # the name of the task type
@@ -66,7 +66,8 @@ class SchedulingSolution:
         return self.to_json_string()
 
     def get_all_tasks_but_unavailable(self):
-        """Return all tasks except those of the type UnavailebleResource."""
+        """Return all tasks except those of the type UnavailabilityTask
+        used to represent a ResourceUnavailable constraint."""
         tasks_to_return = {}
         for task in self.tasks:
             if "NotAvailable" not in task:
@@ -74,7 +75,7 @@ class SchedulingSolution:
         return tasks_to_return
 
     def to_json_string(self) -> str:
-        """ export the solution to a json string """
+        """Export the solution to a json string."""
         d = {}
         d['horizon'] = self.horizon
         d['tasks'] = self.tasks
