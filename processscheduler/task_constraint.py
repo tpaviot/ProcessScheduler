@@ -222,14 +222,14 @@ class TaskEndBeforeLax(_TaskConstraint):
 # Optional classes only constraints
 #
 class OptionalTaskConditionSchedule(_TaskConstraint):
-    """An optional task that is schedule only a certain condition is fulfilled."""
+    """An optional task that is scheduled only if a condition is fulfilled."""
     def __init__(self, task, condition: BoolRef, optional: Optional[bool] = False) -> None:
         super().__init__()
 
         self.optional = optional
 
         if not task.optional:
-            raise ValueError('Task %s must be optional.' % task.name)
+            raise TypeError('Task %s must be optional.' % task.name)
 
         self.set_applied_not_applied_assertions(Implies(condition, task.scheduled))
 
@@ -241,7 +241,7 @@ class OptionalTasksDependency(_TaskConstraint):
         self.optional = optional
 
         if not task_2.optional:
-            raise ValueError('Task %s must be optional.' % task_2.name)
+            raise TypeError('Task %s must be optional.' % task_2.name)
 
         self.set_applied_not_applied_assertions(Implies(task_1.scheduled, task_2.scheduled))
 
