@@ -157,7 +157,9 @@ class SchedulingSolver:
             new_task_solution.duration = z3_sol[task.duration].as_long()
             new_task_solution.optional = task.optional
             if task.optional:
-                new_task_solution.scheduled = ("%s" % z3_sol[task.scheduled] == 'True')  # ugly hack
+                # ugly hack, necessary because there's no as_bool()
+                # method for Bool objects
+                new_task_solution.scheduled = ("%s" % z3_sol[task.scheduled] == 'True')
             else:
                 new_task_solution.scheduled = True
 

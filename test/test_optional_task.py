@@ -233,6 +233,45 @@ class TestOptionalTask(unittest.TestCase):
         self.assertEqual(solution.tasks[task_1.name].start, 0)
         self.assertEqual(solution.tasks[task_1.name].end, 3)
 
+
+    def test_optional_tasks_start_after_strict_start_after_lax(self) -> None:
+        pb = ps.SchedulingProblem('OptionalTasksStartAfter', horizon=8)
+        task_1 = ps.FixedDurationTask('task1', duration = 3)  # mandatory
+        task_2 = ps.FixedDurationTask('task2', duration = 4, optional=True) # optional
+
+        # force task_2 to be scheduled
+        pb.add_constraint(task_2.scheduled == True)
+
+        pb.add_constraint(ps.TaskStartAfterStrict(task_2, 1))
+        pb.add_constraint(ps.TaskStartAfterLax(task_2, 4))
+
+        solver = ps.SchedulingSolver(pb, verbosity=True)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertTrue(solution.tasks[task_1.name].scheduled)
+        self.assertTrue(solution.tasks[task_2.name].scheduled)
+        self.assertEqual(solution.tasks[task_2.name].start, 4)
+        self.assertEqual(solution.tasks[task_2.name].end, 8)
+
+    def test_optional_tasks_end_before_strict_end_before_lax(self) -> None:
+        pb = ps.SchedulingProblem('OptionalTasksEndBefore', horizon=8)
+        task_1 = ps.FixedDurationTask('task1', duration = 3)  # mandatory
+        task_2 = ps.FixedDurationTask('task2', duration = 4, optional=True) # optional
+
+        # force task_2 to be scheduled
+        pb.add_constraint(task_2.scheduled == True)
+
+        pb.add_constraint(ps.TaskEndBeforeStrict(task_2, 7))
+        pb.add_constraint(ps.TaskEndBeforeLax(task_2, 4))
+
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertTrue(solution.tasks[task_1.name].scheduled)
+        self.assertTrue(solution.tasks[task_2.name].scheduled)
+        self.assertEqual(solution.tasks[task_2.name].start, 0)
+        self.assertEqual(solution.tasks[task_2.name].end, 4)
+
     def test_optional_condition_1(self) -> None:
         """A task scheduled only if the horizon is > 10."""
         pb = ps.SchedulingProblem('OptionalCondition1')
@@ -297,6 +336,19 @@ class TestOptionalTask(unittest.TestCase):
         self.assertTrue(solution.tasks[task_1.name].scheduled)
         self.assertFalse(solution.tasks[task_2.name].scheduled)
         self.assertFalse(solution.tasks[task_3.name].scheduled)
+
+    def test_optional_task_dependency_3(self) -> None:
+        """Type checking."""
+        pb = ps.SchedulingProblem('OptionalDependency3', horizon=9)
+        task_1 = ps.FixedDurationTask('task1', duration = 5)  # mandatory
+        task_2 = ps.FixedDurationTask('task2', duration = 4) # mandatory
+        task_3 = ps.FixedDurationTask('task3', duration = 1) # mandatory
+
+        with self.assertRaises(TypeError):
+            ps.OptionalTaskConditionSchedule(task_1, pb.horizon > 10)
+
+        with self.assertRaises(TypeError):
+            ps.OptionalTasksDependency(task_2, task_3)
 
     def test_optional_task_single_worker_1(self) -> None:
         pb = ps.SchedulingProblem('OptionalTaskSingleWorker1', horizon=6)
