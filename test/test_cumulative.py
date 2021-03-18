@@ -76,7 +76,6 @@ class TestCumulative(unittest.TestCase):
         # tasks
         t1 = ps.FixedDurationTask('T1', duration=2)
         t2 = ps.FixedDurationTask('T2', duration=2)
-        t3 = ps.FixedDurationTask('T3', duration=2)
 
         # workers
         r1 = ps.CumulativeWorker('Machine1', size=2)
@@ -117,7 +116,6 @@ class TestCumulative(unittest.TestCase):
         self.assertTrue(solution.tasks[t1.name].scheduled)
         self.assertTrue(solution.tasks[t3.name].scheduled)
         self.assertFalse(solution.tasks[t2.name].scheduled)
-        
 
     def test_cumulative_select_worker_1(self):
         pb_bs = ps.SchedulingProblem("CumulativeSelectWorker", 2)

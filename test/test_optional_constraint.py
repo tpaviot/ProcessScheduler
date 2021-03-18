@@ -44,13 +44,14 @@ class TestOptionalConstraint(unittest.TestCase):
         # force to apply exactly one constraint
         cstr4 = ps.ForceApplyNOptionalConstraints([cstr1, cstr2, cstr3], 1)
         # if we force 2 constraints, there should not be any solution
-        
+
         pb.add_constraints([cstr1, cstr2, cstr3, cstr4])
 
         solver = ps.SchedulingSolver(pb)
 
         solution = solver.solve()
         self.assertTrue(solution)
+
 
 if __name__ == "__main__":
     unittest.main()

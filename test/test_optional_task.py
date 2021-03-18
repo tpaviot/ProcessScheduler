@@ -448,7 +448,7 @@ class TestOptionalTask(unittest.TestCase):
         solution = solver.solve()
         self.assertTrue(solution)
 
-        results = [solution.tasks[task_1.name].scheduled, 
+        results = [solution.tasks[task_1.name].scheduled,
                    solution.tasks[task_2.name].scheduled,
                    solution.tasks[task_3.name].scheduled]
 
@@ -482,6 +482,7 @@ class TestOptionalTask(unittest.TestCase):
 
         with self.assertRaises(TypeError):
             cond = ps.ForceScheduleNOptionalTasks([task_1, task_2], 2)
+            pb.add_constraint(cond)
 
 
 if __name__ == "__main__":

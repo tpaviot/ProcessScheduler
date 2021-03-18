@@ -114,7 +114,7 @@ class TestIndicator(unittest.TestCase):
     def test_resource_utilization_indicator_4(self) -> None:
         """20 optional tasks, one worker. Force resource utilization maximization objective."""
         problem = ps.SchedulingProblem('IndicatorUtilization4', horizon = 20)
-        
+
         worker = ps.Worker('Worker')
         
         for i in range(20):

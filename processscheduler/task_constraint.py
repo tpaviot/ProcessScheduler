@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List, Optional
+from typing import Optional
 
 from z3 import And, BoolRef, Implies, Xor, PbEq, PbGe, PbLe
 
