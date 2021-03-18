@@ -61,3 +61,12 @@ Optional tasks constraints
 - the :class:`OptionalTasksDependency` takes two optional tasks :attr:`task_1` and :attr:`task_2`, and ensures that task_1 is schdeuld implies that task_2 is scheduled as well.
 
 - the :class:`ForceScheduleNOptionalTasks` forces :math:`m` optional tasks among :math:`n` to be scheduled, with :math:`m \leq n`.
+
+
+.. note::
+
+    All the Task constraints may be defined as **optional**. This parameter is set to ``False`` by default, which means the task constraint is mandatory. If you set the attribute ``optional`` to ``True`` the the constraint becomes optional, and may/may not apply according to the solver. If you need an optional constraint to be applied, you can force the solver to apply the constraint by adding the constraint:
+
+    .. code:: python
+
+        pb.add_constraint([task.applied == True])
