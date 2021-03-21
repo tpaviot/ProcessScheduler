@@ -123,12 +123,33 @@ class TestIndicator(unittest.TestCase):
 
         utilization_res = problem.add_indicator_resource_utilization(worker)
         problem.maximize_indicator(utilization_res)
-        #ps.MaximizeObjective('MaximizeResourceUtilization', utilization_res)
 
         solution = ps.SchedulingSolver(problem).solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[utilization_res.name], 100)
+
+    def test_resource_utilization_indicator_5(self) -> None:
+        """Same input data than previous tests, but we dont use
+        an optimisation solver, the objective of 100% is set by an
+        additionnal constraint. This should be **much faster**."""
+        problem = ps.SchedulingProblem('IndicatorUtilization5', horizon = 20)
+
+        worker = ps.Worker('Worker')
+
+        for i in range(40):
+            t = ps.FixedDurationTask(f'T{i+1}', duration = 1, optional = True)
+            t.add_required_resource(worker)
+
+        utilization_res = problem.add_indicator_resource_utilization(worker)
+
+        problem.add_constraint(utilization_res.indicator_variable == 100)
+
+        solution = ps.SchedulingSolver(problem).solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(solution.indicators[utilization_res.name], 100)
+
 
 if __name__ == "__main__":
     unittest.main()
