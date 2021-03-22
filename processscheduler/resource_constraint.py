@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+from typing import Optional
 import uuid
 
 from processscheduler.task import UnavailabilityTask
@@ -27,25 +28,27 @@ class AllSameSelected(_Constraint):
     """ Selected workers by both AlternateWorkers are constrained to
     be the same
     """
-    def __init__(self, alternate_workers_1, alternate_workers_2):
+    def __init__(self, alternate_workers_1, alternate_workers_2,
+                 optional: Optional[bool] = False):
         super().__init__()
         # we check resources in alt work 1, if it is present in
         # Select worker 2 as well, then add a constraint
         for res_work_1 in alternate_workers_1.selection_dict:
             if res_work_1 in alternate_workers_2.selection_dict:
-                self.add_assertion(alternate_workers_1.selection_dict[res_work_1] == alternate_workers_2.selection_dict[res_work_1])
+                self.set_applied_not_applied_assertions(alternate_workers_1.selection_dict[res_work_1] == alternate_workers_2.selection_dict[res_work_1])
 
 class AllDifferentSelected(_Constraint):
     """ Selected workers by both AlternateWorkers are constrained to
     be the same
     """
-    def __init__(self, alternate_workers_1, alternate_workers_2):
+    def __init__(self, alternate_workers_1, alternate_workers_2,
+                 optional: Optional[bool] = False):
         super().__init__()
         # we check resources in alt work 1, if it is present in
         # alterna worker 2 as well, then add a constraint
         for res_work_1 in alternate_workers_1.selection_dict:
             if res_work_1 in alternate_workers_2.selection_dict:
-                self.add_assertion(alternate_workers_1.selection_dict[res_work_1] != alternate_workers_2.selection_dict[res_work_1])
+                self.set_applied_not_applied_assertions(alternate_workers_1.selection_dict[res_work_1] != alternate_workers_2.selection_dict[res_work_1])
 
 class ResourceUnavailable(_Constraint):
     """ set unavailablity or a resource, in terms of busy intervals
