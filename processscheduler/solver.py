@@ -65,7 +65,6 @@ class SchedulingSolver:
 
         if parallel:
             set_option("parallel.enable", True)  # enable parallel computation
-            set_option("parallel.threads.max", 16)  #nbr of max tasks
 
         # add all tasks assertions to the solver
         for task in self.problem_context.tasks:
