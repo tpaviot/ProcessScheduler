@@ -23,13 +23,20 @@ def _get_big_random_problem(name:str, n: int) -> ps.SchedulingProblem:
     """ returns a problem with n tasks and n * 3 workers. Workers are random assigned. """
     problem = ps.SchedulingProblem(name)
 
-    tasks = [ps.FixedDurationTask('task%i' % i,
-                                  duration=random.randint(1, n // 10)) for i in range(n)]
+    mandatory_tasks = [ps.FixedDurationTask('mand_task%i' % i,
+                                            duration=random.randint(1, n // 10)) for i in range(n)]
+
+    # n/10 optional tasks
+    optional_tasks = [ps.FixedDurationTask('opt_task%i' % i,
+                                            duration=random.randint(1, n // 10),
+                                            optional=True) for i in range(n // 10)]
+
+    all_tasks = mandatory_tasks + optional_tasks
 
     workers = [ps.Worker('task%i' % i) for i in range(n * 3)]
 
     # for each task, add three single required workers
-    for task in tasks:
+    for task in all_tasks:
         random_workers = random.sample(workers, 3)
         task.add_required_resources(random_workers)
 
