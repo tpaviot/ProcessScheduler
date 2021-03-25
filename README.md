@@ -14,7 +14,7 @@ pip install ProcessScheduler
 ```
 
 ## About
-The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the SMT [Z3Prover](https://github.com/Z3Prover/z3). This project was inspired by the work form Tim Nonner at https://github.com/timnon/pyschedule.
+The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the SMT [Z3Prover](https://github.com/Z3Prover/z3). This project was inspired by the work from Tim Nonner at https://github.com/timnon/pyschedule.
 
 ```python
 import processscheduler as ps
@@ -45,9 +45,12 @@ solution.render_gantt_matplotlib()
 *   tasks: zero duration task, fixed duration task, variable duration task, work amount, optional task,
 *   resources: worker, cumulative workers, workers selection, cost_per_period and productivity attributes,
 *   task constraints: precedence, start synced, end synced, start at, end at, start after, end before,
+*   optional tasks,
 *   optional task constraints: task schedule condition, tasks schedule dependencies,
 *   resource constraints: AllSameSelected, AllDifferentSelected,
+*   optional resource constraints,
 *   first-order-logic operations (not, or, xor, and, implies, if/then/else) between task or resource constraints,
+*   builtin indicators (resource utilization, resource cost),
 *   customized indicators,
 *   SAT/SMT solver with or without optimization,
 *   objective (makespan, flowtime, earliest, latest, resource cost).
