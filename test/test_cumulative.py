@@ -142,7 +142,7 @@ class TestCumulative(unittest.TestCase):
             t = ps.FixedDurationTask('T%i' % (i+1), duration=1)
             t.add_required_resource(r1)
 
-        solver = ps.SchedulingSolver(pb_bs, logic='QF_IDL')
+        solver = ps.SchedulingSolver(pb_bs)
         solution = solver.solve()
         self.assertTrue(solution)
 

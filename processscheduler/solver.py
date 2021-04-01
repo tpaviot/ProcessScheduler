@@ -19,7 +19,7 @@ import time
 from typing import Optional
 import warnings
 
-from z3 import (SolverFor, Sum, unsat,
+from z3 import (Solver, Sum, unsat,
                 ArithRef, unknown, Optimize, set_option)
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective
@@ -33,8 +33,7 @@ class SchedulingSolver:
     def __init__(self, problem,
                  verbosity: Optional[bool] = False,
                  max_time: Optional[int] = 60,
-                 parallel: Optional[bool] = False,
-                 logic: Optional[str] = 'QF_LIA'):
+                 parallel: Optional[bool] = False):
         """ Scheduling Solver
 
         verbosity: True or False, False by default
@@ -59,7 +58,7 @@ class SchedulingSolver:
         else:
             # see this url for a documentation about logics
             # http://smtlib.cs.uiowa.edu/logics.shtml
-            self._solver = SolverFor(logic)  # SMT without optimization
+            self._solver = Solver()
             if verbosity:
                 print("Solver without optimization enabled")
 
