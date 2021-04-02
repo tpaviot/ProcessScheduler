@@ -158,6 +158,12 @@ class SchedulingProblem(_NamedUIDObject):
     def add_objective_flowtime(self) -> MinimizeObjective:
         """ the flowtime is the sum of all ends, minimize. Be carful that
         it is contradictory with makespan """
-        flow_time_expr = Sum([task.end for task in self.context.tasks])
+        task_ends = []
+        for task in self.context.tasks:
+            if task.optional:
+                task_ends.append(task.end * task.scheduled)
+            else:
+                task_ends.append(task.end)
+        flow_time_expr = Sum(task_ends)
         smallest_start_time_indicator = Indicator('FlowTime', flow_time_expr)
         return MinimizeObjective('FlowTimeObjective', smallest_start_time_indicator)
