@@ -95,10 +95,9 @@ class SchedulingProblem(_NamedUIDObject):
         """
         durations = []
         for interv_low, interv_up in resource.busy_intervals.values():
-            duration = interv_up - interv_low
-            durations.append(duration)
+            durations.append(interv_up - interv_low)
         utilization = (Sum(durations) * 100) / self.horizon  # in percentage
-        utilization_indicator = Indicator('Uilization (%s)' % resource.name,
+        utilization_indicator = Indicator('Utilization (%s)' % resource.name,
                                            utilization)
         return utilization_indicator
 
@@ -111,7 +110,7 @@ class SchedulingProblem(_NamedUIDObject):
     def add_objective_priorities(self) -> MinimizeObjective:
         """ optimize the solution such that all task with a higher
         priority value are scheduled before other tasks """
-        priority_sum = Sum([task.end  * task.priority for task in self.context.tasks])
+        priority_sum = Sum([task.end * task.priority for task in self.context.tasks])
         priority_indicator = Indicator('PriorityTotal', priority_sum)
         return MinimizeObjective('PriorityObjective', priority_indicator)
 
@@ -119,11 +118,11 @@ class SchedulingProblem(_NamedUIDObject):
         """ maximize the minimum start time, i.e. all the tasks
         are scheduled as late as possible """
         mini = Int('SmallestStartTime')
-        a = BuiltinIndicator('GreatestStartTime')
-        a.add_assertion(Or([mini == task.start for task in self.context.tasks]))
+        smallest_start_time = BuiltinIndicator('SmallestStartTime')
+        smallest_start_time.add_assertion(Or([mini == task.start for task in self.context.tasks]))
         for tsk in self.context.tasks:
-            a.add_assertion(mini <= tsk.start)
-        a.indicator_variable=mini
+            smallest_start_time.add_assertion(mini <= tsk.start)
+        smallest_start_time.indicator_variable = mini
         return MaximizeObjective('SmallestStartTime', mini)
 
     def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:
@@ -138,11 +137,11 @@ class SchedulingProblem(_NamedUIDObject):
         """ minimize the greatest start time, i.e. tasks are schedules
         as early as possible """
         maxi = Int('GreatestStartTime')
-        a = BuiltinIndicator('GreatestStartTime')
-        a.add_assertion(Or([maxi == task.start for task in self.context.tasks]))
+        greatest_start_time = BuiltinIndicator('GreatestStartTime')
+        greatest_start_time.add_assertion(Or([maxi == task.start for task in self.context.tasks]))
         for tsk in self.context.tasks:
-            a.add_assertion(maxi >= tsk.start)
-        a.indicator_variable=maxi
+            greatest_start_time.add_assertion(maxi >= tsk.start)
+        greatest_start_time.indicator_variable = maxi
         return MinimizeObjective('GreatestStartTimeObjective', maxi)
 
     def add_objective_flowtime(self) -> MinimizeObjective:
