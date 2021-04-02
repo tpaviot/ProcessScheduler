@@ -101,6 +101,11 @@ class SchedulingProblem(_NamedUIDObject):
                                            utilization)
         return utilization_indicator
 
+    def add_objective_resource_utilization(self, resource: _Resource) -> MaximizeObjective:
+        """Maximize resource occupation."""
+        resource_utilization_indicator = self.add_indicator_resource_utilization(resource)
+        return MaximizeObjective('UtilizationObjective', resource_utilization_indicator)
+
     def add_objective_resource_cost(self, list_of_resources: List[_Resource]) -> MinimizeObjective:
         """ minimise the cost of selected resources
         """
@@ -110,7 +115,13 @@ class SchedulingProblem(_NamedUIDObject):
     def add_objective_priorities(self) -> MinimizeObjective:
         """ optimize the solution such that all task with a higher
         priority value are scheduled before other tasks """
-        priority_sum = Sum([task.end * task.priority for task in self.context.tasks])
+        all_priorities = []
+        for task in self.context.tasks:
+            if task.optional:
+                all_priorities.append(task.end * task.priority * task.scheduled)
+            else:
+                all_priorities.append(task.end * task.priority)
+        priority_sum = Sum(all_priorities)
         priority_indicator = Indicator('PriorityTotal', priority_sum)
         return MinimizeObjective('PriorityObjective', priority_indicator)
 
