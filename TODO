@@ -2,12 +2,11 @@
 
 [X] Optional tasks: tasks that may or may not be scheduled
 
-[ ] Automatic logic: sometimes IDL is better than QF_LIA but fail to find a solution
-
 [ ] Inventories: input/output for tasks
 
 [ ] Add a plotly/pandas gantt renderer with real datetimes
 
 [ ] Performance benchmark
 
-[ ] Simplify api, too many lines of code are required for a single model
+[ ] JSON importer for a scheduling problem
+
