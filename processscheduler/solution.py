@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import timedelta, datetime
 import json
 
 from typing import Optional, Tuple
@@ -27,17 +28,26 @@ except ImportError:
     HAVE_MATPLOTLIB = False
 
 class SolutionJSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        return o.__dict__
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.strftime('%Y-%m-%d %H:%M:%S.%f')
+        if isinstance(obj, timedelta):
+            return '%s' % obj
+        return obj.__dict__
 
 class TaskSolution:
     """Class to represent the solution for a scheduled Task."""
     def __init__(self, name: str):
         self.name = name
         self.type = ''  # the name of the task type
-        self.start = 0
-        self.end = 0
-        self.duration = 0
+        self.start = 0  # an integer
+        self.end = 0  # an integer
+        self.duration = 0  # an integer
+
+        self.start_time = ''  # a string
+        self.end_time = '' # a string
+        self.duration_time = ''  # a string
+
         self.optional = False
         self.scheduled = False
         # the name of assigned resources
@@ -53,10 +63,12 @@ class ResourceSolution:
 
 class SchedulingSolution:
     """ A class that represent the solution of a scheduling problem. Can be rendered
-    to a matplotlib Gannt chart, or exported to json
+    to a matplotlib Gantt chart, or exported to json
     """
-    def __init__(self, problem_name: str):
-        self.problem_name = problem_name
+    def __init__(self, problem):
+        """problem: a scheduling problem."""
+        self.problem_name = problem.name
+        self.problem = problem
         self.horizon = 0
         self.tasks = {} # the dict of tasks
         self.resources = {}  # the dict of all resources
@@ -78,6 +90,11 @@ class SchedulingSolution:
         """Export the solution to a json string."""
         d = {}
         d['horizon'] = self.horizon
+        # time data
+        d['problem_timedelta'] = self.problem.delta_time
+        d['problem_start_time'] = self.problem.start_time
+        d['problem_end_time'] = self.problem.start_time + self.horizon * self.problem.delta_time
+
         d['tasks'] = self.tasks
         d['resources'] = self.resources
         d['indicators'] = self.indicators

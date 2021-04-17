@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import timedelta, datetime
 from typing import List, Optional
 
 from z3 import BoolRef, Int, Or, Sum
@@ -31,8 +32,19 @@ class SchedulingProblem(_NamedUIDObject):
 
     :param name: the problem name, a string type
     :param horizon: an optional integer, the final instant of the timeline
+    :param delta_time: an optional timedelta object
+    :param start_time: an optional datetime object
+    :param end_time: an optional datetime object
+    :param datetime_format: an optional string
+
     """
-    def __init__(self, name: str, horizon: Optional[int] = None):
+    def __init__(self, name: str,
+                 horizon: Optional[int] = None,
+                 delta_time: Optional[timedelta] = None,
+                 start_time: Optional[datetime] = None,
+                 end_time: Optional[datetime] = None,
+                 datetime_format: Optional[str] = '%H:%M:%S'
+                 ):
         super().__init__(name)
         # the problem context, where all will be stored
         # at creation
@@ -48,6 +60,18 @@ class SchedulingProblem(_NamedUIDObject):
             self.fixed_horizon = True
         elif horizon is not None:
             raise TypeError('horizon must either be a strict positive integer or None')
+
+        # check time data
+        if delta_time is not None and not isinstance(delta_time, timedelta):
+            raise TypeError('delta_time must be a timedelta instance')
+        if start_time is not None and not isinstance(start_time, datetime):
+            raise TypeError('start_time must be a datetime instance')
+        if end_time is not None and not isinstance(end_time, datetime):
+            raise TypeError('delta_time must be a datetime instance')
+
+        self.delta_time = delta_time
+        self.start_time = start_time
+        self.end_time = end_time
 
     def add_constraint(self, constraint: BoolRef) -> None:
         self.context.add_constraint(constraint)
