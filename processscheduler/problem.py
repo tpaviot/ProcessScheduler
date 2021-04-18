@@ -42,8 +42,7 @@ class SchedulingProblem(_NamedUIDObject):
                  horizon: Optional[int] = None,
                  delta_time: Optional[timedelta] = None,
                  start_time: Optional[datetime] = None,
-                 end_time: Optional[datetime] = None,
-                 datetime_format: Optional[str] = '%H:%M:%S'
+                 end_time: Optional[datetime] = None
                  ):
         super().__init__(name)
         # the problem context, where all will be stored

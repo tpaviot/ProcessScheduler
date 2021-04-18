@@ -29,9 +29,7 @@ except ImportError:
 
 class SolutionJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, datetime):
-            return obj.strftime('%Y-%m-%d %H:%M:%S.%f')
-        if isinstance(obj, timedelta):
+        if isinstance(obj, datetime) or isinstance(obj, timedelta):
             return '%s' % obj
         return obj.__dict__
 
@@ -89,11 +87,17 @@ class SchedulingSolution:
     def to_json_string(self) -> str:
         """Export the solution to a json string."""
         d = {}
+        # problem properties
+        problem_properties = {}
         d['horizon'] = self.horizon
         # time data
-        d['problem_timedelta'] = self.problem.delta_time
-        d['problem_start_time'] = self.problem.start_time
-        d['problem_end_time'] = self.problem.start_time + self.horizon * self.problem.delta_time
+        problem_properties['problem_timedelta'] = self.problem.delta_time
+        problem_properties['problem_start_time'] = self.problem.start_time
+        if self.problem.delta_time is not None and self.problem.start_time is not None:
+            problem_properties['problem_end_time'] = self.problem.start_time + self.horizon * self.problem.delta_time
+        else:
+            problem_properties['problem_end_time'] = None
+        d['problem_properties'] = problem_properties
 
         d['tasks'] = self.tasks
         d['resources'] = self.resources
