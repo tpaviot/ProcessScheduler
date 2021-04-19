@@ -9,10 +9,6 @@
 # ProcessScheduler
 A python library to compute resource-constrained task schedules. Documentation at https://processscheduler.readthedocs.io/
 
-```bash
-pip install ProcessScheduler
-```
-
 ## About
 The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the SMT [Z3Prover](https://github.com/Z3Prover/z3). This project was inspired by the work from Tim Nonner at https://github.com/timnon/pyschedule.
 
@@ -40,6 +36,22 @@ solution.render_gantt_matplotlib()
 
 ![png](examples-notebooks/pics/hello_world_gantt.svg)
 
+## Install
+
+Install with pip.
+
+
+```bash
+pip install ProcessScheduler
+```
+
+The Z3 theorem prover is the only required dependency.
+
+Optional dependencies:
+
+*   matplotlib (Gantt chart rendering),
+*   plotly (Gantt chart rendering).
+
 ## Features
 
 *   tasks: zero duration task, fixed duration task, variable duration task, work amount, optional task,
@@ -53,7 +65,9 @@ solution.render_gantt_matplotlib()
 *   builtin indicators (resource utilization, resource cost),
 *   customized indicators,
 *   SAT/SMT solver with or without optimization,
-*   objective (makespan, flowtime, earliest, latest, resource cost).
+*   objective (makespan, flowtime, earliest, latest, resource cost),
+*   exporters: smtlib2.0, json
+*   Gantt chart rendering using matplotlib or plotly
 
 ## Jupyter notebooks
 
