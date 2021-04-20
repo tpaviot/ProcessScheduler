@@ -116,6 +116,44 @@ class SchedulingSolution:
         """Add resource solution."""
         self.resources[resource_solution.name] = resource_solution
 
+    def render_gantt_plotly(self,
+                            render_mode: Optional[str] = 'Task',) -> None:
+        try:
+            import plotly.express as px
+            import pandas as pd
+        except ImportError:
+            raise ModuleNotFoundError("plotly and pandas are not installed")
+
+        if not render_mode in ['Task', 'Resource']:
+            raise ValueError('data_type must be either Task or Resource')
+
+        # tasks to render
+        if render_mode == 'Tasks':
+            tasks_to_render = self.get_all_tasks_but_unavailable()
+        else:
+            tasks_to_render = self.tasks
+
+        dd = []
+        for i, task_name in enumerate(tasks_to_render):
+            task_solution = self.tasks[task_name]
+            if task_solution.assigned_resources:
+                resource_text = ','.join(task_solution.assigned_resources)
+            else:
+                resource_text = r'($\emptyset$)'
+            dd.append(dict(Task=task_name,
+                           Start=task_solution.start_time,
+                           Finish=task_solution.end_time,
+                           Resource=resource_text))
+
+        df = pd.DataFrame(dd)
+        color_data = 'Task'  # by default
+        if render_mode == 'Task':
+            color_data = 'Resource'
+
+        fig = px.timeline(df, x_start='Start', x_end='Finish', y=render_mode, color=color_data)
+        fig.update_yaxes(autorange="reversed")
+        fig.show()
+
     def render_gantt_matplotlib(self,
                                 fig_size:Optional[Tuple[int, int]] = (9,6),
                                 show_plot: Optional[bool] = True,
@@ -127,10 +165,10 @@ class SchedulingSolution:
         https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
         """
         if not self.resources:
-            render_mode = 'Tasks'
+            render_mode = 'Task'
 
-        if render_mode not in ['Resources', 'Tasks']:
-            raise ValueError("render_mode must either be 'Resources' or 'Tasks")
+        if render_mode not in ['Resource', 'Task']:
+            raise ValueError("render_mode must either be 'Resource' or 'Task'")
 
         # tasks to render
         if render_mode == 'Tasks':
@@ -139,12 +177,12 @@ class SchedulingSolution:
             tasks_to_render = self.tasks
 
         # render mode is Resource by default, can be set to 'Task'
-        if render_mode == 'Resources':
+        if render_mode == 'Resource':
             plot_title = 'Resources schedule - %s' % self.problem_name
             plot_ylabel = 'Resources'
             plot_ticklabels = list(self.resources.keys())
             nbr_y_values = len(self.resources)
-        elif render_mode == 'Tasks':
+        elif render_mode == 'Task':
             plot_title = 'Task schedule - %s' % self.problem_name
             plot_ylabel = 'Tasks'
             plot_ticklabels = list(tasks_to_render.keys())
