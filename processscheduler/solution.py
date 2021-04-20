@@ -114,10 +114,17 @@ class SchedulingSolution:
                             render_mode: Optional[str] = 'Resource',
                             fig_filename: Optional[str] = None,) -> None:
         try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            raise ModuleNotFoundError("matplotlib is not installed.")
+        try:
             import plotly.express as px
+        except ImportError:
+            raise ModuleNotFoundError("plotly is not installed.")
+        try:
             import pandas as pd
         except ImportError:
-            raise ModuleNotFoundError("plotly and pandas are not installed.")
+            raise ModuleNotFoundError("pandas is not installed.")
 
         if not render_mode in ['Task', 'Resource']:
             raise ValueError('data_type must be either Task or Resource')
@@ -164,7 +171,6 @@ class SchedulingSolution:
         Inspired by
         https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
         """
-
         try:
             import matplotlib.pyplot as plt
             from matplotlib.colors import LinearSegmentedColormap
