@@ -117,7 +117,9 @@ class SchedulingSolution:
         self.resources[resource_solution.name] = resource_solution
 
     def render_gantt_plotly(self,
-                            render_mode: Optional[str] = 'Task',) -> None:
+                            show_plot: Optional[bool] = True,
+                            render_mode: Optional[str] = 'Resource',
+                            fig_filename: Optional[str] = None,) -> None:
         try:
             import plotly.express as px
             import pandas as pd
@@ -152,7 +154,12 @@ class SchedulingSolution:
 
         fig = px.timeline(df, x_start='Start', x_end='Finish', y=render_mode, color=color_data)
         fig.update_yaxes(autorange="reversed")
-        fig.show()
+
+        if fig_filename is not None:
+            fig.write_image(fig_filename)
+
+        if show_plot:
+            plt.show()
 
     def render_gantt_matplotlib(self,
                                 fig_size:Optional[Tuple[int, int]] = (9,6),
