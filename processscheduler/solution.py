@@ -15,29 +15,30 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import timedelta, datetime
 import json
 
 from typing import Optional, Tuple
 
-try:
-    import matplotlib.pyplot as plt
-    from matplotlib.colors import LinearSegmentedColormap
-    HAVE_MATPLOTLIB = True
-except ImportError:
-    HAVE_MATPLOTLIB = False
-
 class SolutionJSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        return o.__dict__
+    def default(self, obj):
+        if isinstance(obj, datetime) or isinstance(obj, timedelta):
+            return '%s' % obj
+        return obj.__dict__
 
 class TaskSolution:
     """Class to represent the solution for a scheduled Task."""
     def __init__(self, name: str):
         self.name = name
         self.type = ''  # the name of the task type
-        self.start = 0
-        self.end = 0
-        self.duration = 0
+        self.start = 0  # an integer
+        self.end = 0  # an integer
+        self.duration = 0  # an integer
+
+        self.start_time = ''  # a string
+        self.end_time = '' # a string
+        self.duration_time = ''  # a string
+
         self.optional = False
         self.scheduled = False
         # the name of assigned resources
@@ -53,10 +54,12 @@ class ResourceSolution:
 
 class SchedulingSolution:
     """ A class that represent the solution of a scheduling problem. Can be rendered
-    to a matplotlib Gannt chart, or exported to json
+    to a matplotlib Gantt chart, or exported to json
     """
-    def __init__(self, problem_name: str):
-        self.problem_name = problem_name
+    def __init__(self, problem):
+        """problem: a scheduling problem."""
+        self.problem_name = problem.name
+        self.problem = problem
         self.horizon = 0
         self.tasks = {} # the dict of tasks
         self.resources = {}  # the dict of all resources
@@ -77,7 +80,18 @@ class SchedulingSolution:
     def to_json_string(self) -> str:
         """Export the solution to a json string."""
         d = {}
+        # problem properties
+        problem_properties = {}
         d['horizon'] = self.horizon
+        # time data
+        problem_properties['problem_timedelta'] = self.problem.delta_time
+        problem_properties['problem_start_time'] = self.problem.start_time
+        if self.problem.delta_time is not None and self.problem.start_time is not None:
+            problem_properties['problem_end_time'] = self.problem.start_time + self.horizon * self.problem.delta_time
+        else:
+            problem_properties['problem_end_time'] = None
+        d['problem_properties'] = problem_properties
+
         d['tasks'] = self.tasks
         d['resources'] = self.resources
         d['indicators'] = self.indicators
@@ -95,6 +109,58 @@ class SchedulingSolution:
         """Add resource solution."""
         self.resources[resource_solution.name] = resource_solution
 
+    def render_gantt_plotly(self,
+                            show_plot: Optional[bool] = True,
+                            render_mode: Optional[str] = 'Resource',
+                            fig_filename: Optional[str] = None,) -> None:
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            raise ModuleNotFoundError("matplotlib is not installed.")
+        try:
+            import plotly.express as px
+        except ImportError:
+            raise ModuleNotFoundError("plotly is not installed.")
+        try:
+            import pandas as pd
+        except ImportError:
+            raise ModuleNotFoundError("pandas is not installed.")
+
+        if not render_mode in ['Task', 'Resource']:
+            raise ValueError('data_type must be either Task or Resource')
+
+        # tasks to render
+        if render_mode == 'Tasks':
+            tasks_to_render = self.get_all_tasks_but_unavailable()
+        else:
+            tasks_to_render = self.tasks
+
+        dd = []
+        for i, task_name in enumerate(tasks_to_render):
+            task_solution = self.tasks[task_name]
+            if task_solution.assigned_resources:
+                resource_text = ','.join(task_solution.assigned_resources)
+            else:
+                resource_text = r'($\emptyset$)'
+            dd.append(dict(Task=task_name,
+                           Start=task_solution.start_time,
+                           Finish=task_solution.end_time,
+                           Resource=resource_text))
+
+        df = pd.DataFrame(dd)
+        color_data = 'Task'  # by default
+        if render_mode == 'Task':
+            color_data = 'Resource'
+
+        fig = px.timeline(df, x_start='Start', x_end='Finish', y=render_mode, color=color_data)
+        fig.update_yaxes(autorange="reversed")
+
+        if fig_filename is not None:
+            fig.write_image(fig_filename)
+
+        if show_plot:
+            plt.show()
+
     def render_gantt_matplotlib(self,
                                 fig_size:Optional[Tuple[int, int]] = (9,6),
                                 show_plot: Optional[bool] = True,
@@ -105,11 +171,17 @@ class SchedulingSolution:
         Inspired by
         https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
         """
-        if not self.resources:
-            render_mode = 'Tasks'
+        try:
+            import matplotlib.pyplot as plt
+            from matplotlib.colors import LinearSegmentedColormap
+        except ImportError:
+            raise ModuleNotFoundError("matplotlib is not installed.")
 
-        if render_mode not in ['Resources', 'Tasks']:
-            raise ValueError("render_mode must either be 'Resources' or 'Tasks")
+        if not self.resources:
+            render_mode = 'Task'
+
+        if render_mode not in ['Resource', 'Task']:
+            raise ValueError("render_mode must either be 'Resource' or 'Task'")
 
         # tasks to render
         if render_mode == 'Tasks':
@@ -118,12 +190,12 @@ class SchedulingSolution:
             tasks_to_render = self.tasks
 
         # render mode is Resource by default, can be set to 'Task'
-        if render_mode == 'Resources':
+        if render_mode == 'Resource':
             plot_title = 'Resources schedule - %s' % self.problem_name
             plot_ylabel = 'Resources'
             plot_ticklabels = list(self.resources.keys())
             nbr_y_values = len(self.resources)
-        elif render_mode == 'Tasks':
+        elif render_mode == 'Task':
             plot_title = 'Task schedule - %s' % self.problem_name
             plot_ylabel = 'Tasks'
             plot_ticklabels = list(tasks_to_render.keys())

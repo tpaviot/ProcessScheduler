@@ -19,7 +19,7 @@ import time
 from typing import Optional
 import warnings
 
-from z3 import (Solver, Sum, unsat,
+from z3 import (Solver, SolverFor, Sum, unsat,
                 ArithRef, unknown, Optimize, set_option)
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective
@@ -140,7 +140,7 @@ class SchedulingSolver:
 
     def build_solution(self, z3_sol):
         """ create a SchedulingSolution instance, and return it """
-        solution = SchedulingSolution(self._problem.name)
+        solution = SchedulingSolution(self._problem)
 
         # set the horizon solution
         solution.horizon = z3_sol[self._problem.horizon].as_long()
@@ -154,6 +154,12 @@ class SchedulingSolver:
             new_task_solution.end = z3_sol[task.end].as_long()
             new_task_solution.duration = z3_sol[task.duration].as_long()
             new_task_solution.optional = task.optional
+
+            # times, if ever delta_time and start_time are defined
+            if self._problem.delta_time is not None and self._problem.start_time is not None:
+                new_task_solution.duration_time = new_task_solution.duration * self._problem.delta_time
+                new_task_solution.start_time = self._problem.start_time + new_task_solution.start * self._problem.delta_time
+                new_task_solution.end_time = new_task_solution.start_time + new_task_solution.duration_time
             if task.optional:
                 # ugly hack, necessary because there's no as_bool()
                 # method for Bool objects

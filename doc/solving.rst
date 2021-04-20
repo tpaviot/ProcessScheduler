@@ -91,8 +91,8 @@ Then, we can request for another solution:
 
 You can recursively call :func:`find_another_solution` to find all possible solutions, until the solver fails to return a new one.
 
-Render a Gantt chart
---------------------
+Render to a Gantt chart
+-----------------------
 
 Call the :func:`render_gantt_matplotlib` to render the solution as a Gantt chart. The time line is from 0 to :attr:`horizon` value, you can choose to render either Tasks or Resources (default).
 
@@ -105,5 +105,4 @@ Call the :func:`render_gantt_matplotlib` to render the solution as a Gantt chart
         solution.render_gantt_matplotlib(render_mode='Tasks')
 
 
-
-
+If you prefer **plotly**, just change the methof name to use to :func:`render_gantt_plotly`.

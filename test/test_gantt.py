@@ -19,7 +19,7 @@ import unittest
 import processscheduler as ps
 
 class TestGantt(unittest.TestCase):
-    def test_gantt_base(self):
+    def test_gantt_matplotlib_base(self):
         """ take the single task/single resource and display output """
         problem = ps.SchedulingProblem('RenderSolution', horizon=7)
         task = ps.FixedDurationTask('task', duration=7)
@@ -32,17 +32,17 @@ class TestGantt(unittest.TestCase):
         self.assertTrue(solution)
 
         # display solution, using both ascii or matplotlib
-        solution.render_gantt_matplotlib(render_mode='Resources',
+        solution.render_gantt_matplotlib(render_mode='Resource',
                                         show_plot=False,
-                                        fig_filename='test_render_resources.svg')
-        solution.render_gantt_matplotlib(render_mode='Tasks',
+                                        fig_filename='test_render_resources_matplotlib.svg')
+        solution.render_gantt_matplotlib(render_mode='Task',
                                         show_plot=False,
-                                        fig_filename='test_render_tasks.svg')
-        self.assertTrue(os.path.isfile('test_render_resources.svg'))
-        self.assertTrue(os.path.isfile('test_render_tasks.svg'))
+                                        fig_filename='test_render_tasks_matplotlib.svg')
+        self.assertTrue(os.path.isfile('test_render_resources_matplotlib.svg'))
+        self.assertTrue(os.path.isfile('test_render_tasks_matplotlib.svg'))
 
 
-    def test_gantt_indicator(self):
+    def test_gantt_matplotlib_indicator(self):
         problem = ps.SchedulingProblem('GanttIndicator', horizon = 10)
 
         t_1 = ps.FixedDurationTask('T1', duration=5)
@@ -56,10 +56,10 @@ class TestGantt(unittest.TestCase):
 
         self.assertTrue(solution)
         # display solution, using both ascii or matplotlib
-        solution.render_gantt_matplotlib(render_mode='Resources',
+        solution.render_gantt_matplotlib(render_mode='Resource',
                                          show_plot=False)
 
-    def test_gantt_unavaible_resource(self):
+    def test_gantt_matplotlib_navaible_resource(self):
         pb = ps.SchedulingProblem('GanttResourceUnavailable', horizon=10)
         task_1 = ps.FixedDurationTask('task1', duration = 3)
         worker_1 = ps.Worker('Worker1')
@@ -69,10 +69,10 @@ class TestGantt(unittest.TestCase):
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertTrue(solution)
-        solution.render_gantt_matplotlib(render_mode='Resources',
+        solution.render_gantt_matplotlib(render_mode='Resource',
                                          show_plot=False)
 
-    def test_gantt_no_resource(self):
+    def test_gantt_matplotlib_no_resource(self):
         pb = ps.SchedulingProblem('GanttNoResource', horizon=10)
         task_1 = ps.FixedDurationTask('task1', duration = 3)
         solver = ps.SchedulingSolver(pb)
@@ -80,7 +80,7 @@ class TestGantt(unittest.TestCase):
         self.assertTrue(solution)
         solution.render_gantt_matplotlib(show_plot=False)
 
-    def test_gantt_wrong_render_mode(self):
+    def test_gantt_matplotlib_wrong_render_mode(self):
         pb = ps.SchedulingProblem('GanttWrongRenderMode', horizon=10)
         task_1 = ps.FixedDurationTask('task1', duration = 3)
         worker_1 = ps.Worker('Worker1')
@@ -90,6 +90,28 @@ class TestGantt(unittest.TestCase):
         self.assertTrue(solution)
         with self.assertRaises(ValueError):
             solution.render_gantt_matplotlib(render_mode='foo', show_plot=False)
+
+    def test_gantt_plotly_base(self):
+        """ take the single task/single resource and display output """
+        problem = ps.SchedulingProblem('RenderSolutionPlotly', horizon=7)
+        task = ps.FixedDurationTask('task', duration=7)
+        #problem.add_task(task)
+        worker = ps.Worker('worker')
+        #problem.add_resource(worker)
+        task.add_required_resource(worker)
+        solver = ps.SchedulingSolver(problem)
+        solution = solver.solve()
+        self.assertTrue(solution)
+
+        # display solution, using both ascii or matplotlib
+        solution.render_gantt_plotly(render_mode='Resource',
+                                     show_plot=False,
+                                     fig_filename='test_render_resources_plotly.svg')
+        solution.render_gantt_plotly(render_mode='Task',
+                                     show_plot=False,
+                                     fig_filename='test_render_tasks_plotly.svg')
+        self.assertTrue(os.path.isfile('test_render_resources_plotly.svg'))
+        self.assertTrue(os.path.isfile('test_render_tasks_plotly.svg'))
 
 if __name__ == "__main__":
     unittest.main()
