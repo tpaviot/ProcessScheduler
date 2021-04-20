@@ -20,13 +20,6 @@ import json
 
 from typing import Optional, Tuple
 
-try:
-    import matplotlib.pyplot as plt
-    from matplotlib.colors import LinearSegmentedColormap
-    HAVE_MATPLOTLIB = True
-except ImportError:
-    HAVE_MATPLOTLIB = False
-
 class SolutionJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime) or isinstance(obj, timedelta):
@@ -124,7 +117,7 @@ class SchedulingSolution:
             import plotly.express as px
             import pandas as pd
         except ImportError:
-            raise ModuleNotFoundError("plotly and pandas are not installed")
+            raise ModuleNotFoundError("plotly and pandas are not installed.")
 
         if not render_mode in ['Task', 'Resource']:
             raise ValueError('data_type must be either Task or Resource')
@@ -171,6 +164,13 @@ class SchedulingSolution:
         Inspired by
         https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
         """
+
+        try:
+            import matplotlib.pyplot as plt
+            from matplotlib.colors import LinearSegmentedColormap
+        except ImportError:
+            raise ModuleNotFoundError("matplotlib is not installed.")
+
         if not self.resources:
             render_mode = 'Task'
 
