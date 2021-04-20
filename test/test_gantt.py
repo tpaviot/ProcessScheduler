@@ -34,10 +34,10 @@ class TestGantt(unittest.TestCase):
         # display solution, using both ascii or matplotlib
         solution.render_gantt_matplotlib(render_mode='Resource',
                                         show_plot=False,
-                                        fig_filename='test_render_resources.svg')
+                                        fig_filename='test_render_resources_matplotlib.svg')
         solution.render_gantt_matplotlib(render_mode='Task',
                                         show_plot=False,
-                                        fig_filename='test_render_tasks.svg')
+                                        fig_filename='test_render_tasks_matplotlib.svg')
         self.assertTrue(os.path.isfile('test_render_resources_matplotlib.svg'))
         self.assertTrue(os.path.isfile('test_render_tasks_matplotlib.svg'))
 
