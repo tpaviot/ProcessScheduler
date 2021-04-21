@@ -14,31 +14,34 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import random
 import unittest
 
 import processscheduler as ps
 
-def _get_big_random_problem(name:str, n: int) -> ps.SchedulingProblem:
-    """ returns a problem with n tasks and n * 3 workers. Workers are random assigned. """
+def build_complex_problem(name:str, n: int) -> ps.SchedulingProblem:
+    """ returns a problem with n tasks and n * 3 workers """
     problem = ps.SchedulingProblem(name)
 
+    nb_mandatory_tasks = 3 * n
+    nb_optional_tasks = n
+    nb_workers = 4 * n
+
     mandatory_tasks = [ps.FixedDurationTask('mand_task%i' % i,
-                                            duration=random.randint(1, n // 10)) for i in range(n)]
+                                            duration=i % 8 + 1) for i in range(nb_mandatory_tasks)]
 
     # n/10 optional tasks
     optional_tasks = [ps.FixedDurationTask('opt_task%i' % i,
-                                            duration=random.randint(1, n // 10),
-                                            optional=True) for i in range(n // 10)]
+                                            duration=i % 8 + 1,
+                                            optional=True) for i in range(nb_optional_tasks)]
 
     all_tasks = mandatory_tasks + optional_tasks
 
-    workers = [ps.Worker('task%i' % i) for i in range(n * 3)]
+    workers = [ps.Worker('task%i' % i) for i in range(nb_workers)]
 
     # for each task, add three single required workers
-    for task in all_tasks:
-        random_workers = random.sample(workers, 3)
-        task.add_required_resources(random_workers)
+    for i, task in enumerate(all_tasks):
+        j = i + 1  # an overlap
+        task.add_required_resources(workers[j - 1:i + 3])
 
     return problem
 
@@ -211,14 +214,14 @@ class TestSolver(unittest.TestCase):
 
     def test_solve_parallel(self):
         """ a stress test with parallel mode solving """
-        problem = _get_big_random_problem('SolveParallel', 5000)
+        problem = build_complex_problem('SolveParallel', 50)
         parallel_solver = ps.SchedulingSolver(problem, parallel=True)
         solution = parallel_solver.solve()
         self.assertTrue(solution)
 
     def test_solve_max_time(self):
         """ a stress test which  """
-        problem = _get_big_random_problem('SolveMaxTime', 10000)
+        problem = build_complex_problem('SolveMaxTime', 1000)
         # 1s is not enough to solve this problem
         max_time_solver = ps.SchedulingSolver(problem, max_time=1)
         solution = max_time_solver.solve()
@@ -228,7 +231,7 @@ class TestSolver(unittest.TestCase):
     # Objectives
     #
     def test_makespan_objective(self):
-        problem = _get_big_random_problem('SolveMakeSpanObjective', 2000)
+        problem = build_complex_problem('SolveMakeSpanObjective', 20)
         # first look for a solution without optimization
         solution_1 = _solve_problem(problem)
         self.assertTrue(solution_1)
@@ -245,17 +248,17 @@ class TestSolver(unittest.TestCase):
         self.assertLess(horizon_with_optimization, horizon_without_optimization)
 
     def test_flowtime_objective_big_problem(self):
-        problem = _get_big_random_problem('SolveFlowTimeObjective', 20)  # long to compute
+        problem = build_complex_problem('SolveFlowTimeObjective', 5)  # long to compute
         problem.add_objective_flowtime()
         self.assertTrue(_solve_problem(problem))
 
     def test_start_latest_objective_big_problem(self):
-        problem = _get_big_random_problem('SolveStartLatestObjective', 1000)
+        problem = build_complex_problem('SolveStartLatestObjective', 10)
         problem.add_objective_start_latest()
         self.assertTrue(_solve_problem(problem))
 
     def test_start_earliest_objective_big_problem(self):
-        problem = _get_big_random_problem('SolveStartEarliestObjective', 1000)
+        problem = build_complex_problem('SolveStartEarliestObjective', 10)
         problem.add_objective_start_earliest()
         self.assertTrue(_solve_problem(problem))
 
@@ -415,15 +418,15 @@ class TestSolver(unittest.TestCase):
     # Import/export
     #
     def test_export_to_smt2(self):
-        problem = _get_big_random_problem('SolveExportToSMT2', 5000)
+        problem = build_complex_problem('SolveExportToSMT2', 50)
         solver = ps.SchedulingSolver(problem)
         solution = _solve_problem(problem)
         self.assertTrue(solution)
-        solver.export_to_smt2('big_random_problem.smt2')
-        self.assertTrue(os.path.isfile('big_random_problem.smt2'))
+        solver.export_to_smt2('complex_problem.smt2')
+        self.assertTrue(os.path.isfile('complex_problem.smt2'))
 
     def test_export_solution_to_json(self):
-        problem = _get_big_random_problem('SolutionExportToJson', 5000)
+        problem = build_complex_problem('SolutionExportToJson', 50)
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         solution.to_json_string()
