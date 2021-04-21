@@ -156,10 +156,15 @@ class SchedulingSolver:
             new_task_solution.optional = task.optional
 
             # times, if ever delta_time and start_time are defined
-            if self._problem.delta_time is not None and self._problem.start_time is not None:
+            if self._problem.delta_time is not None:
                 new_task_solution.duration_time = new_task_solution.duration * self._problem.delta_time
-                new_task_solution.start_time = self._problem.start_time + new_task_solution.start * self._problem.delta_time
-                new_task_solution.end_time = new_task_solution.start_time + new_task_solution.duration_time
+                if self._problem.start_time is not None:
+                    new_task_solution.start_time = self._problem.start_time + new_task_solution.start * self._problem.delta_time
+                    new_task_solution.end_time = new_task_solution.start_time + new_task_solution.duration_time
+                else:
+                    new_task_solution.start_time = new_task_solution.start * self._problem.delta_time
+                    new_task_solution.end_time = new_task_solution.start_time + new_task_solution.duration_time
+
             if task.optional:
                 # ugly hack, necessary because there's no as_bool()
                 # method for Bool objects

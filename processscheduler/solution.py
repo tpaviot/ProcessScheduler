@@ -15,14 +15,14 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import timedelta, datetime
+from datetime import time, timedelta, datetime
 import json
 
 from typing import Optional, Tuple
 
 class SolutionJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, datetime) or isinstance(obj, timedelta):
+        if isinstance(obj, datetime) or isinstance(obj, (time, timedelta)):
             return '%s' % obj
         return obj.__dict__
 
@@ -85,9 +85,13 @@ class SchedulingSolution:
         d['horizon'] = self.horizon
         # time data
         problem_properties['problem_timedelta'] = self.problem.delta_time
-        problem_properties['problem_start_time'] = self.problem.start_time
-        if self.problem.delta_time is not None and self.problem.start_time is not None:
-            problem_properties['problem_end_time'] = self.problem.start_time + self.horizon * self.problem.delta_time
+        if self.problem.delta_time is not None:
+            if self.problem.start_time is not None:
+                problem_properties['problem_start_time'] = self.problem.start_time
+                problem_properties['problem_end_time'] = self.problem.start_time + self.horizon * self.problem.delta_time
+            else:
+                problem_properties['problem_start_time'] = time(0)
+                problem_properties['problem_end_time'] = self.horizon * self.problem.delta_time
         else:
             problem_properties['problem_end_time'] = None
         d['problem_properties'] = problem_properties
