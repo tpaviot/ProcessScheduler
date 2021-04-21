@@ -4,7 +4,7 @@
 
 [ ] Inventories: input/output for tasks
 
-[ ] Add a plotly/pandas gantt renderer with real datetimes
+[X] Add a plotly/pandas gantt renderer with real datetimes
 
 [ ] Performance benchmark
 
