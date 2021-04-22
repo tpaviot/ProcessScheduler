@@ -207,10 +207,28 @@ class SchedulingSolution:
 
         gantt = plt.subplots(1, 1, figsize=fig_size)[1]
         gantt.set_title(plot_title)
-        gantt.set_xlim(0, self.horizon)
-        gantt.set_xticks(range(self.horizon + 1))
-        # Setting labels for x-axis and y-axis
-        gantt.set_xlabel('Time (%i periods)' % self.horizon, fontsize=12)
+
+        # x axis, use real date and times if possible
+        if self.problem.delta_time is not None:
+            if self.problem.start_time is not None:
+                # get all days
+                times = [self.problem.start_time + i * self.problem.delta_time for i in range(self.horizon + 1)]
+                times_str = []
+                for t in times:
+                    times_str.append(t.strftime("%H:%M"))
+            else:
+                times_str = ['%s' % (i * self.problem.delta_time) for i in range(self.horizon + 1)]
+            gantt.set_xlim(0, self.horizon)
+            plt.xticks(range(self.horizon + 1), times_str, rotation=60)
+            plt.subplots_adjust(bottom=0.15)
+            gantt.set_xlabel('Time', fontsize=12)
+        else:
+            # otherwise use integers
+            gantt.set_xlim(0, self.horizon)
+            gantt.set_xticks(range(self.horizon + 1))
+            # Setting label
+            gantt.set_xlabel('Time (%i periods)' % self.horizon, fontsize=12)
+
         gantt.set_ylabel(plot_ylabel, fontsize=12)
 
         # colormap definition
@@ -244,7 +262,7 @@ class SchedulingSolution:
                        s=text, ha='center', va='center', color='black')
 
         # in Tasks mode, create one line per task on the y axis
-        if render_mode == 'Tasks':
+        if render_mode == 'Task':
             for i, task_name in enumerate(tasks_to_render):
                 # build the bar text string
                 task_solution = self.tasks[task_name]
@@ -256,7 +274,7 @@ class SchedulingSolution:
                                            task_solution.duration,
                                            task_colors[task_name],
                                            text)
-        elif render_mode == 'Resources':
+        elif render_mode == 'Resource':
             for i, resource_name in enumerate(self.resources):
                 ress = self.resources[resource_name]
                 # each interval from the busy_intervals list is rendered as a bar
