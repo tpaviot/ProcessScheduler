@@ -134,7 +134,7 @@ class SchedulingSolution:
             raise ValueError('data_type must be either Task or Resource')
 
         # tasks to render
-        if render_mode == 'Tasks':
+        if render_mode == 'Task':
             tasks_to_render = self.get_all_tasks_but_unavailable()
         else:
             tasks_to_render = self.tasks
@@ -188,7 +188,7 @@ class SchedulingSolution:
             raise ValueError("render_mode must either be 'Resource' or 'Task'")
 
         # tasks to render
-        if render_mode == 'Tasks':
+        if render_mode == 'Task':
             tasks_to_render = self.get_all_tasks_but_unavailable()
         else:
             tasks_to_render = self.tasks
