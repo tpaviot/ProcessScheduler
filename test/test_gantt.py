@@ -15,6 +15,7 @@
 
 import os
 import unittest
+from datetime import datetime, timedelta
 
 import processscheduler as ps
 
@@ -79,6 +80,30 @@ class TestGantt(unittest.TestCase):
         solution = solver.solve()
         self.assertTrue(solution)
         solution.render_gantt_matplotlib(show_plot=False)
+
+    def test_gantt_matplotlib_real_date_1(self):
+        pb = ps.SchedulingProblem('GanttMatplotLibRealDate1', horizon=10,
+                                  start_time=datetime.now(), delta_time = timedelta(minutes=15))
+        task_1 = ps.FixedDurationTask('task1', duration = 3)
+        worker_1 = ps.Worker('Worker1')
+        task_1.add_required_resource(worker_1)
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        solution.render_gantt_matplotlib(render_mode='Task', show_plot=False)
+        solution.render_gantt_matplotlib(render_mode='Resource', show_plot=False)
+
+    def test_gantt_matplotlib_real_date_no_start_time(self):
+        pb = ps.SchedulingProblem('GanttMatplotLibRealDateNoStartTime', horizon=10,
+                                  delta_time = timedelta(hours=2))
+        task_1 = ps.FixedDurationTask('task1', duration = 3)
+        worker_1 = ps.Worker('Worker1')
+        task_1.add_required_resource(worker_1)
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        solution.render_gantt_matplotlib(render_mode='Task', show_plot=False)
+        solution.render_gantt_matplotlib(render_mode='Resource', show_plot=False)
 
     def test_gantt_matplotlib_wrong_render_mode(self):
         pb = ps.SchedulingProblem('GanttWrongRenderMode', horizon=10)
