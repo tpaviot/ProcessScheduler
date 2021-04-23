@@ -464,7 +464,7 @@ class TestOptionalTask(unittest.TestCase):
         solution = solver.solve()
         self.assertTrue(solution)
 
-        results = [solution.tasks[task_1.name].scheduled, 
+        results = [solution.tasks[task_1.name].scheduled,
                    solution.tasks[task_2.name].scheduled,
                    solution.tasks[task_3.name].scheduled]
 

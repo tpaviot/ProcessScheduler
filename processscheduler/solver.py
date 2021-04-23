@@ -19,8 +19,7 @@ import time
 from typing import Optional
 import warnings
 
-from z3 import (Solver, SolverFor, Sum, unsat,
-                ArithRef, unknown, Optimize, set_option)
+from z3 import Solver, Sum, unsat, ArithRef, unknown, Optimize, set_option
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution

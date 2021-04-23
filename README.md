@@ -40,7 +40,6 @@ solution.render_gantt_matplotlib()
 
 Install with pip.
 
-
 ```bash
 pip install ProcessScheduler
 ```

@@ -74,7 +74,7 @@ class TestGantt(unittest.TestCase):
 
     def test_gantt_matplotlib_no_resource(self):
         pb = ps.SchedulingProblem('GanttNoResource', horizon=10)
-        task_1 = ps.FixedDurationTask('task1', duration = 3)
+        ps.FixedDurationTask('task1', duration = 3)
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertTrue(solution)
@@ -112,6 +112,7 @@ class TestGantt(unittest.TestCase):
                                      fig_filename='test_render_tasks_plotly.svg')
         self.assertTrue(os.path.isfile('test_render_resources_plotly.svg'))
         self.assertTrue(os.path.isfile('test_render_tasks_plotly.svg'))
+
 
 if __name__ == "__main__":
     unittest.main()

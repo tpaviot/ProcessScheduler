@@ -112,7 +112,7 @@ class TestIndicator(unittest.TestCase):
         problem = ps.SchedulingProblem('IndicatorUtilization4', horizon = 20)
 
         worker = ps.Worker('Worker')
-        
+
         for i in range(20):
             t = ps.FixedDurationTask(f'T{i+1}', duration = 1, optional = True)
             t.add_required_resource(worker)

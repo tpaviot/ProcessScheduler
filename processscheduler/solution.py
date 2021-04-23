@@ -130,7 +130,7 @@ class SchedulingSolution:
         except ImportError:
             raise ModuleNotFoundError("pandas is not installed.")
 
-        if not render_mode in ['Task', 'Resource']:
+        if render_mode not in ['Task', 'Resource']:
             raise ValueError('data_type must be either Task or Resource')
 
         # tasks to render
@@ -140,7 +140,7 @@ class SchedulingSolution:
             tasks_to_render = self.tasks
 
         dd = []
-        for i, task_name in enumerate(tasks_to_render):
+        for task_name in tasks_to_render:
             task_solution = self.tasks[task_name]
             if task_solution.assigned_resources:
                 resource_text = ','.join(task_solution.assigned_resources)

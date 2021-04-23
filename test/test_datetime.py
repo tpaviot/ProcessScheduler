@@ -14,7 +14,6 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime, timedelta
-import os
 import unittest
 
 import processscheduler as ps
