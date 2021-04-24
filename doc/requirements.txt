@@ -4,6 +4,5 @@ sphinx-autodoc-typehints
 ipykernel
 nbsphinx
 plotly
-pandas
 kaleido
 -e .

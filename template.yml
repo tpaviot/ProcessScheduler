@@ -41,7 +41,7 @@ jobs:
   - bash: |
       source activate psenv && \
       conda install pip && \
-      pip install coverage plotly kaleido pandas
+      pip install coverage plotly kaleido
     displayName: 'Install additional packages (plotly, kaleido, coverage)'
 
   - bash: |

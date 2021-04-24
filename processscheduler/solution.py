@@ -117,18 +117,13 @@ class SchedulingSolution:
                             show_plot: Optional[bool] = True,
                             render_mode: Optional[str] = 'Resource',
                             fig_filename: Optional[str] = None,) -> None:
+        """Use plotly.create_gantt method, see
+        https://plotly.github.io/plotly.py-docs/generated/plotly.figure_factory.create_gantt.html
+        """
         try:
-            import matplotlib.pyplot as plt
-        except ImportError:
-            raise ModuleNotFoundError("matplotlib is not installed.")
-        try:
-            import plotly.express as px
+            from plotly.figure_factory import create_gantt
         except ImportError:
             raise ModuleNotFoundError("plotly is not installed.")
-        try:
-            import pandas as pd
-        except ImportError:
-            raise ModuleNotFoundError("pandas is not installed.")
 
         if render_mode not in ['Task', 'Resource']:
             raise ValueError('data_type must be either Task or Resource')
@@ -139,31 +134,34 @@ class SchedulingSolution:
         else:
             tasks_to_render = self.tasks
 
-        dd = []
+        df = []
         for task_name in tasks_to_render:
             task_solution = self.tasks[task_name]
             if task_solution.assigned_resources:
                 resource_text = ','.join(task_solution.assigned_resources)
             else:
                 resource_text = r'($\emptyset$)'
-            dd.append(dict(Task=task_name,
+            df.append(dict(Task=task_name,
                            Start=task_solution.start_time,
                            Finish=task_solution.end_time,
                            Resource=resource_text))
 
-        df = pd.DataFrame(dd)
         color_data = 'Task'  # by default
         if render_mode == 'Task':
             color_data = 'Resource'
 
-        fig = px.timeline(df, x_start='Start', x_end='Finish', y=render_mode, color=color_data)
-        fig.update_yaxes(autorange="reversed")
+        fig = create_gantt(df, index_col=render_mode, show_colorbar=True, showgrid_x=True,
+                           showgrid_y=True, show_hover_fill=True,
+                           title='%s Gantt chart' % self.problem.name,
+                           bar_width=0.5)
+        #fig = px.timeline(df, x_start='Start', x_end='Finish', y=render_mode, color=color_data)
+        #fig.update_yaxes(autorange="reversed")
 
         if fig_filename is not None:
             fig.write_image(fig_filename)
 
         if show_plot:
-            plt.show()
+            fig.show()
 
     def render_gantt_matplotlib(self,
                                 fig_size:Optional[Tuple[int, int]] = (9,6),
