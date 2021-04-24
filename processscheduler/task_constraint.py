@@ -17,7 +17,7 @@
 
 from typing import Optional
 
-from z3 import And, BoolRef, Implies, Xor, PbEq, PbGe, PbLe
+from z3 import And, Bool, BoolRef, Implies, If, Xor, PbEq, PbGe, PbLe
 
 from processscheduler.base import _Constraint
 
@@ -271,3 +271,47 @@ class ForceScheduleNOptionalTasks(_TaskConstraint):
         asst = problem_function[kind]([(scheduled, True) for scheduled in sched_vars],
                                       nb_tasks_to_schedule)
         self.set_applied_not_applied_assertions(asst)
+
+class ScheduleNTasksInTimeIntervals(_TaskConstraint):
+    """Given a set of m different tasks, and a list of time intervals, schedule N tasks among m
+    in this time interval"""
+    def __init__(self, list_of_tasks,
+                       nb_tasks_to_schedule,
+                       list_of_time_intervals,
+                       kind: Optional[str] = 'exact',
+                       optional: Optional[bool] = False) -> None:
+        super().__init__()
+
+        self.optional = optional
+
+        problem_function = {'atleast': PbGe, 'atmost': PbLe, 'exact': PbEq}
+
+        # first check that all tasks from the list_of_optional_tasks are
+        # actually optional
+        if not isinstance(list_of_tasks, list):
+            raise TypeError('list_of_task must be a list')
+
+        if not isinstance(list_of_time_intervals, list):
+            raise TypeError('list_of_time_intervals must be a list of list')
+
+        # count the number of tasks that re scheduled in this time interval
+        all_bools =[]
+        for task in list_of_tasks:
+            # create a bool variable
+            # set this boolean to True if the task is in the time range
+            i = 0
+            for time_interval_lower_bound,  time_interval_upper_bound in list_of_time_intervals:
+                b = Bool('InTimeIntervalTask_%s_%i' % (task.name, i))
+                asst = If(And(task.start >= time_interval_lower_bound,
+                              task.start <= time_interval_upper_bound,
+                              task.end >= time_interval_lower_bound,
+                              task.end <= time_interval_upper_bound),
+                          b == True,  # consequence
+                          b == False)  # else
+                self.set_applied_not_applied_assertions(asst)
+                i += 1
+                all_bools.append(b)
+        # then set the constraint for the number of tasks to schedule
+        asst_2 = problem_function[kind]([(scheduled, True) for scheduled in all_bools],
+                                        nb_tasks_to_schedule)
+        self.set_applied_not_applied_assertions(asst_2)
