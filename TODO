@@ -1,12 +1,23 @@
+End-user:
+=========
+
 [X] Cumulative resources: resources that can process multiple tasks at the same time
 
 [X] Optional tasks: tasks that may or may not be scheduled
 
 [ ] Inventories: input/output for tasks
 
-[X] Add a plotly/pandas gantt renderer with real datetimes
+[X] Add a plotly/pandas gantt renderer with real dates and times
+
+[ ] JSON importer/exporter for a scheduling problem
+
+Dev:
+====
 
 [ ] Performance benchmark
 
-[ ] JSON importer for a scheduling problem
+[ ] Improve class hierarchy and inheritance
 
+[ ] Categorize task constraints
+
+[ ] Developer user guide, especially how to add constraints
