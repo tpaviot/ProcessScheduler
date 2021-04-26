@@ -160,7 +160,7 @@ class TestIndicator(unittest.TestCase):
         problem.add_objective_resource_utilization(worker)
         problem.add_objective_priorities()
 
-        solver = ps.SchedulingSolver(problem, verbosity=True)
+        solver = ps.SchedulingSolver(problem)
         solver._solver.set(priority='pareto')
         solution = solver.solve()
         self.assertTrue(solution)

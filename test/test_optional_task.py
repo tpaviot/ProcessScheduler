@@ -241,7 +241,7 @@ class TestOptionalTask(unittest.TestCase):
         pb.add_constraint(ps.TaskStartAfterStrict(task_2, 1))
         pb.add_constraint(ps.TaskStartAfterLax(task_2, 4))
 
-        solver = ps.SchedulingSolver(pb, verbosity=True)
+        solver = ps.SchedulingSolver(pb, debug=True)
         solution = solver.solve()
         self.assertTrue(solution)
         self.assertTrue(solution.tasks[task_1.name].scheduled)

@@ -47,7 +47,7 @@ def build_complex_problem(name:str, n: int) -> ps.SchedulingProblem:
 
 def _solve_problem(problem, verbose=False):
     """ create a solver instance, return True if sat else False """
-    solver = ps.SchedulingSolver(problem, verbosity=verbose)
+    solver = ps.SchedulingSolver(problem, debug=verbose)
     solution = solver.solve()
     return solution
 
@@ -195,7 +195,7 @@ class TestSolver(unittest.TestCase):
         pb_alt.add_objective_makespan()
 
         # solve
-        solver1 = ps.SchedulingSolver(pb_alt, verbosity=False)
+        solver1 = ps.SchedulingSolver(pb_alt, debug=False)
         solution = solver1.solve()
 
         self.assertEqual(solution.horizon, 5)
