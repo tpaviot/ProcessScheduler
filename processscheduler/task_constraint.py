@@ -17,7 +17,7 @@
 
 from typing import Optional
 
-from z3 import And, Bool, Not, BoolRef, Implies, If, Or, Xor, PbEq, PbGe, PbLe
+from z3 import And, Bool, Not, BoolRef, Implies, Xor, PbEq, PbGe, PbLe
 
 from processscheduler.base import _Constraint
 
@@ -293,16 +293,6 @@ class ScheduleNTasksInTimeIntervals(_TaskConstraint):
 
         if not isinstance(list_of_time_intervals, list):
             raise TypeError('list_of_time_intervals must be a list of list')
-
-        # check for special case
-        # for the first interval, it is a bit special: if the lower bound is different
-        # from zero, we have to handle the case where the start and/or end are scheduled
-        # before the first allowed interval
-        first_interval = list_of_time_intervals[0]
-        lower_bound_first_interval = first_interval[0]
-        is_first_bound_greater_than_zero = False
-        if lower_bound_first_interval > 0:
-            is_first_bound_greater_than_zero = True
 
         # count the number of tasks that re scheduled in this time interval
         all_bools =[]
