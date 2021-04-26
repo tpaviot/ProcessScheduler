@@ -67,8 +67,8 @@ class ScheduleNTasksInTimeIntervals(unittest.TestCase):
         pb.add_constraint(cstrt)
         # force task_1 to be shceduled after 10. So the only solution is that task 2 is scheduled
         # before 10
-        ctr1 = ps.TaskStartAfterLax(task_1, 10)
-
+        cstrt1 = ps.TaskStartAfterLax(task_1, 10)
+        pb.add_constraint(cstrt1)
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertTrue(solution)
