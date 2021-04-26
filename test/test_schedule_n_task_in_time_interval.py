@@ -18,7 +18,7 @@ import unittest
 import processscheduler as ps
 
 class ScheduleNTasksInTimeIntervals(unittest.TestCase):
-    def test_1(self) -> None:
+    def test_single_interval_1(self) -> None:
         pb = ps.SchedulingProblem('ScheduleNTasksInTimeIntervals1', horizon=20)
         task_1 = ps.FixedDurationTask('task1', duration = 3)
         task_2 = ps.FixedDurationTask('task2', duration = 3)
@@ -37,7 +37,7 @@ class ScheduleNTasksInTimeIntervals(unittest.TestCase):
         self.assertTrue(solution.tasks[task_2.name].start == 10)
         self.assertTrue(solution.tasks[task_2.name].end == 13)
 
-    def test_2(self) -> None:
+    def test_single_interval_2(self) -> None:
         pb = ps.SchedulingProblem('ScheduleNTasksInTimeIntervals2', horizon=20)
         task_1 = ps.FixedDurationTask('task1', duration = 3)
         task_2 = ps.FixedDurationTask('task2', duration = 3)
@@ -54,9 +54,7 @@ class ScheduleNTasksInTimeIntervals(unittest.TestCase):
         self.assertTrue(solution.tasks[task_1.name].end <= 10)
         self.assertTrue(solution.tasks[task_2.name].end <= 10)
 
-
-
-    def test_3(self) -> None:
+    def test_single_interval_3(self) -> None:
         pb = ps.SchedulingProblem('ScheduleNTasksInTimeIntervals3', horizon=20)
         task_1 = ps.FixedDurationTask('task1', duration = 3)
         task_2 = ps.FixedDurationTask('task2', duration = 3)
@@ -76,7 +74,7 @@ class ScheduleNTasksInTimeIntervals(unittest.TestCase):
         self.assertTrue(solution.tasks[task_1.name].start >= 10)
         self.assertTrue(solution.tasks[task_2.name].end <= 10)
 
-    def test_4(self) -> None:
+    def test_single_interval_4(self) -> None:
         pb = ps.SchedulingProblem('ScheduleNTasksInTimeIntervals4', horizon=20)
         task_1 = ps.FixedDurationTask('task1', duration = 3)
         task_2 = ps.FixedDurationTask('task2', duration = 3)
@@ -85,9 +83,36 @@ class ScheduleNTasksInTimeIntervals(unittest.TestCase):
                                                  nb_tasks_to_schedule= 3,  # impossible!!
                                                  list_of_time_intervals = [[10, 20]])
         pb.add_constraint(cstrt)
-        solver = ps.SchedulingSolver(pb, verbosity=True)
+        solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertFalse(solution)
+
+    def test_double_interval_1(self) -> None:
+        pb = ps.SchedulingProblem('ScheduleNTasksInTimeIntervalsDoubleInterval1', horizon=20)
+        task_1 = ps.FixedDurationTask('task1', duration = 3)
+        task_2 = ps.FixedDurationTask('task2', duration = 3)
+
+        cstrt = ps.ScheduleNTasksInTimeIntervals([task_1, task_2],
+                                                 nb_tasks_to_schedule= 2,
+                                                 list_of_time_intervals = [[5, 10], [15, 19]])
+        pb.add_constraint(cstrt)
+        solver = ps.SchedulingSolver(pb, verbosity=True)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        
+    def test_double_interval_2(self) -> None:
+        pb = ps.SchedulingProblem('ScheduleNTasksInTimeIntervalsDoubleInterval2', horizon=20)
+        task_1 = ps.FixedDurationTask('task1', duration = 3)
+        task_2 = ps.FixedDurationTask('task2', duration = 3)
+
+        cstrt = ps.ScheduleNTasksInTimeIntervals([task_1, task_2],
+                                                 nb_tasks_to_schedule= 1,
+                                                 list_of_time_intervals = [[5, 7], [15, 19]])
+        pb.add_constraint(cstrt)
+        solver = ps.SchedulingSolver(pb, verbosity=True)
+        solution = solver.solve()
+        print(solution)
+        self.assertTrue(solution)
 
 
 if __name__ == "__main__":
