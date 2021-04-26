@@ -300,18 +300,22 @@ class ScheduleNTasksInTimeIntervals(_TaskConstraint):
             # for this task, the logic expression is that any of its start or end must be
             # between two consecutive intervals
             i = 0
-            cstrs = []
+            bools_for_this_task = []
             for time_interval in list_of_time_intervals:
                 b = Bool('InTimeIntervalTask_%s_%i' % (task.name, i))
                 lower_bound, upper_bound = time_interval
-                cstrs += [task.start >= lower_bound, task.end <= upper_bound,
-                          Not(And(task.start < lower_bound, task.end > lower_bound)),  # overlap at start
-                          Not(And(task.start < upper_bound, task.end > upper_bound)),   # overlap at end
-                          Not(And(task.start < lower_bound, task.end > upper_bound))]   # full overlap
+                cstrs = [task.start >= lower_bound, task.end <= upper_bound,
+                         Not(And(task.start < lower_bound, task.end > lower_bound)),  # overlap at start
+                         Not(And(task.start < upper_bound, task.end > upper_bound)),   # overlap at end
+                         Not(And(task.start < lower_bound, task.end > upper_bound))]   # full overlap
                 asst = Implies(b, And(cstrs))
                 self.set_applied_not_applied_assertions(asst)
-                all_bools.append(b)
+                bools_for_this_task.append(b)
                 i += 1
+            # only one maximum bool to True from the previous possibilities
+            asst_tsk = PbLe([(scheduled, True) for scheduled in bools_for_this_task], 1)
+            self.set_applied_not_applied_assertions(asst_tsk)
+            all_bools.extend(bools_for_this_task)
 
         # we also have to exclude all the other cases, where start or end can be between two intervals
         # then set the constraint for the number of tasks to schedule
