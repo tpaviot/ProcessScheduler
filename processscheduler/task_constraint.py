@@ -17,7 +17,7 @@
 
 from typing import Optional
 
-from z3 import And, Bool, BoolRef, Implies, If, Xor, PbEq, PbGe, PbLe
+from z3 import And, Bool, Not, BoolRef, Implies, If, Or, Xor, PbEq, PbGe, PbLe
 
 from processscheduler.base import _Constraint
 
@@ -294,24 +294,36 @@ class ScheduleNTasksInTimeIntervals(_TaskConstraint):
         if not isinstance(list_of_time_intervals, list):
             raise TypeError('list_of_time_intervals must be a list of list')
 
+        # check for special case
+        # for the first interval, it is a bit special: if the lower bound is different
+        # from zero, we have to handle the case where the start and/or end are scheduled
+        # before the first allowed interval
+        first_interval = list_of_time_intervals[0]
+        lower_bound_first_interval = first_interval[0]
+        is_first_bound_greater_than_zero = False
+        if lower_bound_first_interval > 0:
+            is_first_bound_greater_than_zero = True
+
         # count the number of tasks that re scheduled in this time interval
         all_bools =[]
         for task in list_of_tasks:
-            # create a bool variable
-            # set this boolean to True if the task is in the time range
+            # for this task, the logic expression is that any of its start or end must be
+            # between two consecutive intervals
             i = 0
-            for time_interval_lower_bound,  time_interval_upper_bound in list_of_time_intervals:
-                b = Bool('InTimeIntervalTask_%s_%i' % (task.name, i))
-                asst = If(And(task.start >= time_interval_lower_bound,
-                              task.start <= time_interval_upper_bound,
-                              task.end >= time_interval_lower_bound,
-                              task.end <= time_interval_upper_bound),
-                          b == True,  # consequence
-                          b == False)  # else
-                self.set_applied_not_applied_assertions(asst)
-                i += 1
-                all_bools.append(b)
+            b = Bool('InTimeIntervalTask_%s_%i' % (task.name, i))
+            cstrs = []
+            for time_interval in list_of_time_intervals:
+                lower_bound, upper_bound = time_interval
+                cstrs += [task.start >= lower_bound, task.end <= upper_bound,
+                             Not(And(task.start < lower_bound, task.end > lower_bound)),  # overlap at start
+                             Not(And(task.start < upper_bound, task.end > upper_bound)),   # overlap at end
+                             Not(And(task.start < lower_bound, task.end > upper_bound))]   # full overlap
+            asst = Implies(b, And(cstrs))
+            self.set_applied_not_applied_assertions(asst)
+            all_bools.append(b)
+
+        # we also have to exclude all the other cases, where start or end can be between two intervals
         # then set the constraint for the number of tasks to schedule
-        asst_2 = problem_function[kind]([(scheduled, True) for scheduled in all_bools],
-                                        nb_tasks_to_schedule)
-        self.set_applied_not_applied_assertions(asst_2)
+        asst_pb = problem_function[kind]([(scheduled, True) for scheduled in all_bools],
+                                          nb_tasks_to_schedule)
+        self.set_applied_not_applied_assertions(asst_pb)
