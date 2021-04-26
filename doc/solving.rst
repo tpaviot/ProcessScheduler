@@ -13,7 +13,7 @@ A :class:`SchedulingSolver` instance takes a :class:`SchedulingProblem` instance
 
 It takes three optional arguments:
 
-- :attr:`verbosity`: False by default, if set to True will output many useful information
+- :attr:`debug`: False by default, if set to True will output many useful information.
 
 - :attr:`max_time`: in seconds, the maximal time allowed to find a solution. Default is 60s.
 
@@ -90,6 +90,10 @@ Then, we can request for another solution:
    Solution for task_1.start: 1
 
 You can recursively call :func:`find_another_solution` to find all possible solutions, until the solver fails to return a new one.
+
+Run in debug mode
+-----------------
+If the :attr:`debug` attribute is set to True, the z3 solver is run with the unsat_core option. This will result in a much longer computation time, but this will help identifying the constraints which conflict. Because of this higher consumption of resources, the debug flag should be used only if the solver did not fin any solution, after a first resolution gave no answer. 
 
 Render to a Gantt chart
 -----------------------

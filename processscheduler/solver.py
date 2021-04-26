@@ -30,56 +30,58 @@ from processscheduler.solution import SchedulingSolution, TaskSolution, Resource
 class SchedulingSolver:
     """ A solver class """
     def __init__(self, problem,
-                 verbosity: Optional[bool] = False,
+                 debug: Optional[bool] = False,
                  max_time: Optional[int] = 60,
                  parallel: Optional[bool] = False):
         """ Scheduling Solver
 
-        verbosity: True or False, False by default
+        debug: True or False, False by default
         max_time: time in seconds, 60 by default
         parallel: True to enable mutlthreading, False by default
         """
         self._problem = problem
         self.problem_context = problem.context
 
-        self._verbosity = verbosity
-        if verbosity:
+        self.debug = debug
+        if debug:
             set_option("verbose", 2)
 
         # set timeout
         set_option("timeout", max_time * 1000)  # in ms
 
         # create the solver
+        print('Solver type:\n===========')
         if self.problem_context.objectives:
             self._solver = Optimize()  # Solver with optimization
-            if verbosity:
-                print("Solver with optimization enabled")
+            if debug:
+                print("\tsolver with optimization enabled")
         else:
             # see this url for a documentation about logics
             # http://smtlib.cs.uiowa.edu/logics.shtml
             self._solver = Solver()
-            if verbosity:
-                print("Solver without optimization enabled")
+            if debug:
+                set_option(unsat_core=True)
+                print("\tsolver without optimization enabled")
 
         if parallel:
             set_option("parallel.enable", True)  # enable parallel computation
 
         # add all tasks assertions to the solver
         for task in self.problem_context.tasks:
-            self._solver.add(task.get_assertions())
-            self._solver.add(task.end <= self._problem.horizon)
+            self.add_constraint(task.get_assertions())
+            self.add_constraint(task.end <= self._problem.horizon)
 
         # then process tasks constraints
         for constraint in self.problem_context.constraints:
-            self._solver.add(constraint)
+            self.add_constraint(constraint)
 
         # process resources requirements
         for ress in self.problem_context.resources:
-            self._solver.add(ress.get_assertions())
+            self.add_constraint(ress.get_assertions())
 
         # process indicators
         for indic in self.problem_context.indicators:
-            self._solver.add(indic.get_assertions())
+            self.add_constraint(indic.get_assertions())
 
         self.process_work_amount()
 
@@ -87,6 +89,19 @@ class SchedulingSolver:
 
         # each time the solver is called, the current_solution is stored
         self.current_solution = None
+
+    def add_constraint(self, cstr) -> bool:
+        # set the method to use to add constraints
+        # in debug mode this is assert_and_track, to be able to trace
+        # unsat core, in regular mode this is the add function
+        if self.debug:
+            if isinstance(cstr, list):
+                for c in cstr:
+                    self._solver.assert_and_track(c, '%s' % c)
+            else:
+                self._solver.assert_and_track(cstr, '%s' % cstr)
+        else:
+            self._solver.add(cstr)
 
     def create_objectives(self) -> None:
         """ create optimization objectives """
@@ -108,31 +123,39 @@ class SchedulingSolver:
                     interv_low, interv_up = required_resource.busy_intervals[task]
                     work_contribution = required_resource.productivity * (interv_up - interv_low)
                     work_total_for_all_resources.append(work_contribution)
-                self._solver.add(Sum(work_total_for_all_resources) >= task.work_amount)
+                self.add_constraint(Sum(work_total_for_all_resources) >= task.work_amount)
 
     def check_sat(self) -> bool:
         """ check satisfiability """
         init_time = time.perf_counter()
         sat_result  = self._solver.check()
         final_time = time.perf_counter()
-        print('%s Satisfiability checked in %.2fs' % (self._problem.name, final_time - init_time))
 
-        if self._verbosity:
-            print("\tAssertions:\n\t======")
+        if self.debug:
+            print('Assertions:\n===========')
             for assertion in self._solver.assertions():
-                print("\t", assertion)
-            print("\tObjectives:\n\t======")
+                print('\t->', assertion)
             if isinstance(self._solver, Optimize):
+                print('\tObjectives:\n\t======')
                 for obj in self._solver.objectives():
                     print('\t', obj)
+        print('SAT computation time:\n=====================')
+        print('\t%s satisfiability checked in %.2fs' % (self._problem.name, final_time - init_time))
+
         if sat_result == unsat:
-            print("No solution exists for problem %s." % self._problem.name)
+            print("SAT result:\n===========")
+            print("\tNo solution exists for problem %s." % self._problem.name)
+            if self.debug:
+                unsat_core = self._solver.unsat_core()
+                print('\t%i unsatisfied assertion(s) (probable conflict):' % len(unsat_core))
+                for c in unsat_core:
+                    print('\t->%s' % c)
             return False
 
         if sat_result == unknown:
             reason = self._solver.reason_unknown()
-            print("No solution can be found for problem %s because: %s" % (self._problem.name,
-                                                                           reason))
+            print("\tNo solution can be found for problem %s because: %s" % (self._problem.name,
+                                                                             reason))
             return False
 
         return True
@@ -238,7 +261,7 @@ class SchedulingSolver:
         solution = self._solver.model()
         self.current_solution = solution
 
-        if self._verbosity:
+        if self.debug:
             print('Solver satistics:')
             for key, value in self._solver.statistics():
                 print('\t%s: %s' % (key, value))
@@ -258,7 +281,7 @@ class SchedulingSolver:
             warnings.warn('No current solution. First call the solve() method.')
             return False
         current_variable_value = self.current_solution[variable].as_long()
-        self._solver.add(variable != current_variable_value)
+        self.add_constraint(variable != current_variable_value)
         return self.solve()
 
     def export_to_smt2(self, smt_filename):

@@ -63,7 +63,7 @@ class TestCumulative(unittest.TestCase):
         pb_bs.add_constraint(ps.TaskStartAt(t2, 1))
 
         # plot solution
-        solver = ps.SchedulingSolver(pb_bs, verbosity=False)
+        solver = ps.SchedulingSolver(pb_bs, debug=False)
         solution = solver.solve()
         self.assertTrue(solution)
 
@@ -83,7 +83,7 @@ class TestCumulative(unittest.TestCase):
         pb_bs.add_constraint(ps.TaskStartAt(t2, 1))
 
         # plot solution
-        solver = ps.SchedulingSolver(pb_bs, verbosity=False)
+        solver = ps.SchedulingSolver(pb_bs, debug=False)
         solution = solver.solve()
         self.assertTrue(solution)
 
@@ -106,7 +106,7 @@ class TestCumulative(unittest.TestCase):
         pb_bs.add_constraint(ps.TaskStartAt(t2, 1))
 
         # plot solution
-        solver = ps.SchedulingSolver(pb_bs, verbosity=False)
+        solver = ps.SchedulingSolver(pb_bs, debug=False)
         solution = solver.solve()
         self.assertTrue(solution)
         self.assertTrue(solution.tasks[t1.name].scheduled)
