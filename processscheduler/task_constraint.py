@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+import uuid
 from typing import Optional
 
 from z3 import And, Bool, Not, BoolRef, Implies, Xor, PbEq, PbGe, PbLe
@@ -299,19 +300,17 @@ class ScheduleNTasksInTimeIntervals(_TaskConstraint):
         for task in list_of_tasks:
             # for this task, the logic expression is that any of its start or end must be
             # between two consecutive intervals
-            i = 0
             bools_for_this_task = []
             for time_interval in list_of_time_intervals:
-                b = Bool('InTimeIntervalTask_%s_%i' % (task.name, i))
+                task_in_time_interval = Bool('InTimeIntervalTask_%s_%i' % (task.name, uuid.uuid4().int))
                 lower_bound, upper_bound = time_interval
                 cstrs = [task.start >= lower_bound, task.end <= upper_bound,
-                         Not(And(task.start < lower_bound, task.end > lower_bound)),  # overlap at start
+                         Not(And(task.start < lower_bound, task.end > lower_bound)),   # overlap at start
                          Not(And(task.start < upper_bound, task.end > upper_bound)),   # overlap at end
                          Not(And(task.start < lower_bound, task.end > upper_bound))]   # full overlap
-                asst = Implies(b, And(cstrs))
+                asst = Implies(task_in_time_interval, And(cstrs))
                 self.set_applied_not_applied_assertions(asst)
-                bools_for_this_task.append(b)
-                i += 1
+                bools_for_this_task.append(task_in_time_interval)
             # only one maximum bool to True from the previous possibilities
             asst_tsk = PbLe([(scheduled, True) for scheduled in bools_for_this_task], 1)
             self.set_applied_not_applied_assertions(asst_tsk)
