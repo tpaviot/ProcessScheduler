@@ -98,15 +98,14 @@ If the :attr:`debug` attribute is set to True, the z3 solver is run with the uns
 Render to a Gantt chart
 -----------------------
 
-Call the :func:`render_gantt_matplotlib` to render the solution as a Gantt chart. The time line is from 0 to :attr:`horizon` value, you can choose to render either Tasks or Resources (default).
+Call the :func:`render_gantt_matplotlib` to render the solution as a Gantt chart. The time line is from 0 to :attr:`horizon` value, you can choose to render either :attr:`Task` or :attr:`Resource` (default).
 
 .. code-block:: python
 
     solution = solver.solve()
     if solution is not None:
-        solution.render_gantt_matplotlib()  # default render_mode is 'Resources'
-        # a second gantt chart, in 'Tasks' mode
-        solution.render_gantt_matplotlib(render_mode='Tasks')
+        solution.render_gantt_matplotlib()  # default render_mode is 'Resource'
+        # a second gantt chart, in 'Task' mode
+        solution.render_gantt_matplotlib(render_mode='Task')
 
-
-If you prefer **plotly**, just change the methof name to use to :func:`render_gantt_plotly`.
+If you prefer **plotly**, just use the method name :func:`render_gantt_plotly`.
