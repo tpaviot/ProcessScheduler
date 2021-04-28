@@ -194,5 +194,6 @@ class ScheduleNTasksInTimeIntervals(unittest.TestCase):
         self.assertTrue(task1_in_interval_1 != task2_in_interval_1)  # xor
         self.assertTrue(task1_in_interval_2 != task2_in_interval_2)  # xor
 
+
 if __name__ == "__main__":
     unittest.main()
