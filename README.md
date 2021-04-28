@@ -7,10 +7,51 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4480745.svg)](https://doi.org/10.5281/zenodo.4480745)
 
 # ProcessScheduler
-A python library to compute resource-constrained task schedules. Documentation at https://processscheduler.readthedocs.io/
+A python library to compute resource-constrained task schedules.
 
-## About
-The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the SMT [Z3Prover](https://github.com/Z3Prover/z3). This project was inspired by the work from Tim Nonner at https://github.com/timnon/pyschedule.
+The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the SAT/SMT [Z3 Theorem Prover](https://github.com/Z3Prover/z3).
+
+## Documentation
+
+User-end documentation available at https://processscheduler.readthedocs.io/
+
+## Slack
+
+Join the [ProcesScheduler slack workspace](https://join.slack.com/t/processscheduler/shared_invite/zt-pa152rki-126YyMsuLNxhOv_suqKtkQ) for any question/suggestion/discussion.
+
+## Features
+
+*   tasks: zero duration task, fixed duration task, variable duration task, work amount, optional task,
+*   resources: worker, cumulative workers, workers selection, cost_per_period and productivity attributes,
+*   task constraints: precedence, start synced, end synced, start at, end at, start after, end before,
+*   optional tasks and task constraints: task schedule condition, tasks schedule dependencies,
+*   resource and optional resource constraints: AllSameSelected, AllDifferentSelected,
+*   first-order-logic operations (not, or, xor, and, implies, if/then/else) between task or resource constraints,
+*   builtin and customized indicators (resource utilization, resource cost),
+*   single and multiobjective optimization (makespan, flowtime, earliest, latest, resource cost, etc.),
+*   exporters: smtlib2.0, json
+*   Gantt chart rendering using matplotlib or plotly
+
+## Install
+
+Install with pip.
+
+```bash
+pip install ProcessScheduler
+```
+
+The Z3 theorem prover is the only required dependency.
+
+Optional dependencies (install either with pip or conda):
+
+*   matplotlib (Gantt chart rendering),
+*   plotly (Gantt chart rendering).
+
+## Try online
+
+There are some [Jupypter notebooks](https://github.com/tpaviot/ProcessScheduler/tree/master/example-notebooks). They can be executed online at [myBinder.org](https://mybinder.org/v2/gh/tpaviot/ProcessScheduler/HEAD?filepath=example-notebooks)
+
+## Helloworld
 
 ```python
 import processscheduler as ps
@@ -36,45 +77,9 @@ solution.render_gantt_matplotlib()
 
 ![png](examples-notebooks/pics/hello_world_gantt.svg)
 
-## Install
-
-Install with pip.
-
-```bash
-pip install ProcessScheduler
-```
-
-The Z3 theorem prover is the only required dependency.
-
-Optional dependencies:
-
-*   matplotlib (Gantt chart rendering),
-*   plotly (Gantt chart rendering).
-
-## Features
-
-*   tasks: zero duration task, fixed duration task, variable duration task, work amount, optional task,
-*   resources: worker, cumulative workers, workers selection, cost_per_period and productivity attributes,
-*   task constraints: precedence, start synced, end synced, start at, end at, start after, end before,
-*   optional tasks,
-*   optional task constraints: task schedule condition, tasks schedule dependencies,
-*   resource constraints: AllSameSelected, AllDifferentSelected,
-*   optional resource constraints,
-*   first-order-logic operations (not, or, xor, and, implies, if/then/else) between task or resource constraints,
-*   builtin indicators (resource utilization, resource cost),
-*   customized indicators,
-*   SAT/SMT solver with or without optimization,
-*   objective (makespan, flowtime, earliest, latest, resource cost),
-*   exporters: smtlib2.0, json
-*   Gantt chart rendering using matplotlib or plotly
-
-## Jupyter notebooks
-
-There are some [Jupypter notebooks](https://github.com/tpaviot/ProcessScheduler/tree/master/example-notebooks). They can be executed online at [myBinder.org](https://mybinder.org/v2/gh/tpaviot/ProcessScheduler/HEAD?filepath=example-notebooks)
-
 ## Code quality
 
-ProcessScheduler uses the following tools/methods to ensure code quality:
+ProcessScheduler uses the following tools to ensure code quality:
 
 *   unittests,
 *   code coverage (coverage.py, codecov.io),
