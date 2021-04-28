@@ -32,17 +32,22 @@ class SchedulingSolver:
     def __init__(self, problem,
                  debug: Optional[bool] = False,
                  max_time: Optional[int] = 60,
+                 optimize_priority = 'lex',
                  parallel: Optional[bool] = False):
         """ Scheduling Solver
 
         debug: True or False, False by default
         max_time: time in seconds, 60 by default
+        optimize_priority: one of 'lex', 'box', 'pareto'
         parallel: True to enable mutlthreading, False by default
         """
         self._problem = problem
         self.problem_context = problem.context
-
         self.debug = debug
+        # objectives list
+        self.optimize_priority = optimize_priority
+        self.objectives = []  # an emtpy list so far
+
         if debug:
             set_option("verbose", 2)
 
@@ -53,12 +58,13 @@ class SchedulingSolver:
         print('Solver type:\n===========')
         if self.problem_context.objectives:
             self._solver = Optimize()  # Solver with optimization
+            self._solver.set(priority=self.optimize_priority)
             print("\t-> Solver with optimization enabled")
         else:
             # see this url for a documentation about logics
             # http://smtlib.cs.uiowa.edu/logics.shtml
             self._solver = Solver()
-            print("\t-> Standard SAT/SMT solverd")
+            print("\t-> Standard SAT/SMT solver")
             if debug:
                 set_option(unsat_core=True)
 
@@ -108,9 +114,11 @@ class SchedulingSolver:
             if isinstance(obj, MaximizeObjective):
                 # look for the minimum horizon, i.e. the shortest
                 # time horizon to complete all tasks
-                self._solver.maximize(obj.target)
+                new_max = self._solver.maximize(obj.target)
+                self.objectives.append(['%s(max objective)' % obj.target, new_max])
             elif isinstance(obj, MinimizeObjective):
-                self._solver.minimize(obj.target)
+                new_min = self._solver.minimize(obj.target)
+                self.objectives.append(['%s(min objective)' % obj.target, new_min])
 
     def process_work_amount(self) -> None:
         """ for each task, compute the total work for all required resources """
@@ -259,6 +267,13 @@ class SchedulingSolver:
 
         solution = self._solver.model()
         self.current_solution = solution
+
+        if self.objectives:
+            print('Optimization results:\n=====================')
+            print('\t->Objective priority specification: %s' % self.optimize_priority)
+            print('\t->Objective values:')
+            for objective_name, objective_value in self.objectives:  # if ever no objectives, this line will do nothing
+                print('\t\t->%s: %s' % (objective_name, objective_value.value()))
 
         if self.debug:
             print('Solver satistics:')
