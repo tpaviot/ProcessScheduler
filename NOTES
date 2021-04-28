@@ -1,5 +1,11 @@
 RELEASE NOTES
 
+Version 0.6.1
+=============
+Misc:
+  - fix regression in render_matplotlib
+  - fix features jupyter notebook
+
 Version 0.6.0
 =============
 New features:
