@@ -148,10 +148,6 @@ class SchedulingSolution:
                            Finish=task_solution.end_time,
                            Resource=resource_text))
 
-        color_data = 'Task'  # by default
-        if render_mode == 'Task':
-            color_data = 'Resource'
-
         gantt_title = '%s Gantt chart' % self.problem.name
         # add indicators value to title
         if self.indicators and show_indicators:
