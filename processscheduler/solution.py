@@ -114,7 +114,9 @@ class SchedulingSolution:
         self.resources[resource_solution.name] = resource_solution
 
     def render_gantt_plotly(self,
+                            fig_size: Optional[Tuple[int, int]] = None,
                             show_plot: Optional[bool] = True,
+                            show_indicators: Optional[bool] = True,
                             render_mode: Optional[str] = 'Resource',
                             fig_filename: Optional[str] = None,) -> None:
         """Use plotly.create_gantt method, see
@@ -150,12 +152,20 @@ class SchedulingSolution:
         if render_mode == 'Task':
             color_data = 'Resource'
 
-        fig = create_gantt(df, index_col=render_mode, show_colorbar=True, showgrid_x=True,
-                           showgrid_y=True, show_hover_fill=True,
-                           title='%s Gantt chart' % self.problem.name,
-                           bar_width=0.5)
-        #fig = px.timeline(df, x_start='Start', x_end='Finish', y=render_mode, color=color_data)
-        #fig.update_yaxes(autorange="reversed")
+        gantt_title = '%s Gantt chart' % self.problem.name
+        # add indicators value to title
+        if self.indicators and show_indicators:
+            for indicator_name in self.indicators:
+                gantt_title +=" - %s: %i" % (indicator_name, self.indicators[indicator_name])
+
+        if fig_size is None:
+            fig = create_gantt(df, index_col=render_mode, show_colorbar=True, showgrid_x=True,
+                               showgrid_y=True, show_hover_fill=True,
+                               title=gantt_title, bar_width=0.5)
+        else:
+            fig = create_gantt(df, index_col=render_mode, show_colorbar=True, showgrid_x=True,
+                               showgrid_y=True, show_hover_fill=True,
+                               title=gantt_title, bar_width=0.5, width=fig_size[0], height=fig_size[1])
 
         if fig_filename is not None:
             fig.write_image(fig_filename)
@@ -164,7 +174,7 @@ class SchedulingSolution:
             fig.show()
 
     def render_gantt_matplotlib(self,
-                                fig_size:Optional[Tuple[int, int]] = (9,6),
+                                fig_size: Optional[Tuple[int, int]] = (9,6),
                                 show_plot: Optional[bool] = True,
                                 show_indicators: Optional[bool] = True,
                                 render_mode: Optional[str] = 'Resources',
