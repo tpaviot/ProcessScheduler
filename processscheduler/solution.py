@@ -45,7 +45,7 @@ class TaskSolution:
         self.assigned_resources = []
 
 class ResourceSolution:
-    """Class to represent the solution for the resource assignements."""
+    """Class to represent the solution for the resource assignments."""
     def __init__(self, name: str):
         self.name = name
         self.type = ''  # the name of the task type

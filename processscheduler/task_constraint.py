@@ -263,7 +263,7 @@ class ForceScheduleNOptionalTasks(_TaskConstraint):
         # actually optional
         for task in list_of_optional_tasks:
             if not task.optional:
-                raise TypeError('This class %s must excplicitly be set as optional.' % task.name)
+                raise TypeError('This class %s must excplicitely be set as optional.' % task.name)
         # all scheduled variables to take into account
         sched_vars = []
         for task in list_of_optional_tasks:
