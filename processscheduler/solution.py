@@ -173,7 +173,7 @@ class SchedulingSolution:
                                 fig_size: Optional[Tuple[int, int]] = (9,6),
                                 show_plot: Optional[bool] = True,
                                 show_indicators: Optional[bool] = True,
-                                render_mode: Optional[str] = 'Resources',
+                                render_mode: Optional[str] = 'Resource',
                                 fig_filename: Optional[str] = None) -> None:
         """ generate a gantt diagram using matplotlib.
         Inspired by
