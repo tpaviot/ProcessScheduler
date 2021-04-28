@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-__VERSION__ = '0.6.0dev'
+__VERSION__ = '0.6.0'
 
 try:
     from z3 import BoolRef
