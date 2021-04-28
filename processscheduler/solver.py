@@ -53,15 +53,14 @@ class SchedulingSolver:
         print('Solver type:\n===========')
         if self.problem_context.objectives:
             self._solver = Optimize()  # Solver with optimization
-            if debug:
-                print("\tsolver with optimization enabled")
+            print("\t-> Solver with optimization enabled")
         else:
             # see this url for a documentation about logics
             # http://smtlib.cs.uiowa.edu/logics.shtml
             self._solver = Solver()
+            print("\t-> Standard SAT/SMT solverd")
             if debug:
                 set_option(unsat_core=True)
-                print("\tsolver without optimization enabled")
 
         if parallel:
             set_option("parallel.enable", True)  # enable parallel computation
