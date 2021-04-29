@@ -24,7 +24,7 @@ from processscheduler.base import (_NamedUIDObject, is_positive_integer,
 import processscheduler.context as ps_context
 
 #
-# Utilisy functions
+# Utility functions
 #
 def _distribute_p_over_n(p, n):
     """Returns a list of integer p distributed over n values."""
