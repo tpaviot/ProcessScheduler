@@ -65,6 +65,29 @@ class TestResourceUnavailable(unittest.TestCase):
         solution = solver.solve()
         self.assertFalse(solution)
 
+    def test_cumulative_4(self):
+        pb_bs = ps.SchedulingProblem("ResourceUnavailableCumulative1", 10)
+        # tasks
+        t1 = ps.FixedDurationTask('T1', duration=2)
+        t2 = ps.FixedDurationTask('T2', duration=2)
+        t3 = ps.FixedDurationTask('T3', duration=2)
+
+        # workers
+        r1 = ps.CumulativeWorker('Machine1', size=3)
+
+        # resource assignment
+        t1.add_required_resource(r1)
+        t2.add_required_resource(r1)
+        t3.add_required_resource(r1)
+
+        c1 = ps.ResourceUnavailable(r1, [(1, 10)])
+        pb_bs.add_constraint(c1)
+
+        # plot solution
+        solver = ps.SchedulingSolver(pb_bs)#, debug=True)
+        solution = solver.solve()
+        self.assertFalse(solution)
+
 
 if __name__ == "__main__":
     unittest.main()
