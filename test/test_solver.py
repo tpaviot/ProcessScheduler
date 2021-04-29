@@ -45,9 +45,9 @@ def build_complex_problem(name:str, n: int) -> ps.SchedulingProblem:
 
     return problem
 
-def _solve_problem(problem, verbose=False):
+def _solve_problem(problem, debug=True):
     """ create a solver instance, return True if sat else False """
-    solver = ps.SchedulingSolver(problem, debug=verbose)
+    solver = ps.SchedulingSolver(problem, debug)
     solution = solver.solve()
     return solution
 
@@ -72,7 +72,7 @@ class TestSolver(unittest.TestCase):
         problem.add_constraint(ps.TaskStartAt(task, 1))
         problem.add_constraint(ps.TaskEndAt(task, 4))
 
-        solution = _solve_problem(problem, verbose=True)
+        solution = _solve_problem(problem)
         self.assertTrue(solution)
         # task should have been scheduled with start at 0
         # and end at 2
@@ -290,7 +290,9 @@ class TestSolver(unittest.TestCase):
 
         problem.add_objective_priorities()
 
-        solution = _solve_problem(problem)
+        # set debug to False because assert_and_track
+        # does not properly handles optimization
+        solution = _solve_problem(problem, debug=False)
         self.assertTrue(solution)
         # check that the task is not scheduled to start à 0
         # the only solution is 1
@@ -396,7 +398,7 @@ class TestSolver(unittest.TestCase):
         worker_1 = ps.Worker('Worker1', productivity=2)
         task_1.add_required_resource(worker_1)
         # solve
-        solution = _solve_problem(problem, verbose=True)
+        solution = _solve_problem(problem)
         self.assertTrue(solution)
         # the expected duration for task 1 is 6
         self.assertEqual(solution.tasks[task_1.name].duration, 6)
@@ -464,36 +466,6 @@ class TestSolver(unittest.TestCase):
         solution = solver.solve()
         self.assertTrue(solution)
         self.assertEqual(solution.horizon, 4)
-
-    def test_resource_unavailable(self) -> None:
-        pb = ps.SchedulingProblem('ResourceUnavailable', horizon=10)
-        task_1 = ps.FixedDurationTask('task1', duration = 3)
-        worker_1 = ps.Worker('Worker1')
-        task_1.add_required_resource(worker_1)
-        c1 = ps.ResourceUnavailable(worker_1, [(1, 3), (6, 8)])
-        pb.add_constraint(c1)
-        solver = ps.SchedulingSolver(pb)
-        solution = solver.solve()
-        self.assertTrue(solution)
-        self.assertEqual(solution.tasks[task_1.name].start, 3)
-        self.assertEqual(solution.tasks[task_1.name].end, 6)
-
-    def test_resource_unavailable_2(self) -> None:
-        pb = ps.SchedulingProblem('ResourceUnavailable2', horizon=10)
-        task_1 = ps.FixedDurationTask('task1', duration = 3)
-        worker_1 = ps.Worker('Worker1')
-        task_1.add_required_resource(worker_1)
-        # difference with the first one: build 2 constraints
-        # merged using a and_
-        c1 = ps.ResourceUnavailable(worker_1, [(1, 3)])
-        c2 = ps.ResourceUnavailable(worker_1, [(6, 8)])
-        pb.add_constraint(ps.and_([c1, c2]))
-        # that should not change the problem solution
-        solver = ps.SchedulingSolver(pb)
-        solution = solver.solve()
-        self.assertTrue(solution)
-        self.assertEqual(solution.tasks[task_1.name].start, 3)
-        self.assertEqual(solution.tasks[task_1.name].end, 6)
 
 
 if __name__ == "__main__":

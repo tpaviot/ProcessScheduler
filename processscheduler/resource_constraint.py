@@ -18,11 +18,41 @@
 from typing import Optional
 import uuid
 
+from z3 import Xor
+
 from processscheduler.task import UnavailabilityTask
+from processscheduler.resource import Worker, CumulativeWorker
 from processscheduler.base import _Constraint
 
+class ResourceUnavailable(_Constraint):
+    """ set unavailablity or a resource, in terms of busy intervals
+    """
+    def __init__(self,
+                 resource,
+                 list_of_time_intervals,
+                 optional: Optional[bool] = False) -> None:
+        """
+
+        :param resource: the resource
+        :param list_of_intervals: periods for which the resource is unavailable for any task.
+        for example [(0, 2), (5, 8)]
+        """
+        super().__init__()
+        # for each interval we create a task 'UnavailableResource%i'
+        if isinstance(resource, Worker):
+            workers = [resource]
+        elif isinstance(resource, CumulativeWorker):
+            workers = resource.cumulative_workers
+
+        for interval_lower_bound, interval_upper_bound in list_of_time_intervals:
+            # add constraints on each busy interval
+            for worker in workers:
+                for start_task_i, end_task_i in worker.get_busy_intervals():
+                    self.set_applied_not_applied_assertions(Xor(start_task_i >= interval_upper_bound,
+                                                                end_task_i <= interval_lower_bound))
+
 #
-# SameWorkers constraint
+# AlternativeWorker specific constraints
 #
 class AllSameSelected(_Constraint):
     """ Selected workers by both AlternateWorkers are constrained to
@@ -49,23 +79,3 @@ class AllDifferentSelected(_Constraint):
         for res_work_1 in alternate_workers_1.selection_dict:
             if res_work_1 in alternate_workers_2.selection_dict:
                 self.set_applied_not_applied_assertions(alternate_workers_1.selection_dict[res_work_1] != alternate_workers_2.selection_dict[res_work_1])
-
-class ResourceUnavailable(_Constraint):
-    """ set unavailablity or a resource, in terms of busy intervals
-    """
-    def __init__(self, resource, list_of_intervals):
-        """
-
-        :param resource: the resource
-        :param list_of_intervals: periods for which the resource is unavailable for any task.
-        for example [(0, 2), (5, 8)]
-        """
-        super().__init__()
-        # for each interval we create a task 'UnavailableResource%i'
-        for interval_lower_bound, interval_upper_bound in list_of_intervals:
-            new_t = UnavailabilityTask('%sNotAvailable%i' % (resource.name, uuid.uuid4().int),
-                                       duration = interval_upper_bound - interval_lower_bound)
-            # add this resource to the task
-            self.add_assertion(new_t.start == interval_lower_bound)
-            self.add_assertion(new_t.end == interval_upper_bound)
-            new_t.add_required_resource(resource)

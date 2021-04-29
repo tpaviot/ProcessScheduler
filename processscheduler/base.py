@@ -17,6 +17,7 @@
 
 from typing import List, Optional
 import uuid
+import warnings
 
 from z3 import BoolRef, Bool, Implies, PbGe, PbEq, PbLe
 
@@ -69,14 +70,18 @@ class _NamedUIDObject:
         assertions_str = ''.join(["%s" % ass for ass in self.assertions])
         return str_to_return + assertions_str
 
-    def add_assertion(self, z3_assertion: BoolRef) -> None:
+    def add_assertion(self, z3_assertion: BoolRef) -> bool:
         """
         Add a z3 assertion to the list of assertions to be satisfied.
 
         Args:
             z3_assertion: the z3 assertion
         """
+        if z3_assertion in self.assertions:
+            warnings.warn('assertion %s already added.' % z3_assertion)
+            return False
         self.assertions.append(z3_assertion)
+        return True
 
     def get_assertions(self) -> List[BoolRef]:
         """ Return the assertions list """

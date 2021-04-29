@@ -7,7 +7,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4480745.svg)](https://doi.org/10.5281/zenodo.4480745)
 
 # ProcessScheduler
-A python library to compute resource-constrained task schedules.
+A python library to compute resource-constrained task schedules. Express your scheduling problem in terms of tasks, resources and constraints, ProcessScheduler will find one/the best schedule that satifies all the contraints.
 
 The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the SAT/SMT [Z3 Theorem Prover](https://github.com/Z3Prover/z3).
 
