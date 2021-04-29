@@ -66,11 +66,13 @@ Resources are assigned to tasks in two steps:
 .. code-block:: python
 
     assemble_engine = FixedDurationTask('AssembleCarEngine', 10)
+    paint_engine = FixedDurationTask('PaintCarEngine', 10)
+    
     john = Worker('JohnBenis')
+    alice = Worker('AliceParker')
+    
     assemble_engine.add_required_resource(john)
-
-.. note::
-   You can add any number of required resources to a task, but they all have to be different instances.
+    paint_engine.add_required_resources([john, alice])
 
 2. After the solver has found a solution, resources are assigned to tasks. In the case above, it is obvious that JohnBenis will actually be assigned to the task :const:`AssembleCarEngine`. There can be cases where it is not possible to guess which resource will be assigned by the solver, especially if many different resources can be used to perform one specific task. In that case, let the solver decides which resource(s) to assign by defining :ref:`alternative-workers` (see below).
 
