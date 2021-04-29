@@ -46,6 +46,8 @@ The following builtin objectives are available:
 
 - :func:`add_objective_makespan`: minimize the schedule horizon,
 
+- :func:`add_objective_resource_utilization`: maximize resource occupation,
+
 - :func:`add_objective_resource_cost`: minimize the total cost for selected resource(s),
 
 - :func:`add_objective_priorities`: minimize total priority indicator (tasks with high priorities will be scheduled before tasks with lower priorities, under the condition however that all constraints are satisfied),
