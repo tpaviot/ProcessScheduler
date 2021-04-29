@@ -21,6 +21,7 @@ import uuid
 from z3 import Xor
 
 from processscheduler.task import UnavailabilityTask
+from processscheduler.resource import Worker, CumulativeWorker
 from processscheduler.base import _Constraint
 
 class ResourceUnavailable(_Constraint):
@@ -38,17 +39,17 @@ class ResourceUnavailable(_Constraint):
         """
         super().__init__()
         # for each interval we create a task 'UnavailableResource%i'
+        if isinstance(resource, Worker):
+            workers = [resource]
+        elif isinstance(resource, CumulativeWorker):
+            workers = resource.cumulative_workers
+
         for interval_lower_bound, interval_upper_bound in list_of_time_intervals:
             # add constraints on each busy interval
-            for start_task_i, end_task_i in resource.get_busy_intervals():
-                self.set_applied_not_applied_assertions(Xor(start_task_i >= interval_upper_bound,
-                                                            end_task_i <= interval_lower_bound))
-            # create a fake task, not sure it is necessary
-            new_t = UnavailabilityTask('%sNotAvailable%i' % (resource.name, uuid.uuid4().int),
-                                       duration = interval_upper_bound - interval_lower_bound)
-            # add this resource to the task
-            self.add_assertion(new_t.start == interval_lower_bound)
-            self.add_assertion(new_t.end == interval_upper_bound)
+            for worker in workers:
+                for start_task_i, end_task_i in worker.get_busy_intervals():
+                    self.set_applied_not_applied_assertions(Xor(start_task_i >= interval_upper_bound,
+                                                                end_task_i <= interval_lower_bound))
 
 #
 # AlternativeWorker specific constraints

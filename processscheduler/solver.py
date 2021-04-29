@@ -79,7 +79,6 @@ class SchedulingSolver:
         # then process tasks constraints
         for constraint in self.problem_context.constraints:
             self.add_constraint(constraint)
-
         # process resources requirements
         for ress in self.problem_context.resources:
             self.add_constraint(ress.get_assertions())
@@ -102,8 +101,10 @@ class SchedulingSolver:
         if self.debug:
             if isinstance(cstr, list):
                 for c in cstr:
+                    print('Assert and track:\n\t-> %s' % c)
                     self._solver.assert_and_track(c, '%s' % c)
             else:
+                print('Assert and track:\n\t-> %s' % cstr)
                 self._solver.assert_and_track(cstr, '%s' % cstr)
         else:
             self._solver.add(cstr)
