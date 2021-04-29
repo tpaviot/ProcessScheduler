@@ -45,9 +45,9 @@ def build_complex_problem(name:str, n: int) -> ps.SchedulingProblem:
 
     return problem
 
-def _solve_problem(problem):
+def _solve_problem(problem, debug=True):
     """ create a solver instance, return True if sat else False """
-    solver = ps.SchedulingSolver(problem, debug=True)
+    solver = ps.SchedulingSolver(problem, debug)
     solution = solver.solve()
     return solution
 
@@ -290,7 +290,9 @@ class TestSolver(unittest.TestCase):
 
         problem.add_objective_priorities()
 
-        solution = _solve_problem(problem)
+        # set debug to False because assert_and_track
+        # does not properly handles optimization
+        solution = _solve_problem(problem, debug=False)
         self.assertTrue(solution)
         # check that the task is not scheduled to start à 0
         # the only solution is 1
