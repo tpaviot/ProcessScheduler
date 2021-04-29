@@ -45,9 +45,9 @@ def build_complex_problem(name:str, n: int) -> ps.SchedulingProblem:
 
     return problem
 
-def _solve_problem(problem, verbose=False):
+def _solve_problem(problem):
     """ create a solver instance, return True if sat else False """
-    solver = ps.SchedulingSolver(problem, debug=verbose)
+    solver = ps.SchedulingSolver(problem, debug=True)
     solution = solver.solve()
     return solution
 
@@ -72,7 +72,7 @@ class TestSolver(unittest.TestCase):
         problem.add_constraint(ps.TaskStartAt(task, 1))
         problem.add_constraint(ps.TaskEndAt(task, 4))
 
-        solution = _solve_problem(problem, verbose=True)
+        solution = _solve_problem(problem)
         self.assertTrue(solution)
         # task should have been scheduled with start at 0
         # and end at 2
@@ -396,7 +396,7 @@ class TestSolver(unittest.TestCase):
         worker_1 = ps.Worker('Worker1', productivity=2)
         task_1.add_required_resource(worker_1)
         # solve
-        solution = _solve_problem(problem, verbose=True)
+        solution = _solve_problem(problem)
         self.assertTrue(solution)
         # the expected duration for task 1 is 6
         self.assertEqual(solution.tasks[task_1.name].duration, 6)
