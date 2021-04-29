@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 DESCRIPTION = (
-      'A package to solve resource-constrained scheduling problems using SMT theory/solver.'
+      'A package to solve resource-constrained scheduling problems using SAT/SMT.'
 )
 
 CLASSIFIERS = [
@@ -20,7 +20,7 @@ CLASSIFIERS = [
 ]
 
 setup(name='ProcessScheduler',
-      version='0.6.1',
+      version='0.7.0dev',
       description=DESCRIPTION,
       long_description=open("README.md").read(),
       long_description_content_type="text/markdown",
