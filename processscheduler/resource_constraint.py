@@ -18,9 +18,8 @@
 from typing import Optional
 import uuid
 
-from z3 import And, Bool, Implies, Int, Not, Sum, Xor
+from z3 import And, Implies, Int, Sum, Xor
 
-from processscheduler.task import UnavailabilityTask
 from processscheduler.resource import Worker, CumulativeWorker
 from processscheduler.base import _Constraint
 
@@ -29,26 +28,28 @@ class ResourceCapacity(_Constraint):
     """ set a mini/maxi/exact number of slots a resource can be scheduled."""
     def __init__(self, resource,
                        dict_time_intervals_limits,
-                       kind: Optional[str] = 'exact',
+                       kind: Optional[str] = 'atmost',
                        optional: Optional[bool] = False) -> None:
         """The resource can be a single Worker or a CumulativeWorker.
 
         The list of time_intervals is a dict such as:
         [(1,20):6, (50,60):2] which means: in the interval (1,20), the resource might not use
         more than 6 slots. And no more than 2 time slots in the interval (50, 60)
+
+        kind: optional string, default to 'atmost', can be 'atleast' or 'exact'
         """
         super().__init__()
 
         self.optional = optional
 
-        #problem_function = {'atleast': PbGe, 'atmost': PbLe, 'exact': PbEq}
+        if kind not in ['exact', 'atmost', 'atleast']:
+            raise ValueError("kind must either be 'exact', 'atleast' or 'atmost'")
 
         if isinstance(resource, Worker):
             workers = [resource]
         elif isinstance(resource, CumulativeWorker):
             workers = resource.cumulative_workers
 
-        all_bools =[]
         for worker in workers:
             # for this task, the logic expression is that any of its start or end must be
             # between two consecutive intervals
@@ -75,7 +76,7 @@ class ResourceCapacity(_Constraint):
                                         end_task_i > upper_bound),
                                     dur == upper_bound - start_task_i)
                     self.set_applied_not_applied_assertions(asst3)
-                    # # all overlap
+                    # all overlap
                     asst4 = Implies(And(start_task_i < lower_bound,
                                         end_task_i > upper_bound),
                                     dur == upper_bound - lower_bound)
@@ -83,7 +84,15 @@ class ResourceCapacity(_Constraint):
 
                     durations.append(dur)
 
-                self.set_applied_not_applied_assertions(Sum(durations) <= number_of_time_slots)
+                # capacity constraint depends on the kind
+                if kind == 'exact':
+                    capa_constrt = Sum(durations) == number_of_time_slots
+                elif kind == 'atmost':
+                    capa_constrt = Sum(durations) <= number_of_time_slots
+                elif kind == 'atleast':
+                    capa_constrt = Sum(durations) >= number_of_time_slots
+
+                self.set_applied_not_applied_assertions(capa_constrt)
 
 
 class ResourceUnavailable(_Constraint):
@@ -100,6 +109,9 @@ class ResourceUnavailable(_Constraint):
         for example [(0, 2), (5, 8)]
         """
         super().__init__()
+
+        self.optional = optional
+
         # for each interval we create a task 'UnavailableResource%i'
         if isinstance(resource, Worker):
             workers = [resource]
