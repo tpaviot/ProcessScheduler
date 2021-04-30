@@ -284,7 +284,7 @@ class SchedulingSolver:
             for decl in solution.decls():
                 var_name = decl.name()
                 var_value = solution[decl]
-                print("\t%s=%s" %(var_name, var_value))
+                print("\t-> %s=%s" %(var_name, var_value))
 
         sol = self.build_solution(solution)
 
