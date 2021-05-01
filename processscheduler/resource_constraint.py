@@ -30,7 +30,8 @@ class ResourceCapacity(_Constraint):
                        dict_time_intervals_limits,
                        kind: Optional[str] = 'atmost',
                        optional: Optional[bool] = False) -> None:
-        """The resource can be a single Worker or a CumulativeWorker.
+        """Capacity constraints can be used to restrict the number tasks which are executed during a certain time period.
+        The resource can be a single Worker or a CumulativeWorker.
 
         The list of time_intervals is a dict such as:
         [(1,20):6, (50,60):2] which means: in the interval (1,20), the resource might not use
@@ -50,17 +51,19 @@ class ResourceCapacity(_Constraint):
         elif isinstance(resource, CumulativeWorker):
             workers = resource.cumulative_workers
 
-        for worker in workers:
-            # for this task, the logic expression is that any of its start or end must be
-            # between two consecutive intervals
-            for time_interval in dict_time_intervals_limits:
-                number_of_time_slots = dict_time_intervals_limits[time_interval]
+        for time_interval in dict_time_intervals_limits:
+            number_of_time_slots = dict_time_intervals_limits[time_interval]
+            lower_bound, upper_bound = time_interval
+            for worker in workers:
                 durations = []
+                # for this task, the logic expression is that any of its start or end must be
+                # between two consecutive intervals
                 for start_task_i, end_task_i in worker.get_busy_intervals():
-                    lower_bound, upper_bound = time_interval
                     # this variable allows to compute the occupation
                     # of the resource during the time interval
                     dur = Int('Duration_%s' % uuid.uuid4().int)
+                    # prevent solutions where duration would be negative
+                    self.set_applied_not_applied_assertions(dur >= 0)
                     # 4 different cases to take into account
                     asst1 = Implies(And(start_task_i >= lower_bound,
                                         end_task_i <= upper_bound),
@@ -84,15 +87,15 @@ class ResourceCapacity(_Constraint):
 
                     durations.append(dur)
 
-                # capacity constraint depends on the kind
-                if kind == 'exact':
-                    capa_constrt = Sum(durations) == number_of_time_slots
-                elif kind == 'atmost':
-                    capa_constrt = Sum(durations) <= number_of_time_slots
-                elif kind == 'atleast':
-                    capa_constrt = Sum(durations) >= number_of_time_slots
+            # capacity constraint depends on the kind
+            if kind == 'exact':
+                capa_constrt = Sum(durations) == number_of_time_slots
+            elif kind == 'atmost':
+                capa_constrt = Sum(durations) <= number_of_time_slots
+            elif kind == 'atleast':
+                capa_constrt = Sum(durations) >= number_of_time_slots
 
-                self.set_applied_not_applied_assertions(capa_constrt)
+            self.set_applied_not_applied_assertions(capa_constrt)
 
 
 class ResourceUnavailable(_Constraint):
