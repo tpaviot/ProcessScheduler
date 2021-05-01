@@ -16,7 +16,7 @@ copyright = "2020-2021, Thomas Paviot"
 author = "Thomas Paviot"
 
 # The full version, including alpha/beta/rc tags
-version = '0.6.1'
+version = '0.7.0dev'
 release = version
 
 # -- RTD configuration ------------------------------------------------
@@ -63,3 +63,7 @@ else:
     html_theme = "default"
 
 always_document_param_types = True
+
+pygments_style = 'default'
+
+highlight_language = 'autohotkey'
