@@ -21,3 +21,10 @@ Dev:
 [ ] Categorize task constraints
 
 [ ] Developer user guide, especially how to add constraints
+
+Misc/unordered:
+===============
+
+[ ] Resource status. A status is a set of real/boolean parameters (for instance the position of a point, the heat of an oven). That would enable to create tasks that change a resource status, from example "Move a crane from point A to point B" or "heat the oven from 25°C to 1300°C", given a certain time or speed.
+
+[ ] Test CapacityConstraint for cumulative workers
