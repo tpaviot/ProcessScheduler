@@ -277,18 +277,26 @@ class SchedulingSolver:
                 print('\t\t->%s: %s' % (objective_name, objective_value.value()))
 
         if self.debug:
-            print('Solver satistics:')
-            for key, value in self._solver.statistics():
-                print('\t%s: %s' % (key, value))
-            print('Solution:')
-            for decl in solution.decls():
-                var_name = decl.name()
-                var_value = solution[decl]
-                print("\t-> %s=%s" %(var_name, var_value))
+            self.print_statistics()
+            self.print_solution()
 
         sol = self.build_solution(solution)
 
         return sol
+
+    def print_statistics(self):
+        """A utility method that displays solver statistics"""
+        print('Solver satistics:')
+        for key, value in self._solver.statistics():
+            print('\t%s: %s' % (key, value))
+
+    def print_solution(self):
+        """A utility method that displays all internal variables for the current solution"""
+        print('Solution:')
+        for decl in self.current_solution.decls():
+            var_name = decl.name()
+            var_value = self.current_solution[decl]
+            print("\t-> %s=%s" %(var_name, var_value))
 
     def find_another_solution(self, variable: ArithRef) -> bool:
         """ let the solver find another solution for the variable """
