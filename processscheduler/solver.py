@@ -219,7 +219,8 @@ class SchedulingSolver:
                 if resource_is_assigned and (req_res.name not in new_task_solution.assigned_resources):
                     # if it is a cumulative resource, then we transform the resource name
                     resource_name = req_res.name.split('_CumulativeWorker_')[0]
-                    new_task_solution.assigned_resources.append(resource_name)
+                    if not resource_name in new_task_solution.assigned_resources:
+                        new_task_solution.assigned_resources.append(resource_name)
 
             solution.add_task_solution(new_task_solution)
 
@@ -242,7 +243,7 @@ class SchedulingSolver:
                 st_var, end_var = resource.busy_intervals[task]
                 start = z3_sol[st_var].as_long()
                 end = z3_sol[end_var].as_long()
-                if start >= 0 and end >= 0:
+                if start >= 0 and end >= 0 and (task_name, start, end) not in new_resource_solution.assignments:
                     new_resource_solution.assignments.append((task_name, start, end))
 
             if '_CumulativeWorker_' in resource.name:
