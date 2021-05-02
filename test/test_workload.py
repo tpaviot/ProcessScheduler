@@ -58,19 +58,19 @@ class TestWorkLoad(unittest.TestCase):
         worker_1 = ps.Worker('Worker1')
         task_1.add_required_resource(worker_1)
 
-        c1 = ps.WorkLoad(worker_1, {(5, 9): 2}, kind='min')
+        c1 = ps.WorkLoad(worker_1, {(6, 8): 2}, kind='min')
         pb.add_constraint(c1)
 
-        c2 = ps.WorkLoad(worker_1, {(10, 12): 1}, kind='min')
-        pb.add_constraint(c2)
+        #c2 = ps.WorkLoad(worker_1, {(10, 12): 1})
+        #pb.add_constraint(c2)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
 
         self.assertTrue(solution)
         # the only possible solution is that the task is scheduled form 3 to 9
-        self.assertEqual(solution.tasks[task_1.name].start, 6)
-        self.assertEqual(solution.tasks[task_1.name].end, 16)
+        self.assertTrue(solution.tasks[task_1.name].start <= 6)
+        self.assertTrue(solution.tasks[task_1.name].end >= 8)
 
     def test_resource_work_load_3(self) -> None:
         # same problem, but we force two tasks to be scheduled at start and end
