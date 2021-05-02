@@ -17,15 +17,15 @@ import unittest
 
 import processscheduler as ps
 
-class TestCapacity(unittest.TestCase):
-    def test_resource_capacity_1(self) -> None:
-        pb = ps.SchedulingProblem('ResourceCapacity1', horizon=12)
+class TestWorkLoad(unittest.TestCase):
+    def test_resource_work_load_1(self) -> None:
+        pb = ps.SchedulingProblem('ResourceWorkLoad', horizon=12)
         task_1 = ps.FixedDurationTask('task1', duration = 8)
 
         worker_1 = ps.Worker('Worker1')
         task_1.add_required_resource(worker_1)
 
-        c1 = ps.ResourceCapacity(worker_1, {(0, 6): 2})
+        c1 = ps.WorkLoad(worker_1, {(0, 6): 2})
         pb.add_constraint(c1)
 
         solver = ps.SchedulingSolver(pb)
@@ -35,17 +35,17 @@ class TestCapacity(unittest.TestCase):
         self.assertEqual(solution.tasks[task_1.name].start, 4)
         self.assertEqual(solution.tasks[task_1.name].end, 12)
 
-    def test_resource_capacity_2(self) -> None:
+    def test_resource_work_load_2(self) -> None:
         # same problem, but we force two tasks to be scheduled at start and end
         # of the planning
-        pb = ps.SchedulingProblem('ResourceCapacity2', horizon=12)
+        pb = ps.SchedulingProblem('ResourceWorkLoad2', horizon=12)
         task_1 = ps.FixedDurationTask('task1', duration = 4)
         task_2 = ps.FixedDurationTask('task2', duration = 4)
         worker_1 = ps.Worker('Worker1')
         task_1.add_required_resource(worker_1)
         task_2.add_required_resource(worker_1)
 
-        c1 = ps.ResourceCapacity(worker_1, {(4, 8): 0})
+        c1 = ps.WorkLoad(worker_1, {(4, 8): 0})
         pb.add_constraint(c1)
 
         solver = ps.SchedulingSolver(pb)

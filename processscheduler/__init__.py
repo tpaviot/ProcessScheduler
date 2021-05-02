@@ -27,7 +27,7 @@ from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObj
 from processscheduler.task import ZeroDurationTask, FixedDurationTask, VariableDurationTask
 from processscheduler.task_constraint import *
 from processscheduler.resource_constraint import (AllSameSelected, AllDifferentSelected,
-	                                              ResourceUnavailable, ResourceCapacity)
+	                                              ResourceUnavailable, WorkLoad)
 from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
 from processscheduler.problem import SchedulingProblem
 from processscheduler.solver import SchedulingSolver

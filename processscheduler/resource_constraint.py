@@ -24,36 +24,37 @@ from processscheduler.resource import Worker, CumulativeWorker
 from processscheduler.base import _Constraint
 
 
-class ResourceCapacity(_Constraint):
+class WorkLoad(_Constraint):
     """ set a mini/maxi/exact number of slots a resource can be scheduled."""
     def __init__(self, resource,
-                       dict_time_intervals_limits,
-                       kind: Optional[str] = 'atmost',
+                       dict_time_intervals_and_bound,
+                       kind: Optional[str] = 'max',
                        optional: Optional[bool] = False) -> None:
-        """Capacity constraints can be used to restrict the number tasks which are executed during a certain time period.
+        """WorkLoad constraints can be used to restrict the number tasks which are executed during a certain time period.
         The resource can be a single Worker or a CumulativeWorker.
 
         The list of time_intervals is a dict such as:
         [(1,20):6, (50,60):2] which means: in the interval (1,20), the resource might not use
         more than 6 slots. And no more than 2 time slots in the interval (50, 60)
 
-        kind: optional string, default to 'atmost', can be 'atleast' or 'exact'
+        kind: optional string, default to 'max', can be 'min' or 'exact'
         """
         super().__init__()
 
         self.optional = optional
 
-        if kind not in ['exact', 'atmost', 'atleast']:
-            raise ValueError("kind must either be 'exact', 'atleast' or 'atmost'")
+        if kind not in ['exact', 'max', 'min']:
+            raise ValueError("kind must either be 'exact', 'min' or 'max'")
 
         if isinstance(resource, Worker):
             workers = [resource]
         elif isinstance(resource, CumulativeWorker):
             workers = resource.cumulative_workers
 
-        for time_interval in dict_time_intervals_limits:
-            number_of_time_slots = dict_time_intervals_limits[time_interval]
-            lower_bound, upper_bound = time_interval
+        for time_interval in dict_time_intervals_and_bound:
+            number_of_time_slots = dict_time_intervals_and_bound[time_interval]
+
+            time_interval_lower_bound, time_interval_upper_bound = time_interval
             for worker in workers:
                 durations = []
                 # for this task, the logic expression is that any of its start or end must be
@@ -65,37 +66,37 @@ class ResourceCapacity(_Constraint):
                     # prevent solutions where duration would be negative
                     self.set_applied_not_applied_assertions(dur >= 0)
                     # 4 different cases to take into account
-                    asst1 = Implies(And(start_task_i >= lower_bound,
-                                        end_task_i <= upper_bound),
+                    asst1 = Implies(And(start_task_i >= time_interval_lower_bound,
+                                        end_task_i <= time_interval_upper_bound),
                                     dur == end_task_i - start_task_i)
                     self.set_applied_not_applied_assertions(asst1)
                     # overlap at lower bound
-                    asst2 = Implies(And(start_task_i < lower_bound,
-                                        end_task_i > lower_bound),
-                                    dur == end_task_i - lower_bound)
+                    asst2 = Implies(And(start_task_i < time_interval_lower_bound,
+                                        end_task_i > time_interval_lower_bound),
+                                    dur == end_task_i - time_interval_lower_bound)
                     self.set_applied_not_applied_assertions(asst2)
                     # overlap at upper bound
-                    asst3 = Implies(And(start_task_i < upper_bound,
-                                        end_task_i > upper_bound),
-                                    dur == upper_bound - start_task_i)
+                    asst3 = Implies(And(start_task_i < time_interval_upper_bound,
+                                        end_task_i > time_interval_upper_bound),
+                                    dur == time_interval_upper_bound - start_task_i)
                     self.set_applied_not_applied_assertions(asst3)
                     # all overlap
-                    asst4 = Implies(And(start_task_i < lower_bound,
-                                        end_task_i > upper_bound),
-                                    dur == upper_bound - lower_bound)
+                    asst4 = Implies(And(start_task_i < time_interval_lower_bound,
+                                        end_task_i > time_interval_upper_bound),
+                                    dur == time_interval_upper_bound - time_interval_lower_bound)
                     self.set_applied_not_applied_assertions(asst4)
 
                     durations.append(dur)
 
-            # capacity constraint depends on the kind
+            # workload constraint depends on the kind
             if kind == 'exact':
-                capa_constrt = Sum(durations) == number_of_time_slots
-            elif kind == 'atmost':
-                capa_constrt = Sum(durations) <= number_of_time_slots
-            elif kind == 'atleast':
-                capa_constrt = Sum(durations) >= number_of_time_slots
+                wl_constrt = Sum(durations) == number_of_time_slots
+            elif kind == 'max':
+                wl_constrt = Sum(durations) <= number_of_time_slots
+            elif kind == 'min':
+                wl_constrt = Sum(durations) >= number_of_time_slots
 
-            self.set_applied_not_applied_assertions(capa_constrt)
+            self.set_applied_not_applied_assertions(wl_constrt)
 
 
 class ResourceUnavailable(_Constraint):
