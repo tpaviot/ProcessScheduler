@@ -102,9 +102,9 @@ class SchedulingSolver:
         if self.debug:
             if isinstance(cstr, list):
                 for c in cstr:
-                    self._solver.assert_and_track(c, 'asst_%s' % uuid.uuid4().hex[:6])
+                    self._solver.assert_and_track(c, 'asst_%s' % uuid.uuid4().hex[:8])
             else:
-                self._solver.assert_and_track(cstr, 'asst_%s' % uuid.uuid4().hex[:6])
+                self._solver.assert_and_track(cstr, 'asst_%s' % uuid.uuid4().hex[:8])
         else:
             self._solver.add(cstr)
 

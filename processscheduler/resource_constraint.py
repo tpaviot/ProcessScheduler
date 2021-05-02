@@ -66,7 +66,7 @@ class WorkLoad(_Constraint):
                     # of the resource during the time interval
                     dur = Int('Overlap_%i_%i_%s' % (time_interval_lower_bound,
                                                     time_interval_upper_bound,
-                                                    uuid.uuid4().hex[:6]))
+                                                    uuid.uuid4().hex[:8]))
                     # prevent solutions where duration would be negative
                     self.set_assertions(dur >= 0)
                     # 4 different cases to take into account
