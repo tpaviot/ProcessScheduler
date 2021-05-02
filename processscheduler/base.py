@@ -96,7 +96,7 @@ class _Constraint(_NamedUIDObject):
         self.optional = False
         self.applied = True
 
-    def set_applied_not_applied_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
+    def set_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
         """Take a list of constraint to satisfy. If the constraint is optional then
         the list of z3 assertions apply under the condition that the applied flag
         is set to True.
@@ -136,4 +136,4 @@ class ForceApplyNOptionalConstraints(_Constraint):
 
         asst = problem_function[kind]([(applied, True) for applied in applied_vars],
                                       nb_constraints_to_apply)
-        self.set_applied_not_applied_assertions(asst)
+        self.set_assertions(asst)

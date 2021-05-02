@@ -17,6 +17,7 @@
 
 import time
 from typing import Optional
+import uuid
 import warnings
 
 from z3 import Solver, Sum, unsat, ArithRef, unknown, Optimize, set_option
@@ -101,11 +102,9 @@ class SchedulingSolver:
         if self.debug:
             if isinstance(cstr, list):
                 for c in cstr:
-                    print('Assert and track:\n\t-> %s' % c)
-                    self._solver.assert_and_track(c, '%s' % c)
+                    self._solver.assert_and_track(c, 'asst_%s' % uuid.uuid4().hex[:6])
             else:
-                print('Assert and track:\n\t-> %s' % cstr)
-                self._solver.assert_and_track(cstr, '%s' % cstr)
+                self._solver.assert_and_track(cstr, 'asst_%s' % uuid.uuid4().hex[:6])
         else:
             self._solver.add(cstr)
 
@@ -140,9 +139,7 @@ class SchedulingSolver:
         final_time = time.perf_counter()
 
         if self.debug:
-            print('Assertions:\n===========')
-            for assertion in self._solver.assertions():
-                print('\t->', assertion)
+            self.print_assertions()
             if isinstance(self._solver, Optimize):
                 print('\tObjectives:\n\t======')
                 for obj in self._solver.objectives():
@@ -284,6 +281,12 @@ class SchedulingSolver:
         sol = self.build_solution(solution)
 
         return sol
+
+    def print_assertions(self):
+        """A utility method to display solver assertions"""
+        print('Assertions:\n===========')
+        for assertion in self._solver.assertions():
+            print('\t->', assertion)
 
     def print_statistics(self):
         """A utility method that displays solver statistics"""

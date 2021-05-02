@@ -75,9 +75,9 @@ class TaskPrecedence(_TaskConstraint):
 
         if task_before.optional or task_after.optional:
             # both tasks must be scheduled so that the precedence constraint applies
-            self.set_applied_not_applied_assertions(Implies(And(task_before.scheduled, task_after.scheduled) , scheduled_assertion))
+            self.set_assertions(Implies(And(task_before.scheduled, task_after.scheduled) , scheduled_assertion))
         else:
-            self.set_applied_not_applied_assertions(scheduled_assertion)
+            self.set_assertions(scheduled_assertion)
 
 class TasksStartSynced(_TaskConstraint):
     """ Two tasks that must start at the same time """
@@ -90,10 +90,10 @@ class TasksStartSynced(_TaskConstraint):
 
         if task_1.optional or task_2.optional:
             # both tasks must be scheduled so that the startsynced constraint applies
-            self.set_applied_not_applied_assertions(Implies(And(task_1.scheduled, task_2.scheduled)
+            self.set_assertions(Implies(And(task_1.scheduled, task_2.scheduled)
                                        , scheduled_assertion))
         else:
-            self.set_applied_not_applied_assertions(scheduled_assertion)
+            self.set_assertions(scheduled_assertion)
 
 class TasksEndSynced(_TaskConstraint):
     """ Two tasks that must complete at the same time """
@@ -106,9 +106,9 @@ class TasksEndSynced(_TaskConstraint):
 
         if task_1.optional or task_2.optional:
             # both tasks must be scheduled so that the endsynced constraint applies
-            self.set_applied_not_applied_assertions(Implies(And(task_1.scheduled, task_2.scheduled) , scheduled_assertion))
+            self.set_assertions(Implies(And(task_1.scheduled, task_2.scheduled) , scheduled_assertion))
         else:
-            self.set_applied_not_applied_assertions(scheduled_assertion)
+            self.set_assertions(scheduled_assertion)
 
 class TasksDontOverlap(_TaskConstraint):
     """ two tasks must not overlap, i.e. one needs to be completed before
@@ -123,9 +123,9 @@ class TasksDontOverlap(_TaskConstraint):
 
         if task_1.optional or task_2.optional:
             # if one task is not scheduledboth tasks must be scheduled so that the not overlap constraint applies
-            self.set_applied_not_applied_assertions(Implies(And(task_1.scheduled, task_2.scheduled) , scheduled_assertion))
+            self.set_assertions(Implies(And(task_1.scheduled, task_2.scheduled) , scheduled_assertion))
         else:
-            self.set_applied_not_applied_assertions(scheduled_assertion)
+            self.set_assertions(scheduled_assertion)
 
 #
 # Task constraints for one single task
@@ -141,9 +141,9 @@ class TaskStartAt(_TaskConstraint):
         scheduled_assertion = task.start == value
 
         if task.optional:
-            self.set_applied_not_applied_assertions(Implies(task.scheduled, scheduled_assertion))
+            self.set_assertions(Implies(task.scheduled, scheduled_assertion))
         else:
-            self.set_applied_not_applied_assertions(scheduled_assertion)
+            self.set_assertions(scheduled_assertion)
 
 class TaskStartAfterStrict(_TaskConstraint):
     """ task.start > value """
@@ -156,9 +156,9 @@ class TaskStartAfterStrict(_TaskConstraint):
         scheduled_assertion = task.start > value
 
         if task.optional:
-            self.set_applied_not_applied_assertions(Implies(task.scheduled, scheduled_assertion))
+            self.set_assertions(Implies(task.scheduled, scheduled_assertion))
         else:
-            self.set_applied_not_applied_assertions(scheduled_assertion)
+            self.set_assertions(scheduled_assertion)
 
 class TaskStartAfterLax(_TaskConstraint):
     """  task.start >= value  """
@@ -171,9 +171,9 @@ class TaskStartAfterLax(_TaskConstraint):
         scheduled_assertion = task.start >= value
 
         if task.optional:
-            self.set_applied_not_applied_assertions(Implies(task.scheduled, scheduled_assertion))
+            self.set_assertions(Implies(task.scheduled, scheduled_assertion))
         else:
-            self.set_applied_not_applied_assertions(scheduled_assertion)
+            self.set_assertions(scheduled_assertion)
 
 class TaskEndAt(_TaskConstraint):
     """ On task must complete at the desired time """
@@ -186,9 +186,9 @@ class TaskEndAt(_TaskConstraint):
         scheduled_assertion = task.end == value
 
         if task.optional:
-            self.set_applied_not_applied_assertions(Implies(task.scheduled, scheduled_assertion))
+            self.set_assertions(Implies(task.scheduled, scheduled_assertion))
         else:
-            self.set_applied_not_applied_assertions(scheduled_assertion)
+            self.set_assertions(scheduled_assertion)
 
 class TaskEndBeforeStrict(_TaskConstraint):
     """ task.end < value """
@@ -201,9 +201,9 @@ class TaskEndBeforeStrict(_TaskConstraint):
         scheduled_assertion = task.end < value
 
         if task.optional:
-            self.set_applied_not_applied_assertions(Implies(task.scheduled, scheduled_assertion))
+            self.set_assertions(Implies(task.scheduled, scheduled_assertion))
         else:
-            self.set_applied_not_applied_assertions(scheduled_assertion)
+            self.set_assertions(scheduled_assertion)
 
 class TaskEndBeforeLax(_TaskConstraint):
     """ task.end <= value """
@@ -216,9 +216,9 @@ class TaskEndBeforeLax(_TaskConstraint):
         scheduled_assertion = task.end <= value
 
         if task.optional:
-            self.set_applied_not_applied_assertions(Implies(task.scheduled, scheduled_assertion))
+            self.set_assertions(Implies(task.scheduled, scheduled_assertion))
         else:
-            self.set_applied_not_applied_assertions(scheduled_assertion)
+            self.set_assertions(scheduled_assertion)
 #
 # Optional classes only constraints
 #
@@ -232,7 +232,7 @@ class OptionalTaskConditionSchedule(_TaskConstraint):
         if not task.optional:
             raise TypeError('Task %s must be optional.' % task.name)
 
-        self.set_applied_not_applied_assertions(Implies(condition, task.scheduled))
+        self.set_assertions(Implies(condition, task.scheduled))
 
 class OptionalTasksDependency(_TaskConstraint):
     """task_2 is scheduled if and only if task_1 is scheduled"""
@@ -244,7 +244,7 @@ class OptionalTasksDependency(_TaskConstraint):
         if not task_2.optional:
             raise TypeError('Task %s must be optional.' % task_2.name)
 
-        self.set_applied_not_applied_assertions(Implies(task_1.scheduled, task_2.scheduled))
+        self.set_assertions(Implies(task_1.scheduled, task_2.scheduled))
 
 class ForceScheduleNOptionalTasks(_TaskConstraint):
     """Given a set of m different optional tasks, force the solver to schedule
@@ -271,7 +271,7 @@ class ForceScheduleNOptionalTasks(_TaskConstraint):
 
         asst = problem_function[kind]([(scheduled, True) for scheduled in sched_vars],
                                       nb_tasks_to_schedule)
-        self.set_applied_not_applied_assertions(asst)
+        self.set_assertions(asst)
 
 class ScheduleNTasksInTimeIntervals(_TaskConstraint):
     """Given a set of m different tasks, and a list of time intervals, schedule N tasks among m
@@ -309,15 +309,15 @@ class ScheduleNTasksInTimeIntervals(_TaskConstraint):
                          Not(And(task.start < upper_bound, task.end > upper_bound)),   # overlap at end
                          Not(And(task.start < lower_bound, task.end > upper_bound))]   # full overlap
                 asst = Implies(task_in_time_interval, And(cstrs))
-                self.set_applied_not_applied_assertions(asst)
+                self.set_assertions(asst)
                 bools_for_this_task.append(task_in_time_interval)
             # only one maximum bool to True from the previous possibilities
             asst_tsk = PbLe([(scheduled, True) for scheduled in bools_for_this_task], 1)
-            self.set_applied_not_applied_assertions(asst_tsk)
+            self.set_assertions(asst_tsk)
             all_bools.extend(bools_for_this_task)
 
         # we also have to exclude all the other cases, where start or end can be between two intervals
         # then set the constraint for the number of tasks to schedule
         asst_pb = problem_function[kind]([(scheduled, True) for scheduled in all_bools],
                                           nb_tasks_to_schedule)
-        self.set_applied_not_applied_assertions(asst_pb)
+        self.set_assertions(asst_pb)

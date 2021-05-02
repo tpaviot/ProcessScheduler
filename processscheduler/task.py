@@ -116,7 +116,7 @@ class Task(_NamedUIDObject):
         for resource in list_of_resources:
             self.add_required_resource(resource)
 
-    def set_scheduled_unscheduled_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
+    def set_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
         """Take a list of constraint to satisfy. Create two cases: if the task is scheduled,
         nothing is done, if the case is optional, scheduling the task to the past"""
         if self.optional: # in this case the previous assertions maybe skipped
@@ -144,7 +144,7 @@ class ZeroDurationTask(Task):
         scheduled_assertions = [self.start == self.end,
                                 self.duration == 0]
 
-        self.set_scheduled_unscheduled_assertions(scheduled_assertions)
+        self.set_assertions(scheduled_assertions)
 
 class FixedDurationTask(Task):
     """ Task with constant duration.
@@ -175,7 +175,7 @@ class FixedDurationTask(Task):
                                 self.duration == duration,
                                 self.start >= 0]
 
-        self.set_scheduled_unscheduled_assertions(scheduled_assertions)
+        self.set_assertions(scheduled_assertions)
 
 class UnavailabilityTask(FixedDurationTask):
     """ A task that tells that a resource is unavailable during this period. This
@@ -219,4 +219,4 @@ class VariableDurationTask(Task):
         if length_at_most is not None:
             scheduled_assertions.append(self.duration <= length_at_most)
 
-        self.set_scheduled_unscheduled_assertions(scheduled_assertions)
+        self.set_assertions(scheduled_assertions)

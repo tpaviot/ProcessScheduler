@@ -55,36 +55,40 @@ class WorkLoad(_Constraint):
             number_of_time_slots = dict_time_intervals_and_bound[time_interval]
 
             time_interval_lower_bound, time_interval_upper_bound = time_interval
+
+            durations = []
+
             for worker in workers:
-                durations = []
                 # for this task, the logic expression is that any of its start or end must be
                 # between two consecutive intervals
                 for start_task_i, end_task_i in worker.get_busy_intervals():
                     # this variable allows to compute the occupation
                     # of the resource during the time interval
-                    dur = Int('Duration_%s' % uuid.uuid4().int)
+                    dur = Int('Overlap_%i_%i_%s' % (time_interval_lower_bound,
+                                                    time_interval_upper_bound,
+                                                    uuid.uuid4().hex[:6]))
                     # prevent solutions where duration would be negative
-                    self.set_applied_not_applied_assertions(dur >= 0)
+                    self.set_assertions(dur >= 0)
                     # 4 different cases to take into account
                     asst1 = Implies(And(start_task_i >= time_interval_lower_bound,
                                         end_task_i <= time_interval_upper_bound),
                                     dur == end_task_i - start_task_i)
-                    self.set_applied_not_applied_assertions(asst1)
+                    self.set_assertions(asst1)
                     # overlap at lower bound
                     asst2 = Implies(And(start_task_i < time_interval_lower_bound,
                                         end_task_i > time_interval_lower_bound),
                                     dur == end_task_i - time_interval_lower_bound)
-                    self.set_applied_not_applied_assertions(asst2)
+                    self.set_assertions(asst2)
                     # overlap at upper bound
                     asst3 = Implies(And(start_task_i < time_interval_upper_bound,
                                         end_task_i > time_interval_upper_bound),
                                     dur == time_interval_upper_bound - start_task_i)
-                    self.set_applied_not_applied_assertions(asst3)
+                    self.set_assertions(asst3)
                     # all overlap
                     asst4 = Implies(And(start_task_i < time_interval_lower_bound,
                                         end_task_i > time_interval_upper_bound),
                                     dur == time_interval_upper_bound - time_interval_lower_bound)
-                    self.set_applied_not_applied_assertions(asst4)
+                    self.set_assertions(asst4)
 
                     durations.append(dur)
 
@@ -96,7 +100,7 @@ class WorkLoad(_Constraint):
             elif kind == 'min':
                 wl_constrt = Sum(durations) >= number_of_time_slots
 
-            self.set_applied_not_applied_assertions(wl_constrt)
+            self.set_assertions(wl_constrt)
 
 
 class ResourceUnavailable(_Constraint):
@@ -126,7 +130,7 @@ class ResourceUnavailable(_Constraint):
             # add constraints on each busy interval
             for worker in workers:
                 for start_task_i, end_task_i in worker.get_busy_intervals():
-                    self.set_applied_not_applied_assertions(Xor(start_task_i >= interval_upper_bound,
+                    self.set_assertions(Xor(start_task_i >= interval_upper_bound,
                                                                 end_task_i <= interval_lower_bound))
 
 
@@ -144,7 +148,7 @@ class AllSameSelected(_Constraint):
         # Select worker 2 as well, then add a constraint
         for res_work_1 in alternate_workers_1.selection_dict:
             if res_work_1 in alternate_workers_2.selection_dict:
-                self.set_applied_not_applied_assertions(alternate_workers_1.selection_dict[res_work_1] == alternate_workers_2.selection_dict[res_work_1])
+                self.set_assertions(alternate_workers_1.selection_dict[res_work_1] == alternate_workers_2.selection_dict[res_work_1])
 
 
 class AllDifferentSelected(_Constraint):
@@ -158,4 +162,4 @@ class AllDifferentSelected(_Constraint):
         # alterna worker 2 as well, then add a constraint
         for res_work_1 in alternate_workers_1.selection_dict:
             if res_work_1 in alternate_workers_2.selection_dict:
-                self.set_applied_not_applied_assertions(alternate_workers_1.selection_dict[res_work_1] != alternate_workers_2.selection_dict[res_work_1])
+                self.set_assertions(alternate_workers_1.selection_dict[res_work_1] != alternate_workers_2.selection_dict[res_work_1])
