@@ -37,20 +37,19 @@ class TestWorkLoad(unittest.TestCase):
 
     def test_resource_work_load_2(self) -> None:
         pb = ps.SchedulingProblem('ResourceWorkLoadEq', horizon=12)
-        task_1 = ps.FixedDurationTask('task1', duration = 6)
+        task_1 = ps.FixedDurationTask('task1', duration = 7)
 
         worker_1 = ps.Worker('Worker1')
         task_1.add_required_resource(worker_1)
 
         c1 = ps.WorkLoad(worker_1, {(0, 6): 3}, kind='exact')
         pb.add_constraint(c1)
-
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertTrue(solution)
         # the only possible solution is that the task is scheduled form 3 to 9
         self.assertEqual(solution.tasks[task_1.name].start, 3)
-        self.assertEqual(solution.tasks[task_1.name].end, 9)
+        self.assertEqual(solution.tasks[task_1.name].end, 10)
 
     # def test_resource_work_load_2(self) -> None:
     #     pb = ps.SchedulingProblem('ResourceWorkLoadMin', horizon=20)
