@@ -51,26 +51,26 @@ class TestWorkLoad(unittest.TestCase):
         self.assertEqual(solution.tasks[task_1.name].start, 3)
         self.assertEqual(solution.tasks[task_1.name].end, 10)
 
-    # def test_resource_work_load_2(self) -> None:
-    #     pb = ps.SchedulingProblem('ResourceWorkLoadMin', horizon=20)
-    #     task_1 = ps.FixedDurationTask('task1', duration = 7)
+    def test_resource_work_load_2(self) -> None:
+        pb = ps.SchedulingProblem('ResourceWorkLoadMin', horizon=20)
+        task_1 = ps.FixedDurationTask('task1', duration = 7)
 
-    #     worker_1 = ps.Worker('Worker1')
-    #     task_1.add_required_resource(worker_1)
+        worker_1 = ps.Worker('Worker1')
+        task_1.add_required_resource(worker_1)
 
-    #     c1 = ps.WorkLoad(worker_1, {(6, 9): 2}, kind='min')
-    #     pb.add_constraint(c1)
+        c1 = ps.WorkLoad(worker_1, {(5, 9): 2}, kind='min')
+        pb.add_constraint(c1)
 
-    #     c2 = ps.WorkLoad(worker_1, {(10, 12): 1}, kind='min')
-    #     pb.add_constraint(c2)
+        c2 = ps.WorkLoad(worker_1, {(10, 12): 1}, kind='min')
+        pb.add_constraint(c2)
 
-    #     solver = ps.SchedulingSolver(pb)
-    #     solution = solver.solve()
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
 
-    #     self.assertTrue(solution)
-    #     # the only possible solution is that the task is scheduled form 3 to 9
-    #     self.assertEqual(solution.tasks[task_1.name].start, 6)
-    #     self.assertEqual(solution.tasks[task_1.name].end, 16)
+        self.assertTrue(solution)
+        # the only possible solution is that the task is scheduled form 3 to 9
+        self.assertEqual(solution.tasks[task_1.name].start, 6)
+        self.assertEqual(solution.tasks[task_1.name].end, 16)
 
     def test_resource_work_load_3(self) -> None:
         # same problem, but we force two tasks to be scheduled at start and end
