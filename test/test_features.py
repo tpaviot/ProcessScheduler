@@ -287,6 +287,14 @@ class TestFeatures(unittest.TestCase):
                                   ps.TaskStartAt(t_1, 2)])
         self.assertIsInstance(xor_constraint, ps.BoolRef)
 
+    def test_operator_xor_2(self) -> None:
+        new_problem_or_clear()
+        t_1 = ps.FixedDurationTask('t1', duration=2)
+        with self.assertRaises(TypeError):
+            ps.xor_([ps.TaskStartAt(t_1, 1),
+                     ps.TaskStartAt(t_1, 2),
+                     ps.TaskStartAt(t_1, 3)])
+
     def test_operator_and_(self) -> None:
         new_problem_or_clear()
         t_1 = ps.FixedDurationTask('t1', duration=2)
