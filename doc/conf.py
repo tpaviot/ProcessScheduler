@@ -40,6 +40,8 @@ extensions = [
     "nbsphinx"
 ]
 
+nbsphinx_execute = 'always'
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
@@ -64,6 +66,27 @@ else:
 
 always_document_param_types = True
 
-pygments_style = 'default'
+pygments_style = 'sphinx'
 
 highlight_language = 'autohotkey'
+
+
+# -- epub --------------------------
+
+# Bibliographic Dublin Core info.
+epub_title = project
+epub_author = author
+epub_publisher = author
+epub_copyright = copyright
+
+# -- Theme options -----------------
+
+# Options are theme-specific and customize the look and feel of the theme.
+html_theme_options = {
+    # Toc options
+    'collapse_navigation': True,
+    'sticky_navigation': True,
+    'navigation_depth': 2,
+    'includehidden': True,
+    'titles_only': False
+}
