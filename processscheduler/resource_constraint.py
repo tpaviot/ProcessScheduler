@@ -18,7 +18,7 @@
 from typing import Optional
 import uuid
 
-from z3 import And, Implies, Int, Sum, Xor
+from z3 import And, Implies, Int, Not, Or, Sum, Xor
 
 from processscheduler.resource import Worker, CumulativeWorker
 from processscheduler.base import _Constraint
@@ -70,26 +70,34 @@ class WorkLoad(_Constraint):
                     # prevent solutions where duration would be negative
                     self.set_assertions(dur >= 0)
                     # 4 different cases to take into account
-                    asst1 = Implies(And(start_task_i >= time_interval_lower_bound,
-                                        end_task_i <= time_interval_upper_bound),
+                    cond1 = And(start_task_i >= time_interval_lower_bound,
+                                end_task_i <= time_interval_upper_bound)
+                    asst1 = Implies(cond1,
                                     dur == end_task_i - start_task_i)
                     self.set_assertions(asst1)
                     # overlap at lower bound
-                    asst2 = Implies(And(start_task_i < time_interval_lower_bound,
-                                        end_task_i > time_interval_lower_bound),
+                    cond2 = And(start_task_i < time_interval_lower_bound,
+                                end_task_i > time_interval_lower_bound)
+                    asst2 = Implies(cond2,
                                     dur == end_task_i - time_interval_lower_bound)
                     self.set_assertions(asst2)
                     # overlap at upper bound
-                    asst3 = Implies(And(start_task_i < time_interval_upper_bound,
-                                        end_task_i > time_interval_upper_bound),
+                    cond3 = And(start_task_i < time_interval_upper_bound,
+                                end_task_i > time_interval_upper_bound)
+                    asst3 = Implies(cond3,
                                     dur == time_interval_upper_bound - start_task_i)
                     self.set_assertions(asst3)
                     # all overlap
-                    asst4 = Implies(And(start_task_i < time_interval_lower_bound,
-                                        end_task_i > time_interval_upper_bound),
+                    cond4 = And(start_task_i < time_interval_lower_bound,
+                                end_task_i > time_interval_upper_bound)
+                    asst4 = Implies(cond4,
                                     dur == time_interval_upper_bound - time_interval_lower_bound)
                     self.set_assertions(asst4)
 
+                    # make these constraints mutual: no overlap
+                    self.set_assertions(Implies(Not(Or([cond1, cond2, cond3, cond4])), dur == 0))
+
+                    # finally, store this variable in the duratins list
                     durations.append(dur)
 
             # workload constraint depends on the kind

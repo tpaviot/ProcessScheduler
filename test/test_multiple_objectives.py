@@ -15,7 +15,6 @@
 
 import unittest
 
-from z3 import set_option
 import processscheduler as ps
 
 # in this test, two tasks. The start of the first one and the end of the second
@@ -23,7 +22,7 @@ import processscheduler as ps
 # the maximum of task_1.end is 20 (in this case task_1.start is 0)
 # the maximum of task_2.end is 20 (in this case task_2.start is 0)
 # what happens if we look for the maximum of both task_1 and task_2 ends ?
-        
+
 class MultiObjective(unittest.TestCase):
     def test_multi_two_tasks_1(self) -> None:
         pb = ps.SchedulingProblem('MultiObjective1', horizon=20)
