@@ -90,11 +90,9 @@ class TestWorkLoad(unittest.TestCase):
         self.assertTrue(solution.tasks[task_1.name].start == 8 or solution.tasks[task_2.name].start == 8)
 
     def test_resource_work_load_exception(self) -> None:
-        pb = ps.SchedulingProblem('ResourceWorkLoadException', horizon=12)
-        task_1 = ps.FixedDurationTask('task1', duration = 8)
-
+        ps.SchedulingProblem('ResourceWorkLoadException', horizon=12)
+        
         worker_1 = ps.Worker('Worker1')
-        task_1.add_required_resource(worker_1)
 
         with self.assertRaises(ValueError):
             ps.WorkLoad(worker_1, {(0, 6): 2}, kind='foo')

@@ -216,7 +216,7 @@ class SchedulingSolver:
                 if resource_is_assigned and (req_res.name not in new_task_solution.assigned_resources):
                     # if it is a cumulative resource, then we transform the resource name
                     resource_name = req_res.name.split('_CumulativeWorker_')[0]
-                    if not resource_name in new_task_solution.assigned_resources:
+                    if resource_name not in new_task_solution.assigned_resources:
                         new_task_solution.assigned_resources.append(resource_name)
 
             solution.add_task_solution(new_task_solution)
