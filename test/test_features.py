@@ -243,6 +243,41 @@ class TestFeatures(unittest.TestCase):
     #
     # Two tasks constraints
     #
+    def test_create_task_precedence_lax(self) -> None:
+        new_problem_or_clear()
+        t_1 = ps.FixedDurationTask('t1', duration=2)
+        t_2 = ps.FixedDurationTask('t2', duration=3)
+        precedence_constraint = ps.TaskPrecedence(t_1, t_2, offset=1, kind='lax')
+        self.assertIsInstance(precedence_constraint, ps.TaskPrecedence)
+
+    def test_create_task_precedence_tight(self) -> None:
+        new_problem_or_clear()
+        t_1 = ps.FixedDurationTask('t1', duration=2)
+        t_2 = ps.FixedDurationTask('t2', duration=3)
+        precedence_constraint = ps.TaskPrecedence(t_1, t_2, offset=1, kind='tight')
+        self.assertIsInstance(precedence_constraint, ps.TaskPrecedence)
+
+    def test_create_task_precedence_strict(self) -> None:
+        new_problem_or_clear()
+        t_1 = ps.FixedDurationTask('t1', duration=2)
+        t_2 = ps.FixedDurationTask('t2', duration=3)
+        precedence_constraint = ps.TaskPrecedence(t_1, t_2, offset=1, kind='strict')
+        self.assertIsInstance(precedence_constraint, ps.TaskPrecedence)
+
+    def test_create_task_precedence_raise_exception_kind(self) -> None:
+        new_problem_or_clear()
+        t_1 = ps.FixedDurationTask('t1', duration=2)
+        t_2 = ps.FixedDurationTask('t2', duration=3)
+        with self.assertRaises(ValueError):
+            ps.TaskPrecedence(t_1, t_2, offset=1, kind='foo')
+
+    def test_create_task_precedence_raise_exception_offset_int(self) -> None:
+        new_problem_or_clear()
+        t_1 = ps.FixedDurationTask('t1', duration=2)
+        t_2 = ps.FixedDurationTask('t2', duration=3)
+        with self.assertRaises(ValueError):
+            ps.TaskPrecedence(t_1, t_2, offset=1.5, kind='lax')  # should be int
+
     def test_tasks_dont_overlap(self) -> None:
         new_problem_or_clear()
         t_1 = ps.FixedDurationTask('t1', duration=2)
@@ -263,6 +298,13 @@ class TestFeatures(unittest.TestCase):
         t_2 = ps.FixedDurationTask('t2', duration=3)
         constraint = ps.TasksEndSynced(t_1, t_2)
         self.assertIsInstance(constraint, ps.TasksEndSynced)
+
+    def test_schedule_n_task_raise_exception(self) -> None:
+        new_problem_or_clear()
+        with self.assertRaises(TypeError):
+            ps.ScheduleNTasksInTimeIntervals('list_of_tasks', 1, 'list_of_time_intervals')
+        with self.assertRaises(TypeError):
+            ps.ScheduleNTasksInTimeIntervals([], 1, 'list_of_time_intervals')
 
     #
     # Boolean operators
@@ -361,7 +403,7 @@ class TestFeatures(unittest.TestCase):
     # Print _NamedUIDObject
     #
     def test_print_objects(self) -> None:
-        pb = ps.SchedulingProblem('TestPrint')
+        new_problem_or_clear()
         t1 = ps.FixedDurationTask('task_1', duration=1)
         t2 = ps.VariableDurationTask('task_2')
         worker_1 = ps.Worker('W1')
