@@ -84,7 +84,7 @@ The solver gives the expected result.
 
 Multiple objective optimization
 -------------------------------
-ProcessScheduler can deal with multiple objectives optimization, but you have to know wether or not the objectives are **independent** from each other.
+ProcessScheduler can deal with multiple objectives optimization, but you have to know whether or not the objectives are **independent** from each other.
 
 
 Independent objectives
@@ -117,7 +117,7 @@ The solver gives the expected result.
 
 Non independent objectives
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-In the previous example, if we add a constraint between tasks :attr:`task_1` and :attr:`task_2`, then both tasks end may not be independant from each other. For example, let's add the following constraint:
+In the previous example, if we add a constraint between tasks :attr:`task_1` and :attr:`task_2`, then both tasks end may not be independent from each other. For example, let's add the following constraint:
 
 .. code-block:: python
 
@@ -170,7 +170,7 @@ Lexicon priority (:attr:`'box'`)
 --------------------------------
 The optimization solver breaks the dependency between objectives and look for the maximum (resp. minimum) value that can be achieved for each objective.
 
-In the previous example, the maximum of task_1end can be 20, and the maximum of task_2.end can alos be 20, but not at the same time. The :attr:`box` priority then gives an information about the values that can be reached.
+In the previous example, the maximum of task_1end can be 20, and the maximum of task_2.end can also be 20, but not at the same time. The :attr:`box` priority then gives an information about the values that can be reached.
 
 .. code-block:: python
 

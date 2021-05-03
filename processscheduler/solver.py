@@ -47,7 +47,7 @@ class SchedulingSolver:
         self.debug = debug
         # objectives list
         self.optimize_priority = optimize_priority
-        self.objectives = []  # an emtpy list so far
+        self.objectives = []  # the list of all objectives defined in this problem
 
         if debug:
             set_option("verbose", 2)
