@@ -93,6 +93,7 @@ class SchedulingSolution:
                 problem_properties['problem_start_time'] = time(0)
                 problem_properties['problem_end_time'] = self.horizon * self.problem.delta_time
         else:
+            problem_properties['problem_start_time'] = None
             problem_properties['problem_end_time'] = None
         d['problem_properties'] = problem_properties
 
