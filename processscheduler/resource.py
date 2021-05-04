@@ -72,7 +72,11 @@ class Worker(_Resource):
             raise TypeError('productivity must be an integer >= 0')
         self.productivity = productivity
         self.cost_per_period = cost_per_period
+
         # only worker are add to the main context, not SelectWorkers
+        # add this resource to the current context
+        if ps_context.main_context is None:
+            raise AssertionError('No context available. First create a SchedulingProblem')
         ps_context.main_context.add_resource(self)
 
 class SelectWorkers(_Resource):
