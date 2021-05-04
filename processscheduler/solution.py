@@ -78,13 +78,13 @@ class SchedulingSolution:
         return tasks_to_return
     
     def get_scheduled_tasks(self):
-    """Return scheduled tasks."""
-    tasks_not_unavailable = self.get_all_tasks_but_unavailable()
-    tasks_to_return = {}
-    for task in tasks_not_unavailable:
-        if tasks_not_unavailable[task].scheduled:
-            tasks_to_return[task] = tasks_not_unavailable[task]
-    return tasks_to_return
+        """Return scheduled tasks."""
+        tasks_not_unavailable = self.get_all_tasks_but_unavailable()
+        tasks_to_return = {}
+        for task in tasks_not_unavailable:
+            if tasks_not_unavailable[task].scheduled:
+                tasks_to_return[task] = tasks_not_unavailable[task]
+        return tasks_to_return
 
     def to_json_string(self) -> str:
         """Export the solution to a json string."""
