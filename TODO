@@ -11,6 +11,10 @@ End-user:
 
 [ ] JSON importer/exporter for a scheduling problem
 
+[ ] Export a networkx model to a set of tasks/taks precedences
+
+[ ] Voila based user interface
+
 Dev:
 ====
 
