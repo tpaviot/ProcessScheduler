@@ -10,4 +10,6 @@ dependencies:
     - plotly== 4.14.3
     - kaleido== 0.2.1
     - ipywidgets== 7.6.3
+    - isodate==0.6.0
+    - ipympl==0.7.0
     - -e .
