@@ -454,8 +454,8 @@ class TestOptionalTask(unittest.TestCase):
         """Just change the number of tasks to be scheduled."""
         pb = ps.SchedulingProblem('ForceScheduleOptionalTasks2', horizon=14)
         task_1 = ps.VariableDurationTask('task1', optional=True)
-        task_2 = ps.FixedDurationTask('task2', duration = 7, optional=True)
-        task_3 = ps.FixedDurationTask('task3', duration = 2, optional=True)
+        task_2 = ps.FixedDurationTask('task2', duration=7, optional=True)
+        task_3 = ps.FixedDurationTask('task3', duration=2, optional=True)
 
         cond = ps.ForceScheduleNOptionalTasks([task_1, task_2, task_3], 2)
         pb.add_constraint(cond)
@@ -474,11 +474,32 @@ class TestOptionalTask(unittest.TestCase):
         """Check an error is raised if ever one of the task is not optional."""
         pb = ps.SchedulingProblem('ForceScheduleOptionalTasks3', horizon=14)
         task_1 = ps.VariableDurationTask('task1')  # this one is not optional
-        task_2 = ps.FixedDurationTask('task2', duration = 7, optional=True)
+        task_2 = ps.FixedDurationTask('task2', duration=7, optional=True)
 
         with self.assertRaises(TypeError):
             cond = ps.ForceScheduleNOptionalTasks([task_1, task_2], 2)
             pb.add_constraint(cond)
+
+    def test_get_scheduled_tasks(self) -> None:
+        # task_1 cannot be scheduled, only tasks 2 and 3 can be
+        pb = ps.SchedulingProblem('GetScheduledTasks', horizon=14)
+        task_1 = ps.FixedDurationTask('task1', duration=15, optional=True)
+        task_2 = ps.FixedDurationTask('task2', duration=7, optional=True)
+        task_3 = ps.FixedDurationTask('task3', duration=2, optional=True)
+
+        cond = ps.ForceScheduleNOptionalTasks([task_1, task_2, task_3], 2)
+        pb.add_constraint(cond)
+
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+
+        scheduled_tasks_dictionary = solution.get_scheduled_tasks()
+
+        self.assertEqual(len(scheduled_tasks_dictionary), 2)
+        self.assertTrue('task2' in scheduled_tasks_dictionary)
+        self.assertTrue('task3' in scheduled_tasks_dictionary)
 
 
 if __name__ == "__main__":
