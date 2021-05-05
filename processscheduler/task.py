@@ -88,10 +88,10 @@ class Task(_NamedUIDObject):
                 assertion = If(selected_variable, schedule_as_usual, move_to_past)
                 # ... and store it into the task assertions list
                 self.add_assertion(assertion)
-                # also, don't forget to add the AlternativeWorker assertion
-                self.add_assertion(resource.selection_assertion)
                 # finally, add each worker to the "required" resource list
                 self.required_resources.append(worker)
+            # also, don't forget to add the AlternativeWorker assertion
+            self.add_assertion(resource.selection_assertion)
         elif isinstance(resource, Worker):
             resource_busy_start = Int('%s_busy_%s_start' % (resource.name, self.name))
             resource_busy_end = Int('%s_busy_%s_end' % (resource.name, self.name))
