@@ -121,7 +121,7 @@ class ForceApplyNOptionalConstraints(_Constraint):
 
         self.optional = optional
 
-        problem_function = {'atleast': PbGe, 'atmost': PbLe, 'exact': PbEq}
+        problem_function = {'min': PbGe, 'max': PbLe, 'exact': PbEq}
 
         # first check that all tasks from the list_of_optional_tasks are
         # actually optional

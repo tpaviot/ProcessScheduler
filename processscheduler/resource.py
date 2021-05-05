@@ -89,10 +89,10 @@ class SelectWorkers(_Resource):
         """ create an instance of the SelectWorkers class. """
         super().__init__('')
 
-        problem_function = {'atleast': PbGe, 'atmost': PbLe, 'exact': PbEq}
+        problem_function = {'min': PbGe, 'max': PbLe, 'exact': PbEq}
 
         if kind not in problem_function:
-            raise ValueError("kind must be either 'exact', 'atleast' or 'atmost'")
+            raise ValueError("kind must be either 'exact', 'min' or 'max'")
 
         if not is_strict_positive_integer(nb_workers_to_select):
             raise TypeError('nb_workers must be an integer > 0')
@@ -159,4 +159,4 @@ class CumulativeWorker(_Resource):
         is instance to be passed to the task."""
         return SelectWorkers(self.cumulative_workers,
                              nb_workers_to_select=1,
-                             kind='atleast')
+                             kind='min')

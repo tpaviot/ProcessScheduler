@@ -181,8 +181,8 @@ class TestSolver(unittest.TestCase):
         w2 = ps.Worker('W2')
         w3 = ps.Worker('W3')
         w4 = ps.SelectWorkers([w1, w2, w3], nb_workers_to_select=1, kind='exact')
-        w5 = ps.SelectWorkers([w1, w2, w3], nb_workers_to_select=2, kind='atmost')
-        w6 = ps.SelectWorkers([w1, w2, w3], nb_workers_to_select=3, kind='atleast')
+        w5 = ps.SelectWorkers([w1, w2, w3], nb_workers_to_select=2, kind='max')
+        w6 = ps.SelectWorkers([w1, w2, w3], nb_workers_to_select=3, kind='min')
 
         # resource assignment
         t1.add_required_resource(w1)  # t1 only needs w1

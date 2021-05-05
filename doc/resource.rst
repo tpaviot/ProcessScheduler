@@ -92,6 +92,6 @@ The :class:`SelectWorkers` class let the solver decide which resource(s) to assi
                                         nb_workers=1,
                                         kind='exact'))
 
-This tells the solver to select *exactly 1* resource among the list of three workers able to process the task. The :attr:`kind` parameter can take either :const:`'exact'` (default value), :const:`'atleast'` or :const:`'atmost'` values.
+This tells the solver to select *exactly 1* resource among the list of three workers able to process the task. The :attr:`kind` parameter can take either :const:`'exact'` (default value), :const:`'min'` or :const:`'max'` values.
 
 :const:`nb_workers` can take any integer between 1 (default value) and the number of capable workers in the list. Passing a value out of these bounds will raise an exception.
