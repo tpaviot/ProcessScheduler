@@ -16,7 +16,7 @@
 from datetime import datetime
 
 from processscheduler.problem import SchedulingProblem
-from processscheduler.resource import Worker, CumulativeWorker
+from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
 from processscheduler.task import ZeroDurationTask, FixedDurationTask, VariableDurationTask
 from processscheduler.task_constraint import *
 from processscheduler.resource_constraint import *
@@ -61,12 +61,6 @@ start_time_widget = widgets.Text(
     description='Start Time:',
     disabled=False
 )
-end_time_widget = widgets.Text(
-    value='',
-    placeholder='Optional, you can leave blank',
-    description='End time:',
-    disabled=False
-)
 delta_time_widget = widgets.Text(
     value='',
     placeholder='Optional, you can leave blank',
@@ -78,37 +72,33 @@ def on_create_problem_button_clicked(b) -> bool:
     global pb
     problem_name = problem_name_widget.value
     # start time
-    start_time = None
+    parsed_start_time = None
     if start_time_widget.value != '':
-        start_time = isodate.parse_datetime(start_time_widget.value)
+        parsed_start_time = isodate.parse_datetime(start_time_widget.value)
         try:
-            start_time = isodate.parse_datetime(start_time_widget.value)
+            parsed_start_time = isodate.parse_datetime(start_time_widget.value)
         except ValueError:
             print('Not a valid isodate format for start_time')
-            start_time = None
-            return False
-    # end time
-    end_time = None
-    if end_time_widget.value != '':
-        try:
-            end_time = isodate.parse_datetime(end_time_widget.value)
-        except ValueError:
-            print('Not a valid isodate format for end_time')
-            end_time = None
+            parsed_start_time = None
             return False
     # timedelta
-    delta_time = None
+    parsed_delta_time = None
     if delta_time_widget.value != '':
         try:
-            delta_time = isodate.parse_duration(delta_time_widget.value)
+            parsed_delta_time = isodate.parse_duration(delta_time_widget.value)
         except:
             print('Not a valid isodate format for delta_time')
-            delta_time = None
+            parsed_delta_time = None
             return False
     if set_horizon_widget.value:
-        pb = SchedulingProblem(problem_name, horizon_widget.value)
+        pb = SchedulingProblem(problem_name,
+                               horizon_widget.value,
+                               start_time=parsed_start_time,
+                               delta_time=parsed_delta_time)
     else:
-        pb = SchedulingProblem(problem_name)
+        pb = SchedulingProblem(problem_name,
+                               start_time=parsed_start_time,
+                               delta_time=parsed_delta_time)
     with problem_output:
         print('Scheduling problem', problem_name, 'successfully created.')
     create_problem_button.disabled = True
@@ -118,8 +108,8 @@ problem_ui = widgets.VBox([widgets.HBox([problem_name_widget,
                                          widgets.VBox([widgets.HBox([horizon_widget,
                                                                      set_horizon_widget,]),
                                                        start_time_widget,
-                                                       delta_time_widget,
-                                                       end_time_widget]),
+                                                       delta_time_widget],
+                                                       layout=widgets.Layout(border='solid 1px gray')),
                                         create_problem_button]),
                            problem_output])
 #
@@ -140,6 +130,19 @@ resource_name_widget = widgets.Text(
     disabled=False,
     layout={'width': '200px'}
 )
+resource_cost_per_period_widget = widgets.IntText(
+    value=1,
+    disabled=False,
+    description='Cost/Period:',
+    layout={'width': '200px'}
+)
+resource_productivity_widget = widgets.IntText(
+    value=0,
+    disabled=False,
+    description='Productivity/Period:',
+    layout={'width': '200px'}
+)
+
 resource_size_widget = widgets.IntText(
     value=2,
     disabled=True,
@@ -167,9 +170,14 @@ def on_create_resource_button_clicked(b):
     resource_name = resource_name_widget.value
     resource_type = resource_types[resource_type_widget.value]
     if resource_type == Worker:
-        new_resource = resource_type(resource_name)
+        new_resource = resource_type(resource_name,
+                                     productivity=resource_productivity_widget.value,
+                                     cost_per_period=resource_cost_per_period_widget.value)
     elif resource_type == CumulativeWorker:
-        new_resource = resource_type(resource_name, size=resource_size_widget.value)
+        new_resource = resource_type(resource_name,
+                                     size=resource_size_widget.value,
+                                     productivity=resource_productivity_widget.value,
+                                     cost_per_period=resource_cost_per_period_widget.value)
     # rebuild option list for the task list
     resources_list_of_tuples = []
     for resource in pb.context.resources:
@@ -180,6 +188,8 @@ def on_create_resource_button_clicked(b):
 create_resource_button.on_click(on_create_resource_button_clicked)
 resource_ui = widgets.VBox([widgets.HBox([resource_type_widget,
                                           widgets.VBox([resource_name_widget,
+                                                        resource_cost_per_period_widget,
+                                                        resource_productivity_widget,
                                                         resource_size_widget]),
                                           create_resource_button]),
                             resource_output])
@@ -306,6 +316,7 @@ task_constraint_types = {'TaskPrecedence': TaskPrecedence,
                          }
 task_constraint_type_widget = widgets.Dropdown(options=list(task_constraint_types),
                                                description='',
+                                               layout={'width': '250px'},
                                                disabled=False)
 resource_constraint_types = {'WorkLoad': WorkLoad,
                              'ResourceUnavailable': ResourceUnavailable,
@@ -314,6 +325,7 @@ resource_constraint_types = {'WorkLoad': WorkLoad,
                              }
 resource_constraint_type_widget = widgets.Dropdown(options=list(resource_constraint_types),
                                                    description='',
+                                                   layout={'width': '250px'},
                                                    disabled=False)
 create_task_constraint_button = widgets.Button(
     description='Create task constraint',
@@ -333,7 +345,7 @@ assign_all_workers_resource_button = widgets.Button(
     indent=True
 )
 assign_resource_output = widgets.Output()
-def assign_all_workers_resource_button_clicked(b):
+def assign_all_workers_resource_button_clicked(b) -> bool:
     # create the solver
     with assign_resource_output:
         if len(tasks_select_widget.value) != 1:
@@ -346,14 +358,35 @@ def assign_all_workers_resource_button_clicked(b):
         selected_resources = resources_select_widget.value
         # assign resources to task
         selected_task.add_required_resources(selected_resources)
-        print("Add required resources", selected_resources, "to task", selected_task)
+        print("Assign",
+              ','.join([s.name for s in selected_resources]),
+              "to task", selected_task.name)
+    return True
 assign_all_workers_resource_button.on_click(assign_all_workers_resource_button_clicked)
 
 assign_alternative_workers_resource_button = widgets.Button(
-    description='Assign alt. workers',
+    description='Select 2 workers',
     disabled=False,
     indent=True
 )
+nb_workers_widget = widgets.IntText(
+    value=2,
+    description='NbWorkers:',
+    disabled=False,
+    layout={'width': '150px'}
+)
+def on_nb_workers_value_change(change):
+    #print(change['new'])
+    assign_alternative_workers_resource_button.description = 'Select %i workers' % change['new']
+nb_workers_widget.observe(on_nb_workers_value_change, names='value')
+select_worker_type_widget = widgets.Dropdown(
+    options=['exact', 'min', 'max'],
+    value='max',
+    description='Type:',
+    disabled=False,
+    layout={'width': '150px'}
+)
+
 def assign_alternative_workers_resource_button_clicked(b) -> bool:
     # create the solver
     with assign_resource_output:
@@ -366,19 +399,70 @@ def assign_alternative_workers_resource_button_clicked(b) -> bool:
             return False
         selected_resources = resources_select_widget.value
         # assign resources to task
-        selected_task.add_required_resources(SelectWorker(list_of_workers=selected_resources,
-                                                          nb_workers_to_select=1,
-                                                          kind='exact'))
+        selected_task.add_required_resource(SelectWorkers(list_of_workers=selected_resources,
+                                                           nb_workers_to_select=nb_workers_widget.value,
+                                                           kind=select_worker_type_widget.value))
+        print("Assign %i (%s) resources among" % (nb_workers_widget.value, select_worker_type_widget.value),
+              ','.join([s.name for s in selected_resources]),
+              "to task", selected_task.name)
+        return True
 assign_alternative_workers_resource_button.on_click(assign_alternative_workers_resource_button_clicked)
 
 
 constraint_ui = widgets.VBox([widgets.HBox([resources_select_widget, resource_constraint_type_widget,
                                             create_resource_constraint_button]),
-                              widgets.HBox([assign_all_workers_resource_button,
-                                            assign_alternative_workers_resource_button]),
                               widgets.HBox([tasks_select_widget, task_constraint_type_widget,
                                             create_task_constraint_button]),
+                              widgets.HBox([widgets.VBox([assign_all_workers_resource_button],
+                                                        layout=widgets.Layout(border='solid 1px gray')),
+                                            widgets.VBox([assign_alternative_workers_resource_button,
+                                                          nb_workers_widget,
+                                                          select_worker_type_widget],
+                                                          layout=widgets.Layout(border='solid 1px gray')),
+                                            ]),
                               assign_resource_output])
+#
+# Optimization UI
+#
+is_makespan_widget = widgets.Checkbox(
+    value=False,
+    description='MakeSpan',
+    disabled=False,
+    indent=False,
+    layout={'width': '200px'}
+)
+is_flowtime_widget = widgets.Checkbox(
+    value=False,
+    description='Flowtime',
+    disabled=False,
+    indent=False,
+    layout={'width': '200px'}
+)
+is_cost_widget = widgets.Checkbox(
+    value=False,
+    description='GlobalCost',
+    disabled=False,
+    indent=False,
+    layout={'width': '200px'}
+)
+is_priority_widget = widgets.Checkbox(
+    value=False,
+    description='Priorities',
+    disabled=False,
+    indent=False,
+    layout={'width': '200px'}
+)
+priority_widget = widgets.Select(
+    options=['lex', 'box', 'pareto'],
+    description='Priority:',
+    disabled=False,
+    layout={'width': '200px'}
+)
+optimization_ui = widgets.HBox([widgets.VBox([is_makespan_widget, is_flowtime_widget,
+                                is_cost_widget, is_priority_widget]),
+                                priority_widget])
+
+
 #
 # Solver UI
 #
@@ -402,12 +486,6 @@ max_time_widget = widgets.IntText(
     disabled=False,
     layout={'width': '200px'}
 )
-priority_widget = widgets.Select(
-    options=['lex', 'box', 'pareto'],
-    description='Priority:',
-    disabled=False,
-    layout={'width': '200px'}
-)
 solve_button = widgets.Button(
     description='Solve',
     disabled=False)
@@ -416,6 +494,15 @@ def on_solve_task_button_clicked(b):
     # create the solver
     solve_output.clear_output()
     with solve_output:
+        # according to the optimization, enable the related function
+        if is_makespan_widget.value:
+            pb.add_objective_makespan()
+        if is_flowtime_widget.value:
+            pb.add_objective_flowtime()
+        if is_priority_widget.value:
+            pb.add_objective_priorities()
+        if is_cost_widget.value:
+            pb.add_objective_resource_cost([pb.context.resources])
         solver = SchedulingSolver(pb,
                                   debug=is_debug_solver_widget.value,
                                   max_time=max_time_widget.value,
@@ -423,6 +510,7 @@ def on_solve_task_button_clicked(b):
                                   parallel=is_parallel_solver_widget.value)
         solution = solver.solve()
         # choose the gantt renderer
+        print(solution)
         if pb.start_time is not None and pb.delta_time is not None:
             solution.render_gantt_plotly(render_mode='Resource')
         else:
