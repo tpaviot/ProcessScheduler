@@ -24,6 +24,11 @@ End-user:
 
 [ ] Add a penalty parameter to the Task class. And the related optimization (minimization) function.
 
+[ ] Cost function: currently the cost of a task is a constant rate. It is defined, for example, as 5$/hour, or
+540€/day etc. It should be possible to express the cost as a function of the time, for example a linear or affine
+function (cost(t)=a*t+b) for example. Indeed many industrial costs may change over time as quadratic or exponential
+functions, seasonality etc.
+
 Dev:
 ====
 
