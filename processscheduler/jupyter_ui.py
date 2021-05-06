@@ -120,7 +120,7 @@ resource_types = {'Worker': Worker,
 resource_type_widget = widgets.Dropdown(
     options=list(resource_types),
     value='Worker',
-    description='Task type:',
+    description='Resource type:',
     disabled=False,
 )
 resource_name_widget = widgets.Text(
