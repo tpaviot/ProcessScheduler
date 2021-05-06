@@ -1,3 +1,10 @@
+TODO list
+=========
+[ ] : not started
+[W] : work in progress
+[X] : done
+[-] : cancelled
+
 End-user:
 =========
 
@@ -13,7 +20,9 @@ End-user:
 
 [ ] Export a networkx model to a set of tasks/taks precedences
 
-[ ] Voila based user interface
+[W] Voila based user interface
+
+[ ] Add a penalty parameter to the Task class. And the related optimization (minimization) function.
 
 Dev:
 ====
@@ -24,7 +33,7 @@ Dev:
 
 [ ] Categorize task constraints
 
-[ ] Developer user guide, especially how to add constraints
+[ ] Developer guide, especially how to add constraints
 
 Misc/unordered:
 ===============
