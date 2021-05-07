@@ -33,8 +33,8 @@ class TestIndicator(unittest.TestCase):
     def test_cost_indicator(self) -> None:
         problem = ps.SchedulingProblem('IndicatorResourceCost')
         t_1 = ps.VariableDurationTask('t1', work_amount=100)
-        worker_1 = ps.Worker('Worker1', productivity=4, cost_per_period=10)
-        worker_2 = ps.Worker('Worker2', productivity=7, cost_per_period=20)
+        worker_1 = ps.Worker('Worker1', productivity=4, cost=ps.ConstantCostPerPeriod(10))
+        worker_2 = ps.Worker('Worker2', productivity=7, cost=ps.ConstantCostPerPeriod(20))
         all_workers = [worker_1, worker_2]
         problem.add_objective_makespan()
         t_1.add_required_resources(all_workers)
