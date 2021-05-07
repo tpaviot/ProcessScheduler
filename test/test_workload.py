@@ -97,6 +97,64 @@ class TestWorkLoad(unittest.TestCase):
         with self.assertRaises(ValueError):
             ps.WorkLoad(worker_1, {(0, 6): 2}, kind='foo')
 
+    def test_selectworker_work_load_1(self) -> None:
+        pb = ps.SchedulingProblem('SelectWorkerWorkLoad1', horizon=12)
+
+        worker_1 = ps.Worker('Worker1')
+        worker_2 = ps.Worker('Worker2')
+
+        task1 = ps.FixedDurationTask('Task1', duration=10)
+
+        task1.add_required_resource(ps.SelectWorkers([worker_1, worker_2], 1, 'min'))
+        # the workload on worker_1 forces 0 between 4 and 8
+        # then the worker_1 can not be assigned
+        c1 = ps.WorkLoad(worker_1, {(4, 8): 0})
+        pb.add_constraint(c1)
+
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        print(solution)
+        self.assertTrue(solution)
+        self.assertTrue(solution.tasks[task1.name].assigned_resources == [worker_2.name])
+
+    def test_multiple_workers_work_load_1(self) -> None:
+        pb = ps.SchedulingProblem('MultipleWorkersWorkLoad1', horizon=12)
+
+        worker_1 = ps.Worker('Worker1')
+        worker_2 = ps.Worker('Worker2')
+
+        task1 = ps.FixedDurationTask('Task1', duration=10)
+        task1.add_required_resources([worker_1, worker_2])
+
+        c1 = ps.WorkLoad(worker_1, {(0, 4): 2})
+        pb.add_constraint(c1)
+        c2 = ps.WorkLoad(worker_2, {(2, 6): 2}, kind='min')
+        pb.add_constraint(c2)
+
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertTrue(solution.tasks[task1.name].start == 2)
+
+    def test_multiple_workers_work_load_1(self) -> None:
+        ### the same as above but changing 'min' to 'exact', there's no solution
+        pb = ps.SchedulingProblem('MultipleWorkersWorkLoad1', horizon=12)
+
+        worker_1 = ps.Worker('Worker1')
+        worker_2 = ps.Worker('Worker2')
+
+        task1 = ps.FixedDurationTask('Task1', duration=10)
+        task1.add_required_resources([worker_1, worker_2])
+
+        c1 = ps.WorkLoad(worker_1, {(0, 4): 2})
+        pb.add_constraint(c1)
+        c2 = ps.WorkLoad(worker_2, {(2, 6): 2}, kind='exact')
+        pb.add_constraint(c2)
+
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertFalse(solution)
+
 
 if __name__ == "__main__":
     unittest.main()
