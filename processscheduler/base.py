@@ -89,11 +89,11 @@ class _NamedUIDObject:
 
 class _Constraint(_NamedUIDObject):
     """ The base class for all constraints, including Task and Resource constraints. """
-    def __init__(self):
-        super().__init__(name='')
+    def __init__(self, optional):
+        super().__init__('')
 
+        self.optional = optional
         # by default, this constraint has to be applied
-        self.optional = False
         self.applied = True
 
     def set_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
@@ -117,9 +117,7 @@ class ForceApplyNOptionalConstraints(_Constraint):
                        nb_constraints_to_apply: Optional[int] = 1,
                        kind: Optional[str] = 'exact',
                        optional: Optional[bool] = False) -> None:
-        super().__init__()
-
-        self.optional = optional
+        super().__init__(optional)
 
         problem_function = {'min': PbGe, 'max': PbLe, 'exact': PbEq}
 

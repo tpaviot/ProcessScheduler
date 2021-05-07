@@ -26,7 +26,7 @@ import processscheduler.context as ps_context
 
 class Task(_NamedUIDObject):
     """ a Task object """
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, optional: bool) -> None:
         super().__init__(name)
         self.work_amount = 0
         self.priority = 1  # by default
@@ -40,7 +40,7 @@ class Task(_NamedUIDObject):
         self.duration = Int('%s_duration' % name)
 
         # by default, this task has to be scheduled
-        self.optional = False
+        self.optional = optional
         self.scheduled = True
 
         # add this task to the current context
@@ -138,13 +138,13 @@ class ZeroDurationTask(Task):
     Args:
         name: the task name. It must be unique
     """
-    def __init__(self, name: str) -> None:
-        super().__init__(name)
+    def __init__(self, name: str, optional: Optional[bool] = False) -> None:
+        super().__init__(name, optional)
         # add an assertion: end = start because the duration is zero
-        scheduled_assertions = [self.start == self.end,
+        assertions = [self.start == self.end,
                                 self.duration == 0]
 
-        self.set_assertions(scheduled_assertions)
+        self.set_assertions(assertions)
 
 class FixedDurationTask(Task):
     """ Task with constant duration.
@@ -161,7 +161,7 @@ class FixedDurationTask(Task):
                  work_amount: Optional[int] = 0,
                  priority: Optional[int] = 1,
                  optional: Optional[bool] = False) -> None:
-        super().__init__(name)
+        super().__init__(name, optional)
         if not is_strict_positive_integer(duration):
             raise TypeError('duration must be a strict positive integer')
         if not is_positive_integer(work_amount):
@@ -169,13 +169,12 @@ class FixedDurationTask(Task):
 
         self.work_amount = work_amount
         self.priority = priority
-        self.optional = optional
 
-        scheduled_assertions = [self.start + self.duration == self.end,
-                                self.duration == duration,
-                                self.start >= 0]
+        assertions = [self.start + self.duration == self.end,
+                      self.duration == duration,
+                      self.start >= 0]
 
-        self.set_assertions(scheduled_assertions)
+        self.set_assertions(assertions)
 
 class UnavailabilityTask(FixedDurationTask):
     """ A task that tells that a resource is unavailable during this period. This
@@ -193,7 +192,7 @@ class VariableDurationTask(Task):
                  work_amount: Optional[int] = 0,
                  priority: Optional[int] = 1,
                  optional: Optional[bool] = False):
-        super().__init__(name)
+        super().__init__(name, optional)
 
         if is_positive_integer(length_at_most):
             self.add_assertion(self.duration <= length_at_most)
@@ -210,13 +209,12 @@ class VariableDurationTask(Task):
         self.length_at_most = length_at_most
         self.work_amount = work_amount
         self.priority = priority
-        self.optional = optional
 
-        scheduled_assertions = [self.start + self.duration == self.end,
-                                self.start >= 0,
-                                self.duration >= length_at_least]
+        assertions = [self.start + self.duration == self.end,
+                      self.start >= 0,
+                      self.duration >= length_at_least]
 
         if length_at_most is not None:
-            scheduled_assertions.append(self.duration <= length_at_most)
+            assertions.append(self.duration <= length_at_most)
 
-        self.set_assertions(scheduled_assertions)
+        self.set_assertions(assertions)
