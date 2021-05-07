@@ -39,9 +39,7 @@ class WorkLoad(_Constraint):
 
         kind: optional string, default to 'max', can be 'min' or 'exact'
         """
-        super().__init__()
-
-        self.optional = optional
+        super().__init__(optional)
 
         if kind not in ['exact', 'max', 'min']:
             raise ValueError("kind must either be 'exact', 'min' or 'max'")
@@ -124,9 +122,7 @@ class ResourceUnavailable(_Constraint):
         :param list_of_intervals: periods for which the resource is unavailable for any task.
         for example [(0, 2), (5, 8)]
         """
-        super().__init__()
-
-        self.optional = optional
+        super().__init__(optional)
 
         # for each interval we create a task 'UnavailableResource%i'
         if isinstance(resource, Worker):
@@ -151,7 +147,7 @@ class AllSameSelected(_Constraint):
     """
     def __init__(self, alternate_workers_1, alternate_workers_2,
                  optional: Optional[bool] = False):
-        super().__init__()
+        super().__init__(optional)
         # we check resources in alt work 1, if it is present in
         # Select worker 2 as well, then add a constraint
         for res_work_1 in alternate_workers_1.selection_dict:
@@ -165,7 +161,7 @@ class AllDifferentSelected(_Constraint):
     """
     def __init__(self, alternate_workers_1, alternate_workers_2,
                  optional: Optional[bool] = False):
-        super().__init__()
+        super().__init__(optional)
         # we check resources in alt work 1, if it is present in
         # alterna worker 2 as well, then add a constraint
         for res_work_1 in alternate_workers_1.selection_dict:
