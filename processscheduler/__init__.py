@@ -29,7 +29,7 @@ from processscheduler.task_constraint import *
 from processscheduler.resource_constraint import (AllSameSelected, AllDifferentSelected,
 	                                              ResourceUnavailable, WorkLoad)
 from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
-from processscheduler.cost import ConstantCostPerPeriod
+from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
 from processscheduler.problem import SchedulingProblem
 from processscheduler.solver import SchedulingSolver
 from processscheduler.context import main_context, SchedulingContext, clear_main_context
