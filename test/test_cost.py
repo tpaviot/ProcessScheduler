@@ -81,7 +81,7 @@ class TestCost(unittest.TestCase):
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[cost_ind.name], 77)
 
-    def test_polynomial_cost_1(self) -> None:
+    def test_linear_cost_1(self) -> None:
         problem = ps.SchedulingProblem('IndicatorResourcePolynomialCost1')
 
         t_1 = ps.FixedDurationTask('t1', duration=17)
@@ -102,10 +102,10 @@ class TestCost(unittest.TestCase):
         expected_cost = int(((int_cost_function(13) + int_cost_function(13+17)) * 17) /2)
         self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
 
-    def test_optimize_polynomial_cost_1(self) -> None:
+    def test_optimize_linear_cost_1(self) -> None:
         # same cost function as above, we minimize the cst,
         # the task should be scheduled at 0 (because the cost function increases)
-        problem = ps.SchedulingProblem('OptimizePolynomialCost1')
+        problem = ps.SchedulingProblem('OptimizeLinearCost1')
 
         t_1 = ps.FixedDurationTask('t1', duration=17)
 
@@ -127,11 +127,11 @@ class TestCost(unittest.TestCase):
         expected_cost = int(((int_cost_function(0) + int_cost_function(17)) * 17) /2)
         self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
 
-    def test_optimize_polynomial_cost_2(self) -> None:
+    def test_optimize_linear_cost_2(self) -> None:
         # now we have a cost function that decreases over time,
         # then minimizing the cost should schedule the task at the end.
         # so we define an horizon for the problem
-        problem = ps.SchedulingProblem('OptimizePolynomialCost2', horizon=87)
+        problem = ps.SchedulingProblem('OptimizeLinear2', horizon=87)
 
         t_1 = ps.FixedDurationTask('t1', duration=13)
 
@@ -153,6 +153,55 @@ class TestCost(unittest.TestCase):
         
         # expected cost should be 3374
         expected_cost = int(((int_cost_function(74) + int_cost_function(87)) * 13) /2)
+        self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
+
+    def test_quadratic_cost_1(self) -> None:
+        problem = ps.SchedulingProblem('IndicatorResourceQuadraticCost1')
+
+        t_1 = ps.FixedDurationTask('t1', duration=17)
+
+        def int_cost_function(t):
+            return 23 * t ** 2 - 13 * t + 513
+
+        worker_1 = ps.Worker('Worker1', cost=ps.PolynomialCostFunction(int_cost_function))
+        t_1.add_required_resource(worker_1)
+
+        problem.add_constraint(ps.TaskStartAt(t_1, 13))
+        cost_ind = problem.add_indicator_resource_cost([worker_1])
+
+        solution = ps.SchedulingSolver(problem).solve()
+
+        self.assertTrue(solution)
+        # expected cost should be 8457
+        expected_cost = int(((int_cost_function(13) + int_cost_function(13+17)) * 17) /2)
+        self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
+
+    def test_optimize_quadratic_cost_1(self) -> None:
+        problem = ps.SchedulingProblem('OptimizeQuadraticCost1')
+
+        t_1 = ps.FixedDurationTask('t1', duration=4)
+
+        # we chosse a function where we know the minimum is
+        # let's imagine the minimum is at t=37
+        def int_cost_function(t):
+            return (t - 37) ** 2 + 513
+
+        worker_1 = ps.Worker('Worker1', cost=ps.PolynomialCostFunction(int_cost_function))
+        t_1.add_required_resource(worker_1)
+
+        cost_ind = problem.add_indicator_resource_cost([worker_1])
+        #problem.add_objective_resource_cost([worker_1])
+        problem.minimize_indicator(cost_ind)
+
+        solution = ps.SchedulingSolver(problem).solve()
+
+        self.assertTrue(solution)
+        # the solver shoudhave scheduled this task between 35 and 39, so
+        # that the middle of the task is a the function minimum
+        self.assertEqual(solution.tasks[t_1.name].start, 35)
+        self.assertEqual(solution.tasks[t_1.name].end, 39)
+        # expected cost should be 8457
+        expected_cost = int(((int_cost_function(35) + int_cost_function(35+4)) * 4) /2)
         self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
 
 
