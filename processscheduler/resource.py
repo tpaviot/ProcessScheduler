@@ -21,6 +21,7 @@ from z3 import ArithRef, Bool, PbEq, PbGe, PbLe, Xor
 
 from processscheduler.base import (_NamedUIDObject, is_positive_integer,
                                    is_strict_positive_integer)
+from processscheduler.cost import (_Cost, ConstantCostPerPeriod)
 import processscheduler.context as ps_context
 
 #
@@ -66,12 +67,16 @@ class Worker(_Resource):
     def __init__(self,
                  name: str,
                  productivity: Optional[int] = 1,
-                 cost_per_period: Optional[int] = 0) -> None:
+                 cost: Optional[int] = None) -> None:
         super().__init__(name)
         if not is_positive_integer(productivity):
             raise TypeError('productivity must be an integer >= 0')
+        if cost is None:
+            self.cost = None   
+        elif not isinstance(cost, _Cost):
+            raise TypeError('cost must be a _Cost instance')
         self.productivity = productivity
-        self.cost_per_period = cost_per_period
+        self.cost = cost
 
         # only worker are add to the main context, not SelectWorkers
         # add this resource to the current context
@@ -133,7 +138,7 @@ class CumulativeWorker(_Resource):
                  name: str,
                  size: int,
                  productivity: Optional[int] = 1,
-                 cost_per_period: Optional[int] = 0) -> None:
+                 cost: Optional[int] = 0) -> None:
         super().__init__(name)
 
         if not (isinstance(size, int) and size >= 2):
@@ -156,7 +161,7 @@ class CumulativeWorker(_Resource):
 
     def get_select_workers(self):
         """Each time the cumulative resource is assigned to a task, a SelectWorker
-        is instance to be passed to the task."""
+        instance is assigned to the task."""
         return SelectWorkers(self.cumulative_workers,
                              nb_workers_to_select=1,
                              kind='min')
