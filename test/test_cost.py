@@ -250,6 +250,26 @@ class TestCost(unittest.TestCase):
 
         cost.plot([0, 40], show_plot=False)
 
+    def test_cumulative_cost(self):
+        problem = ps.SchedulingProblem("CumulativeCost", horizon=5)
+        t_1 = ps.FixedDurationTask('t1', duration=5)
+        t_2 = ps.FixedDurationTask('t2', duration=5)
+        t_3 = ps.FixedDurationTask('t3', duration=5)
+        worker_1 = ps.CumulativeWorker('CumulWorker', size=3, cost=ps.ConstantCostPerPeriod(5))
+        t_1.add_required_resource(worker_1)
+        t_2.add_required_resource(worker_1)
+        t_3.add_required_resource(worker_1)
+
+        cost_ind = problem.add_indicator_resource_cost([worker_1])
+
+        solution = ps.SchedulingSolver(problem).solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(solution.indicators[cost_ind.name], 25)
+        solution = ps.SchedulingSolver(problem).solve()
+        self.assertTrue(solution)
+
+
 
 if __name__ == "__main__":
     unittest.main()

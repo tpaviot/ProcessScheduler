@@ -29,11 +29,20 @@ import processscheduler.context as ps_context
 #
 def _distribute_p_over_n(p, n):
     """Returns a list of integer p distributed over n values."""
-    int_div = p // n
-    to_return = [int_div + p % n]
-    for _ in range(n-1):
-        to_return.append(int_div)
-    return to_return
+    if p is None:
+        return [p for i in range(n)]
+    if isinstance(p, int):
+        int_div = p // n
+        to_return = [int_div + p % n]
+        for _ in range(n-1):
+            to_return.append(int_div)
+        return to_return
+    elif isinstance(p, ConstantCostPerPeriod):
+        int_div = p.value // n
+        to_return = [ConstantCostPerPeriod(int_div + p.value % n)]
+        for _ in range(n-1):
+            to_return.append(ConstantCostPerPeriod(int_div))
+        return to_return
 #
 # Resources class definition
 #
@@ -72,7 +81,7 @@ class Worker(_Resource):
         if not is_positive_integer(productivity):
             raise TypeError('productivity must be an integer >= 0')
         if cost is None:
-            self.cost = None   
+            self.cost = None
         elif not isinstance(cost, _Cost):
             raise TypeError('cost must be a _Cost instance')
         self.productivity = productivity
@@ -138,11 +147,17 @@ class CumulativeWorker(_Resource):
                  name: str,
                  size: int,
                  productivity: Optional[int] = 1,
-                 cost: Optional[int] = 0) -> None:
+                 cost: Optional[int] = None) -> None:
         super().__init__(name)
 
         if not (isinstance(size, int) and size >= 2):
             raise ValueError("CumulativeWorker 'size' attribute must be >=2.")
+
+        if cost is None:
+            self.cost = None
+
+        elif not isinstance(cost, _Cost):
+            raise TypeError('cost must be a _Cost instance')
 
         self.size = size
         # productivity and cost_per_period are distributed over
@@ -151,12 +166,12 @@ class CumulativeWorker(_Resource):
         # as 3 on worker 1, 2 on worker 2 and 2 on worker 3. Same for cost_per_periods
         productivities = _distribute_p_over_n(productivity, size)
 
-        costs_per_period = _distribute_p_over_n(cost_per_period, size)
+        costs_per_period = _distribute_p_over_n(cost, size)
 
         # we create as much elementary workers as the cumulative size
         self.cumulative_workers = [Worker('%s_CumulativeWorker_%i' % (name, i+1),
                                           productivity=productivities[i],
-                                          cost_per_period=costs_per_period[i])
+                                          cost=costs_per_period[i])
                                    for i in range(size)]
 
     def get_select_workers(self):
