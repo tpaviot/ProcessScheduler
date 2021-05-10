@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+import math
 import unittest
 
 import processscheduler as ps
@@ -155,6 +156,34 @@ class TestCost(unittest.TestCase):
         expected_cost = int(((int_cost_function(74) + int_cost_function(87)) * 13) /2)
         self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
 
+    def test_optimize_linear_cost_3(self) -> None:
+        # same cost function as above, we minimize the cst,
+        # the task should be scheduled at 0 (because the cost function increases)
+        problem = ps.SchedulingProblem('OptimizeLinearCost3')
+
+        t_1 = ps.FixedDurationTask('t1', duration=17)
+
+        def real_cost_function(t):
+            return 23.112 * t + 3.5
+
+        worker_1 = ps.Worker('Worker1', cost=ps.PolynomialCostFunction(real_cost_function))
+        t_1.add_required_resource(worker_1)
+
+        cost_ind = problem.add_indicator_resource_cost([worker_1])
+        problem.add_objective_resource_cost([worker_1])
+
+        solution = ps.SchedulingSolver(problem).solve()
+
+        self.assertTrue(solution)
+        # the task is scheduled at the beginning of the workplan
+        self.assertEqual(solution.tasks[t_1.name].start, 0)
+        # expected cost should be 3374
+        expected_cost = ((real_cost_function(0) + real_cost_function(17)) * 17) /2
+        # Because there are Int type conversions, the result may not be exactly
+        # the one expected, let's assume 99% is a good approx.
+        err = abs(solution.indicators[cost_ind.name] / expected_cost - 1)
+        self.assertLessEqual(err, 0.01)
+
     def test_quadratic_cost_1(self) -> None:
         problem = ps.SchedulingProblem('IndicatorResourceQuadraticCost1')
 
@@ -177,6 +206,9 @@ class TestCost(unittest.TestCase):
         self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
 
     def test_optimize_quadratic_cost_1(self) -> None:
+        # TODO: add an horizon, it should return the expected result
+        # but there's an issue, see
+        # https://github.com/Z3Prover/z3/issues/5254
         problem = ps.SchedulingProblem('OptimizeQuadraticCost1')
 
         t_1 = ps.FixedDurationTask('t1', duration=4)
@@ -203,6 +235,20 @@ class TestCost(unittest.TestCase):
         # expected cost should be 8457
         expected_cost = int(((int_cost_function(35) + int_cost_function(35+4)) * 4) /2)
         self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
+
+    def test_plot_cost_function(self) -> None:
+        # TODO: add an horizon, it should return the expected result
+        # but there's an issue, see
+        # https://github.com/Z3Prover/z3/issues/5254
+
+        # we chosse a function where we know the minimum is
+        # let's imagine the minimum is at t=37
+        def int_cost_function(t):
+            return (t - 37) ** 2 + 513
+
+        cost=ps.PolynomialCostFunction(int_cost_function)
+
+        cost.plot([0, 40], show_plot=False)
 
 
 if __name__ == "__main__":

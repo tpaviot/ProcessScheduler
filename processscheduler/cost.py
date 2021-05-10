@@ -20,14 +20,43 @@ class _Cost(_NamedUIDObject):
     def __init__(self):
         super().__init__('')
 
+    def plot(self, interval, show_plot=True) -> None:
+        """Plot the cost curve using matplotlib."""
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:
+            raise ModuleNotFoundError("matplotlib is not installed.")
+
+        lower_bound, upper_bound = interval
+        x = np.linspace(lower_bound, upper_bound, 1000)
+        y = []
+        for x_ in x:
+            y.append(self.f(x_))
+
+        plt.plot(x, y, label='Cost function')
+
+        plt.legend()
+        plt.grid()
+        plt.xlabel('x')
+        plt.ylabel('y')
+
+        if show_plot:
+            plt.show()
+
 class ConstantCostPerPeriod(_Cost):
     def __init__(self, value: int) -> None:
         super().__init__()
         if not is_positive_integer(value):
             raise ValueError('the cost per period must be a positive integer')
         self.value = value
+        self.f = lambda x: value
+
+    def __call__(self, value):
+        """ compute the value of the cost function for a given value"""
+        return self.f(value)
 
 class PolynomialCostFunction(_Cost):
+    """A function of time under a polynomail form."""
     def __init__(self, function: callable) -> None:
         super().__init__()
         if not callable(function):
