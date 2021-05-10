@@ -27,6 +27,11 @@ class _Cost(_NamedUIDObject):
         except ImportError:
             raise ModuleNotFoundError("matplotlib is not installed.")
 
+        try:
+            import numpy as np
+        except ImportError:
+            raise ModuleNotFoundError("numpy is not installed.")
+
         lower_bound, upper_bound = interval
         x = np.linspace(lower_bound, upper_bound, 1000)
         y = []
