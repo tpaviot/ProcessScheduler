@@ -18,8 +18,8 @@ A Worker is created as follows:
 
     john = Worker('JohnBenis')
 
-Worker productivity
-^^^^^^^^^^^^^^^^^^^
+Productivity
+------------
 The worker :attr:`productivity` is the quantity of work the worker can produce per period. The default productivity for a worker is :const:`0`.
 
 For example, if two drillers are available, the first one with a producvity of 3 holes per period, the second one with a productivity of 9 holes per period, then will be defined as:
@@ -31,18 +31,42 @@ For example, if two drillers are available, the first one with a producvity of 3
 
 .. note::
 
-  The workers :const:`productivity` is used by the solver to satisfy the targeted task :attr:`work_amount`.
+  The workers :const:`productivity` is used by the solver to satisfy the targeted task :attr:`work_amount` parameter value.
 
-Worker cost per period
-^^^^^^^^^^^^^^^^^^^^^^
-The worker :attr:`cost_per_period` is set to :const:`0` by default, and can bet set at the Worker instantiation.
+Cost
+----
 
-In the case where a Senior developer is charged 750$/hour and a junior dev 250$/hour, then if one period is mapped to one hour:
+A cost information can be added to any resource. ProcessScheduler can use this information to compute the total cost of a schedule, the cost for a resrouce, or optimize the schedule so that the cost is the lowest (minimiation, see the Objective section). There are currently two different ways to define a resource cost:
+
+* the class :class:`ConstantCostPerPeriod`: the cost of the resource is constant over time.
 
 .. code-block:: python
 
-    dev_1 = Worker('SeniorDeveloper', cost_per_period=750)
-    dev_2 = Worker('JuniorDeveloper', cost_per_period=250)
+    dev_1 = Worker('SeniorDeveloper', cost=ConstantCostPerPeriod(750))
+
+* the class :class:`PolynomialCostFunction`: the cost of the resource evolves as a polynomial function of time. It is useful to represent, for example, energy cost that is known to be unstable (oil) or time dependant (electricity). The :attr:`cost` parameter taks any python function (i.e. a :attr:`callable` object).
+
+.. code-block:: python
+
+    def quadratic_time_function(t):
+        return (t-20)**2 + 154
+
+    cost_function = PolynomialCostFunction(quadratic_time_function)
+    dev_1 = Worker('AWorker', cost=cost_function)
+
+The worker :attr:`cost` is set to :const:`None` by default.
+
+The cost function can be plotted using matplotlib, just for information. Just give the plotter the range to be plotted:
+
+.. code-block:: python
+
+    cost_function.plot([0, 200])
+
+.. image:: img/CostQuadraticFunction.svg
+
+.. warning::
+
+    Currently, ProcessScheduler can handle integer numbers only. Then, all the coefficients of the polynomial must be integer numbers. If ever there are floating point numbers, no exception will be raised, but you might face strange results in the cost computation.
 
 .. note::
 
