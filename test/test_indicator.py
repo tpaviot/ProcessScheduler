@@ -160,7 +160,29 @@ class TestIndicator(unittest.TestCase):
         print("Obtained value:", solution)
         self.assertTrue(solution)
 
+    def test_resource_utilization_maximization_incremantal_1(self) -> None:
+        """Same as above, but both workers are selectable. Force one with resource
+        utilization maximization objective."""
+        problem = ps.SchedulingProblem('IndicatorMaximizeIncremantal', horizon = 10)
 
+        t_1 = ps.FixedDurationTask('T1', duration=5)
+        t_2 = ps.FixedDurationTask('T2', duration=5)
+
+        worker_1 = ps.Worker('Worker1')
+        worker_2 = ps.Worker('Worker2')
+
+        t_1.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
+        t_2.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
+
+        utilization_res_1 = problem.add_indicator_resource_utilization(worker_1)
+        utilization_res_2 = problem.add_indicator_resource_utilization(worker_2)
+
+        solver = ps.SchedulingSolver(problem)
+        solution = solver.solve_optimize_incremental(utilization_res_1.indicator_variable, kind='max')
+
+        self.assertTrue(solution)
+        self.assertEqual(solution.indicators[utilization_res_1.name], 100)
+        self.assertEqual(solution.indicators[utilization_res_2.name], 0)
 
 if __name__ == "__main__":
     unittest.main()

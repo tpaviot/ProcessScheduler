@@ -311,8 +311,8 @@ class TestCost(unittest.TestCase):
 
         cost_ind = problem.add_indicator_resource_cost([worker_1])
 
-        solver = ps.SchedulingSolver(problem, max_time=3)  # max 3s per each iteration
-        solution = solver.solve_optimize_incremental(cost_ind.indicator_variable)
+        solver = ps.SchedulingSolver(problem)  # max 3s per each iteration
+        solution = solver.solve_optimize_incremental(cost_ind.indicator_variable, max_time=3)
 
         self.assertTrue(solution)
         self.assertEqual(solution.tasks[t_1.name].start, 35)

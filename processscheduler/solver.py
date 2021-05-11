@@ -32,7 +32,7 @@ class SchedulingSolver:
     """ A solver class """
     def __init__(self, problem,
                  debug: Optional[bool] = False,
-                 max_time: Optional[int] = 60,
+                 max_time: Optional[int] = 10,
                  optimize_priority = 'lex',
                  parallel: Optional[bool] = False):
         """ Scheduling Solver
@@ -314,11 +314,13 @@ class SchedulingSolver:
     def solve_optimize_incremental(self,
                                    variable: ArithRef,
                                    max_recursion_depth=None,
+                                   max_time=10,
                                    kind='min') -> int:
         """ target a min or max for a variable, without the Optimize solver.
         The loop continues ever and ever untill the next value is more than 90%"""
         if kind not in ['min', 'max']:
             raise ValueError("choose either 'min' or 'max'")
+        set_option("timeout", max_time * 1000)  # in ms
         depth = 0
         solution = False
         init_time = time.perf_counter()
@@ -332,6 +334,9 @@ class SchedulingSolver:
             if is_sat != sat:
                 break
             solution = self._solver.model()
+            current_time = time.perf_counter() - init_time
+            if current_time > max_time:
+                break
             current_variable_value = solution[variable].as_long()
             self._solver.push()
             if kind == 'min':
