@@ -24,7 +24,7 @@ from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
 from processscheduler.objective import (Indicator, MaximizeObjective,
                                         MinimizeObjective, BuiltinIndicator)
 from processscheduler.resource import _Resource, CumulativeWorker
-
+from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
 import processscheduler.context as ps_context
 
 class SchedulingProblem(_NamedUIDObject):
@@ -94,8 +94,14 @@ class SchedulingProblem(_NamedUIDObject):
         def get_resource_cost(res):
             p = []
             for interv_low, interv_up in res.busy_intervals.values():
-                partial_cost_contribution = res.cost_per_period * (interv_up - interv_low)
-                p.append(partial_cost_contribution)
+                # Constant cost per period
+                if isinstance(res.cost, ConstantCostPerPeriod):
+                    period_cost = res.cost.value * (interv_up - interv_low)
+                    p.append(period_cost)
+                # Polynomial cost. Compute the area of the trapeze
+                if isinstance(res.cost, PolynomialCostFunction):
+                    period_cost = (res.cost(interv_low) + res.cost(interv_up)) * (interv_up - interv_low) / 2
+                    p.append(period_cost)
             return p
 
         for resource in list_of_resources:
