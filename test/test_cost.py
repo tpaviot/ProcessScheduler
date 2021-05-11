@@ -202,14 +202,14 @@ class TestCost(unittest.TestCase):
 
         self.assertTrue(solution)
         # expected cost should be 8457
-        expected_cost = int(((int_cost_function(13) + int_cost_function(13+17)) * 17) /2)
+        expected_cost = int(((int_cost_function(13) + int_cost_function(13 + 17)) * 17) /2)
         self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
 
-    def test_optimize_quadratic_cost_1(self) -> None:
+    def test_optimize_quadratic_cost_2(self) -> None:
         # TODO: add an horizon, it should return the expected result
         # but there's an issue, see
         # https://github.com/Z3Prover/z3/issues/5254
-        problem = ps.SchedulingProblem('OptimizeQuadraticCost1')
+        problem = ps.SchedulingProblem('OptimizeQuadraticCost2')
 
         t_1 = ps.FixedDurationTask('t1', duration=4)
 
