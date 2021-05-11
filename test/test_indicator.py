@@ -156,7 +156,7 @@ class TestIndicator(unittest.TestCase):
         
         solver = ps.SchedulingSolver(problem)
         # maximize the start_time for this task
-        solution = solver.optimize_incremental(task_1.start, depth=1500, kind='max')
+        solution = solver.solve_optimize_incremental(task_1.start, kind='max')
         print("Obtained value:", solution)
         self.assertTrue(solution)
 
