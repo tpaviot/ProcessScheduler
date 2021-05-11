@@ -20,7 +20,7 @@ from typing import Optional
 import uuid
 import warnings
 
-from z3 import Solver, Sum, unsat, ArithRef, unknown, Optimize, set_option
+from z3 import Solver, Sum, unsat, sat, ArithRef, unknown, Optimize, set_option
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
@@ -311,26 +311,43 @@ class SchedulingSolver:
         self.add_constraint(variable != current_variable_value)
         return self.solve()
 
-    def optimize_incremental(self, variable: ArithRef, depth=1, kind='min') -> int:
+    def solve_optimize_incremental(self,
+                                   variable: ArithRef,
+                                   max_recursion_depth=None,
+                                   kind='min') -> int:
         """ target a min or max for a variable, without the Optimize solver.
         The loop continues ever and ever untill the next value is more than 90%"""
         if kind not in ['min', 'max']:
             raise ValueError("choose either 'min' or 'max'")
-        if self.current_solution is None:
-            self.solve()
-        for _ in range(depth):
-            current_variable_value = self.current_solution[variable].as_long()
+        depth = 0
+        solution = False
+        init_time = time.perf_counter()
+        while True:  # infinite loop, break if unsat of max_depth
+            depth += 1
+            if max_recursion_depth is not None:
+                if depth > max_recursion_depth:
+                    warnings.warn('maximum recursion depth exceeded. There might be a better solution.')
+                    break
+            is_sat = self._solver.check()
+            if is_sat != sat:
+                break
+            solution = self._solver.model()
+            current_variable_value = solution[variable].as_long()
             self._solver.push()
             if kind == 'min':
                 self.add_constraint(variable < current_variable_value)
             else:
                 self.add_constraint(variable > current_variable_value)
-            result = self.solve()
-            if not result:
-                warnings.warn('maximum recursion depth')
-                break # unsat
+        if not solution:
+            return False
+        final_time = time.perf_counter()
+        print('Incremental optimizer:\n============================')
+        print('\tnumber of iterations: %i' % depth)
+        print('\tvalue: %i' %current_variable_value)
+        print('\t%s satisfiability checked in %.2fs' % (self._problem.name, final_time - init_time))
 
-        return current_variable_value
+        self.current_solution = solution
+        return self.build_solution(solution)
 
     def export_to_smt2(self, smt_filename):
         """ export the model to a smt file to be processed by another SMT solver """
