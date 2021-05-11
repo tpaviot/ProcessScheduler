@@ -311,6 +311,27 @@ class SchedulingSolver:
         self.add_constraint(variable != current_variable_value)
         return self.solve()
 
+    def optimize_incremental(self, variable: ArithRef, depth=1, kind='min') -> int:
+        """ target a min or max for a variable, without the Optimize solver.
+        The loop continues ever and ever untill the next value is more than 90%"""
+        if kind not in ['min', 'max']:
+            raise ValueError("choose either 'min' or 'max'")
+        if self.current_solution is None:
+            self.solve()
+        for _ in range(depth):
+            current_variable_value = self.current_solution[variable].as_long()
+            self._solver.push()
+            if kind == 'min':
+                self.add_constraint(variable < current_variable_value)
+            else:
+                self.add_constraint(variable > current_variable_value)
+            result = self.solve()
+            if not result:
+                warnings.warn('maximum recursion depth')
+                break # unsat
+
+        return current_variable_value
+
     def export_to_smt2(self, smt_filename):
         """ export the model to a smt file to be processed by another SMT solver """
         with open(smt_filename, 'w') as outfile:
