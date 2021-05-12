@@ -128,7 +128,8 @@ class SchedulingSolution:
                             show_plot: Optional[bool] = True,
                             show_indicators: Optional[bool] = True,
                             render_mode: Optional[str] = 'Resource',
-                            fig_filename: Optional[str] = None,) -> None:
+                            fig_filename: Optional[str] = None,
+                            html_filename: Optional[str] = None,) -> None:
         """Use plotly.create_gantt method, see
         https://plotly.github.io/plotly.py-docs/generated/plotly.figure_factory.create_gantt.html
         """
@@ -175,6 +176,9 @@ class SchedulingSolution:
 
         if fig_filename is not None:
             fig.write_image(fig_filename)
+
+        if html_filename is not None:
+            print(fig.to_html())
 
         if show_plot:
             fig.show()
