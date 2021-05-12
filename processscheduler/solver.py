@@ -53,11 +53,23 @@ class SchedulingSolver:
             set_option("verbose", 2)
 
         # set timeout
-        set_option("timeout", max_time * 1000)  # in ms
+        self.max_time = max_time  # in seconds
+        set_option("timeout", self.max_time * 1000)  # in milliseconds
 
         # create the solver
         print('Solver type:\n===========')
-        if self.problem_context.objectives:
+
+        # check if the problem is an optimization problem
+        self.is_not_optimization_problem = len(self.problem_context.objectives) == 0
+        self.is_multi_objective_optimization_problem = len(self.problem_context.objectives) > 1
+        self.is_single_objective_optimization_problem = len(self.problem_context.objectives) == 1
+
+        # the Optimize() solver is used only in the case of a mutli-optimization
+        # problem. This enables to choose the priority method.
+        # in the case of a single objective optimization, the Optimize() solver
+        # apperas to be less robust than the basic Solver(). The
+        # incremental solver is then used.
+        if self.is_multi_objective_optimization_problem:
             self._solver = Optimize()  # Solver with optimization
             self._solver.set(priority=self.optimize_priority)
             print("\t-> Solver with optimization enabled")
@@ -90,7 +102,8 @@ class SchedulingSolver:
 
         self.process_work_amount()
 
-        self.create_objectives()
+        if self.is_multi_objective_optimization_problem:
+            self.create_objectives()
 
         # each time the solver is called, the current_solution is stored
         self.current_solution = None
@@ -110,6 +123,7 @@ class SchedulingSolver:
 
     def create_objectives(self) -> None:
         """ create optimization objectives """
+        # in case of a single value to optimize
         for obj in self.problem_context.objectives:
             if isinstance(obj, MaximizeObjective):
                 # look for the minimum horizon, i.e. the shortest
@@ -132,41 +146,17 @@ class SchedulingSolver:
                     work_total_for_all_resources.append(work_contribution)
                 self.add_constraint(Sum(work_total_for_all_resources) >= task.work_amount)
 
-    def check_sat(self) -> bool:
-        """ check satisfiability """
+    def check_sat(self):
+        """ check satisfiability. Returns resulta as True (sat) or False (unsat, unknown).
+        The computation time.
+        """
         init_time = time.perf_counter()
         sat_result  = self._solver.check()
-        final_time = time.perf_counter()
-
-        if self.debug:
-            self.print_assertions()
-            if isinstance(self._solver, Optimize):
-                print('\tObjectives:\n\t======')
-                for obj in self._solver.objectives():
-                    print('\t', obj)
-        print('SAT computation time:\n=====================')
-        print('\t%s satisfiability checked in %.2fs' % (self._problem.name, final_time - init_time))
-
-        if sat_result == unsat:
-            print("SAT result:\n===========")
-            print("\tNo solution exists for problem %s." % self._problem.name)
-            if self.debug:
-                unsat_core = self._solver.unsat_core()
-                print('\t%i unsatisfied assertion(s) (probable conflict):' % len(unsat_core))
-                for c in unsat_core:
-                    print('\t->%s' % c)
-            return False
-
-        if sat_result == unknown:
-            reason = self._solver.reason_unknown()
-            print("\tNo solution can be found for problem %s because: %s" % (self._problem.name,
-                                                                             reason))
-            return False
-
-        return True
+        check_sat_time = time.perf_counter() - init_time
+        return sat_result, check_sat_time
 
     def build_solution(self, z3_sol):
-        """ create a SchedulingSolution instance, and return it """
+        """create and return a SchedulingSolution instance"""
         solution = SchedulingSolution(self._problem)
 
         # set the horizon solution
@@ -260,27 +250,112 @@ class SchedulingSolver:
 
     def solve(self) -> bool:
         """ call the solver and returns the solution, if ever """
-        # first check satisfiability
-        if not self.check_sat():
-            return False
-
-        solution = self._solver.model()
-        self.current_solution = solution
-
-        if self.objectives:
-            print('Optimization results:\n=====================')
-            print('\t->Objective priority specification: %s' % self.optimize_priority)
-            print('\t->Objective values:')
-            for objective_name, objective_value in self.objectives:  # if ever no objectives, this line will do nothing
-                print('\t\t->%s: %s' % (objective_name, objective_value.value()))
-
+        # for all cases
         if self.debug:
-            self.print_statistics()
-            self.print_solution()
+            self.print_assertions()
 
+        if self.is_single_objective_optimization_problem:
+            # in this case, use the incremental solver
+            objective = self.problem_context.objectives[0]
+            if isinstance(objective, MinimizeObjective):
+                dd = 'min'
+            elif isinstance(objective, MaximizeObjective):
+                dd = 'max'
+            # print(dir(objective))
+            # print(objective.target)
+            solution = self.solve_optimize_incremental(objective.target, kind=dd)
+            if not solution:
+                #raise ('No Solution')
+                return False
+        else:
+            # first check satisfiability
+            sat_result, sat_computation_time = self.check_sat()
+            if self.is_multi_objective_optimization_problem:
+                print('\tObjectives:\n\t======')
+                for obj in self._solver.objectives():
+                    print('\t', obj)
+
+            print('Total computation time:\n=====================')
+            print('\t%s satisfiability checked in %.2fs' % (self._problem.name, sat_computation_time))
+
+            if sat_result == unsat:
+                print("SAT result:\n===========")
+                print("\tNo solution exists for problem %s." % self._problem.name)
+                if self.debug:
+                    unsat_core = self._solver.unsat_core()
+                    print('\t%i unsatisfied assertion(s) (probable conflict):' % len(unsat_core))
+                    for c in unsat_core:
+                        print('\t->%s' % c)
+                return False
+
+            if sat_result == unknown:
+                reason = self._solver.reason_unknown()
+                print("\tNo solution can be found for problem %s because: %s" % (self._problem.name,
+                                                                                 reason))
+                return False
+
+            # then get the solution
+            solution = self._solver.model()
+            
+
+            if self.objectives:
+                print('Optimization results:\n=====================')
+                print('\t->Objective priority specification: %s' % self.optimize_priority)
+                print('\t->Objective values:')
+                for objective_name, objective_value in self.objectives:  # if ever no objectives, this line will do nothing
+                    print('\t\t->%s: %s' % (objective_name, objective_value.value()))
+
+            if self.debug:
+                self.print_statistics()
+                self.print_solution()
+
+        self.current_solution = solution
         sol = self.build_solution(solution)
 
         return sol
+
+    def solve_optimize_incremental(self,
+                                   variable: ArithRef,
+                                   max_recursion_depth=None,
+                                   kind='min') -> int:
+        """ target a min or max for a variable, without the Optimize solver.
+        The loop continues ever and ever until the next value is more than 90%"""
+        if kind not in ['min', 'max']:
+            raise ValueError("choose either 'min' or 'max'")
+        depth = 0
+        solution = False
+        total_time = 0
+        print('Incremental optimizer:\n============================')
+        while True:  # infinite loop, break if unsat of max_depth
+            depth += 1
+            if max_recursion_depth is not None:
+                if depth > max_recursion_depth:
+                    warnings.warn('maximum recursion depth exceeded. There might be a better solution.')
+                    break
+
+            is_sat, sat_computation_time = self.check_sat()
+            if is_sat != sat:
+                break
+            solution = self._solver.model()
+            total_time += sat_computation_time
+            if total_time > self.max_time:
+                warnings.warn('max time exceeded')
+                break
+            current_variable_value = solution[variable].as_long()
+            print(f'\tvalue:{current_variable_value}, time:{total_time}')
+
+            if kind == 'min':
+                self.add_constraint(variable < current_variable_value)
+            else:
+                self.add_constraint(variable > current_variable_value)
+
+        if not solution:
+            return False
+        print('\ttotal number of iterations: %i' % depth)
+        print('\tvalue: %i' %current_variable_value)
+        print('\t%s satisfiability checked in %.2fs' % (self._problem.name, total_time))
+
+        return solution
 
     def print_assertions(self):
         """A utility method to display solver assertions"""
@@ -310,49 +385,6 @@ class SchedulingSolver:
         current_variable_value = self.current_solution[variable].as_long()
         self.add_constraint(variable != current_variable_value)
         return self.solve()
-
-    def solve_optimize_incremental(self,
-                                   variable: ArithRef,
-                                   max_recursion_depth=None,
-                                   max_time=10,
-                                   kind='min') -> int:
-        """ target a min or max for a variable, without the Optimize solver.
-        The loop continues ever and ever untill the next value is more than 90%"""
-        if kind not in ['min', 'max']:
-            raise ValueError("choose either 'min' or 'max'")
-        set_option("timeout", max_time * 1000)  # in ms
-        depth = 0
-        solution = False
-        init_time = time.perf_counter()
-        while True:  # infinite loop, break if unsat of max_depth
-            depth += 1
-            if max_recursion_depth is not None:
-                if depth > max_recursion_depth:
-                    warnings.warn('maximum recursion depth exceeded. There might be a better solution.')
-                    break
-            is_sat = self._solver.check()
-            if is_sat != sat:
-                break
-            solution = self._solver.model()
-            current_time = time.perf_counter() - init_time
-            if current_time > max_time:
-                break
-            current_variable_value = solution[variable].as_long()
-            self._solver.push()
-            if kind == 'min':
-                self.add_constraint(variable < current_variable_value)
-            else:
-                self.add_constraint(variable > current_variable_value)
-        if not solution:
-            return False
-        final_time = time.perf_counter()
-        print('Incremental optimizer:\n============================')
-        print('\tnumber of iterations: %i' % depth)
-        print('\tvalue: %i' %current_variable_value)
-        print('\t%s satisfiability checked in %.2fs' % (self._problem.name, final_time - init_time))
-
-        self.current_solution = solution
-        return self.build_solution(solution)
 
     def export_to_smt2(self, smt_filename):
         """ export the model to a smt file to be processed by another SMT solver """

@@ -177,8 +177,8 @@ class TestIndicator(unittest.TestCase):
         utilization_res_1 = problem.add_indicator_resource_utilization(worker_1)
         utilization_res_2 = problem.add_indicator_resource_utilization(worker_2)
 
+        problem.maximize_indicator(utilization_res_1)
         solver = ps.SchedulingSolver(problem)
-        solution = solver.solve_optimize_incremental(utilization_res_1.indicator_variable, kind='max')
 
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[utilization_res_1.name], 100)

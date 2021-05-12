@@ -288,10 +288,11 @@ class TestCost(unittest.TestCase):
         t_1.add_required_resource(worker_1)
 
         cost_ind = problem.add_indicator_resource_cost([worker_1])
+        problem.minimize_indicator(cost_ind)
         
         solver = ps.SchedulingSolver(problem)
 
-        solution = solver.solve_optimize_incremental(cost_ind.indicator_variable)
+        solution = solver.solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.tasks[t_1.name].start, 23)
@@ -310,9 +311,10 @@ class TestCost(unittest.TestCase):
         t_1.add_required_resource(worker_1)
 
         cost_ind = problem.add_indicator_resource_cost([worker_1])
-
-        solver = ps.SchedulingSolver(problem)  # max 3s per each iteration
-        solution = solver.solve_optimize_incremental(cost_ind.indicator_variable, max_time=3)
+        problem.minimize_indicator(cost_ind)
+        
+        solver = ps.SchedulingSolver(problem, max_time=3)  # max 3s per each iteration
+        solution = solver.solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.tasks[t_1.name].start, 35)
