@@ -305,12 +305,13 @@ class SchedulingSolver:
                 for objective_name, objective_value in self.objectives:  # if ever no objectives, this line will do nothing
                     print('\t\t->%s: %s' % (objective_name, objective_value.value()))
 
-            if self.debug:
-                self.print_statistics()
-                self.print_solution()
-
         self.current_solution = solution
         sol = self.build_solution(solution)
+
+
+        if self.debug:
+            self.print_statistics()
+            self.print_solution()
 
         return sol
 
