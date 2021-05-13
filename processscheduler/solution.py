@@ -17,6 +17,7 @@
 
 from datetime import time, timedelta, datetime
 import json
+from pathlib import Path
 
 from typing import Optional, Tuple
 
@@ -178,7 +179,8 @@ class SchedulingSolution:
             fig.write_image(fig_filename)
 
         if html_filename is not None:
-            print(fig.to_html())
+            file = Path(html_filename)
+            file.write_text(fig.to_html(include_plotlyjs='cdn'))
 
         if show_plot:
             fig.show()
