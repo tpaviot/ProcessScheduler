@@ -273,7 +273,55 @@ class TestCost(unittest.TestCase):
         solution = ps.SchedulingSolver(problem).solve()
         self.assertTrue(solution)
 
+    def test_incremental_optimizer_linear_cost_1(self) -> None:
+        # same cost function as above, we minimize the cst,
+        # the task should be scheduled at 0 (because the cost function increases)
+        problem = ps.SchedulingProblem('IncrementalOptimizerLinearCost1', horizon=40)
 
+        t_1 = ps.FixedDurationTask('t1', duration=17)
+
+        # the task should be scheduled at the end
+        def int_cost_function(t):
+            return - 23 * t + 321
+
+        worker_1 = ps.Worker('Worker1', cost=ps.PolynomialCostFunction(int_cost_function))
+        t_1.add_required_resource(worker_1)
+
+        cost_ind = problem.add_indicator_resource_cost([worker_1])
+        problem.minimize_indicator(cost_ind)
+        
+        solver = ps.SchedulingSolver(problem)
+
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(solution.tasks[t_1.name].start, 23)
+
+    def test_incremental_optimizer_quadratic_cost_1(self) -> None:
+        problem = ps.SchedulingProblem('IncrementalOptimizeQuadraticCost1', horizon=80)
+
+        t_1 = ps.FixedDurationTask('t1', duration=4)
+
+        # we chosse a function where we know the minimum is
+        # let's imagine the minimum is at t=37
+        def int_cost_function(t):
+            return (t - 37) ** 2 + 513
+
+        worker_1 = ps.Worker('Worker1', cost=ps.PolynomialCostFunction(int_cost_function))
+        t_1.add_required_resource(worker_1)
+
+        cost_ind = problem.add_indicator_resource_cost([worker_1])
+        problem.minimize_indicator(cost_ind)
+        
+        solver = ps.SchedulingSolver(problem, max_time=3)  # max 3s per each iteration
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(solution.tasks[t_1.name].start, 35)
+        self.assertEqual(solution.tasks[t_1.name].end, 39)
+        expected_cost = int(((int_cost_function(35) + int_cost_function(35+4)) * 4) /2)
+        # TODO: check expected cost
+        self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
 
 if __name__ == "__main__":
     unittest.main()
