@@ -66,6 +66,7 @@ jobs:
   - bash: |
       source activate psenv && \
       cd doc && \
+      conda install -c conda-forge pandoc && \
       pip install -r requirements.txt && \
       make html
     displayName: 'Build Sphinx documentation'
