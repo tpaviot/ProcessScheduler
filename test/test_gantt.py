@@ -154,8 +154,16 @@ class TestGantt(unittest.TestCase):
         solution.render_gantt_plotly(render_mode='Task',
                                      show_plot=False,
                                      fig_filename='test_render_tasks_plotly.svg')
+        solution.render_gantt_plotly(render_mode='Resource',
+                                     show_plot=False,
+                                     html_filename='test_render_resources_plotly.html')
+        solution.render_gantt_plotly(render_mode='Task',
+                                     show_plot=False,
+                                     html_filename='test_render_tasks_plotly.html')
         self.assertTrue(os.path.isfile('test_render_resources_plotly.svg'))
         self.assertTrue(os.path.isfile('test_render_tasks_plotly.svg'))
+        self.assertTrue(os.path.isfile('test_render_resources_plotly.html'))
+        self.assertTrue(os.path.isfile('test_render_tasks_plotly.html'))
 
 
     def test_gantt_plotly_with_indicators_figsize(self):
