@@ -153,12 +153,15 @@ class TestIndicator(unittest.TestCase):
     def test_incremental_optimizer_1(self) -> None:
         problem = ps.SchedulingProblem('IncrementalOptimizer1', horizon=100)
         task_1 = ps.FixedDurationTask('task1', duration=2)
-        
+
+        task_1_start_ind = ps.Indicator("Task1Start", task_1.start)
+        problem.maximize_indicator(task_1_start_ind)
+
         solver = ps.SchedulingSolver(problem)
-        # maximize the start_time for this task
-        solution = solver.solve_optimize_incremental(task_1.start, kind='max')
-        print("Obtained value:", solution)
+        solution = solver.solve()
+
         self.assertTrue(solution)
+        self.assertEqual(solution.indicators[task_1_start_ind.name], 98)
 
     def test_resource_utilization_maximization_incremantal_1(self) -> None:
         """Same as above, but both workers are selectable. Force one with resource
@@ -179,6 +182,8 @@ class TestIndicator(unittest.TestCase):
 
         problem.maximize_indicator(utilization_res_1)
         solver = ps.SchedulingSolver(problem)
+
+        solution = solver.solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[utilization_res_1.name], 100)
