@@ -297,7 +297,6 @@ class SchedulingSolver:
             # then get the solution
             solution = self._solver.model()
             
-
             if self.objectives:
                 print('Optimization results:\n=====================')
                 print('\t->Objective priority specification: %s' % self.optimize_priority)
@@ -307,7 +306,6 @@ class SchedulingSolver:
 
         self.current_solution = solution
         sol = self.build_solution(solution)
-
 
         if self.debug:
             self.print_statistics()
@@ -343,7 +341,7 @@ class SchedulingSolver:
                 warnings.warn('max time exceeded')
                 break
             current_variable_value = solution[variable].as_long()
-            print(f'\tvalue:{current_variable_value}, time:{total_time}')
+            print(f'\tvalue:{current_variable_value}, elapsed time(s):{total_time}')
 
             if kind == 'min':
                 self.add_constraint(variable < current_variable_value)
