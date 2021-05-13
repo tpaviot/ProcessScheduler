@@ -53,13 +53,18 @@ class TestTask(unittest.TestCase):
             ps.FixedDurationTask('NegativeWorkAmount', 2, work_amount=-3)
 
     def test_create_task_variable_duration(self) -> None:
-        new_problem_or_clear()
-        ps.VariableDurationTask('vdt1')
+        pb = ps.SchedulingProblem('CreateVariableDurationTask')
+
+        vdt_1 = ps.VariableDurationTask('vdt1')
         vdt_2 = ps.VariableDurationTask('vdt2', length_at_most=4)
         vdt_3 = ps.VariableDurationTask('vdt3', length_at_least=5)
-        ps.VariableDurationTask('vdt4', work_amount=10)
-        self.assertEqual(vdt_2.length_at_most, 4)
-        self.assertEqual(vdt_3.length_at_least, 5)
+
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+        self.assertTrue(solution.tasks[vdt_2.name].duration <= 4)
+        self.assertTrue(solution.tasks[vdt_3.name].duration >= 5)
 
     def test_task_types(self) -> None:
         new_problem_or_clear()
@@ -101,7 +106,8 @@ class TestTask(unittest.TestCase):
         self.assertEqual(list(pb.context.resources), [worker_1])
 
     def test_resource_requirements(self) -> None:
-        new_problem_or_clear()
+        pb = ps.SchedulingProblem('ResourceRequirements')
+
         task_1 = ps.FixedDurationTask('task1', duration=3)
         worker_1 = ps.Worker('Worker1')
         worker_2 = ps.Worker('Worker2')
@@ -110,7 +116,10 @@ class TestTask(unittest.TestCase):
         task_1.add_required_resource(worker_1)
         task_1.add_required_resource(worker_2)
         task_1.add_required_resources([worker_3, worker_4])
-        self.assertEqual(len(task_1.required_resources), 4)
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertEqual(len(solution.tasks['task1'].assigned_resources), 4)
 
     def test_wrong_assignement(self) -> None:
         new_problem_or_clear()
@@ -168,6 +177,26 @@ class TestTask(unittest.TestCase):
         constraint = ps.TaskEndBeforeLax(task, 3)
         self.assertIsInstance(constraint, ps.TaskEndBeforeLax)
         self.assertEqual(constraint.value, 3)
+
+    def test_task_duration_depend_on_start(self) -> None:
+        pb = ps.SchedulingProblem('TaskDurationDependsOnStart', horizon=30)
+
+        task_1 = ps.VariableDurationTask('Task1')
+        task_2 = ps.VariableDurationTask('Task2')
+
+        pb.add_constraint(ps.TaskStartAt(task_1, 5))
+        task_1_cstr = task_1.duration == task_1.start * 3
+        pb.add_constraint(task_1_cstr)
+
+        pb.add_constraint(ps.TaskStartAt(task_2, 11))
+        task_2_cstr = ps.if_then_else(task_2.start  < 10, [task_2.duration == 3], [task_2.duration == 1])
+        pb.add_constraint(task_2_cstr)
+
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertEqual(solution.tasks['Task1'].duration, 15)
+        self.assertEqual(solution.tasks['Task2'].duration, 1)
 
     #
     # Two tasks constraints
