@@ -217,4 +217,7 @@ class VariableDurationTask(Task):
         if length_at_most is not None:
             assertions.append(self.duration <= length_at_most)
 
+        if length_at_least is not None:
+            assertions.append(self.duration >= length_at_least)
+
         self.set_assertions(assertions)
