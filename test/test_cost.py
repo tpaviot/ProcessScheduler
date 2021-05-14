@@ -19,21 +19,23 @@ import processscheduler as ps
 
 class TestCost(unittest.TestCase):
     def test_cost_basic(self) -> None:
-        pb = ps.SchedulingProblem('CostBasic', horizon=12)
+        ps.SchedulingProblem('CostBasic', horizon=12)
         ress_cost = ps.ConstantCostPerPeriod(5)
-        ress = ps.Worker('Worker1', cost=ress_cost)
+        ps.Worker('Worker1', cost=ress_cost)
 
     def test_cost_polynomial_1(self) -> None:
         ps.SchedulingProblem('PolynomialCost1', horizon=12)
+
         def c(t):
             return 0.5 * t ** 2 + 50
+
         ress_cost = ps.PolynomialCostFunction(c)
-        ress = ps.Worker('Worker1', cost=ress_cost)
+        ps.Worker('Worker1', cost=ress_cost)
 
     def test_cost_polynomial_lambda(self) -> None:
-        pb = ps.SchedulingProblem('PolynomialCostLambdaFunction', horizon=12)
+        ps.SchedulingProblem('PolynomialCostLambdaFunction', horizon=12)
         ress_cost = ps.PolynomialCostFunction(lambda t : 2 * t + 10)
-        ress = ps.Worker('Worker1', cost=ress_cost)
+        ps.Worker('Worker1', cost=ress_cost)
 
     def test_cost_failure(self) -> None:
         ps.SchedulingProblem('CostWrongType', horizon=12)
@@ -138,7 +140,7 @@ class TestCost(unittest.TestCase):
         self.assertTrue(solution)
         # the task is scheduled at the beginning of the workplan
         self.assertEqual(solution.tasks[t_1.name].start, 74)
-        
+
         # expected cost should be 3374
         expected_cost = int(((int_cost_function(74) + int_cost_function(87)) * 13) /2)
         self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
@@ -273,7 +275,7 @@ class TestCost(unittest.TestCase):
 
         cost_ind = problem.add_indicator_resource_cost([worker_1])
         problem.minimize_indicator(cost_ind)
-        
+
         solver = ps.SchedulingSolver(problem)
 
         solution = solver.solve()
@@ -296,7 +298,7 @@ class TestCost(unittest.TestCase):
 
         cost_ind = problem.add_indicator_resource_cost([worker_1])
         problem.minimize_indicator(cost_ind)
-        
+
         solver = ps.SchedulingSolver(problem, max_time=3)  # max 3s per each iteration
         solution = solver.solve()
 
@@ -306,6 +308,7 @@ class TestCost(unittest.TestCase):
         expected_cost = int(((int_cost_function(35) + int_cost_function(35+4)) * 4) /2)
         # TODO: check expected cost
         self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
+
 
 if __name__ == "__main__":
     unittest.main()

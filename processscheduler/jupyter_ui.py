@@ -16,8 +16,24 @@
 from processscheduler.problem import SchedulingProblem
 from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
 from processscheduler.task import ZeroDurationTask, FixedDurationTask, VariableDurationTask
-from processscheduler.task_constraint import *
-from processscheduler.resource_constraint import *
+from processscheduler.task_constraint import (TaskPrecedence,
+                                              TasksStartSynced,
+                                              TasksEndSynced,
+                                              TasksDontOverlap,
+                                              TaskStartAt,
+                                              TaskStartAfterStrict,
+                                              TaskStartAfterLax,
+                                              TaskEndAt,
+                                              TaskEndBeforeStrict,
+                                              TaskEndBeforeLax,
+                                              OptionalTaskConditionSchedule,
+                                              OptionalTasksDependency,
+                                              ForceScheduleNOptionalTasks,
+                                              ScheduleNTasksInTimeIntervals)
+from processscheduler.resource_constraint import (WorkLoad,
+                                                  ResourceUnavailable,
+                                                  AllSameSelected,
+                                                  AllDifferentSelected)
 from processscheduler.solver import SchedulingSolver
 
 import isodate
@@ -90,7 +106,7 @@ def on_create_problem_button_clicked(b) -> bool:
     if delta_time_widget.value != '':
         try:
             parsed_delta_time = isodate.parse_duration(delta_time_widget.value)
-        except:
+        except isodate.isoerror.ISO8601Error:
             print('Not a valid isodate format for delta_time')
             parsed_delta_time = None
             return False
@@ -277,22 +293,22 @@ def on_create_task_button_clicked(b):
     task_name = task_name_widget.value
     task_class = task_types[task_type_widget.value]
     if task_class == ZeroDurationTask:
-        new_class = task_class(task_name)
+        task_class(task_name)
     elif task_class == VariableDurationTask:
-        new_class = task_class(task_name,
-                               #priority=task_priority_widget.value,
-                               #work_amount=task_work_amount_widget.value,
-                               optional=task_optional)
+        task_class(task_name,
+                   #priority=task_priority_widget.value,
+                   #work_amount=task_work_amount_widget.value,
+                   optional=task_optional)
     else:
-        new_class = task_class(task_name,
-                               duration=task_duration_widget.value,
-                               #priority=task_priority_widget.value,
-                               #work_amount=task_work_amount_widget.value,
-                               optional=task_optional)
+        task_class(task_name,
+                   duration=task_duration_widget.value,
+                   #priority=task_priority_widget.value,
+                   #work_amount=task_work_amount_widget.value,
+                   optional=task_optional)
     # rebuild option list for the task list
     tasks_list_of_tuples = []
     for task in pb.context.tasks:
-        tasks_list_of_tuples.append((new_class.name, new_class))
+        tasks_list_of_tuples.append((task.name, task))
     tasks_select_widget.options = tasks_list_of_tuples
     with task_output:
         print('Task', task_name, 'successfully created.')

@@ -60,7 +60,7 @@ class TestTask(unittest.TestCase):
     def test_create_task_variable_duration(self) -> None:
         pb = ps.SchedulingProblem('CreateVariableDurationTask')
 
-        vdt_1 = ps.VariableDurationTask('vdt1')
+        ps.VariableDurationTask('vdt1')
         vdt_2 = ps.VariableDurationTask('vdt2', length_at_most=4)
         vdt_3 = ps.VariableDurationTask('vdt3', length_at_least=5)
 
