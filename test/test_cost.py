@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-import math
 import unittest
 
 import processscheduler as ps
@@ -25,7 +24,7 @@ class TestCost(unittest.TestCase):
         ress = ps.Worker('Worker1', cost=ress_cost)
 
     def test_cost_polynomial_1(self) -> None:
-        pb = ps.SchedulingProblem('PolynomialCost1', horizon=12)
+        ps.SchedulingProblem('PolynomialCost1', horizon=12)
         def c(t):
             return 0.5 * t ** 2 + 50
         ress_cost = ps.PolynomialCostFunction(c)
@@ -37,9 +36,9 @@ class TestCost(unittest.TestCase):
         ress = ps.Worker('Worker1', cost=ress_cost)
 
     def test_cost_failure(self) -> None:
-        pb = ps.SchedulingProblem('CostWrongType', horizon=12)
+        ps.SchedulingProblem('CostWrongType', horizon=12)
         with self.assertRaises(TypeError):
-            ress = ps.Worker('ress1', cost = 5)  # only accepts a _Cost instance
+            ps.Worker('ress1', cost = 5)  # only accepts a _Cost instance
         with self.assertRaises(TypeError):
             ps.PolynomialCostFunction('f')  # only accepts a callable
 
@@ -69,18 +68,6 @@ class TestCost(unittest.TestCase):
 
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[cost_ind.name], 300)
-
-    def test_constant_cost_per_period_1(self) -> None:
-        problem = ps.SchedulingProblem('IndicatorResourceConstantCostPerPeriod1')
-        t_1 = ps.FixedDurationTask('t1', duration=11)
-        worker_1 = ps.Worker('Worker1', cost=ps.ConstantCostPerPeriod(7))
-        t_1.add_required_resource(worker_1)
-        cost_ind = problem.add_indicator_resource_cost([worker_1])
-
-        solution = ps.SchedulingSolver(problem).solve()
-
-        self.assertTrue(solution)
-        self.assertEqual(solution.indicators[cost_ind.name], 77)
 
     def test_linear_cost_1(self) -> None:
         problem = ps.SchedulingProblem('IndicatorResourcePolynomialCost1')
@@ -232,13 +219,10 @@ class TestCost(unittest.TestCase):
         # that the middle of the task is a the function minimum
         # TODO: should be 35 for start and 39 for end.
         # on windows azure, strt is 39. Why ?
-        #self.assertEqual(solution.tasks[t_1.name].start, 35)
-        #self.assertEqual(solution.tasks[t_1.name].end, 39)
-        self.assertTrue(35 <= solution.tasks[t_1.name].start <= 39)
+        self.assertEqual(solution.tasks[t_1.name].start, 35)
         # expected cost should be 8457
         expected_cost = int(((int_cost_function(35) + int_cost_function(35+4)) * 4) /2)
-        # TODO: check expected cost
-        # self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
+        self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
 
     def test_plot_cost_function(self) -> None:
         # TODO: add an horizon, it should return the expected result

@@ -296,7 +296,7 @@ class SchedulingSolver:
 
             # then get the solution
             solution = self._solver.model()
-            
+
             if self.objectives:
                 print('Optimization results:\n=====================')
                 print('\t->Objective priority specification: %s' % self.optimize_priority)

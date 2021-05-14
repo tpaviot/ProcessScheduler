@@ -13,8 +13,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime
-
 from processscheduler.problem import SchedulingProblem
 from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
 from processscheduler.task import ZeroDurationTask, FixedDurationTask, VariableDurationTask
@@ -46,9 +44,14 @@ horizon_widget = widgets.IntText(
     disabled=True,
     layout={'width': '200px'}
 )
+
+
 def on_set_horizon_clicked(b):
     horizon_widget.disabled = not set_horizon_widget.value
+
+
 set_horizon_widget.observe(on_set_horizon_clicked)
+
 create_problem_button = widgets.Button(
     description='Create problem',
     disabled=False,
@@ -68,6 +71,7 @@ delta_time_widget = widgets.Text(
     disabled=False
 )
 problem_output = widgets.Output()
+
 def on_create_problem_button_clicked(b) -> bool:
     global pb
     problem_name = problem_name_widget.value
@@ -103,6 +107,8 @@ def on_create_problem_button_clicked(b) -> bool:
         print('Scheduling problem', problem_name, 'successfully created.')
     create_problem_button.disabled = True
     return True
+
+
 create_problem_button.on_click(on_create_problem_button_clicked)
 problem_ui = widgets.VBox([widgets.HBox([problem_name_widget,
                                          widgets.VBox([widgets.HBox([horizon_widget,
@@ -149,6 +155,7 @@ resource_size_widget = widgets.IntText(
     description='Size:',
     layout={'width': '200px'}
 )
+
 def on_change_resource_type(change):
     #print("popo", change)
     if change['type'] == 'change' and change['name'] == 'value':
@@ -157,6 +164,8 @@ def on_change_resource_type(change):
             resource_size_widget.disabled = False
         elif new_value == 'Worker':
             resource_size_widget.disabled = True
+
+
 resource_type_widget.observe(on_change_resource_type)
 
 create_resource_button = widgets.Button(
@@ -185,6 +194,8 @@ def on_create_resource_button_clicked(b):
     resources_select_widget.options = resources_list_of_tuples
     with resource_output:
         print('Resource', new_resource.name, 'successfully created.')
+
+
 create_resource_button.on_click(on_create_resource_button_clicked)
 resource_ui = widgets.VBox([widgets.HBox([resource_type_widget,
                                           widgets.VBox([resource_name_widget,
@@ -206,6 +217,8 @@ task_type_widget = widgets.Dropdown(
     description='Task type:',
     disabled=False,
 )
+
+
 def on_change_task_type(change):
     #print("popo", change)
     if change['type'] == 'change' and change['name'] == 'value':
@@ -216,6 +229,8 @@ def on_change_task_type(change):
             task_duration_widget.disabled = True
         elif new_value == 'VariableDurationTask':
             task_duration_widget.disabled = True
+
+
 task_type_widget.observe(on_change_task_type)
 
 task_name_widget = widgets.Text(
@@ -277,16 +292,18 @@ def on_create_task_button_clicked(b):
     # rebuild option list for the task list
     tasks_list_of_tuples = []
     for task in pb.context.tasks:
-        tasks_list_of_tuples.append((task.name, task))
+        tasks_list_of_tuples.append((new_class.name, new_class))
     tasks_select_widget.options = tasks_list_of_tuples
     with task_output:
         print('Task', task_name, 'successfully created.')
+
+
 create_task_button.on_click(on_create_task_button_clicked)
 task_ui = widgets.VBox([widgets.HBox([is_optional_widget, task_type_widget,
                                       widgets.VBox([task_name_widget,
                                       task_duration_widget,
                                       task_priority_widget,
-                                      task_work_amount_widget]), create_task_button]),                       
+                                      task_work_amount_widget]), create_task_button]),
                        task_output])
 #
 # Constraints UI, both tasks and resources
@@ -345,6 +362,7 @@ assign_all_workers_resource_button = widgets.Button(
     indent=True
 )
 assign_resource_output = widgets.Output()
+
 def assign_all_workers_resource_button_clicked(b) -> bool:
     # create the solver
     with assign_resource_output:
@@ -362,6 +380,8 @@ def assign_all_workers_resource_button_clicked(b) -> bool:
               ','.join([s.name for s in selected_resources]),
               "to task", selected_task.name)
     return True
+
+
 assign_all_workers_resource_button.on_click(assign_all_workers_resource_button_clicked)
 
 assign_alternative_workers_resource_button = widgets.Button(
@@ -375,9 +395,12 @@ nb_workers_widget = widgets.IntText(
     disabled=False,
     layout={'width': '150px'}
 )
+
 def on_nb_workers_value_change(change):
     #print(change['new'])
     assign_alternative_workers_resource_button.description = 'Select %i workers' % change['new']
+
+
 nb_workers_widget.observe(on_nb_workers_value_change, names='value')
 select_worker_type_widget = widgets.Dropdown(
     options=['exact', 'min', 'max'],
@@ -406,6 +429,8 @@ def assign_alternative_workers_resource_button_clicked(b) -> bool:
               ','.join([s.name for s in selected_resources]),
               "to task", selected_task.name)
         return True
+
+
 assign_alternative_workers_resource_button.on_click(assign_alternative_workers_resource_button_clicked)
 
 
@@ -490,6 +515,7 @@ solve_button = widgets.Button(
     description='Solve',
     disabled=False)
 solve_output = widgets.Output()
+
 def on_solve_task_button_clicked(b):
     # create the solver
     solve_output.clear_output()
@@ -515,6 +541,8 @@ def on_solve_task_button_clicked(b):
             solution.render_gantt_plotly(render_mode='Resource')
         else:
             solution.render_gantt_matplotlib(render_mode='Resource')
+
+
 solve_button.on_click(on_solve_task_button_clicked)
 solver_ui = widgets.VBox([widgets.HBox([max_time_widget, priority_widget,
                           widgets.VBox([is_debug_solver_widget, is_parallel_solver_widget]),

@@ -77,7 +77,7 @@ class SchedulingSolution:
             if "NotAvailable" not in task:
                 tasks_to_return[task] = self.tasks[task]
         return tasks_to_return
-    
+
     def get_scheduled_tasks(self):
         """Return scheduled tasks."""
         tasks_not_unavailable = self.get_all_tasks_but_unavailable()

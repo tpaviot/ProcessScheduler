@@ -136,9 +136,9 @@ class TestWorkLoad(unittest.TestCase):
         self.assertTrue(solution)
         self.assertTrue(solution.tasks[task1.name].start == 2)
 
-    def test_multiple_workers_work_load_1(self) -> None:
+    def test_multiple_workers_work_load_2(self) -> None:
         ### the same as above but changing 'min' to 'exact', there's no solution
-        pb = ps.SchedulingProblem('MultipleWorkersWorkLoad1', horizon=12)
+        pb = ps.SchedulingProblem('MultipleWorkersWorkLoad2', horizon=12)
 
         worker_1 = ps.Worker('Worker1')
         worker_2 = ps.Worker('Worker2')

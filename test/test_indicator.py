@@ -189,5 +189,6 @@ class TestIndicator(unittest.TestCase):
         self.assertEqual(solution.indicators[utilization_res_1.name], 100)
         self.assertEqual(solution.indicators[utilization_res_2.name], 0)
 
+
 if __name__ == "__main__":
     unittest.main()
