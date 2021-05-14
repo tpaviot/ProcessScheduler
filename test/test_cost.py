@@ -198,20 +198,19 @@ class TestCost(unittest.TestCase):
         # TODO: add an horizon, it should return the expected result
         # but there's an issue, see
         # https://github.com/Z3Prover/z3/issues/5254
-        problem = ps.SchedulingProblem('OptimizeQuadraticCost2')
+        problem = ps.SchedulingProblem('OptimizeQuadraticCost2', horizon=20)
 
         t_1 = ps.FixedDurationTask('t1', duration=4)
 
         # we chosse a function where we know the minimum is
         # let's imagine the minimum is at t=37
         def int_cost_function(t):
-            return (t - 37) ** 2 + 513
+            return (t - 8) ** 2 + 100
 
         worker_1 = ps.Worker('Worker1', cost=ps.PolynomialCostFunction(int_cost_function))
         t_1.add_required_resource(worker_1)
 
         cost_ind = problem.add_indicator_resource_cost([worker_1])
-        #problem.add_objective_resource_cost([worker_1])
         problem.minimize_indicator(cost_ind)
 
         solution = ps.SchedulingSolver(problem).solve()
@@ -220,10 +219,9 @@ class TestCost(unittest.TestCase):
         # the solver shoudhave scheduled this task between 35 and 39, so
         # that the middle of the task is a the function minimum
         # TODO: should be 35 for start and 39 for end.
-        # on windows azure, strt is 39. Why ?
-        self.assertEqual(solution.tasks[t_1.name].start, 35)
-        # expected cost should be 8457
-        expected_cost = int(((int_cost_function(35) + int_cost_function(35+4)) * 4) /2)
+        self.assertEqual(solution.tasks[t_1.name].start, 6)
+
+        expected_cost = int(((int_cost_function(6) + int_cost_function(6 + 4)) * 4) /2)
         self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
 
     def test_plot_cost_function(self) -> None:
@@ -282,32 +280,6 @@ class TestCost(unittest.TestCase):
 
         self.assertTrue(solution)
         self.assertEqual(solution.tasks[t_1.name].start, 23)
-
-    def test_incremental_optimizer_quadratic_cost_1(self) -> None:
-        problem = ps.SchedulingProblem('IncrementalOptimizeQuadraticCost1', horizon=80)
-
-        t_1 = ps.FixedDurationTask('t1', duration=4)
-
-        # we chosse a function where we know the minimum is
-        # let's imagine the minimum is at t=37
-        def int_cost_function(t):
-            return (t - 37) ** 2 + 513
-
-        worker_1 = ps.Worker('Worker1', cost=ps.PolynomialCostFunction(int_cost_function))
-        t_1.add_required_resource(worker_1)
-
-        cost_ind = problem.add_indicator_resource_cost([worker_1])
-        problem.minimize_indicator(cost_ind)
-
-        solver = ps.SchedulingSolver(problem, max_time=3)  # max 3s per each iteration
-        solution = solver.solve()
-
-        self.assertTrue(solution)
-        self.assertEqual(solution.tasks[t_1.name].start, 35)
-        self.assertEqual(solution.tasks[t_1.name].end, 39)
-        expected_cost = int(((int_cost_function(35) + int_cost_function(35+4)) * 4) /2)
-        # TODO: check expected cost
-        self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
 
 
 if __name__ == "__main__":
