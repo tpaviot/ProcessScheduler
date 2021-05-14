@@ -96,7 +96,9 @@ class SchedulingProblem(_NamedUIDObject):
             for interv_low, interv_up in res.busy_intervals.values():
                 # Constant cost per period
                 if isinstance(res.cost, ConstantCostPerPeriod):
-                    period_cost = res.cost.value * (interv_up - interv_low)
+                    # res.cost(interv_up), res.cost(interv_low)
+                    # or res.cost.value give the same result because the function is constant
+                    period_cost = res.cost(interv_up) * (interv_up - interv_low)
                     p.append(period_cost)
                 # Polynomial cost. Compute the area of the trapeze
                 if isinstance(res.cost, PolynomialCostFunction):

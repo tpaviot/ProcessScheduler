@@ -32,6 +32,11 @@ class TestTask(unittest.TestCase):
         new_problem_or_clear()
         self.assertIsInstance(ps_context.main_context, ps.SchedulingContext)
 
+    def test_create_task_without_problem(self) -> None:
+        ps_context.main_context = None
+        with self.assertRaises(AssertionError):
+            ps.ZeroDurationTask('AZeroDurationTask')
+
     def test_create_task_zero_duration(self) -> None:
         ps.SchedulingProblem('ProblemWithoutHorizon')
         task = ps.ZeroDurationTask('zdt')
