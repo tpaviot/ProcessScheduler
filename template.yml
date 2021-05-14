@@ -63,9 +63,11 @@ jobs:
         bash <(curl -s https://codecov.io/bash)
       displayName: 'Coverage and export to codecov (Linux py39 only)'
 
-  - bash: |
-      source activate psenv && \
-      cd doc && \
-      conda install sphinx sphinx_rtd_theme sphinx-autodoc-typehints nbsphinx ipykernel && \
-      make html
-    displayName: 'Build Sphinx documentation'
+  - ${{ if not(startsWith(parameters.name, 'Windows')) }}:
+    - bash: |
+        source activate psenv && \
+        cd doc && \
+        conda install -c conda-forge pandoc && \
+        pip install -r requirements.txt && \
+        make html
+      displayName: 'Build Sphinx documentation (Mac and Linux only)'

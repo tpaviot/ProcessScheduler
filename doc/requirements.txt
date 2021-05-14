@@ -1,8 +1,9 @@
 z3-solver
 matplotlib
 sphinx-autodoc-typehints
+sphinx_rtd_theme
 ipykernel
 nbsphinx
 plotly
 kaleido
--e .
+-e ..
