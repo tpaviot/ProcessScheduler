@@ -167,10 +167,10 @@ class SchedulingSolution:
             for indicator_name in self.indicators:
                 gantt_title +=" - %s: %i" % (indicator_name, self.indicators[indicator_name])
 
-        r = lambda: random.randint(0,255)
-        colors = ['#%02X%02X%02X' % (r(),r(),r())]  
-        for i in range(1, len(df) + 1):   
-            colors.append('#%02X%02X%02X' % (r(),r(),r()))
+        r = lambda: random.randint(0, 255)
+        colors = []
+        for _ in range(len(df)):
+            colors.append('#%02X%02X%02X' % (r(), r(), r()))
 
         if fig_size is None:
             fig = create_gantt(df, colors=colors, index_col=render_mode, show_colorbar=True, showgrid_x=True,
