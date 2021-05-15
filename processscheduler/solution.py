@@ -18,6 +18,7 @@
 from datetime import time, timedelta, datetime
 import json
 from pathlib import Path
+import random
 
 from typing import Optional, Tuple
 
@@ -166,12 +167,17 @@ class SchedulingSolution:
             for indicator_name in self.indicators:
                 gantt_title +=" - %s: %i" % (indicator_name, self.indicators[indicator_name])
 
+        r = lambda: random.randint(0,255)
+        colors = ['#%02X%02X%02X' % (r(),r(),r())]  
+        for i in range(1, len(df) + 1):   
+            colors.append('#%02X%02X%02X' % (r(),r(),r()))
+
         if fig_size is None:
-            fig = create_gantt(df, index_col=render_mode, show_colorbar=True, showgrid_x=True,
+            fig = create_gantt(df, colors=colors, index_col=render_mode, show_colorbar=True, showgrid_x=True,
                                showgrid_y=True, show_hover_fill=True,
                                title=gantt_title, bar_width=0.5)
         else:
-            fig = create_gantt(df, index_col=render_mode, show_colorbar=True, showgrid_x=True,
+            fig = create_gantt(df, colors=colors, index_col=render_mode, show_colorbar=True, showgrid_x=True,
                                showgrid_y=True, show_hover_fill=True,
                                title=gantt_title, bar_width=0.5, width=fig_size[0], height=fig_size[1])
 
