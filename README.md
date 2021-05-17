@@ -5,6 +5,7 @@
 [![Documentation Status](https://readthedocs.org/projects/processscheduler/badge/?version=latest)](https://processscheduler.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/ProcessScheduler.svg)](https://badge.fury.io/py/ProcessScheduler)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4480745.svg)](https://doi.org/10.5281/zenodo.4480745)
+[![slack](https://img.shields.io/badge/slack-ProcessScheduler-brightgreen)](https://join.slack.com/t/processscheduler/shared_invite/zt-pa152rki-126YyMsuLNxhOv_suqKtkQ)
 
 # ProcessScheduler
 A python library to compute resource-constrained task schedules. Express your scheduling problem in terms of tasks, resources and constraints, ProcessScheduler suggests one/the best schedule that satisfies the requirements.
@@ -14,10 +15,6 @@ The computation is based on a set of constraints expressed under the form of fir
 ## Documentation
 
 User-end documentation available at https://processscheduler.readthedocs.io/
-
-## Slack
-
-Join the [ProcesScheduler slack workspace](https://join.slack.com/t/processscheduler/shared_invite/zt-pa152rki-126YyMsuLNxhOv_suqKtkQ) for any question/suggestion/discussion.
 
 ## Features
 
