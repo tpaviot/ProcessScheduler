@@ -34,6 +34,7 @@ from processscheduler.resource_constraint import (WorkLoad,
                                                   ResourceUnavailable,
                                                   AllSameSelected,
                                                   AllDifferentSelected)
+from processscheduler.cost import ConstantCostPerPeriod
 from processscheduler.solver import SchedulingSolver
 
 import isodate
@@ -197,12 +198,12 @@ def on_create_resource_button_clicked(b):
     if resource_type == Worker:
         new_resource = resource_type(resource_name,
                                      productivity=resource_productivity_widget.value,
-                                     cost_per_period=resource_cost_per_period_widget.value)
+                                     cost=ConstantCostPerPeriod(resource_cost_per_period_widget.value))
     elif resource_type == CumulativeWorker:
         new_resource = resource_type(resource_name,
                                      size=resource_size_widget.value,
                                      productivity=resource_productivity_widget.value,
-                                     cost_per_period=resource_cost_per_period_widget.value)
+                                     cost=ConstantCostPerPeriod(resource_cost_per_period_widget.value))
     # rebuild option list for the task list
     resources_list_of_tuples = []
     for resource in pb.context.resources:
