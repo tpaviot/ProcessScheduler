@@ -41,7 +41,7 @@ class _Cost(_NamedUIDObject):
         plt.plot(x, y, label='Cost function')
 
         plt.legend()
-        plt.grid()
+        plt.grid(True)
         plt.xlabel('x')
         plt.ylabel('y')
 
