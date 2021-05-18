@@ -108,4 +108,13 @@ Call the :func:`render_gantt_matplotlib` to render the solution as a Gantt chart
         # a second gantt chart, in 'Task' mode
         solution.render_gantt_matplotlib(render_mode='Task')
 
-If you prefer **plotly**, just use the method name :func:`render_gantt_plotly`. Both methods have the same signature, so you can just switch from one to the other by replacing the method names. However, take care that plotly rendering needs **real timepoints** (set at least :attr:`delta_time` at the problem creation).
+Call the :func:`render_gantt_plotly` to render the solution as a Gantt chart using **plotly**.
+Take care that plotly rendering needs **real timepoints** (set at least :attr:`delta_time` at the problem creation).
+
+. code-block:: python
+
+    solution = solver.solve()
+    if solution is not None:
+        solution.render_gantt_plotly(sort="Start", html_filename="index.html")  # default render_mode is 'Resource'
+        # a second gantt chart, in 'Task' mode
+        solution.render_gantt_plotly(render_mode='Task')
