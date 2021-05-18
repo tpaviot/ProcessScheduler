@@ -150,15 +150,19 @@ class TestGantt(unittest.TestCase):
         # display solution, using both ascii or matplotlib
         solution.render_gantt_plotly(render_mode='Resource',
                                      show_plot=False,
+                                     sort='Resource',
                                      fig_filename='test_render_resources_plotly.svg')
         solution.render_gantt_plotly(render_mode='Task',
                                      show_plot=False,
+                                     sort='Task',
                                      fig_filename='test_render_tasks_plotly.svg')
         solution.render_gantt_plotly(render_mode='Resource',
                                      show_plot=False,
+                                     sort='Start',
                                      html_filename='test_render_resources_plotly.html')
         solution.render_gantt_plotly(render_mode='Task',
                                      show_plot=False,
+                                     sort='Finish',
                                      html_filename='test_render_tasks_plotly.html')
         self.assertTrue(os.path.isfile('test_render_resources_plotly.svg'))
         self.assertTrue(os.path.isfile('test_render_tasks_plotly.svg'))
