@@ -173,11 +173,13 @@ class SchedulingSolution:
         for _ in range(len(df)):
             colors.append('#%02X%02X%02X' % (r(), r(), r()))
 
-        if sort in ["Task", "Resource"]:
-            df = sorted(df, key = lambda i: i[sort],reverse=False)
-
-        if sort in ["Start", "Finish"]:
-            df = sorted(df, key = lambda i: i[sort],reverse=True)
+        if sort is not None:
+            if sort in ["Task", "Resource"]:
+                df = sorted(df, key = lambda i: i[sort],reverse=False)
+            elif sort in ["Start", "Finish"]:
+                df = sorted(df, key = lambda i: i[sort],reverse=True)
+            else:
+                raise ValueError('sort must be either "Task", "Resource", "Start", or "Finish"')
 
         if fig_size is None:
             fig = create_gantt(df, colors=colors, index_col=render_mode, show_colorbar=True, showgrid_x=True,
