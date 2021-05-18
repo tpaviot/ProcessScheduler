@@ -292,7 +292,7 @@ class TestOptionalTask(unittest.TestCase):
         cond = ps.OptionalTaskConditionSchedule(task_2, pb.horizon > 10)
         pb.add_constraint(cond)
 
-        solver = ps.SchedulingSolver(pb)
+        solver = ps.SchedulingSolver(pb, random_seed=True)
         solution = solver.solve()
         self.assertTrue(solution)
         self.assertTrue(solution.tasks[task_1.name].scheduled)

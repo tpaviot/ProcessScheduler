@@ -57,6 +57,9 @@ class SchedulingSolver:
         if random_seed:
             set_option('sat.random_seed', random.randint(1, 1e4))
             set_option('smt.random_seed', random.randint(1, 1e4))
+        else:
+            set_option('sat.random_seed', 0)
+            set_option('smt.random_seed', 0)
 
         # set timeout
         self.max_time = max_time  # in seconds
