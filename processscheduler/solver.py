@@ -342,7 +342,7 @@ class SchedulingSolver:
                 break
             current_variable_value = solution[variable].as_long()
             print(f'\tvalue:{current_variable_value}, elapsed time(s):{total_time}')
-
+            self._solver.push()
             if kind == 'min':
                 self.add_constraint(variable < current_variable_value)
             else:
