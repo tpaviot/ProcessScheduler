@@ -21,7 +21,7 @@ from typing import Optional
 import uuid
 import warnings
 
-from z3 import Solver, Sum, unsat, sat, ArithRef, unknown, Optimize, set_option
+from z3 import Solver, SolverFor, Sum, unsat, sat, ArithRef, unknown, Optimize, set_option
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
@@ -36,7 +36,8 @@ class SchedulingSolver:
                  max_time: Optional[int] = 10,
                  optimize_priority = 'lex',
                  parallel: Optional[bool] = False,
-                 random_seed = False):
+                 random_seed = False,
+                 logics=None):
         """ Scheduling Solver
 
         debug: True or False, False by default
@@ -85,8 +86,12 @@ class SchedulingSolver:
         else:
             # see this url for a documentation about logics
             # http://smtlib.cs.uiowa.edu/logics.shtml
-            self._solver = Solver()
-            print("\t-> Standard SAT/SMT solver")
+            if logics is None:
+                self._solver = Solver()
+                print("\t-> Standard SAT/SMT solver")
+            else:
+                self._solver = SolverFor(logics)
+                print("\t-> SMT solver using logics", logics)
             if debug:
                 set_option(unsat_core=True)
 
