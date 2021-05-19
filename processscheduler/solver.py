@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+import random
 import time
 from typing import Optional
 import uuid
@@ -34,7 +35,8 @@ class SchedulingSolver:
                  debug: Optional[bool] = False,
                  max_time: Optional[int] = 10,
                  optimize_priority = 'lex',
-                 parallel: Optional[bool] = False):
+                 parallel: Optional[bool] = False,
+                 random_seed = False):
         """ Scheduling Solver
 
         debug: True or False, False by default
@@ -51,6 +53,13 @@ class SchedulingSolver:
 
         if debug:
             set_option("verbose", 2)
+
+        if random_seed:
+            set_option('sat.random_seed', random.randint(1, 1e4))
+            set_option('smt.random_seed', random.randint(1, 1e4))
+        else:
+            set_option('sat.random_seed', 0)
+            set_option('smt.random_seed', 0)
 
         # set timeout
         self.max_time = max_time  # in seconds

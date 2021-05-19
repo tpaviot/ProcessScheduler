@@ -18,7 +18,7 @@
 import uuid
 from typing import Optional
 
-from z3 import And, Bool, Not, BoolRef, Implies, Xor, PbEq, PbGe, PbLe
+from z3 import And, Bool, Not, BoolRef, Implies, If, Xor, PbEq, PbGe, PbLe
 
 from processscheduler.base import _Constraint
 
@@ -200,7 +200,7 @@ class OptionalTaskConditionSchedule(_Constraint):
         if not task.optional:
             raise TypeError('Task %s must be optional.' % task.name)
 
-        self.set_assertions(Implies(condition, task.scheduled))
+        self.set_assertions(If(condition, task.scheduled == True, task.scheduled == False))
 
 class OptionalTasksDependency(_Constraint):
     """task_2 is scheduled if and only if task_1 is scheduled"""
@@ -210,7 +210,7 @@ class OptionalTasksDependency(_Constraint):
         if not task_2.optional:
             raise TypeError('Task %s must be optional.' % task_2.name)
 
-        self.set_assertions(Implies(task_1.scheduled, task_2.scheduled))
+        self.set_assertions(task_1.scheduled == task_2.scheduled)
 
 class ForceScheduleNOptionalTasks(_Constraint):
     """Given a set of m different optional tasks, force the solver to schedule

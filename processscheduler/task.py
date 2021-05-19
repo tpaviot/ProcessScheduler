@@ -48,12 +48,14 @@ class Task(_NamedUIDObject):
             raise AssertionError('No context available. First create a SchedulingProblem')
         ps_context.main_context.add_task(self)
 
-    def add_required_resource(self, resource: _Resource) -> None:
+    def add_required_resource(self, resource: _Resource, dynamic=False) -> None:
         """
         Add a required resource to the current task.
 
         Args:
             resource: any of one of the _Resource derivatives class (Worker, SelectWorkers etc.)
+        If dynamic flag (False by default) is set to True, then the resource is dynamic
+        and can join the task any time between its start and end times.
         """
         if not isinstance(resource, _Resource):
             raise TypeError('you must pass a Resource instance')
@@ -98,12 +100,16 @@ class Task(_NamedUIDObject):
             # create the busy interval for the resource
             resource.add_busy_interval(self, (resource_busy_start, resource_busy_end))
             # set the busy resource to keep synced with the task
-            self.add_assertion(resource_busy_start + self.duration == resource_busy_end)
-            self.add_assertion(resource_busy_start ==  self.start)
+            if dynamic:
+                self.add_assertion(resource_busy_end <= self.end)
+                self.add_assertion(resource_busy_start >=  self.start)
+            else:
+                self.add_assertion(resource_busy_start + self.duration == resource_busy_end)
+                self.add_assertion(resource_busy_start ==  self.start)
             # finally, store this resource into the resource list
             self.required_resources.append(resource)
 
-    def add_required_resources(self, list_of_resources: List[_Resource]) -> None:
+    def add_required_resources(self, list_of_resources: List[_Resource], dynamic=False) -> None:
         """
         Add a set of required resources to the current task.
 
@@ -114,7 +120,7 @@ class Task(_NamedUIDObject):
             list_of_resources: the list of resources to add.
         """
         for resource in list_of_resources:
-            self.add_required_resource(resource)
+            self.add_required_resource(resource, dynamic)
 
     def set_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
         """Take a list of constraint to satisfy. Create two cases: if the task is scheduled,
