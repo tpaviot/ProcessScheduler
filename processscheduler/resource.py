@@ -57,13 +57,6 @@ class _Resource(_NamedUIDObject):
 
     def add_busy_interval(self, task, interval: Tuple[ArithRef, ArithRef]) -> None:
         """ add an interval in which the resource is busy """
-        # add the assertions: this new interval must not overlap with all the
-        # intervals already defined
-        start, end = interval
-        for start_task_i, end_task_i in self.get_busy_intervals():
-            self.add_assertion(Xor(start_task_i >= end, start >= end_task_i))
-
-        # finally add this interval to the dict
         self.busy_intervals[task] = interval
 
     def get_busy_intervals(self) -> List[Tuple[ArithRef, ArithRef]]:

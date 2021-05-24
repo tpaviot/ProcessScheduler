@@ -15,13 +15,14 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+import multiprocessing
 import random
 import time
 from typing import Optional
 import uuid
 import warnings
 
-from z3 import Solver, SolverFor, Sum, unsat, sat, ArithRef, unknown, Optimize, set_option
+from z3 import Solver, SolverFor, Sum, unsat, sat, ArithRef, unknown, Optimize, set_option, Xor
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
@@ -97,6 +98,9 @@ class SchedulingSolver:
 
         if parallel:
             set_option("parallel.enable", True)  # enable parallel computation
+            n_cpus = multiprocessing.cpu_count()
+            set_option("sat.threads", n_cpus)  # enable parallel computation
+            set_option("smt.threads", n_cpus)  # enable parallel computation
 
         # add all tasks assertions to the solver
         for task in self.problem_context.tasks:
@@ -106,9 +110,19 @@ class SchedulingSolver:
         # then process tasks constraints
         for constraint in self.problem_context.constraints:
             self.add_constraint(constraint)
+
         # process resources requirements
         for ress in self.problem_context.resources:
             self.add_constraint(ress.get_assertions())
+
+        # process resource intervals
+        for ress in self.problem_context.resources:
+            busy_intervals = ress.get_busy_intervals()
+            for i in range(len(busy_intervals)):
+                start_task_i, end_task_i = busy_intervals[i]
+                for k in range(i):
+                    start_task_k, end_task_k = busy_intervals[k]
+                    self.add_constraint(Xor(start_task_k >= end_task_i, start_task_i >= end_task_k))
 
         # process indicators
         for indic in self.problem_context.indicators:
@@ -361,9 +375,9 @@ class SchedulingSolver:
                 self.add_constraint(variable < current_variable_value)
             else:
                 self.add_constraint(variable > current_variable_value)
-
         if not solution:
             return False
+
         print('\ttotal number of iterations: %i' % depth)
         print('\tvalue: %i' %current_variable_value)
         print('\t%s satisfiability checked in %.2fs' % (self._problem.name, total_time))
