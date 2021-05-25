@@ -68,7 +68,7 @@ class SchedulingSolver:
 
         # set timeout
         self.max_time = max_time  # in seconds
-        set_option("timeout", self.max_time * 1000)  # in milliseconds
+        set_option("timeout", int(self.max_time * 1000))  # in milliseconds
 
         # create the solver
         print('Solver type:\n===========')
