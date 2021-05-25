@@ -26,6 +26,7 @@ from z3 import (Solver, SolverFor, Sum, unsat, sat,
                 ArithRef, unknown, Optimize, set_option,
                 Xor, Distinct)
 
+from processscheduler.task import VariableDurationTask
 from processscheduler.objective import MaximizeObjective, MinimizeObjective
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
 
@@ -40,7 +41,7 @@ class SchedulingSolver:
                  optimize_priority = 'lex',
                  parallel: Optional[bool] = False,
                  random_seed = False,
-                 logics=None):
+                 logics="QF_IDL"):
         """ Scheduling Solver
 
         debug: True or False, False by default
@@ -118,17 +119,32 @@ class SchedulingSolver:
             self.add_constraint(ress.get_assertions())
 
         # process resource intervals
+        # First, we check all tasks to find if ever one of them
+        # is a VariableDurationTask. In this case, we have to
+        # use the brute force Xor for the non overlapping constraint.
+        # in the other case, the Distinc constraint over start times is
+        # enough
+        problem_has_variable_duration_task = False
+        for task in self.problem_context.tasks:
+            if isinstance(task, VariableDurationTask):
+                problem_has_variable_duration_task = True
+                break
+        if problem_has_variable_duration_task:
+            overlap_mode = 'brute_xor'
+        else:
+            overlap_mode = 'distinct'
+        # then process the non overlap constraints
         for ress in self.problem_context.resources:
             busy_intervals = ress.get_busy_intervals()
             nb_intervals = len(busy_intervals)
-            if False:  # brute force Xor, works in any case
+            if overlap_mode == 'brute_xor':  # brute force Xor, works in any case
                 for i in range(nb_intervals):
                     start_task_i, end_task_i = busy_intervals[i]
                     for k in range(i + 1, nb_intervals):
                         start_task_k, end_task_k = busy_intervals[k]
                         self.add_constraint(Xor(start_task_k >= end_task_i, start_task_i >= end_task_k))
             # other algorithm, better for task durations that are not big
-            else:
+            elif overlap_mode == 'distinct':
                 all_starts = []
                 for task in ress.busy_intervals:  # look over tasks
                     start_task_i, end_task_i = ress.busy_intervals[task]
@@ -369,7 +385,7 @@ class SchedulingSolver:
         solution = False
         total_time = 0
         print('Incremental optimizer:\n============================')
-        was_pushed = False
+
         while True:  # infinite loop, break if unsat of max_depth
             depth += 1
             if max_recursion_depth is not None:
@@ -387,10 +403,7 @@ class SchedulingSolver:
                 break
             current_variable_value = solution[variable].as_long()
             print(f'\tvalue:{current_variable_value}, elapsed time(s):{total_time}')
-            if was_pushed:
-                self._solver.pop()
             self._solver.push()
-            was_pushed = True
             if kind == 'min':
                 self.add_constraint(variable < current_variable_value)
             else:

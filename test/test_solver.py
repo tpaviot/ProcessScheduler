@@ -45,7 +45,7 @@ def build_complex_problem(name:str, n: int) -> ps.SchedulingProblem:
 
     return problem
 
-def _solve_problem(problem, debug=True):
+def _solve_problem(problem, debug=False):
     """ create a solver instance, return True if sat else False """
     solver = ps.SchedulingSolver(problem, debug)
     solution = solver.solve()
@@ -195,7 +195,7 @@ class TestSolver(unittest.TestCase):
         pb_alt.add_objective_makespan()
 
         # solve
-        solver1 = ps.SchedulingSolver(pb_alt, debug=False)
+        solver1 = ps.SchedulingSolver(pb_alt)
         solution = solver1.solve()
 
         self.assertEqual(solution.horizon, 5)
@@ -292,7 +292,7 @@ class TestSolver(unittest.TestCase):
 
         # set debug to False because assert_and_track
         # does not properly handles optimization
-        solution = _solve_problem(problem, debug=False)
+        solution = _solve_problem(problem)
         self.assertTrue(solution)
         # check that the task is not scheduled to start à 0
         # the only solution is 1
@@ -461,6 +461,8 @@ class TestSolver(unittest.TestCase):
         d = ps.AllSameSelected(res_for_t3, res_for_t4)
         e = ps.AllDifferentSelected(res_for_t2, res_for_t4)
         pb.add_constraints([c, d, e])
+
+        pb.add_objective_makespan()
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()

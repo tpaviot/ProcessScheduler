@@ -126,9 +126,13 @@ class Task(_NamedUIDObject):
         nothing is done, if the case is optional, scheduling the task to the past"""
         if self.optional: # in this case the previous assertions maybe skipped
             self.scheduled = Bool('%s_scheduled' % self.name)
-            not_scheduled_assertion = And(self.start <= -1, # to past
-                                          self.end <= -1,
-                                          self.duration == 0)
+            if isinstance(self, VariableDurationTask):
+                not_scheduled_assertion = And(self.start <= -1, # to past
+                                              self.end <= -1,
+                                              self.duration == 0)
+            else:
+                not_scheduled_assertion = And(self.start <= -1, # Fixed duration task, no constraint on duration
+                                              self.end <= -1)
             self.add_assertion(If(self.scheduled, And(list_of_z3_assertions), not_scheduled_assertion))
         else:
             self.scheduled = True
@@ -198,6 +202,8 @@ class VariableDurationTask(Task):
                  optional: Optional[bool] = False):
         super().__init__(name, optional)
 
+        self.duration = Int('%s_duration' % name)
+
         if is_positive_integer(length_at_most):
             self.add_assertion(self.duration <= length_at_most)
         elif length_at_most is not None:
@@ -213,7 +219,6 @@ class VariableDurationTask(Task):
         self.length_at_most = length_at_most
         self.work_amount = work_amount
         self.priority = priority
-        self.duration = Int('%s_duration' % name)
 
         assertions = [self.start + self.duration == self.end,
                       self.start >= 0,
