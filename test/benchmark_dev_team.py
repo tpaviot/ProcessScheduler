@@ -1,12 +1,10 @@
 # ProcessScheduler benchmark
-import sys
 import time
 from datetime import datetime
 import subprocess
-import os
 import platform
-import psutil
 import uuid
+import psutil
 
 import matplotlib.pyplot as plt
 import processscheduler as ps
@@ -41,9 +39,9 @@ commit_short_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEA
 print("\tz3 version:", z3.Z3_get_full_version())
 
 print("\tProcessScheduler commit number:", commit_short_hash.decode('utf-8'))
-os_info = os.uname()
+os_info = platform.uname()
 print("OS:")
-print("\tOS:", os_info.sysname)
+print("\tOS:", os_info.system)
 print("\tOS Release:", os_info.release)
 print("\tOS Version:", os_info.version)
 print("Hardware:")
@@ -58,10 +56,10 @@ print(f"\tMin Frequency: {cpufreq.min:.2f}Mhz")
 svmem = psutil.virtual_memory()
 print(f"\tTotal memory: {get_size(svmem.total)}")
 
-model_creation_times = []
 computation_times = []
 
-n = 30  # max number of dev teams
+n = 20  # max number of dev teams
+mt = 10  # max time in seconds
 
 N = list(range(4, n, 2)) # from 4 to N, step 2
 
@@ -88,30 +86,22 @@ for num_dev_teams in N:
     #digital_transformation.add_objective_priorities()
     digital_transformation.add_objective_makespan()
 
-    top1 = time.perf_counter()
-    model_creation_time = top1 - init_time
-
-    #print("Teams: ", num_dev_teams)
-    #print("Creating ")
-    mt = 3
-    solver = ps.SchedulingSolver(digital_transformation, random_seed=True, max_time=mt)
+    solver = ps.SchedulingSolver(digital_transformation, random_seed=True, max_time=mt, logics="QF_IDL")
     #print("Done ok.")
     #print("Solve.")
-    top2 = time.perf_counter()
+    top = time.perf_counter()
     solution = solver.solve()
 
-    computing_time = time.perf_counter() - top2
+    computing_time = time.perf_counter() - top
     if computing_time > mt:
         computing_time = computing_time - mt
 
-    model_creation_times.append(model_creation_time)
     computation_times.append(computing_time)
 
     solver.print_statistics()
 
-plt.title("Benchmark SelectWorkers %s:%s" % (bench_date, bench_id[8:]))
-plt.plot(model_creation_times, label="Model creation")
-plt.plot(computation_times, label="Computing time")
+plt.title("Benchmark SelectWorkers %s:%s" % (bench_date, bench_id[:8]))
+plt.plot(N, computation_times, label="Computing time")
 plt.legend()
 plt.grid(True)
 plt.show()
