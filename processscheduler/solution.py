@@ -130,6 +130,7 @@ class SchedulingSolution:
                             show_plot: Optional[bool] = True,
                             show_indicators: Optional[bool] = True,
                             render_mode: Optional[str] = 'Resource',
+                            sort: Optional[str] = None,
                             fig_filename: Optional[str] = None,
                             html_filename: Optional[str] = None,) -> None:
         """Use plotly.create_gantt method, see
@@ -171,6 +172,14 @@ class SchedulingSolution:
         colors = []
         for _ in range(len(df)):
             colors.append('#%02X%02X%02X' % (r(), r(), r()))
+
+        if sort is not None:
+            if sort in ["Task", "Resource"]:
+                df = sorted(df, key = lambda i: i[sort],reverse=False)
+            elif sort in ["Start", "Finish"]:
+                df = sorted(df, key = lambda i: i[sort],reverse=True)
+            else:
+                raise ValueError('sort must be either "Task", "Resource", "Start", or "Finish"')
 
         if fig_size is None:
             fig = create_gantt(df, colors=colors, index_col=render_mode, show_colorbar=True, showgrid_x=True,
