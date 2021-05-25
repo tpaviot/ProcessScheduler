@@ -72,6 +72,13 @@ class SchedulingProblem(_NamedUIDObject):
         self.start_time = start_time
         self.end_time = end_time
 
+    def has_cost_function(self) -> bool:
+        """Return True if a CostFunction is defined in the problem."""
+        for cost in self.context.costs:
+            if not isinstance(cost, ConstantCostPerPeriod):
+                return True
+        return False
+
     def add_constraint(self, constraint: BoolRef) -> None:
         self.context.add_constraint(constraint)
 

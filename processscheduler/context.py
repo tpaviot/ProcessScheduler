@@ -41,6 +41,16 @@ class SchedulingContext:
         # list of define indicators
         self.indicators = [] # type: List[Indicator]
         self.objectives = [] # type: List[Union[Indicator, ArithRef]]
+        self.costs = []  # cost functions
+
+    def add_cost(self, cost) -> bool:
+        """ add an indicatr to the problem """
+        if cost not in self.costs:
+            self.costs.append(cost)
+        else:
+            warnings.warn('cost %s already part of the problem' % cost)
+            return False
+        return True
 
     def add_indicator(self, indicator) -> bool:
         """ add an indicatr to the problem """

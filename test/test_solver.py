@@ -223,7 +223,7 @@ class TestSolver(unittest.TestCase):
         """ a stress test which  """
         problem = build_complex_problem('SolveMaxTime', 1000)
         # 1s is not enough to solve this problem
-        max_time_solver = ps.SchedulingSolver(problem, max_time=1)
+        max_time_solver = ps.SchedulingSolver(problem, max_time=0.1)
         solution = max_time_solver.solve()
         self.assertFalse(solution)
 
@@ -250,6 +250,10 @@ class TestSolver(unittest.TestCase):
     def test_flowtime_objective_big_problem(self):
         problem = build_complex_problem('SolveFlowTimeObjective', 5)  # long to compute
         problem.add_objective_flowtime()
+        flowtime_solver = ps.SchedulingSolver(problem, logics="QF_LIA")
+        solution = flowtime_solver.solve()
+        self.assertTrue(solution)
+
         self.assertTrue(_solve_problem(problem))
 
     def test_start_latest_objective_big_problem(self):

@@ -94,7 +94,14 @@ class SchedulingSolver:
                 self._solver = Solver()
                 print("\t-> Standard SAT/SMT solver")
             else:
-                self._solver = SolverFor(logics)
+                # the default logics should be QF_IDL, the fastest
+                # Before that, we check if ever there are cost functions
+                # indeed cost functions involve Real numbers ad cannot be handled by
+                # the QF_IDL (Integer Difference Logics), we have to choose QF_LIRA
+                if self._problem.has_cost_function():
+                    self._solver = SolverFor("QF_LIRA")
+                else:
+                    self._solver = SolverFor(logics)
                 print("\t-> SMT solver using logics", logics)
             if debug:
                 set_option(unsat_core=True)
