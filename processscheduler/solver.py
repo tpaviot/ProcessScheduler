@@ -118,9 +118,10 @@ class SchedulingSolver:
         # process resource intervals
         for ress in self.problem_context.resources:
             busy_intervals = ress.get_busy_intervals()
-            for i in range(len(busy_intervals)):
+            nb_intervals = len(busy_intervals)
+            for i in range(nb_intervals):
                 start_task_i, end_task_i = busy_intervals[i]
-                for k in range(i):
+                for k in range(i + 1, nb_intervals):
                     start_task_k, end_task_k = busy_intervals[k]
                     self.add_constraint(Xor(start_task_k >= end_task_i, start_task_i >= end_task_k))
 
