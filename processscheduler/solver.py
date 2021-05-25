@@ -22,7 +22,9 @@ from typing import Optional
 import uuid
 import warnings
 
-from z3 import Solver, SolverFor, Sum, unsat, sat, ArithRef, unknown, Optimize, set_option, Xor
+from z3 import (Solver, SolverFor, Sum, unsat, sat,
+                ArithRef, unknown, Optimize, set_option,
+                Xor, Distinct)
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
@@ -119,11 +121,21 @@ class SchedulingSolver:
         for ress in self.problem_context.resources:
             busy_intervals = ress.get_busy_intervals()
             nb_intervals = len(busy_intervals)
-            for i in range(nb_intervals):
-                start_task_i, end_task_i = busy_intervals[i]
-                for k in range(i + 1, nb_intervals):
-                    start_task_k, end_task_k = busy_intervals[k]
-                    self.add_constraint(Xor(start_task_k >= end_task_i, start_task_i >= end_task_k))
+            if False:  # brute force Xor, works in any case
+                for i in range(nb_intervals):
+                    start_task_i, end_task_i = busy_intervals[i]
+                    for k in range(i + 1, nb_intervals):
+                        start_task_k, end_task_k = busy_intervals[k]
+                        self.add_constraint(Xor(start_task_k >= end_task_i, start_task_i >= end_task_k))
+            # other algorithm, better for task durations that are not big
+            else:
+                all_starts = []
+                for task in ress.busy_intervals:  # look over tasks
+                    start_task_i, end_task_i = ress.busy_intervals[task]
+                    for idx in range(task.duration):
+                        all_starts.append(start_task_i + idx)
+                # add the constraint that tells they are distinct
+                self.add_constraint(Distinct(all_starts))
 
         # process indicators
         for indic in self.problem_context.indicators:
@@ -198,7 +210,10 @@ class SchedulingSolver:
             new_task_solution.type = type(task).__name__
             new_task_solution.start = z3_sol[task.start].as_long()
             new_task_solution.end = z3_sol[task.end].as_long()
-            new_task_solution.duration = z3_sol[task.duration].as_long()
+            if isinstance(task.duration, int):  # a FixedDurationTask
+                new_task_solution.duration = task.duration
+            else:
+                new_task_solution.duration = z3_sol[task.duration].as_long()
             new_task_solution.optional = task.optional
 
             # times, if ever delta_time and start_time are defined
@@ -354,6 +369,7 @@ class SchedulingSolver:
         solution = False
         total_time = 0
         print('Incremental optimizer:\n============================')
+        was_pushed = False
         while True:  # infinite loop, break if unsat of max_depth
             depth += 1
             if max_recursion_depth is not None:
@@ -371,7 +387,10 @@ class SchedulingSolver:
                 break
             current_variable_value = solution[variable].as_long()
             print(f'\tvalue:{current_variable_value}, elapsed time(s):{total_time}')
+            if was_pushed:
+                self._solver.pop()
             self._solver.push()
+            was_pushed = True
             if kind == 'min':
                 self.add_constraint(variable < current_variable_value)
             else:

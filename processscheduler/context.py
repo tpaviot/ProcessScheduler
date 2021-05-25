@@ -18,7 +18,7 @@
 from typing import Dict, List, Union
 import warnings
 
-from z3 import BoolRef, ArithRef
+from z3 import BoolRef, ArithRef, Z3_del_context, main_ctx
 
 from processscheduler.task_constraint import _Constraint
 

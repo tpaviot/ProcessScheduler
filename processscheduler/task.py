@@ -37,7 +37,6 @@ class Task(_NamedUIDObject):
         # z3 Int variables
         self.start = Int('%s_start' % name)
         self.end = Int('%s_end' % name)
-        self.duration = Int('%s_duration' % name)
 
         # by default, this task has to be scheduled
         self.optional = optional
@@ -147,9 +146,8 @@ class ZeroDurationTask(Task):
     def __init__(self, name: str, optional: Optional[bool] = False) -> None:
         super().__init__(name, optional)
         # add an assertion: end = start because the duration is zero
-        assertions = [self.start == self.end,
-                                self.duration == 0]
-
+        assertions = [self.start == self.end]
+        self.duration = 0
         self.set_assertions(assertions)
 
 class FixedDurationTask(Task):
@@ -176,10 +174,10 @@ class FixedDurationTask(Task):
         self.work_amount = work_amount
         self.priority = priority
 
-        assertions = [self.start + self.duration == self.end,
-                      self.duration == duration,
+        assertions = [self.start + duration == self.end,
                       self.start >= 0]
 
+        self.duration = duration
         self.set_assertions(assertions)
 
 class UnavailabilityTask(FixedDurationTask):
@@ -215,6 +213,7 @@ class VariableDurationTask(Task):
         self.length_at_most = length_at_most
         self.work_amount = work_amount
         self.priority = priority
+        self.duration = Int('%s_duration' % name)
 
         assertions = [self.start + self.duration == self.end,
                       self.start >= 0,
