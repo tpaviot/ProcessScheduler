@@ -231,23 +231,11 @@ class SchedulingSolver:
             # for each task, create a TaskSolution instance
             new_task_solution = TaskSolution(task.name)
             new_task_solution.type = type(task).__name__
-            new_task_solution.start = z3_sol[task.start].as_long()
-            new_task_solution.end = z3_sol[task.end].as_long()
             if isinstance(task.duration, int):  # a FixedDurationTask
                 new_task_solution.duration = task.duration
             else:
                 new_task_solution.duration = z3_sol[task.duration].as_long()
             new_task_solution.optional = task.optional
-
-            # times, if ever delta_time and start_time are defined
-            if self._problem.delta_time is not None:
-                new_task_solution.duration_time = new_task_solution.duration * self._problem.delta_time
-                if self._problem.start_time is not None:
-                    new_task_solution.start_time = self._problem.start_time + new_task_solution.start * self._problem.delta_time
-                    new_task_solution.end_time = new_task_solution.start_time + new_task_solution.duration_time
-                else:
-                    new_task_solution.start_time = new_task_solution.start * self._problem.delta_time
-                    new_task_solution.end_time = new_task_solution.start_time + new_task_solution.duration_time
 
             if task.optional:
                 # ugly hack, necessary because there's no as_bool()
@@ -255,6 +243,24 @@ class SchedulingSolver:
                 new_task_solution.scheduled = ("%s" % z3_sol[task.scheduled] == 'True')
             else:
                 new_task_solution.scheduled = True
+
+            if new_task_solution.scheduled:
+                new_task_solution.start = z3_sol[task.start].as_long()
+                new_task_solution.end = z3_sol[task.end].as_long()
+                # times, if ever delta_time and start_time are defined
+                if self._problem.delta_time is not None:
+                    new_task_solution.duration_time = new_task_solution.duration * self._problem.delta_time
+                    if self._problem.start_time is not None:
+                        new_task_solution.start_time = self._problem.start_time + new_task_solution.start * self._problem.delta_time
+                        new_task_solution.end_time = new_task_solution.start_time + new_task_solution.duration_time
+                    else:
+                        new_task_solution.start_time = new_task_solution.start * self._problem.delta_time
+                        new_task_solution.end_time = new_task_solution.start_time + new_task_solution.duration_time
+            else:
+                new_task_solution.start = None
+                new_task_solution.end = None
+                new_task_solution.start_time = None
+                new_task_solution.end_time = None
 
             # process resource assignments
             for req_res in task.required_resources:
