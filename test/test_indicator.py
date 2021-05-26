@@ -124,7 +124,7 @@ class TestIndicator(unittest.TestCase):
 
         utilization_res = problem.add_indicator_resource_utilization(worker)
 
-        problem.add_constraint(utilization_res.indicator_variable == 100)
+        problem.maximize_indicator(utilization_res)
 
         solution = ps.SchedulingSolver(problem).solve()
 
