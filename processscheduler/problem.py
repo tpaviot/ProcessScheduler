@@ -18,7 +18,7 @@
 from datetime import timedelta, datetime
 from typing import List, Optional
 
-from z3 import BoolRef, Int, Or, Sum
+from z3 import BoolRef, If, Int, Or, Sum
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
 from processscheduler.objective import (Indicator, MaximizeObjective,
@@ -133,8 +133,8 @@ class SchedulingProblem(_NamedUIDObject):
         """
         durations = []
         for interv_low, interv_up in resource.busy_intervals.values():
-            durations.append(interv_up - interv_low)
-        utilization = (Sum(durations) * 100) / self.horizon  # in percentage
+            durations.append(If(interv_low >= 0, interv_up - interv_low, 0))
+        utilization = Sum(durations) * 100 / self.horizon  # in percentage
         utilization_indicator = Indicator('Utilization (%s)' % resource.name,
                                            utilization)
         return utilization_indicator
