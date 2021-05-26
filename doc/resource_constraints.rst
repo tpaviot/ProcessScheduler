@@ -28,7 +28,7 @@ The :class:`WorkLoad` is not necessarily a *limitation*. Indeed you can specify 
 
 .. code-block:: python
 
-    c1 = ps.WorkLoad(worker_1, {(0, 10): 3, kind='min'}
+    c1 = ps.WorkLoad(worker_1, {(0, 10): 3}, kind='min')
 
 ResourceUnavailable
 -------------------
