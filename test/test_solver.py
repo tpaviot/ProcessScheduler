@@ -227,6 +227,14 @@ class TestSolver(unittest.TestCase):
         solution = max_time_solver.solve()
         self.assertFalse(solution)
 
+    def test_solve_non_integer_max_time(self):
+        """ a stress test which  """
+        problem = build_complex_problem('SolveMaxTime', 1000)
+        # 0.5s is not enough to solve this problem
+        max_time_solver = ps.SchedulingSolver(problem, max_time=0.5)
+        solution = max_time_solver.solve()
+        self.assertFalse(solution)
+
     #
     # Objectives
     #
