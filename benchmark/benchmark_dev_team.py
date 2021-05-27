@@ -28,15 +28,19 @@ parser.add_argument('-s', '--step',
     help='step'
 )
 parser.add_argument('-mt', '--max_time',
-    default=30,
+    default=60,
     help='Maximum time in seconds to find a solution'
+)
+parser.add_argument('-l', '--logics',
+    default=None,
+    help='SMT logics'
 )
 
 args = parser.parse_args()
 
-n = args.nmax  # max number of dev teams
-mt = args.max_time  # max time in seconds
-step = args.step
+n = int(args.nmax)  # max number of dev teams
+mt = int(args.max_time)  # max time in seconds
+step = int(args.step)
 
 #
 # Display machine identification
@@ -55,7 +59,7 @@ def get_size(byt, suffix="B"):
             return f"{byt:.2f}{unit}{suffix}"
         byt /= factor
 
-bench_id = uuid.uuid4().hex
+bench_id = uuid.uuid4().hex[:8]
 bench_date = datetime.now()
 print("#### Benchmark information header ####")
 print("Date:", bench_date)
@@ -85,6 +89,7 @@ svmem = psutil.virtual_memory()
 print(f"\tTotal memory: {get_size(svmem.total)}")
 
 computation_times = []
+plot_abs = []
 
 N = list(range(10, n, step)) # from 4 to N, step 2
 
@@ -107,27 +112,25 @@ for num_dev_teams in N:
         t_team_migration.add_required_resource(ps.SelectWorkers(r_a))
         t_team_migration.add_required_resource(ps.SelectWorkers(r_b))
 
-    # solve
-    #digital_transformation.add_objective_priorities()
-    #digital_transformation.add_objective_makespan()
-
-    solver = ps.SchedulingSolver(digital_transformation, max_time=mt)
-    #print("Done ok.")
-    #print("Solve.")
-    top = time.perf_counter()
+    # create the solver and solve
+    solver = ps.SchedulingSolver(digital_transformation, max_time=mt, logics=args.logics)
     solution = solver.solve()
 
-    computing_time = time.perf_counter() - top
-    if computing_time > mt:
-        computing_time = computing_time - mt
+    computing_time = time.perf_counter() - init_time
+    if computing_time > mt:  # no need to go beyond, it will fail
+        break
 
-    computation_times.append(computing_time)
+    computation_times.append(time.perf_counter() - init_time)
+    plot_abs.append(num_dev_teams)
 
     solver.print_statistics()
 
+plt.title("Benchmark SelectWorkers %s:%s" % (bench_date, bench_id))
+plt.plot(plot_abs, computation_times, 'D-', label="Computing time")
+plt.legend()
+plt.xlabel('n')
+plt.ylabel('time(s)')
+plt.grid(True)
+plt.savefig('bench_%s.svg' % bench_id)
 if args.plot:
-    plt.title("Benchmark SelectWorkers %s:%s" % (bench_date, bench_id[:8]))
-    plt.plot(N, computation_times, label="Computing time")
-    plt.legend()
-    plt.grid(True)
     plt.show()

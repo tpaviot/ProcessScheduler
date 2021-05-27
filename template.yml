@@ -57,7 +57,7 @@ jobs:
   - bash: |
       source activate psenv && \
       cd benchmark &&\
-      python benchmark_dev_team.py --plot=False &&\
+      python benchmark_dev_team.py --plot=False --logics=QF_IDL --max_time=10 &&\
       cd ..
     displayName: 'Run benchmark'
 
