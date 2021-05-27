@@ -58,20 +58,19 @@ print(f"\tTotal memory: {get_size(svmem.total)}")
 
 computation_times = []
 
-n = 20  # max number of dev teams
-mt = 10  # max time in seconds
+n_max = 120  # max number of dev teams
+num_resource_a = 2
+num_resource_b = 2
+mt = 60  # max time in seconds
 
-N = list(range(4, n, 2)) # from 4 to N, step 2
+N = list(range(10, n_max, 10)) # from 4 to N, step 2
 
 for num_dev_teams in N:
     print("-> Num dev teams:", num_dev_teams)
     # Teams and Resources
-    num_resource_a = 2
-    num_resource_b = 2
-
     init_time = time.perf_counter()
     # Resources
-    digital_transformation = ps.SchedulingProblem('DigitalTransformation')
+    digital_transformation = ps.SchedulingProblem('DigitalTransformation', horizon=num_dev_teams)
     r_a = [ps.Worker('A_%i' % (i + 1)) for i in range(num_resource_a)]
     r_b = [ps.Worker('B_%i' % (i + 1)) for i in range(num_resource_b)]
 
@@ -84,17 +83,15 @@ for num_dev_teams in N:
 
     # solve
     #digital_transformation.add_objective_priorities()
-    digital_transformation.add_objective_makespan()
 
-    solver = ps.SchedulingSolver(digital_transformation, random_seed=True, max_time=mt, logics="QF_IDL")
+    solver = ps.SchedulingSolver(digital_transformation, max_time=mt)
     #print("Done ok.")
     #print("Solve.")
-    top = time.perf_counter()
     solution = solver.solve()
 
-    computing_time = time.perf_counter() - top
-    if computing_time > mt:
-        computing_time = computing_time - mt
+    computing_time = time.perf_counter() - init_time
+    #if computing_time > mt:
+    #    computing_time = computing_time - mt
 
     computation_times.append(computing_time)
 

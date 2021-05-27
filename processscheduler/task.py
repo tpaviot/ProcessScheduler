@@ -175,6 +175,8 @@ class FixedDurationTask(Task):
 
         self.work_amount = work_amount
         self.priority = priority
+        # store the constant duration as an integer
+        self.duration_value = duration
 
         assertions = [self.start + self.duration == self.end,
                       self.duration == duration,

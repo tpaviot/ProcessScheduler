@@ -22,10 +22,12 @@ from typing import Optional
 import uuid
 import warnings
 
-from z3 import Solver, SolverFor, Sum, unsat, sat, ArithRef, unknown, Optimize, set_option, Xor
+from z3 import (Solver, SolverFor, Sum, unsat, sat,
+                ArithRef, unknown, Optimize, set_option, Xor, Distinct)
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
+from processscheduler.task import VariableDurationTask
 
 #
 # Solver class definition
@@ -116,14 +118,40 @@ class SchedulingSolver:
             self.add_constraint(ress.get_assertions())
 
         # process resource intervals
+        # First, we check all tasks to find if ever one of them
+        # is a VariableDurationTask. In this case, we have to
+        # use the brute force Xor for the non overlapping constraint.
+        # in the other case, the Distinc constraint over start times is
+        # enough
+        problem_has_variable_duration_task = False
+        for task in self.problem_context.tasks:
+            if isinstance(task, VariableDurationTask):
+                problem_has_variable_duration_task = True
+                break
+        if problem_has_variable_duration_task:
+            overlap_mode = 'brute_xor'
+        else:
+            overlap_mode = 'distinct'
+
         for ress in self.problem_context.resources:
             busy_intervals = ress.get_busy_intervals()
             nb_intervals = len(busy_intervals)
-            for i in range(nb_intervals):
-                start_task_i, end_task_i = busy_intervals[i]
-                for k in range(i + 1, nb_intervals):
-                    start_task_k, end_task_k = busy_intervals[k]
-                    self.add_constraint(Xor(start_task_k >= end_task_i, start_task_i >= end_task_k))
+
+            if overlap_mode == 'brute_xor':  # brute force Xor, works in any case
+                for i in range(nb_intervals):
+                    start_task_i, end_task_i = busy_intervals[i]
+                    for k in range(i + 1, nb_intervals):
+                        start_task_k, end_task_k = busy_intervals[k]
+                        self.add_constraint(Xor(start_task_k >= end_task_i, start_task_i >= end_task_k))
+            # other algorithm, better for task durations that are not big
+            elif overlap_mode == 'distinct':
+                all_starts = []
+                for task in ress.busy_intervals:  # look over tasks
+                    start_task_i, end_task_i = ress.busy_intervals[task]
+                    for idx in range(task.duration_value):
+                        all_starts.append(start_task_i + idx)
+                # add the constraint that tells they are distinct
+                self.add_constraint(Distinct(all_starts))
 
         # process indicators
         for indic in self.problem_context.indicators:
@@ -352,8 +380,9 @@ class SchedulingSolver:
             raise ValueError("choose either 'min' or 'max'")
         depth = 0
         solution = False
-        total_time = 0
-        print('Incremental optimizer:\n============================')
+        init_time = time.perf_counter()
+        print('Incremental optimizer:\n======================')
+        print('\t-> Computing...')
         while True:  # infinite loop, break if unsat of max_depth
             depth += 1
             if max_recursion_depth is not None:
@@ -364,13 +393,10 @@ class SchedulingSolver:
             is_sat, sat_computation_time = self.check_sat()
             if is_sat != sat:
                 break
+
             solution = self._solver.model()
-            total_time += sat_computation_time
-            if total_time > self.max_time:
-                warnings.warn('max time exceeded')
-                break
             current_variable_value = solution[variable].as_long()
-            print(f'\tvalue:{current_variable_value}, elapsed time(s):{total_time}')
+            print(f'\tvalue:{current_variable_value}')#, elapsed time(s):{total_time}')
             self._solver.push()
             if kind == 'min':
                 self.add_constraint(variable < current_variable_value)
@@ -378,10 +404,11 @@ class SchedulingSolver:
                 self.add_constraint(variable > current_variable_value)
         if not solution:
             return False
-
-        print('\ttotal number of iterations: %i' % depth)
-        print('\tvalue: %i' %current_variable_value)
-        print('\t%s satisfiability checked in %.2fs' % (self._problem.name, total_time))
+        print('\t-> Computation ended.')
+        print('\t-> Total number of iterations: %i' % depth)
+        print('\t-> Value: %i' %current_variable_value)
+        computation_time = (time.perf_counter() - init_time) - self.max_time  # dont count the last one
+        print('\t%s Satisfiability checked in %.2fs' % (self._problem.name, computation_time))
 
         return solution
 

@@ -40,6 +40,7 @@ class SchedulingProblem(_NamedUIDObject):
     """
     def __init__(self, name: str,
                  horizon: Optional[int] = None,
+                 fixed_horizon: Optional[bool]=False,
                  delta_time: Optional[timedelta] = None,
                  start_time: Optional[datetime] = None,
                  end_time: Optional[datetime] = None
@@ -53,10 +54,12 @@ class SchedulingProblem(_NamedUIDObject):
 
         # define the horizon variable
         self.horizon = Int('horizon')
-        self.fixed_horizon = False  # set to True is horizon is fixed
+        self.fixed_horizon = fixed_horizon  # set to True is horizon is fixed
         if is_strict_positive_integer(horizon):  # fixed_horizon
-            self.context.add_constraint(self.horizon == horizon)
-            self.fixed_horizon = True
+            if fixed_horizon:
+                self.context.add_constraint(self.horizon == horizon)
+            else:
+                self.context.add_constraint(self.horizon <= horizon)
         elif horizon is not None:
             raise TypeError('horizon must either be a strict positive integer or None')
 
@@ -83,6 +86,7 @@ class SchedulingProblem(_NamedUIDObject):
     def add_objective_makespan(self) -> MinimizeObjective:
         """ makespan objective
         """
+        print("Horizon is fixed:", self.fixed_horizon)
         if self.fixed_horizon:
             raise ValueError('Horizon constrained to be fixed, no horizon optimization possible.')
         return MinimizeObjective('MakeSpan', self.horizon)
