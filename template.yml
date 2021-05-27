@@ -54,6 +54,13 @@ jobs:
       python -m unittest
     displayName: 'Run unittest suite'
 
+  - bash: |
+      source activate psenv && \
+      cd benchmark &&\
+      python benchmark_dev_team.py &&\
+      cd ..
+    displayName: 'Run benchmark'
+
   - ${{ if eq(parameters.name, 'Ubuntu_20_04_python39') }}:
     - bash: |
         source activate psenv && \
