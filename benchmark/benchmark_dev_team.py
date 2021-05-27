@@ -1,4 +1,5 @@
 # ProcessScheduler benchmark
+import argparse
 import time
 from datetime import datetime
 import subprocess
@@ -9,6 +10,33 @@ import psutil
 import matplotlib.pyplot as plt
 import processscheduler as ps
 import z3
+
+#
+# Argument parser
+#
+parser = argparse.ArgumentParser()
+parser.add_argument('-p', '--plot',
+    default=True,
+    help='Display results in a matplotlib chart'
+)
+parser.add_argument('-n', '--nmax',
+    default=100,
+    help='max dev team'
+)
+parser.add_argument('-s', '--step',
+    default=10,
+    help='step'
+)
+parser.add_argument('-mt', '--max_time',
+    default=30,
+    help='Maximum time in seconds to find a solution'
+)
+
+args = parser.parse_args()
+
+n = args.nmax  # max number of dev teams
+mt = args.max_time  # max time in seconds
+step = args.step
 
 #
 # Display machine identification
@@ -58,10 +86,7 @@ print(f"\tTotal memory: {get_size(svmem.total)}")
 
 computation_times = []
 
-n = 20  # max number of dev teams
-mt = 10  # max time in seconds
-
-N = list(range(4, n, 2)) # from 4 to N, step 2
+N = list(range(10, n, step)) # from 4 to N, step 2
 
 for num_dev_teams in N:
     print("-> Num dev teams:", num_dev_teams)
@@ -71,7 +96,7 @@ for num_dev_teams in N:
 
     init_time = time.perf_counter()
     # Resources
-    digital_transformation = ps.SchedulingProblem('DigitalTransformation')
+    digital_transformation = ps.SchedulingProblem('DigitalTransformation', horizon=num_dev_teams)
     r_a = [ps.Worker('A_%i' % (i + 1)) for i in range(num_resource_a)]
     r_b = [ps.Worker('B_%i' % (i + 1)) for i in range(num_resource_b)]
 
@@ -84,9 +109,9 @@ for num_dev_teams in N:
 
     # solve
     #digital_transformation.add_objective_priorities()
-    digital_transformation.add_objective_makespan()
+    #digital_transformation.add_objective_makespan()
 
-    solver = ps.SchedulingSolver(digital_transformation, random_seed=True, max_time=mt, logics="QF_IDL")
+    solver = ps.SchedulingSolver(digital_transformation, max_time=mt)
     #print("Done ok.")
     #print("Solve.")
     top = time.perf_counter()
@@ -100,8 +125,9 @@ for num_dev_teams in N:
 
     solver.print_statistics()
 
-plt.title("Benchmark SelectWorkers %s:%s" % (bench_date, bench_id[:8]))
-plt.plot(N, computation_times, label="Computing time")
-plt.legend()
-plt.grid(True)
-plt.show()
+if args.plot:
+    plt.title("Benchmark SelectWorkers %s:%s" % (bench_date, bench_id[:8]))
+    plt.plot(N, computation_times, label="Computing time")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
