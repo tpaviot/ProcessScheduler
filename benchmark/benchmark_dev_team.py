@@ -116,8 +116,7 @@ for num_dev_teams in N:
     solver = ps.SchedulingSolver(digital_transformation, max_time=mt, logics=args.logics)
     solution = solver.solve()
 
-    computing_time = time.perf_counter() - init_time
-    if computing_time > mt:  # no need to go beyond, it will fail
+    if not solution:
         break
 
     computation_times.append(time.perf_counter() - init_time)
