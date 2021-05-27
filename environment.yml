@@ -12,4 +12,5 @@ dependencies:
     - ipywidgets== 7.6.3
     - isodate==0.6.0
     - ipympl==0.7.0
+    - psutil==5.8.0
     - -e .
