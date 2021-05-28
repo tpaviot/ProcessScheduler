@@ -54,13 +54,21 @@ jobs:
       python -m unittest
     displayName: 'Run unittest suite'
 
-  - ${{ if not(startsWith(parameters.name, 'Ubuntu')) }}:
+  - ${{ if startsWith(parameters.name, 'Ubuntu') }}:
     - bash: |
         source activate psenv && \
         cd benchmark &&\
-        python benchmark_dev_team.py --plot=False --logics=QF_IDL --max_time=30 &&\
+        mkdir output &&\
+        python benchmark_dev_team.py --plot=False --logics=QF_IDL --max_time=30 > benchmark_dev_team_result.txt &&\
         cd ..
       displayName: 'Run benchmark'
+
+  - ${{ if startsWith(parameters.name, 'Ubuntu') }}:
+    - task: PublishPipelineArtifact@0
+      inputs:
+        targetPath: '/home/vsts/work/1/s/benchmark/'
+        artifactName: Benchmarks${{ parameters.name }}
+      displayName: 'Publish benchmark artifact'
 
   - ${{ if eq(parameters.name, 'Ubuntu_20_04_python39') }}:
     - bash: |
