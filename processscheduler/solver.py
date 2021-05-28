@@ -382,7 +382,8 @@ class SchedulingSolver:
             return False
 
         print('\ttotal number of iterations: %i' % depth)
-        print('\tvalue: %i' % current_variable_value)
+        if current_variable_value is not None:
+            print('\tvalue: %i' % current_variable_value)
         print('\t%s satisfiability checked in %.2fs' % (self._problem.name, total_time))
 
         return solution
