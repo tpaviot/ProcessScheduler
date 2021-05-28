@@ -22,7 +22,7 @@ from typing import Optional
 import uuid
 import warnings
 
-from z3 import Solver, SolverFor, Sum, unsat, sat, ArithRef, unknown, Optimize, set_option, If, Xor, And
+from z3 import Solver, SolverFor, Sum, unsat, sat, ArithRef, unknown, Optimize, set_option, Or
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
@@ -123,8 +123,8 @@ class SchedulingSolver:
                 start_task_i, end_task_i = busy_intervals[i]
                 for k in range(i + 1, nb_intervals):
                     start_task_k, end_task_k = busy_intervals[k]
-                    self.add_constraint(Xor(start_task_k >= end_task_i, start_task_i >= end_task_k))
-                    #self.add_constraint(If(And(start_task_k >= 0, start_task_i>=0), Xor(start_task_k >= end_task_i, start_task_i >= end_task_k), True))
+                    self.add_constraint(Or(start_task_k >= end_task_i, start_task_i >= end_task_k))
+
 
         # process indicators
         for indic in self.problem_context.indicators:
