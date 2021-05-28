@@ -59,14 +59,14 @@ jobs:
         source activate psenv && \
         cd benchmark &&\
         mkdir output &&\
-        python benchmark_dev_team.py --plot=False --logics=QF_IDL --max_time=30 > output/benchmark_dev_tem_result.txt &&\
+        python benchmark_dev_team.py --plot=False --logics=QF_IDL --max_time=30 > benchmark_dev_team_result.txt &&\
         cd ..
       displayName: 'Run benchmark'
 
   - ${{ if startsWith(parameters.name, 'Ubuntu') }}:
     - task: PublishPipelineArtifact@0
       inputs:
-        pathToPublish: '/home/vsts/work/1/s/benchmark/output'
+        pathToPublish: '/home/vsts/work/1/s/benchmark/benchmark_dev_team_result.txt'
         artifactName: Benchmarks${{ parameters.name }}
       displayName: 'Publish benchmark artifact'
 
