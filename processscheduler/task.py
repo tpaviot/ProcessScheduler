@@ -80,12 +80,13 @@ class Task(_NamedUIDObject):
                 schedule_as_usual = And(resource_maybe_busy_start ==  self.start,
                                         resource_maybe_busy_end ==  self.end)
                 # in the case the worker is selected
-                # else: reject in the past !! (i.e. this resource will be scheduled in the past)
-                # to a place where they cannot conflict with the schedule
-                # and with a zero busy duration, that mean they don't contribute in cost
-                # or work amount
-                move_to_past = And(resource_maybe_busy_start <= -1, # to past
-                                   resource_maybe_busy_end == resource_maybe_busy_start) # zero dur.
+                # move the busy interval to a single point in time, in the
+                # past. This way, it does not conflict with tasks to be
+                # actuallt scheduled.
+                # This single point in time results in a zero duration time: related
+                # task will not be considered when cimputing resource utilization or cost.
+                move_to_past = And(resource_maybe_busy_start == -1, # to past
+                                   resource_maybe_busy_end == -1)
                 # define the assertion ...
                 assertion = If(selected_variable, schedule_as_usual, move_to_past)
                 # ... and store it into the task assertions list
