@@ -128,8 +128,8 @@ class Task(_NamedUIDObject):
         nothing is done, if the case is optional, scheduling the task to the past"""
         if self.optional: # in this case the previous assertions maybe skipped
             self.scheduled = Bool('%s_scheduled' % self.name)
-            not_scheduled_assertion = And(self.start <= -1, # to past
-                                          self.end <= -1,
+            not_scheduled_assertion = And(self.start == -1, # to past
+                                          self.end == -1,
                                           self.duration == 0)
             self.add_assertion(If(self.scheduled, And(list_of_z3_assertions), not_scheduled_assertion))
         else:
