@@ -22,7 +22,7 @@ from typing import Optional
 import uuid
 import warnings
 
-from z3 import Solver, SolverFor, Sum, unsat, sat, ArithRef, unknown, Optimize, set_option, Xor
+from z3 import Solver, SolverFor, Sum, unsat, sat, ArithRef, unknown, Optimize, set_option, If, Xor, And
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
@@ -124,6 +124,7 @@ class SchedulingSolver:
                 for k in range(i + 1, nb_intervals):
                     start_task_k, end_task_k = busy_intervals[k]
                     self.add_constraint(Xor(start_task_k >= end_task_i, start_task_i >= end_task_k))
+                    #self.add_constraint(If(And(start_task_k >= 0, start_task_i>=0), Xor(start_task_k >= end_task_i, start_task_i >= end_task_k), True))
 
         # process indicators
         for indic in self.problem_context.indicators:
@@ -353,6 +354,7 @@ class SchedulingSolver:
         depth = 0
         solution = False
         total_time = 0
+        current_variable_value = None
         print('Incremental optimizer:\n============================')
         while True:  # infinite loop, break if unsat of max_depth
             depth += 1
@@ -380,7 +382,7 @@ class SchedulingSolver:
             return False
 
         print('\ttotal number of iterations: %i' % depth)
-        print('\tvalue: %i' %current_variable_value)
+        print('\tvalue: %i' % current_variable_value)
         print('\t%s satisfiability checked in %.2fs' % (self._problem.name, total_time))
 
         return solution
