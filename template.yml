@@ -66,8 +66,8 @@ jobs:
   - ${{ if startsWith(parameters.name, 'Ubuntu') }}:
     - task: PublishPipelineArtifact@0
       inputs:
-        pathToPublish: 'benchmark/output'
-        artifactName: Benchmarks
+        pathToPublish: '/home/vsts/work/1/s/benchmark/output'
+        artifactName: Benchmarks${{ parameters.name }}
       displayName: 'Publish benchmark artifact'
 
   - ${{ if eq(parameters.name, 'Ubuntu_20_04_python39') }}:
