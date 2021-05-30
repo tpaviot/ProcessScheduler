@@ -183,6 +183,15 @@ class SchedulingSolver:
         init_time = time.perf_counter()
         sat_result  = self._solver.check()
         check_sat_time = time.perf_counter() - init_time
+
+        if sat_result == unsat:
+            print("\tNo solution can be found for problem %s.\n\tReason: Unsatisfiable problem: no solution exists" % self._problem.name)
+
+        if sat_result == unknown:
+            reason = self._solver.reason_unknown()
+            print("\tNo solution can be found for problem %s.\n\tReason: %s" % (self._problem.name,
+                                                                                 reason))
+
         return sat_result, check_sat_time
 
     def build_solution(self, z3_sol):
@@ -309,8 +318,6 @@ class SchedulingSolver:
             print('\t%s satisfiability checked in %.2fs' % (self._problem.name, sat_computation_time))
 
             if sat_result == unsat:
-                print("SAT result:\n===========")
-                print("\tNo solution exists for problem %s." % self._problem.name)
                 if self.debug:
                     unsat_core = self._solver.unsat_core()
                     print('\t%i unsatisfied assertion(s) (probable conflict):' % len(unsat_core))
@@ -319,9 +326,6 @@ class SchedulingSolver:
                 return False
 
             if sat_result == unknown:
-                reason = self._solver.reason_unknown()
-                print("\tNo solution can be found for problem %s because: %s" % (self._problem.name,
-                                                                                 reason))
                 return False
 
             # then get the solution
@@ -355,7 +359,7 @@ class SchedulingSolver:
         solution = False
         total_time = 0
         current_variable_value = None
-        print('Incremental optimizer:\n============================')
+        print('Incremental optimizer:\n======================')
         while True:  # infinite loop, break if unsat of max_depth
             depth += 1
             if max_recursion_depth is not None:
