@@ -91,7 +91,7 @@ class TestWorkLoad(unittest.TestCase):
 
     def test_resource_work_load_exception(self) -> None:
         ps.SchedulingProblem('ResourceWorkLoadException', horizon=12)
-        
+
         worker_1 = ps.Worker('Worker1')
 
         with self.assertRaises(ValueError):

@@ -17,7 +17,7 @@
 
 from typing import Dict, List, Optional, Tuple
 
-from z3 import ArithRef, Bool, PbEq, PbGe, PbLe, Xor
+from z3 import ArithRef, Bool, PbEq, PbGe, PbLe
 
 from processscheduler.base import (_NamedUIDObject, is_positive_integer,
                                    is_strict_positive_integer)

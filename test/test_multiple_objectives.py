@@ -78,7 +78,7 @@ class MultiObjective(unittest.TestCase):
         # the first one fixed
         solution1 = ps.SchedulingSolver(pb, optimize_priority='box').solve()
         self.assertTrue(solution1)
-        
+
     def test_multi_two_tasks_pareto(self) -> None:
         # in the thrid test, optimize both. What will the result be?
         pb = ps.SchedulingProblem('MultiObjective2', horizon=20)
