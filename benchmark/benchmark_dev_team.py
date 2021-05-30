@@ -59,6 +59,7 @@ def get_size(byt, suffix="B"):
             return f"{byt:.2f}{unit}{suffix}"
         byt /= factor
 
+
 bench_id = uuid.uuid4().hex[:8]
 bench_date = datetime.now()
 print("#### Benchmark information header ####")

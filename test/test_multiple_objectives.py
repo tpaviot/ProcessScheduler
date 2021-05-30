@@ -101,7 +101,7 @@ class MultiObjective(unittest.TestCase):
         while solver.solve():
             i += 1
         self.assertEqual(i, 18)
-        
+
 
 if __name__ == "__main__":
     unittest.main()
