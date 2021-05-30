@@ -98,9 +98,9 @@ class SchedulingSolver:
 
         if parallel:
             set_option("parallel.enable", True)  # enable parallel computation
-            n_cpus = multiprocessing.cpu_count()
-            set_option("sat.threads", n_cpus)  # enable parallel computation
-            set_option("smt.threads", n_cpus)  # enable parallel computation
+            #n_cpus = multiprocessing.cpu_count()
+            #set_option("sat.threads", n_cpus)  # enable parallel computation
+            #set_option("smt.threads", n_cpus)  # enable parallel computation
 
         # add all tasks assertions to the solver
         for task in self.problem_context.tasks:

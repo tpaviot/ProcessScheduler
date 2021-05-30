@@ -38,12 +38,32 @@ class SchedulingContext:
         self.resources = [] # type: Dict[str, _Resource]
         # the constraints are defined in the scenario
         self.constraints = [] # type: List[BoolRef]
+        self.task_constraints = []
+        self.resource_constraints = []
         # list of define indicators
         self.indicators = [] # type: List[Indicator]
         self.objectives = [] # type: List[Union[Indicator, ArithRef]]
 
+    def add_task_constraint(self, task_constraint) -> bool:
+        """ add an indicator to the problem """
+        if task_constraint not in self.task_constraints:
+            self.task_constraints.append(task_constraint)
+        else:
+            warnings.warn('task constraint %s already part of the problem' % task_constraint)
+            return False
+        return True
+
+    def add_resource_constraint(self, resource_constraint) -> bool:
+        """ add an indicator to the problem """
+        if resource_constraint not in self.resource_constraints:
+            self.resource_constraints.append(resource_constraint)
+        else:
+            warnings.warn('resource constraint %s already part of the problem' % resource_constraint)
+            return False
+        return True
+
     def add_indicator(self, indicator) -> bool:
-        """ add an indicatr to the problem """
+        """ add an indicator to the problem """
         if indicator not in self.indicators:
             self.indicators.append(indicator)
         else:

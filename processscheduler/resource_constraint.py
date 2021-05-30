@@ -22,9 +22,15 @@ from z3 import And, Implies, Int, Not, Or, Sum, Xor
 
 from processscheduler.resource import Worker, CumulativeWorker
 from processscheduler.base import _Constraint
+import processscheduler.context as ps_context
+
+class ResourceConstraint(_Constraint):
+    def __init__(self, *kargs):
+        super().__init__(*kargs)
+        ps_context.main_context.add_resource_constraint(self)
 
 
-class WorkLoad(_Constraint):
+class WorkLoad(ResourceConstraint):
     """ set a mini/maxi/exact number of slots a resource can be scheduled."""
     def __init__(self, resource,
                        dict_time_intervals_and_bound,
@@ -109,7 +115,7 @@ class WorkLoad(_Constraint):
             self.set_assertions(wl_constrt)
 
 
-class ResourceUnavailable(_Constraint):
+class ResourceUnavailable(ResourceConstraint):
     """ set unavailablity or a resource, in terms of busy intervals
     """
     def __init__(self,
@@ -141,7 +147,7 @@ class ResourceUnavailable(_Constraint):
 #
 # SelectWorker specific constraints
 #
-class AllSameSelected(_Constraint):
+class AllSameSelected(ResourceConstraint):
     """ Selected workers by both AlternateWorkers are constrained to
     be the same
     """
@@ -155,7 +161,7 @@ class AllSameSelected(_Constraint):
                 self.set_assertions(alternate_workers_1.selection_dict[res_work_1] == alternate_workers_2.selection_dict[res_work_1])
 
 
-class AllDifferentSelected(_Constraint):
+class AllDifferentSelected(ResourceConstraint):
     """ Selected workers by both AlternateWorkers are constrained to
     be the same
     """

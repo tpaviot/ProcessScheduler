@@ -21,11 +21,17 @@ from typing import Optional
 from z3 import And, Bool, Not, BoolRef, Implies, If, Xor, PbEq, PbGe, PbLe
 
 from processscheduler.base import _Constraint
+import processscheduler.context as ps_context
+
+class TaskConstraint(_Constraint):
+    def __init__(self, *kargs):
+        super().__init__(*kargs)
+        ps_context.main_context.add_task_constraint(self)
 
 #
 # Tasks constraints for two or more classes
 #
-class TaskPrecedence(_Constraint):
+class TaskPrecedence(TaskConstraint):
     """ Task precedence relation """
     def __init__(self, task_before, task_after,
                  offset=0, kind='lax',
@@ -67,7 +73,7 @@ class TaskPrecedence(_Constraint):
         else:
             self.set_assertions(scheduled_assertion)
 
-class TasksStartSynced(_Constraint):
+class TasksStartSynced(TaskConstraint):
     """ Two tasks that must start at the same time """
     def __init__(self, task_1, task_2, optional: Optional[bool] = False) -> None:
         super().__init__(optional)
@@ -81,7 +87,7 @@ class TasksStartSynced(_Constraint):
         else:
             self.set_assertions(scheduled_assertion)
 
-class TasksEndSynced(_Constraint):
+class TasksEndSynced(TaskConstraint):
     """ Two tasks that must complete at the same time """
     def __init__(self, task_1, task_2, optional: Optional[bool] = False) -> None:
         super().__init__(optional)
@@ -94,7 +100,7 @@ class TasksEndSynced(_Constraint):
         else:
             self.set_assertions(scheduled_assertion)
 
-class TasksDontOverlap(_Constraint):
+class TasksDontOverlap(TaskConstraint):
     """ two tasks must not overlap, i.e. one needs to be completed before
     the other can be processed """
     def __init__(self, task_1, task_2, optional: Optional[bool] = False) -> None:
@@ -112,7 +118,7 @@ class TasksDontOverlap(_Constraint):
 #
 # Task constraints for one single task
 #
-class TaskStartAt(_Constraint):
+class TaskStartAt(TaskConstraint):
     """ One task must start at the desired time """
     def __init__(self, task, value: int, optional: Optional[bool] = False) -> None:
         super().__init__(optional)
@@ -125,7 +131,7 @@ class TaskStartAt(_Constraint):
         else:
             self.set_assertions(scheduled_assertion)
 
-class TaskStartAfterStrict(_Constraint):
+class TaskStartAfterStrict(TaskConstraint):
     """ task.start > value """
     def __init__(self, task, value: int, optional: Optional[bool] = False) -> None:
         super().__init__(optional)
@@ -138,7 +144,7 @@ class TaskStartAfterStrict(_Constraint):
         else:
             self.set_assertions(scheduled_assertion)
 
-class TaskStartAfterLax(_Constraint):
+class TaskStartAfterLax(TaskConstraint):
     """  task.start >= value  """
     def __init__(self, task, value: int, optional: Optional[bool] = False) -> None:
         super().__init__(optional)
@@ -151,7 +157,7 @@ class TaskStartAfterLax(_Constraint):
         else:
             self.set_assertions(scheduled_assertion)
 
-class TaskEndAt(_Constraint):
+class TaskEndAt(TaskConstraint):
     """ On task must complete at the desired time """
     def __init__(self, task, value: int, optional: Optional[bool] = False) -> None:
         super().__init__(optional)
@@ -164,7 +170,7 @@ class TaskEndAt(_Constraint):
         else:
             self.set_assertions(scheduled_assertion)
 
-class TaskEndBeforeStrict(_Constraint):
+class TaskEndBeforeStrict(TaskConstraint):
     """ task.end < value """
     def __init__(self, task, value: int, optional: Optional[bool] = False) -> None:
         super().__init__(optional)
@@ -177,7 +183,7 @@ class TaskEndBeforeStrict(_Constraint):
         else:
             self.set_assertions(scheduled_assertion)
 
-class TaskEndBeforeLax(_Constraint):
+class TaskEndBeforeLax(TaskConstraint):
     """ task.end <= value """
     def __init__(self, task, value: int, optional: Optional[bool] = False) -> None:
         super().__init__(optional)
@@ -192,7 +198,7 @@ class TaskEndBeforeLax(_Constraint):
 #
 # Optional classes only constraints
 #
-class OptionalTaskConditionSchedule(_Constraint):
+class OptionalTaskConditionSchedule(TaskConstraint):
     """An optional task that is scheduled only if a condition is fulfilled."""
     def __init__(self, task, condition: BoolRef, optional: Optional[bool] = False) -> None:
         super().__init__(optional)
@@ -202,7 +208,7 @@ class OptionalTaskConditionSchedule(_Constraint):
 
         self.set_assertions(If(condition, task.scheduled == True, task.scheduled == False))
 
-class OptionalTasksDependency(_Constraint):
+class OptionalTasksDependency(TaskConstraint):
     """task_2 is scheduled if and only if task_1 is scheduled"""
     def __init__(self, task_1, task_2, optional: Optional[bool] = False) -> None:
         super().__init__(optional)
@@ -212,7 +218,7 @@ class OptionalTasksDependency(_Constraint):
 
         self.set_assertions(task_1.scheduled == task_2.scheduled)
 
-class ForceScheduleNOptionalTasks(_Constraint):
+class ForceScheduleNOptionalTasks(TaskConstraint):
     """Given a set of m different optional tasks, force the solver to schedule
     at at least/at most/exactly n tasks, with 0 < n <= m."""
     def __init__(self, list_of_optional_tasks,
@@ -237,7 +243,7 @@ class ForceScheduleNOptionalTasks(_Constraint):
                                       nb_tasks_to_schedule)
         self.set_assertions(asst)
 
-class ScheduleNTasksInTimeIntervals(_Constraint):
+class ScheduleNTasksInTimeIntervals(TaskConstraint):
     """Given a set of m different tasks, and a list of time intervals, schedule N tasks among m
     in this time interval"""
     def __init__(self, list_of_tasks,
