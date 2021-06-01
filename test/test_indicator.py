@@ -164,10 +164,10 @@ class TestIndicator(unittest.TestCase):
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[task_1_start_ind.name], 98)
 
-    def test_resource_utilization_maximization_incremantal_1(self) -> None:
+    def test_resource_utilization_maximization_incremental_1(self) -> None:
         """Same as above, but both workers are selectable. Force one with resource
         utilization maximization objective."""
-        problem = ps.SchedulingProblem('IndicatorMaximizeIncremantal', horizon = 10)
+        problem = ps.SchedulingProblem('IndicatorMaximizeIncremental', horizon = 10)
 
         t_1 = ps.FixedDurationTask('T1', duration=5)
         t_2 = ps.FixedDurationTask('T2', duration=5)
@@ -190,6 +190,31 @@ class TestIndicator(unittest.TestCase):
         self.assertEqual(solution.indicators[utilization_res_1.name], 100)
         self.assertEqual(solution.indicators[utilization_res_2.name], 0)
 
+    def test_indicator_flowtime_single_resource_1(self) -> None:
+        problem = ps.SchedulingProblem('IndicatorFlowtimeSingleResource1', horizon = 100)
+
+        t_1 = ps.FixedDurationTask('T1', duration=5)
+        t_2 = ps.FixedDurationTask('T2', duration=5)
+        t_3 = ps.FixedDurationTask('T3', duration=4)
+        t_4 = ps.FixedDurationTask('T4', duration=3)
+        t_5 = ps.FixedDurationTask('T5', duration=2)
+        worker_1 = ps.Worker('Worker1')
+        worker_2 = ps.Worker('Worker2')
+
+        t_1.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
+        t_2.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
+        t_3.add_required_resource(worker_1)
+        t_4.add_required_resource(worker_1)
+        t_5.add_required_resource(worker_1)
+
+        problem.add_constraint(ps.TaskEndAt(t_5, 90))
+        problem.add_objective_flowtime_single_resource(worker_1)
+        solver = ps.SchedulingSolver(problem)
+
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(solution.indicators["FlowTime(Worker1)"], 10)
 
 if __name__ == "__main__":
     unittest.main()

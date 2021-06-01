@@ -198,3 +198,40 @@ class SchedulingProblem(_NamedUIDObject):
         flow_time_expr = Sum(task_ends)
         smallest_start_time_indicator = Indicator('FlowTime', flow_time_expr)
         return self.minimize_indicator(smallest_start_time_indicator)
+
+    def add_objective_flowtime_single_resource(self, resource, time_interval=None) -> MinimizeObjective:
+        """Optimize flowtime for a single resource, for all the tasks scheduled in the
+        time interval provided. Is ever no time interval is passed to the function, the
+        flowtime is minimized for all the tasks scheduled in the workplan."""
+        if time_interval is not None:
+            lower_bound, upper_bound = time_interval
+        else:
+            lower_bound = 0
+            upper_bound = None
+
+        # for this resource, we look for the minimal starting time of scheduled tasks
+        # as well as the maximum
+        flowtime_single_resource = BuiltinIndicator('FlowTime(%s)' % resource.name)
+
+        maxi = Int('GreatestEndTimeForAssignedTask%s' % resource.name)
+        flowtime_single_resource.add_assertion(Or([maxi == task.end for task in resource.busy_intervals]))
+        for tsk in self.context.tasks:
+            flowtime_single_resource.add_assertion(maxi >= tsk.end)
+        flowtime_single_resource.add_assertion(maxi >= 0)  # restrict to scheduled tasks
+        # restrict to time period, if defined:
+        if upper_bound is not None:
+            flowtime_single_resource.add_assertion(maxi <= upper_bound)
+
+        # and the mini
+        mini = Int('SmallestStartTimeAssignedTask%s' % resource.name)
+        flowtime_single_resource.add_assertion(Or([mini == task.start for task in resource.busy_intervals]))
+        for tsk in self.context.tasks:
+            flowtime_single_resource.add_assertion(mini <= tsk.start)
+        #flowtime_single_resource.add_assertion(mini >= 0)  # restrict to scheduled tasks
+        flowtime_single_resource.add_assertion(mini >= lower_bound)
+
+        # the quantity to optimize
+        flowtime = Int('FlowtimeSingleResource')
+        flowtime_single_resource.add_assertion(flowtime == maxi - mini)
+        flowtime_single_resource.indicator_variable = flowtime
+        return self.minimize_indicator(flowtime)
