@@ -18,7 +18,7 @@
 from datetime import timedelta, datetime
 from typing import List, Optional
 
-from z3 import BoolRef, Int, Or, Sum
+from z3 import And, BoolRef, If, Int, Or, Sum, Implies
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
 from processscheduler.objective import (Indicator, MaximizeObjective,
@@ -213,25 +213,33 @@ class SchedulingProblem(_NamedUIDObject):
         # as well as the maximum
         flowtime_single_resource = BuiltinIndicator('FlowTime(%s)' % resource.name)
 
-        maxi = Int('GreatestEndTimeForAssignedTask%s' % resource.name)
-        flowtime_single_resource.add_assertion(Or([maxi == task.end for task in resource.busy_intervals]))
-        for tsk in self.context.tasks:
-            flowtime_single_resource.add_assertion(maxi >= tsk.end)
-        flowtime_single_resource.add_assertion(maxi >= 0)  # restrict to scheduled tasks
-        # restrict to time period, if defined:
-        if upper_bound is not None:
-            flowtime_single_resource.add_assertion(maxi <= upper_bound)
+        # find the max end time in the time_interval
+        maxi = Int('GreatestTaskEndTimeInTimePeriodForResource%s' % resource.name)
 
+        asst_max = []
+        for task in resource.busy_intervals:
+            asst_max.append(Implies(And(task.end <= upper_bound, task.start >= lower_bound),
+                                    maxi == task.end))
+        flowtime_single_resource.add_assertion(Or(asst_max))
+        for task in resource.busy_intervals:
+            flowtime_single_resource.add_assertion(Implies(And(task.end <= upper_bound, task.start >= lower_bound),
+                                                           maxi >= task.end))
+    
         # and the mini
-        mini = Int('SmallestStartTimeAssignedTask%s' % resource.name)
-        flowtime_single_resource.add_assertion(Or([mini == task.start for task in resource.busy_intervals]))
-        for tsk in self.context.tasks:
-            flowtime_single_resource.add_assertion(mini <= tsk.start)
-        #flowtime_single_resource.add_assertion(mini >= 0)  # restrict to scheduled tasks
-        flowtime_single_resource.add_assertion(mini >= lower_bound)
+        mini = Int('SmallestTaskEndTimeInTimePeriodForResource%s' % resource.name)
+
+        asst_min = []
+        for task in resource.busy_intervals:
+            asst_min.append(Implies(And(task.end <= upper_bound, task.start <= lower_bound),
+                                    mini == task.start))
+        flowtime_single_resource.add_assertion(Or(asst_min))
+        for task in resource.busy_intervals:
+            flowtime_single_resource.add_assertion(Implies(And(task.end <= upper_bound, task.start >= lower_bound),
+                                                           mini <= task.start))
 
         # the quantity to optimize
         flowtime = Int('FlowtimeSingleResource')
         flowtime_single_resource.add_assertion(flowtime == maxi - mini)
+        flowtime_single_resource.add_assertion(flowtime >= 0)
         flowtime_single_resource.indicator_variable = flowtime
         return self.minimize_indicator(flowtime)
