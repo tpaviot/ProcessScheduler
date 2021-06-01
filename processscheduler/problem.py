@@ -207,7 +207,7 @@ class SchedulingProblem(_NamedUIDObject):
             lower_bound, upper_bound = time_interval
         else:
             lower_bound = 0
-            upper_bound = None
+            upper_bound = self.horizon
 
         # for this resource, we look for the minimal starting time of scheduled tasks
         # as well as the maximum
