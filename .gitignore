@@ -32,3 +32,4 @@ MANIFEST
 # third part tools
 .coverage
 .pytype/
+.vscode/
