@@ -94,7 +94,7 @@ print(f"\tTotal memory: {get_size(svmem.total)}")
 computation_times = []
 plot_abs = []
 
-for horizon in range(20, n, range):
+for horizon in range(20, n, step):
     MAX_TASKS_PER_PERIOD = 2
     MAX_TASKS_IN_PROBLEM = 4
     NB_WORKERS = 10
