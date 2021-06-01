@@ -38,7 +38,8 @@ class SchedulingSolver:
                  optimize_priority = 'lex',
                  parallel: Optional[bool] = False,
                  random_seed = False,
-                 logics=None):
+                 logics=None,
+                 verbosity=0):
         """ Scheduling Solver
 
         debug: True or False, False by default
@@ -55,6 +56,8 @@ class SchedulingSolver:
 
         if debug:
             set_option("verbose", 2)
+        else:
+            set_option("verbose", verbosity)
 
         if random_seed:
             set_option('sat.random_seed', random.randint(1, 1e4))
