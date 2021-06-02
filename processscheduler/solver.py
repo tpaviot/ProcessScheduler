@@ -22,9 +22,9 @@ from typing import Optional
 import uuid
 import warnings
 
-from z3 import Solver, SolverFor, Sum, unsat, sat, ArithRef, unknown, Optimize, set_option, Or
+from z3 import Int, Solver, SolverFor, Sum, unsat, sat, ArithRef, unknown, set_option, Or
 
-from processscheduler.objective import MaximizeObjective, MinimizeObjective
+from processscheduler.objective import MaximizeObjective, MinimizeObjective, Indicator
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
 
 #
@@ -39,7 +39,8 @@ class SchedulingSolver:
                  parallel: Optional[bool] = False,
                  random_seed = False,
                  logics=None,
-                 verbosity=0):
+                 verbosity=0,
+                 multi_objective_to_single: Optional[bool] = True):
         """ Scheduling Solver
 
         debug: True or False, False by default
@@ -52,7 +53,8 @@ class SchedulingSolver:
         self.debug = debug
         # objectives list
         self.optimize_priority = optimize_priority
-        self.objectives = []  # the list of all objectives defined in this problem
+        self.multi_objective_to_single = multi_objective_to_single
+        self.objective= None  # the list of all objectives defined in this problem
 
         if debug:
             set_option("verbose", 2)
@@ -75,29 +77,24 @@ class SchedulingSolver:
 
         # check if the problem is an optimization problem
         self.is_not_optimization_problem = len(self.problem_context.objectives) == 0
+        self.is_optimization_problem = len(self.problem_context.objectives) > 0
         self.is_multi_objective_optimization_problem = len(self.problem_context.objectives) > 1
-        self.is_single_objective_optimization_problem = len(self.problem_context.objectives) == 1
-
         # the Optimize() solver is used only in the case of a mutli-optimization
         # problem. This enables to choose the priority method.
         # in the case of a single objective optimization, the Optimize() solver
         # apperas to be less robust than the basic Solver(). The
         # incremental solver is then used.
-        if self.is_multi_objective_optimization_problem:
-            self._solver = Optimize()  # Solver with optimization
-            self._solver.set(priority=self.optimize_priority)
-            print("\t-> Solver with optimization enabled")
+    
+        # see this url for a documentation about logics
+        # http://smtlib.cs.uiowa.edu/logics.shtml
+        if logics is None:
+            self._solver = Solver()
+            print("\t-> Standard SAT/SMT solver")
         else:
-            # see this url for a documentation about logics
-            # http://smtlib.cs.uiowa.edu/logics.shtml
-            if logics is None:
-                self._solver = Solver()
-                print("\t-> Standard SAT/SMT solver")
-            else:
-                self._solver = SolverFor(logics)
-                print("\t-> SMT solver using logics", logics)
-            if debug:
-                set_option(unsat_core=True)
+            self._solver = SolverFor(logics)
+            print("\t-> SMT solver using logics", logics)
+        if debug:
+            set_option(unsat_core=True)
 
         if parallel:
             set_option("parallel.enable", True)  # enable parallel computation
@@ -128,15 +125,14 @@ class SchedulingSolver:
                     start_task_k, end_task_k = busy_intervals[k]
                     self.add_constraint(Or(start_task_k >= end_task_i, start_task_i >= end_task_k))
 
-
         # process indicators
         for indic in self.problem_context.indicators:
             self.add_constraint(indic.get_assertions())
 
         self.process_work_amount()
 
-        if self.is_multi_objective_optimization_problem:
-            self.create_objectives()
+        if self.is_optimization_problem:
+            self.create_objective()
 
         # each time the solver is called, the current_solution is stored
         self.current_solution = None
@@ -154,18 +150,26 @@ class SchedulingSolver:
         else:
             self._solver.add(cstr)
 
-    def create_objectives(self) -> None:
+    def create_objective(self) -> bool:
         """ create optimization objectives """
         # in case of a single value to optimize
-        for obj in self.problem_context.objectives:
-            if isinstance(obj, MaximizeObjective):
-                # look for the minimum horizon, i.e. the shortest
-                # time horizon to complete all tasks
-                new_max = self._solver.maximize(obj.target)
-                self.objectives.append(['%s(max objective)' % obj.target, new_max])
-            elif isinstance(obj, MinimizeObjective):
-                new_min = self._solver.minimize(obj.target)
-                self.objectives.append(['%s(min objective)' % obj.target, new_min])
+        if self.is_multi_objective_optimization_problem:
+            # Replace objectives O_i, O_j, O_k with
+            # O = WiOi+WjOj+WkOk etc.
+            equivalent_single_objective = Int("EquivalentSingleObjective")
+            weighted_objectives = []
+            weight = 1
+            for obj in self.problem_context.objectives:
+                weighted_objectives.append(1 * obj.target)
+            self.add_constraint(equivalent_single_objective == Sum(weighted_objectives))
+            # create an indicator
+            equivalent_indicator = Indicator('EquivalentIndicator',
+                                              equivalent_single_objective)
+            print(equivalent_single_objective)
+            self.objective = MinimizeObjective("EquivalentObjective", equivalent_indicator)
+            self.add_constraint(equivalent_indicator.get_assertions())
+        else:
+            self.objective = self._problem.context.objectives[0]
 
     def process_work_amount(self) -> None:
         """ for each task, compute the total work for all required resources """
@@ -296,16 +300,15 @@ class SchedulingSolver:
         if self.debug:
             self.print_assertions()
 
-        if self.is_single_objective_optimization_problem:
+        if self.is_optimization_problem:
             # in this case, use the incremental solver
-            objective = self.problem_context.objectives[0]
-            if isinstance(objective, MinimizeObjective):
+            if isinstance(self.objective, MinimizeObjective):
                 dd = 'min'
-            elif isinstance(objective, MaximizeObjective):
+            elif isinstance(self.objective, MaximizeObjective):
                 dd = 'max'
             # print(dir(objective))
             # print(objective.target)
-            solution = self.solve_optimize_incremental(objective.target, kind=dd)
+            solution = self.solve_optimize_incremental(self.objective.target, kind=dd)
             if not solution:
                 #raise ('No Solution')
                 return False
@@ -334,7 +337,7 @@ class SchedulingSolver:
             # then get the solution
             solution = self._solver.model()
 
-            if self.objectives:
+            if self.objective:
                 print('Optimization results:\n=====================')
                 print('\t->Objective priority specification: %s' % self.optimize_priority)
                 print('\t->Objective values:')
