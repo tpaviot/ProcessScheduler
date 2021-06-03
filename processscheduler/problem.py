@@ -23,7 +23,7 @@ from z3 import And, BoolRef, If, Int, Or, Sum, Implies
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
 from processscheduler.objective import (Indicator, MaximizeObjective,
-                                        MinimizeObjective, BuiltinIndicator)
+                                        MinimizeObjective)
 from processscheduler.resource import _Resource, CumulativeWorker
 from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
 import processscheduler.context as ps_context
@@ -133,18 +133,18 @@ class SchedulingProblem(_NamedUIDObject):
                                            utilization)
         return utilization_indicator
 
-    def add_objective_resource_utilization(self, resource: _Resource) -> MaximizeObjective:
+    def add_objective_resource_utilization(self, resource: _Resource, weight=1) -> MaximizeObjective:
         """Maximize resource occupation."""
         resource_utilization_indicator = self.add_indicator_resource_utilization(resource)
-        return self.maximize_indicator(resource_utilization_indicator)
+        return MaximizeObjective('', resource_utilization_indicator)
 
-    def add_objective_resource_cost(self, list_of_resources: List[_Resource]) -> MinimizeObjective:
+    def add_objective_resource_cost(self, list_of_resources: List[_Resource], weight=1) -> MinimizeObjective:
         """ minimise the cost of selected resources
         """
         cost_indicator = self.add_indicator_resource_cost(list_of_resources)
-        return self.minimize_indicator(cost_indicator)
+        return MinimizeObjective('', cost_indicator)
 
-    def add_objective_priorities(self) -> MinimizeObjective:
+    def add_objective_priorities(self, weight=1) -> MinimizeObjective:
         """ optimize the solution such that all task with a higher
         priority value are scheduled before other tasks """
         all_priorities = []
@@ -155,18 +155,17 @@ class SchedulingProblem(_NamedUIDObject):
                 all_priorities.append(task.end * task.priority)
         priority_sum = Sum(all_priorities)
         priority_indicator = Indicator('PriorityTotal', priority_sum)
-        return self.minimize_indicator(priority_indicator)
+        return MinimizeObjective('', priority_indicator)
 
-    def add_objective_start_latest(self) -> MaximizeObjective:
+    def add_objective_start_latest(self, weight=1) -> MaximizeObjective:
         """ maximize the minimum start time, i.e. all the tasks
         are scheduled as late as possible """
         mini = Int('SmallestStartTime')
-        smallest_start_time = BuiltinIndicator('SmallestStartTime')
+        smallest_start_time = Indicator('SmallestStartTime', mini)
         smallest_start_time.add_assertion(Or([mini == task.start for task in self.context.tasks]))
         for tsk in self.context.tasks:
             smallest_start_time.add_assertion(mini <= tsk.start)
-        smallest_start_time.indicator_variable = mini
-        return self.maximize_indicator(mini)
+        return MaximizeObjective('', smallest_start_time)
 
     def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:
         """Maximize indicator """
@@ -176,18 +175,17 @@ class SchedulingProblem(_NamedUIDObject):
         """Minimize indicator"""
         return MinimizeObjective('', indicator)
 
-    def add_objective_start_earliest(self) -> MinimizeObjective:
+    def add_objective_start_earliest(self, weight=1) -> MinimizeObjective:
         """ minimize the greatest start time, i.e. tasks are schedules
         as early as possible """
         maxi = Int('GreatestStartTime')
-        greatest_start_time = BuiltinIndicator('GreatestStartTime')
+        greatest_start_time = Indicator('GreatestStartTime', maxi)
         greatest_start_time.add_assertion(Or([maxi == task.start for task in self.context.tasks]))
         for tsk in self.context.tasks:
             greatest_start_time.add_assertion(maxi >= tsk.start)
-        greatest_start_time.indicator_variable = maxi
-        return self.minimize_indicator(maxi)
+        return MinimizeObjective('', greatest_start_time)
 
-    def add_objective_flowtime(self) -> MinimizeObjective:
+    def add_objective_flowtime(self, weight=1) -> MinimizeObjective:
         """ the flowtime is the sum of all ends, minimize. Be carful that
         it is contradictory with makespan """
         task_ends = []

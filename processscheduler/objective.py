@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Union
+from typing import Optional, Union
 from z3 import Int, BoolRef, ArithRef
 
 from processscheduler.base import _NamedUIDObject
@@ -40,13 +40,6 @@ class Indicator(_NamedUIDObject):
 
         ps_context.main_context.add_indicator(self)
 
-class BuiltinIndicator(_NamedUIDObject):
-    """ a set of builtin objectives """
-    def __init__(self, name:str) -> None:
-        super().__init__(name)
-
-        ps_context.main_context.add_indicator(self)
-
 class Objective(_NamedUIDObject):
     def __init__(self, name:str, target: Union[ArithRef, Indicator]) -> None:
         super().__init__(name)
@@ -60,9 +53,11 @@ class Objective(_NamedUIDObject):
         ps_context.main_context.add_objective(self)
 
 class MaximizeObjective(Objective):
-    def __init__(self, name:str, target: Union[ArithRef, Indicator]) -> None:
+    def __init__(self, name:str, target: Union[ArithRef, Indicator], weight: Optional[int] = 1) -> None:
         super().__init__(name, target)
+        self.weight = weight
 
 class MinimizeObjective(Objective):
-    def __init__(self, name:str, target: Union[ArithRef, Indicator]) -> None:
+    def __init__(self, name:str, target: Union[ArithRef, Indicator], weight: Optional[int] = 1) -> None:
         super().__init__(name, target)
+        self.weight = 1
