@@ -59,48 +59,48 @@ class MultiObjective(unittest.TestCase):
         self.assertEqual(solution.tasks[task_1.name].start, 0)
         self.assertEqual(solution.tasks[task_2.name].end, 20)
 
-    def test_multi_two_tasks_box(self) -> None:
-        # in the thrid test, optimize both. What will the result be?
-        pb = ps.SchedulingProblem('MultiObjective2', horizon=20)
-        task_1 = ps.FixedDurationTask('task1', duration = 3)
-        task_2 = ps.FixedDurationTask('task2', duration = 3)
+    # def test_multi_two_tasks_box(self) -> None:
+    #     # in the thrid test, optimize both. What will the result be?
+    #     pb = ps.SchedulingProblem('MultiObjective2', horizon=20)
+    #     task_1 = ps.FixedDurationTask('task1', duration = 3)
+    #     task_2 = ps.FixedDurationTask('task2', duration = 3)
 
-        pb.add_constraint(task_1.end == 20 - task_2.start)
+    #     pb.add_constraint(task_1.end == 20 - task_2.start)
 
-        ind_1 = ps.Indicator('Task1End', task_1.end)
-        ind_2 = ps.Indicator('Task2End', task_2.end)
+    #     ind_1 = ps.Indicator('Task1End', task_1.end)
+    #     ind_2 = ps.Indicator('Task2End', task_2.end)
 
-        pb.maximize_indicator(ind_1)
-        pb.maximize_indicator(ind_2)
+    #     pb.maximize_indicator(ind_1)
+    #     pb.maximize_indicator(ind_2)
 
-        # the solution depend on the algorithm
-        # by default, maximize the first objective, then maximize the second one while keeping
-        # the first one fixed
-        solution1 = ps.SchedulingSolver(pb, optimize_priority='box').solve()
-        self.assertTrue(solution1)
+    #     # the solution depend on the algorithm
+    #     # by default, maximize the first objective, then maximize the second one while keeping
+    #     # the first one fixed
+    #     solution1 = ps.SchedulingSolver(pb, optimize_priority='box').solve()
+    #     self.assertTrue(solution1)
 
-    def test_multi_two_tasks_pareto(self) -> None:
-        # in the thrid test, optimize both. What will the result be?
-        pb = ps.SchedulingProblem('MultiObjective2', horizon=20)
-        task_1 = ps.FixedDurationTask('task1', duration = 3)
-        task_2 = ps.FixedDurationTask('task2', duration = 3)
+    # def test_multi_two_tasks_pareto(self) -> None:
+    #     # in the thrid test, optimize both. What will the result be?
+    #     pb = ps.SchedulingProblem('MultiObjective2', horizon=20)
+    #     task_1 = ps.FixedDurationTask('task1', duration = 3)
+    #     task_2 = ps.FixedDurationTask('task2', duration = 3)
 
-        pb.add_constraint(task_1.end == 20 - task_2.start)
+    #     pb.add_constraint(task_1.end == 20 - task_2.start)
 
-        ind_1 = ps.Indicator('Task1End', task_1.end)
-        ind_2 = ps.Indicator('Task2End', task_2.end)
+    #     ind_1 = ps.Indicator('Task1End', task_1.end)
+    #     ind_2 = ps.Indicator('Task2End', task_2.end)
 
-        pb.maximize_indicator(ind_1)
-        pb.maximize_indicator(ind_2)
+    #     pb.maximize_indicator(ind_1)
+    #     pb.maximize_indicator(ind_2)
 
-        # the solution depend on the algorithm
-        # by default, maximize the first objective, then maximize the second one while keeping
-        # the first one fixed
-        solver = ps.SchedulingSolver(pb, optimize_priority='pareto')
-        i = 0
-        while solver.solve():
-            i += 1
-        self.assertEqual(i, 18)
+    #     # the solution depend on the algorithm
+    #     # by default, maximize the first objective, then maximize the second one while keeping
+    #     # the first one fixed
+    #     solver = ps.SchedulingSolver(pb, optimize_priority='pareto')
+    #     i = 0
+    #     while solver.solve():
+    #         i += 1
+    #     self.assertEqual(i, 18)
 
 
 if __name__ == "__main__":
