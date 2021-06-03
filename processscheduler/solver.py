@@ -35,7 +35,6 @@ class SchedulingSolver:
     def __init__(self, problem,
                  debug: Optional[bool] = False,
                  max_time: Optional[int] = 10,
-                 optimize_priority = 'lex',
                  parallel: Optional[bool] = False,
                  random_seed = False,
                  logics=None,
@@ -45,14 +44,12 @@ class SchedulingSolver:
 
         debug: True or False, False by default
         max_time: time in seconds, 60 by default
-        optimize_priority: one of 'lex', 'box', 'pareto'
         parallel: True to enable mutlthreading, False by default
         """
         self._problem = problem
         self.problem_context = problem.context
         self.debug = debug
         # objectives list
-        self.optimize_priority = optimize_priority
         self.multi_objective_to_single = multi_objective_to_single
         self.objective= None  # the list of all objectives defined in this problem
 
@@ -339,7 +336,6 @@ class SchedulingSolver:
 
             if self.objective:
                 print('Optimization results:\n=====================')
-                print('\t->Objective priority specification: %s' % self.optimize_priority)
                 print('\t->Objective values:')
                 for objective_name, objective_value in self.objectives:  # if ever no objectives, this line will do nothing
                     print('\t\t->%s: %s' % (objective_name, objective_value.value()))
