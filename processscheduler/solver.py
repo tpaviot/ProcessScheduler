@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-import multiprocessing
 import random
 import time
 from typing import Optional
@@ -81,7 +80,7 @@ class SchedulingSolver:
         # in the case of a single objective optimization, the Optimize() solver
         # apperas to be less robust than the basic Solver(). The
         # incremental solver is then used.
-    
+
         # see this url for a documentation about logics
         # http://smtlib.cs.uiowa.edu/logics.shtml
         if logics is None:
@@ -95,9 +94,6 @@ class SchedulingSolver:
 
         if parallel:
             set_option("parallel.enable", True)  # enable parallel computation
-            n_cpus = multiprocessing.cpu_count()
-            set_option("sat.threads", n_cpus)  # enable parallel computation
-            set_option("smt.threads", n_cpus)  # enable parallel computation
 
         # add all tasks assertions to the solver
         for task in self.problem_context.tasks:
@@ -155,14 +151,15 @@ class SchedulingSolver:
             # O = WiOi+WjOj+WkOk etc.
             equivalent_single_objective = Int("EquivalentSingleObjective")
             weighted_objectives = []
-            weight = 1
             for obj in self.problem_context.objectives:
-                weighted_objectives.append(1 * obj.target)
+                variable_to_optimize = obj.target
+                weight = obj.weight
+                weighted_objectives.append(weight * variable_to_optimize)
             self.add_constraint(equivalent_single_objective == Sum(weighted_objectives))
             # create an indicator
             equivalent_indicator = Indicator('EquivalentIndicator',
                                               equivalent_single_objective)
-            print(equivalent_single_objective)
+            print(weighted_objectives)
             self.objective = MinimizeObjective("EquivalentObjective", equivalent_indicator)
             self.add_constraint(equivalent_indicator.get_assertions())
         else:
@@ -298,6 +295,10 @@ class SchedulingSolver:
             self.print_assertions()
 
         if self.is_optimization_problem:
+            if self.is_multi_objective_optimization_problem:
+                print('\tObjectives:\n\t======')
+                for obj in self._problem.context.objectives:
+                    print('\t%s' % obj)
             # in this case, use the incremental solver
             if isinstance(self.objective, MinimizeObjective):
                 dd = 'min'
@@ -307,15 +308,10 @@ class SchedulingSolver:
             # print(objective.target)
             solution = self.solve_optimize_incremental(self.objective.target, kind=dd)
             if not solution:
-                #raise ('No Solution')
                 return False
         else:
             # first check satisfiability
             sat_result, sat_computation_time = self.check_sat()
-            if self.is_multi_objective_optimization_problem:
-                print('\tObjectives:\n\t======')
-                for obj in self._solver.objectives():
-                    print('\t', obj)
 
             print('Total computation time:\n=====================')
             print('\t%s satisfiability checked in %.2fs' % (self._problem.name, sat_computation_time))
@@ -334,11 +330,11 @@ class SchedulingSolver:
             # then get the solution
             solution = self._solver.model()
 
-            if self.objective:
-                print('Optimization results:\n=====================')
-                print('\t->Objective values:')
-                for objective_name, objective_value in self.objectives:  # if ever no objectives, this line will do nothing
-                    print('\t\t->%s: %s' % (objective_name, objective_value.value()))
+            # if self.objective:
+            #     print('Optimization results:\n=====================')
+            #     print('\t->Objective values:')
+            #     for objective_name, objective_value in self.objectives:  # if ever no objectives, this line will do nothing
+            #         print('\t\t->%s: %s' % (objective_name, objective_value.value()))
 
         self.current_solution = solution
         sol = self.build_solution(solution)

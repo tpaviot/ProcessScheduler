@@ -81,13 +81,6 @@ class SchedulingProblem(_NamedUIDObject):
         for cstr in list_of_constraints:
             self.context.add_constraint(cstr)
 
-    def add_objective_makespan(self) -> MinimizeObjective:
-        """ makespan objective
-        """
-        if self.fixed_horizon:
-            raise ValueError('Horizon constrained to be fixed, no horizon optimization possible.')
-        return MinimizeObjective('MakeSpan', self.horizon)
-
     def add_indicator_resource_cost(self, list_of_resources: List[_Resource]) -> Indicator:
         """ compute the total cost of a set of resources """
         partial_costs = []
@@ -133,16 +126,34 @@ class SchedulingProblem(_NamedUIDObject):
                                            utilization)
         return utilization_indicator
 
+    def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:
+        """Maximize indicator """
+        return MaximizeObjective('', indicator)
+
+    def minimize_indicator(self, indicator: Indicator) -> MinimizeObjective:
+        """Minimize indicator"""
+        return MinimizeObjective('', indicator)
+
+    #
+    # Optimization objectives
+    #
+    def add_objective_makespan(self, weight=1) -> MinimizeObjective:
+        """ makespan objective
+        """
+        if self.fixed_horizon:
+            raise ValueError('Horizon constrained to be fixed, no horizon optimization possible.')
+        return MinimizeObjective('MakeSpan', self.horizon, weight)
+
     def add_objective_resource_utilization(self, resource: _Resource, weight=1) -> MaximizeObjective:
         """Maximize resource occupation."""
         resource_utilization_indicator = self.add_indicator_resource_utilization(resource)
-        return MaximizeObjective('', resource_utilization_indicator)
+        return MaximizeObjective('', resource_utilization_indicator, weight)
 
     def add_objective_resource_cost(self, list_of_resources: List[_Resource], weight=1) -> MinimizeObjective:
         """ minimise the cost of selected resources
         """
         cost_indicator = self.add_indicator_resource_cost(list_of_resources)
-        return MinimizeObjective('', cost_indicator)
+        return MinimizeObjective('', cost_indicator, weight)
 
     def add_objective_priorities(self, weight=1) -> MinimizeObjective:
         """ optimize the solution such that all task with a higher
@@ -155,7 +166,7 @@ class SchedulingProblem(_NamedUIDObject):
                 all_priorities.append(task.end * task.priority)
         priority_sum = Sum(all_priorities)
         priority_indicator = Indicator('PriorityTotal', priority_sum)
-        return MinimizeObjective('', priority_indicator)
+        return MinimizeObjective('', priority_indicator, weight)
 
     def add_objective_start_latest(self, weight=1) -> MaximizeObjective:
         """ maximize the minimum start time, i.e. all the tasks
@@ -165,15 +176,7 @@ class SchedulingProblem(_NamedUIDObject):
         smallest_start_time.add_assertion(Or([mini == task.start for task in self.context.tasks]))
         for tsk in self.context.tasks:
             smallest_start_time.add_assertion(mini <= tsk.start)
-        return MaximizeObjective('', smallest_start_time)
-
-    def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:
-        """Maximize indicator """
-        return MaximizeObjective('', indicator)
-
-    def minimize_indicator(self, indicator: Indicator) -> MinimizeObjective:
-        """Minimize indicator"""
-        return MinimizeObjective('', indicator)
+        return MaximizeObjective('', smallest_start_time, weight)
 
     def add_objective_start_earliest(self, weight=1) -> MinimizeObjective:
         """ minimize the greatest start time, i.e. tasks are schedules
@@ -183,7 +186,7 @@ class SchedulingProblem(_NamedUIDObject):
         greatest_start_time.add_assertion(Or([maxi == task.start for task in self.context.tasks]))
         for tsk in self.context.tasks:
             greatest_start_time.add_assertion(maxi >= tsk.start)
-        return MinimizeObjective('', greatest_start_time)
+        return MinimizeObjective('', greatest_start_time, weight)
 
     def add_objective_flowtime(self, weight=1) -> MinimizeObjective:
         """ the flowtime is the sum of all ends, minimize. Be carful that
@@ -195,10 +198,10 @@ class SchedulingProblem(_NamedUIDObject):
             else:
                 task_ends.append(task.end)
         flow_time_expr = Sum(task_ends)
-        smallest_start_time_indicator = Indicator('FlowTime', flow_time_expr)
-        return self.minimize_indicator(smallest_start_time_indicator)
+        flow_time = Indicator('FlowTime', flow_time_expr)
+        return MinimizeObjective('', flow_time, weight)
 
-    def add_objective_flowtime_single_resource(self, resource, time_interval=None) -> MinimizeObjective:
+    def add_objective_flowtime_single_resource(self, resource, time_interval=None, weight=1) -> MinimizeObjective:
         """Optimize flowtime for a single resource, for all the tasks scheduled in the
         time interval provided. Is ever no time interval is passed to the function, the
         flowtime is minimized for all the tasks scheduled in the workplan."""
@@ -243,4 +246,4 @@ class SchedulingProblem(_NamedUIDObject):
         flowtime_single_resource.add_assertion(flowtime == maxi - mini)
         flowtime_single_resource.add_assertion(flowtime >= 0)
         flowtime_single_resource.indicator_variable = flowtime
-        return self.minimize_indicator(flowtime)
+        return MinimizeObjective('', flowtime_single_resource, weight)

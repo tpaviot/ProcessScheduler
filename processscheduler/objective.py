@@ -60,4 +60,4 @@ class MaximizeObjective(Objective):
 class MinimizeObjective(Objective):
     def __init__(self, name:str, target: Union[ArithRef, Indicator], weight: Optional[int] = 1) -> None:
         super().__init__(name, target)
-        self.weight = 1
+        self.weight = weight
