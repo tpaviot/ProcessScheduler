@@ -114,7 +114,7 @@ class TestIndicator(unittest.TestCase):
     # def test_resource_utilization_indicator_5(self) -> None:
     #     """Same input data than previous tests, but we dont use
     #     an optimisation solver, the objective of 100% is set by an
-    #     additionnal constraint. This should be **much faster**."""
+    #     additional constraint. This should be **much faster**."""
     #     problem = ps.SchedulingProblem('IndicatorUtilization5', horizon = 20)
 
     #     worker = ps.Worker('Worker')
