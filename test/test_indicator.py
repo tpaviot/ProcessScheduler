@@ -16,7 +16,7 @@
 import unittest
 
 import processscheduler as ps
-import random as rand
+from time import perf_counter
 
 
 class TestIndicator(unittest.TestCase):
@@ -231,8 +231,7 @@ class TestIndicator(unittest.TestCase):
     @staticmethod
     def get_single_resource_utilization_problem_2(time_intervals: list[tuple[int]]):
         horizon = time_intervals[-1][-1] + 3
-        nb_tasks = [rand.randint(3, interval[1]-interval[0]-2)
-                    for interval in time_intervals if interval[1]-interval[0] > 3]
+        nb_tasks = [5 for interval in time_intervals if interval[1]-interval[0] > 3]
         problem = ps.SchedulingProblem('IndicatorFlowtimeSingleResource', horizon=horizon)
         worker_1 = ps.Worker('Worker1')
 
@@ -244,6 +243,10 @@ class TestIndicator(unittest.TestCase):
                 problem.add_constraint(ps.TaskStartAfterLax(tasks[-1], interval[0]))
                 problem.add_constraint(ps.TaskEndBeforeLax(tasks[-1], interval[1]))
         return problem, worker_1, len(tasks)
+
+    @staticmethod
+    def print_perf(start, stop):
+        print('Elapsed time: %s' % (start-stop))
 
     def test_indicator_flowtime_single_resource_1(self) -> None:
         problem, worker_1, sum_durations = self.get_single_resource_utilization_problem(
@@ -291,50 +294,27 @@ class TestIndicator(unittest.TestCase):
         self.assertEqual(solution.indicators['FlowTime(Worker1)'], sum_durations)
 
     @staticmethod
-    def classify_tasks_in_intervals(time_intervals: list[tuple[int]],
-                                    tasks: dict[str, ps.FixedDurationTask]) -> dict[tuple[int],
-                                                                                    list[ps.FixedDurationTask]]:
-        classified_tasks = {interval: [] for interval in time_intervals}
-        for task_id in tasks:
-            task: ps.FixedDurationTask = tasks[task_id]
-            for inter in time_intervals:
-                inter_start, inter_end = inter
-                if task.start >= inter_start and task.end <= inter_end:
-                    classified_tasks[inter].append(task)
-        return classified_tasks
-
-    @staticmethod
-    def get_tasks_flowtime(tasks: list[ps.FixedDurationTask]) -> int:
-        tasks.sort(key=lambda task: task.start)
-        flowtime = 0
-        for i in range(len(tasks)-1):
-            flowtime += tasks[i+1].start - tasks[i].end
-        return flowtime
+    def get_sum_flowtime(solution) -> int:
+        return sum([solution.indicators[indicator_id]
+                    for indicator_id in solution.indicators if 'FlowTime' in indicator_id])
 
     def test_indicator_flowtime_single_resource_5(self) -> None:
         # 2 time interval objectives
         time_intervals = [(11, 20), (21, 34)]
-        problem, worker_1, _ = self.get_single_resource_utilization_problem_2(time_intervals)
+        problem, worker_1, sum_durations = self.get_single_resource_utilization_problem_2(time_intervals)
         for interval in time_intervals:
             problem.add_objective_flowtime_single_resource(worker_1, time_interval=interval)
 
         solver = ps.SchedulingSolver(problem)
         solution = solver.solve()
 
-        scheduled_tasks = solution.get_scheduled_tasks()
-        classified_tasks = self.classify_tasks_in_intervals(time_intervals, scheduled_tasks)
-        total_flowtime = 0
-        for interval in classified_tasks:
-            tasks = classified_tasks[interval]
-            total_flowtime += self.get_tasks_flowtime(tasks)
-
         self.assertTrue(solution)
-        self.assertEqual(total_flowtime, 0)
+        self.assertEqual(sum_durations, self.get_sum_flowtime(solution))
 
     def test_indicator_flowtime_single_resource_6(self) -> None:
         # Mutliple time intervals (Currently fails for nb_time_intervals > 2, gantt to check total_flowtime is correct)
-        nb_time_intervals = 3
-        time_interval_length = 10  # always < 3 so we can measure flowtime
+        nb_time_intervals = 7
+        time_interval_length = 13  # always > 5
         horizon = nb_time_intervals*time_interval_length
         time_intervals = [
             (i, i + time_interval_length)
@@ -343,20 +323,18 @@ class TestIndicator(unittest.TestCase):
 
         problem, worker_1, sum_durations = self.get_single_resource_utilization_problem_2(time_intervals)
         for interval in time_intervals:
+            start = perf_counter()
             problem.add_objective_flowtime_single_resource(worker_1, time_interval=interval)
+            self.print_perf(start, perf_counter())
 
+        start = perf_counter()
         solver = ps.SchedulingSolver(problem)
+        self.print_perf(start, perf_counter())
+
         solution = solver.solve()
 
-        scheduled_tasks = solution.get_scheduled_tasks()
-        classified_tasks = self.classify_tasks_in_intervals(time_intervals, scheduled_tasks)
-        total_flowtime = 0
-        for interval in classified_tasks:
-            tasks = classified_tasks[interval]
-            total_flowtime += self.get_tasks_flowtime(tasks)
-
         self.assertTrue(solution)
-        self.assertEqual(total_flowtime, 0)
+        self.assertEqual(sum_durations, self.get_sum_flowtime(solution))
 
 
 if __name__ == "__main__":
