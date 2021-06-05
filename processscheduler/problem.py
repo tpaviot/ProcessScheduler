@@ -16,6 +16,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import timedelta, datetime
+import uuid
 from typing import List, Optional
 
 from z3 import And, BoolRef, If, Int, Or, Sum, Implies
@@ -208,13 +209,16 @@ class SchedulingProblem(_NamedUIDObject):
         else:
             lower_bound = 0
             upper_bound = self.horizon
-
+        uid = uuid.uuid4().hex
         # for this resource, we look for the minimal starting time of scheduled tasks
         # as well as the maximum
-        flowtime_single_resource = BuiltinIndicator('FlowTime(%s)' % resource.name)
+        flowtime_single_resource = BuiltinIndicator('FlowTime(%s)_%i_%s_%s' % (resource.name,
+                                                                               lower_bound,
+                                                                               upper_bound,
+                                                                               uid))
 
         # find the max end time in the time_interval
-        maxi = Int('GreatestTaskEndTimeInTimePeriodForResource%s' % resource.name)
+        maxi = Int('GreatestTaskEndTimeInTimePeriodForResource%s_%s' % (resource.name, uid))
 
         asst_max = []
         for task in resource.busy_intervals:
@@ -226,7 +230,7 @@ class SchedulingProblem(_NamedUIDObject):
                                                            maxi >= task.end))
     
         # and the mini
-        mini = Int('SmallestTaskEndTimeInTimePeriodForResource%s' % resource.name)
+        mini = Int('SmallestTaskEndTimeInTimePeriodForResource%s_%s' % (resource.name, uid))
 
         asst_min = []
         for task in resource.busy_intervals:
@@ -238,7 +242,7 @@ class SchedulingProblem(_NamedUIDObject):
                                                            mini <= task.start))
 
         # the quantity to optimize
-        flowtime = Int('FlowtimeSingleResource')
+        flowtime = Int('FlowtimeSingleResource%s_%s' % (resource.name, uid))
         flowtime_single_resource.add_assertion(flowtime == maxi - mini)
         flowtime_single_resource.add_assertion(flowtime >= 0)
         flowtime_single_resource.indicator_variable = flowtime
