@@ -51,7 +51,7 @@ class SchedulingSolver:
         # objectives list
         self.multi_objective_to_single = multi_objective_to_single
         self.objective= None  # the list of all objectives defined in this problem
-
+        # set_option('smt.arith.auto_config_simplex', True)
         if debug:
             set_option("verbose", 2)
         else:
@@ -92,6 +92,9 @@ class SchedulingSolver:
         if debug:
             set_option(unsat_core=True)
 
+        # self._solver.set("sat.cardinality.solver", True)
+        # self._solver.set("sat.core.minimize", True)
+        # self._solver.set("sat.core.minimize_partial", True)
         if parallel:
             set_option("parallel.enable", True)  # enable parallel computation
 
