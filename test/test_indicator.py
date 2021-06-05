@@ -332,9 +332,9 @@ class TestIndicator(unittest.TestCase):
         self.assertEqual(total_flowtime, 0)
 
     def test_indicator_flowtime_single_resource_6(self) -> None:
-        # 8 time interval objectives
+        # Mutliple time intervals (Currently fails for nb_time_intervals > 2, gantt to check total_flowtime is correct)
         nb_time_intervals = 3
-        time_interval_length = 10
+        time_interval_length = 10  # always < 3 so we can measure flowtime
         horizon = nb_time_intervals*time_interval_length
         time_intervals = [
             (i, i + time_interval_length)
