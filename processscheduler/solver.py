@@ -18,7 +18,7 @@
 import multiprocessing
 import random
 import time
-from typing import Optional
+from typing import Optional, Union
 import uuid
 import warnings
 
@@ -30,14 +30,17 @@ from processscheduler.solution import SchedulingSolution, TaskSolution, Resource
 #
 # Solver class definition
 #
+
+
 class SchedulingSolver:
     """ A solver class """
+
     def __init__(self, problem,
                  debug: Optional[bool] = False,
                  max_time: Optional[int] = 10,
-                 optimize_priority = 'lex',
+                 optimize_priority='lex',
                  parallel: Optional[bool] = False,
-                 random_seed = False,
+                 random_seed=False,
                  logics=None,
                  verbosity=0):
         """ Scheduling Solver
@@ -128,7 +131,6 @@ class SchedulingSolver:
                     start_task_k, end_task_k = busy_intervals[k]
                     self.add_constraint(Or(start_task_k >= end_task_i, start_task_i >= end_task_k))
 
-
         # process indicators
         for indic in self.problem_context.indicators:
             self.add_constraint(indic.get_assertions())
@@ -184,16 +186,18 @@ class SchedulingSolver:
         The computation time.
         """
         init_time = time.perf_counter()
-        sat_result  = self._solver.check()
+        sat_result = self._solver.check()
         check_sat_time = time.perf_counter() - init_time
 
         if sat_result == unsat:
-            print("\tNo solution can be found for problem %s.\n\tReason: Unsatisfiable problem: no solution exists" % self._problem.name)
+            print(
+                "\tNo solution can be found for problem %s.\n\tReason: Unsatisfiable problem: no solution exists" %
+                self._problem.name)
 
         if sat_result == unknown:
             reason = self._solver.reason_unknown()
             print("\tNo solution can be found for problem %s.\n\tReason: %s" % (self._problem.name,
-                                                                                 reason))
+                                                                                reason))
 
         return sat_result, check_sat_time
 
@@ -290,7 +294,7 @@ class SchedulingSolver:
 
         return solution
 
-    def solve(self) -> bool:
+    def solve(self) -> Union[bool, SchedulingSolution]:
         """ call the solver and returns the solution, if ever """
         # for all cases
         if self.debug:
@@ -413,7 +417,7 @@ class SchedulingSolver:
         for decl in self.current_solution.decls():
             var_name = decl.name()
             var_value = self.current_solution[decl]
-            print("\t-> %s=%s" %(var_name, var_value))
+            print("\t-> %s=%s" % (var_name, var_value))
 
     def find_another_solution(self, variable: ArithRef) -> bool:
         """ let the solver find another solution for the variable """

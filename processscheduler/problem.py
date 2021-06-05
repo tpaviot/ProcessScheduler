@@ -18,7 +18,7 @@
 from datetime import timedelta, datetime
 from typing import List, Optional
 
-from z3 import And, BoolRef, If, Int, Or, Sum, Implies
+from z3 import And, BoolRef, Int, Or, Sum, Implies
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
 from processscheduler.objective import (Indicator, MaximizeObjective,
@@ -26,6 +26,7 @@ from processscheduler.objective import (Indicator, MaximizeObjective,
 from processscheduler.resource import _Resource, CumulativeWorker
 from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
 import processscheduler.context as ps_context
+
 
 class SchedulingProblem(_NamedUIDObject):
     """A scheduling problem
@@ -38,6 +39,7 @@ class SchedulingProblem(_NamedUIDObject):
     :param datetime_format: an optional string
 
     """
+
     def __init__(self, name: str,
                  horizon: Optional[int] = None,
                  delta_time: Optional[timedelta] = None,
@@ -110,7 +112,7 @@ class SchedulingProblem(_NamedUIDObject):
             if isinstance(resource, CumulativeWorker):
                 for res in resource.cumulative_workers:
                     partial_costs.extend(get_resource_cost(res))
-            else: # for a single worker
+            else:  # for a single worker
                 partial_costs.extend(get_resource_cost(resource))
 
         resource_names = ','.join([resource.name for resource in list_of_resources])
@@ -129,7 +131,7 @@ class SchedulingProblem(_NamedUIDObject):
             durations.append(interv_up - interv_low)
         utilization = (Sum(durations) * 100) / self.horizon  # in percentage
         utilization_indicator = Indicator('Utilization (%s)' % resource.name,
-                                           utilization)
+                                          utilization)
         return utilization_indicator
 
     def add_objective_resource_utilization(self, resource: _Resource) -> MaximizeObjective:
@@ -224,7 +226,7 @@ class SchedulingProblem(_NamedUIDObject):
         for task in resource.busy_intervals:
             flowtime_single_resource.add_assertion(Implies(And(task.end <= upper_bound, task.start >= lower_bound),
                                                            maxi >= task.end))
-    
+
         # and the mini
         mini = Int('SmallestTaskEndTimeInTimePeriodForResource%s' % resource.name)
 
