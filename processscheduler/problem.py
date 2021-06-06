@@ -212,10 +212,9 @@ class SchedulingProblem(_NamedUIDObject):
         uid = uuid.uuid4().hex
         # for this resource, we look for the minimal starting time of scheduled tasks
         # as well as the maximum
-        flowtime_single_resource = BuiltinIndicator('FlowTime(%s)_%i_%s_%s' % (resource.name,
-                                                                               lower_bound,
-                                                                               upper_bound,
-                                                                               uid))
+        flowtime_single_resource = BuiltinIndicator('FlowTime(%s:%i:%s)' % (resource.name,
+                                                                            lower_bound,
+                                                                            upper_bound))
 
         # find the max end time in the time_interval
         maxi = Int('GreatestTaskEndTimeInTimePeriodForResource%s_%s' % (resource.name, uid))

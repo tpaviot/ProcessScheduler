@@ -235,7 +235,7 @@ class TestIndicator(unittest.TestCase):
         solution = solver.solve()
         self.assertTrue(solution)
         # the flowtime should be 0
-        self.assertEqual(solution.indicators['FlowTime(Worker1)'], 0)
+        self.assertEqual(solution.indicators['FlowTime(Worker1:40:50)'], 0)
 
     def test_indicator_flowtime_single_resource_2(self) -> None:
         # same as before, but the time interval contains all the tasks
@@ -245,7 +245,7 @@ class TestIndicator(unittest.TestCase):
 
         solution = solver.solve()
         self.assertTrue(solution)
-        self.assertEqual(solution.indicators['FlowTime(Worker1)'], sum_durations)
+        self.assertEqual(solution.indicators['FlowTime(Worker1:10:40)'], sum_durations)
 
     def test_indicator_flowtime_single_resource_3(self) -> None:
         # same as before, but the time interval contains no task
@@ -255,17 +255,19 @@ class TestIndicator(unittest.TestCase):
 
         solution = solver.solve()
         self.assertTrue(solution)
-        self.assertEqual(solution.indicators['FlowTime(Worker1)'], 0)
+        print(solution)
+        self.assertEqual(solution.indicators['FlowTime(Worker1:5:9)'], 0)
 
-    def test_indicator_flowtime_single_resource_3(self) -> None:
+    def test_indicator_flowtime_single_resource_4(self) -> None:
         # without any time_interval provided, should use the whole range [0, horizon]
-        problem, worker_1, sum_durations = self.get_single_resource_utilization_problem('IndicatorFlowtimeSingleResource3')
+        problem, worker_1, sum_durations = self.get_single_resource_utilization_problem('IndicatorFlowtimeSingleResource4')
         problem.add_objective_flowtime_single_resource(worker_1)
         solver = ps.SchedulingSolver(problem)
 
         solution = solver.solve()
+        print(solution)
         self.assertTrue(solution)
-        self.assertEqual(solution.indicators['FlowTime(Worker1)'], sum_durations)
+        self.assertEqual(solution.indicators['FlowTime(Worker1:0:horizon)'], sum_durations)
 
 if __name__ == "__main__":
     unittest.main()
