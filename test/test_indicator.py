@@ -268,5 +268,60 @@ class TestIndicator(unittest.TestCase):
         self.assertTrue(solution)
         self.assertEqual(solution.indicators['FlowTime(Worker1:0:horizon)'], sum_durations)
 
+
+    @staticmethod
+    def get_single_resource_utilization_problem_2(time_intervals):
+        horizon = time_intervals[-1][-1] + 3
+        nb_tasks = [5 for interval in time_intervals if interval[1]-interval[0] > 3]
+        problem = ps.SchedulingProblem('IndicatorFlowtimeSingleResource', horizon=horizon)
+        worker_1 = ps.Worker('Worker1')
+
+        tasks: list[ps.FixedDurationTask] = []
+        for interval, nb_tasks_i in zip(time_intervals, nb_tasks):
+            for _ in range(nb_tasks_i):
+                tasks.append(ps.FixedDurationTask('T%s' % len(tasks), duration=1))
+                tasks[-1].add_required_resource(worker_1)
+                problem.add_constraint(ps.TaskStartAfterLax(tasks[-1], interval[0]))
+                problem.add_constraint(ps.TaskEndBeforeLax(tasks[-1], interval[1]))
+        return problem, worker_1, len(tasks)
+
+    @staticmethod
+    def get_sum_flowtime(solution) -> int:
+        return sum([solution.indicators[indicator_id]
+                    for indicator_id in solution.indicators if 'FlowTime' in indicator_id])
+
+    def test_indicator_flowtime_single_resource_5(self) -> None:
+        # 2 time interval objectives
+        time_intervals = [(11, 20), (21, 34)]
+        problem, worker_1, sum_durations = self.get_single_resource_utilization_problem_2(time_intervals)
+        for interval in time_intervals:
+            problem.add_objective_flowtime_single_resource(worker_1, time_interval=interval)
+
+        solver = ps.SchedulingSolver(problem)
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(sum_durations, self.get_sum_flowtime(solution))
+
+    def test_indicator_flowtime_single_resource_6(self) -> None:
+        # Mutliple time intervals (Currently fails for nb_time_intervals > 2, gantt to check total_flowtime is correct)
+        nb_time_intervals = 7
+        time_interval_length = 13  # always > 5
+        horizon = nb_time_intervals*time_interval_length
+        time_intervals = [
+            (i, i + time_interval_length)
+            for i in range(0, horizon, time_interval_length)]
+
+        problem, worker_1, sum_durations = self.get_single_resource_utilization_problem_2(time_intervals)
+        for interval in time_intervals:
+            problem.add_objective_flowtime_single_resource(worker_1, time_interval=interval)
+
+        solver = ps.SchedulingSolver(problem)
+
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(sum_durations, self.get_sum_flowtime(solution))
+
 if __name__ == "__main__":
     unittest.main()
