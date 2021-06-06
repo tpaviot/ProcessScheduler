@@ -213,10 +213,12 @@ class SchedulingProblem(_NamedUIDObject):
         uid = uuid.uuid4().hex
         # for this resource, we look for the minimal starting time of scheduled tasks
         # as well as the maximum
-        flowtime_single_resource = BuiltinIndicator('FlowTime(%s:%i:%s)' % (resource.name,
-                                                                            lower_bound,
-                                                                            upper_bound))
-
+        flowtime = Int('FlowtimeSingleResource%s_%s' % (resource.name, uid))
+        
+        flowtime_single_resource_indicator = Indicator('FlowTime(%s:%i:%s)' % (resource.name,
+                                                                               lower_bound,
+                                                                               upper_bound),
+                                                       flowtime)
         # find the max end time in the time_interval
         maxi = Int('GreatestTaskEndTimeInTimePeriodForResource%s_%s' % (resource.name, uid))
 
@@ -224,10 +226,10 @@ class SchedulingProblem(_NamedUIDObject):
         for task in resource.busy_intervals:
             asst_max.append(Implies(And(task.end <= upper_bound, task.start >= lower_bound),
                                     maxi == task.end))
-        flowtime_single_resource.add_assertion(Or(asst_max))
+        flowtime_single_resource_indicator.add_assertion(Or(asst_max))
         for task in resource.busy_intervals:
-            flowtime_single_resource.add_assertion(Implies(And(task.end <= upper_bound, task.start >= lower_bound),
-                                                           maxi >= task.end))
+            flowtime_single_resource_indicator.add_assertion(Implies(And(task.end <= upper_bound, task.start >= lower_bound),
+                                                                     maxi >= task.end))
     
         # and the mini
         mini = Int('SmallestTaskEndTimeInTimePeriodForResource%s_%s' % (resource.name, uid))
@@ -236,14 +238,13 @@ class SchedulingProblem(_NamedUIDObject):
         for task in resource.busy_intervals:
             asst_min.append(Implies(And(task.end <= upper_bound, task.start <= lower_bound),
                                     mini == task.start))
-        flowtime_single_resource.add_assertion(Or(asst_min))
+        flowtime_single_resource_indicator.add_assertion(Or(asst_min))
         for task in resource.busy_intervals:
-            flowtime_single_resource.add_assertion(Implies(And(task.end <= upper_bound, task.start >= lower_bound),
-                                                           mini <= task.start))
+            flowtime_single_resource_indicator.add_assertion(Implies(And(task.end <= upper_bound, task.start >= lower_bound),
+                                                                     mini <= task.start))
 
         # the quantity to optimize
-        flowtime = Int('FlowtimeSingleResource%s_%s' % (resource.name, uid))
-        flowtime_single_resource.add_assertion(flowtime == maxi - mini)
-        flowtime_single_resource.add_assertion(flowtime >= 0)
-        flowtime_single_resource.indicator_variable = flowtime
-        return MinimizeObjective('', flowtime_single_resource, weight)
+        flowtime_single_resource_indicator.add_assertion(flowtime == maxi - mini)
+        flowtime_single_resource_indicator.add_assertion(flowtime >= 0)
+
+        return MinimizeObjective('', flowtime_single_resource_indicator, weight)
