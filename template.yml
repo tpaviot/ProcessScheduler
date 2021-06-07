@@ -60,6 +60,7 @@ jobs:
         cd benchmark &&\
         mkdir output &&\
         python benchmark_dev_team.py --plot=False --logics=QF_IDL --max_time=30 > benchmark_dev_team_result.txt &&\
+        python benchmark_n_queens.py --plot=False --logics=QF_UFIDL --max_time=30 > benchmark_n_queens_result.txt &&\
         cd ..
       displayName: 'Run benchmark'
 

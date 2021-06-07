@@ -48,6 +48,15 @@ class Task(_NamedUIDObject):
             raise AssertionError('No context available. First create a SchedulingProblem')
         ps_context.main_context.add_task(self)
 
+        # the counter used for negative integers
+        self._current_negative_integer = 0
+
+    def _get_unique_negative_integer(self):
+        """Returns a new negative integer each time this method is called."""
+        # decrement the current counter
+        self._current_negative_integer -= 1
+        return self._current_negative_integer
+
     def add_required_resource(self, resource: _Resource, dynamic=False) -> None:
         """
         Add a required resource to the current task.
@@ -77,16 +86,17 @@ class Task(_NamedUIDObject):
                 worker.add_busy_interval(self, (resource_maybe_busy_start, resource_maybe_busy_end))
                 # add assertions. If worker is selected then sync the resource with the task
                 selected_variable = resource.selection_dict[worker]
-                schedule_as_usual = And(resource_maybe_busy_start ==  self.start,
-                                        resource_maybe_busy_end ==  self.end)
+                schedule_as_usual = And(resource_maybe_busy_start == self.start,
+                                        resource_maybe_busy_end == self.end)
                 # in the case the worker is selected
                 # move the busy interval to a single point in time, in the
                 # past. This way, it does not conflict with tasks to be
                 # actuallt scheduled.
                 # This single point in time results in a zero duration time: related
                 # task will not be considered when cimputing resource utilization or cost.
-                move_to_past = And(resource_maybe_busy_start == -1, # to past
-                                   resource_maybe_busy_end == -1)
+                single_point_in_past = self._get_unique_negative_integer()
+                move_to_past = And(resource_maybe_busy_start == single_point_in_past, # to past
+                                   resource_maybe_busy_end == single_point_in_past)
                 # define the assertion ...
                 assertion = If(selected_variable, schedule_as_usual, move_to_past)
                 # ... and store it into the task assertions list
@@ -105,8 +115,9 @@ class Task(_NamedUIDObject):
                 self.add_assertion(resource_busy_end <= self.end)
                 self.add_assertion(resource_busy_start >=  self.start)
             else:
-                self.add_assertion(resource_busy_start + self.duration == resource_busy_end)
-                self.add_assertion(resource_busy_start ==  self.start)
+                #self.add_assertion(resource_busy_start + self.duration == resource_busy_end)
+                self.add_assertion(resource_busy_end == self.end)
+                self.add_assertion(resource_busy_start == self.start)
             # finally, store this resource into the resource list
             self.required_resources.append(resource)
 

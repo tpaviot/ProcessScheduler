@@ -16,7 +16,7 @@
 import unittest
 
 import processscheduler as ps
-from time import perf_counter
+# from time import perf_counter
 
 
 class TestIndicator(unittest.TestCase):
@@ -116,7 +116,7 @@ class TestIndicator(unittest.TestCase):
     # def test_resource_utilization_indicator_5(self) -> None:
     #     """Same input data than previous tests, but we dont use
     #     an optimisation solver, the objective of 100% is set by an
-    #     additionnal constraint. This should be **much faster**."""
+    #     additional constraint. This should be **much faster**."""
     #     problem = ps.SchedulingProblem('IndicatorUtilization5', horizon = 20)
 
     #     worker = ps.Worker('Worker')
@@ -149,7 +149,6 @@ class TestIndicator(unittest.TestCase):
         problem.add_objective_priorities()
 
         solver = ps.SchedulingSolver(problem)
-        solver._solver.set(priority='pareto')
         solution = solver.solve()
         self.assertTrue(solution)
 
@@ -245,6 +244,11 @@ class TestIndicator(unittest.TestCase):
         return problem, worker_1, len(tasks)
 
     @staticmethod
+    def get_sum_flowtime(solution) -> int:
+        return sum([solution.indicators[indicator_id]
+                    for indicator_id in solution.indicators if 'FlowTime' in indicator_id])
+
+    @staticmethod
     def print_perf(start, stop):
         print('Elapsed time: %s' % (start-stop))
 
@@ -258,7 +262,7 @@ class TestIndicator(unittest.TestCase):
         solution = solver.solve()
         self.assertTrue(solution)
         # the flowtime should be 0
-        self.assertEqual(solution.indicators['FlowTime(Worker1)'], 0)
+        self.assertEqual(solution.indicators['FlowTime(Worker1:40:50)'], 0)
 
     def test_indicator_flowtime_single_resource_2(self) -> None:
         # same as before, but the time interval contains all the tasks
@@ -269,7 +273,7 @@ class TestIndicator(unittest.TestCase):
 
         solution = solver.solve()
         self.assertTrue(solution)
-        self.assertEqual(solution.indicators['FlowTime(Worker1)'], sum_durations)
+        self.assertEqual(solution.indicators['FlowTime(Worker1:10:40)'], sum_durations)
 
     def test_indicator_flowtime_single_resource_3(self) -> None:
         # same as before, but the time interval contains no task
@@ -280,7 +284,8 @@ class TestIndicator(unittest.TestCase):
 
         solution = solver.solve()
         self.assertTrue(solution)
-        self.assertEqual(solution.indicators['FlowTime(Worker1)'], 0)
+        print(solution)
+        self.assertEqual(solution.indicators['FlowTime(Worker1:5:9)'], 0)
 
     def test_indicator_flowtime_single_resource_4(self) -> None:
         # without any time_interval provided, should use the whole range [0, horizon]
@@ -290,13 +295,9 @@ class TestIndicator(unittest.TestCase):
         solver = ps.SchedulingSolver(problem)
 
         solution = solver.solve()
+        print(solution)
         self.assertTrue(solution)
-        self.assertEqual(solution.indicators['FlowTime(Worker1)'], sum_durations)
-
-    @staticmethod
-    def get_sum_flowtime(solution) -> int:
-        return sum([solution.indicators[indicator_id]
-                    for indicator_id in solution.indicators if 'FlowTime' in indicator_id])
+        self.assertEqual(solution.indicators['FlowTime(Worker1:0:horizon)'], sum_durations)
 
     def test_indicator_flowtime_single_resource_5(self) -> None:
         # 2 time interval objectives
@@ -319,17 +320,12 @@ class TestIndicator(unittest.TestCase):
         time_intervals = [
             (i, i + time_interval_length)
             for i in range(0, horizon, time_interval_length)]
-        print(time_intervals)
 
         problem, worker_1, sum_durations = self.get_single_resource_utilization_problem_2(time_intervals)
         for interval in time_intervals:
-            start = perf_counter()
             problem.add_objective_flowtime_single_resource(worker_1, time_interval=interval)
-            self.print_perf(start, perf_counter())
 
-        start = perf_counter()
         solver = ps.SchedulingSolver(problem)
-        self.print_perf(start, perf_counter())
 
         solution = solver.solve()
 
