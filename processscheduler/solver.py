@@ -180,7 +180,6 @@ class SchedulingSolver:
                     weighted_objectives.append(- weight * variable_to_optimize)
                 else:
                     weighted_objectives.append(weight * variable_to_optimize)
-                weighted_objectives.append(weight * variable_to_optimize)
             self.add_constraint(equivalent_single_objective == Sum(weighted_objectives))
             # create an indicator
             equivalent_indicator = Indicator('EquivalentIndicator',
