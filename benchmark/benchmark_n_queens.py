@@ -20,11 +20,11 @@ parser.add_argument('-p', '--plot',
     help='Display results in a matplotlib chart'
 )
 parser.add_argument('-n', '--nmax',
-    default=100,
+    default=40,
     help='max dev team'
 )
 parser.add_argument('-s', '--step',
-    default=10,
+    default=5,
     help='step'
 )
 parser.add_argument('-mt', '--max_time',
@@ -94,34 +94,34 @@ plot_abs = []
 
 N = list(range(10, n, step)) # from 4 to N, step 2
 
-for num_dev_teams in N:
-    print("-> Num dev teams:", num_dev_teams)
+for problem_size in N:
+    print("-> Problem size:", problem_size)
     # Teams and Resources
-    num_resource_a = 2
-    num_resource_b = 2
 
     init_time = time.perf_counter()
-    # Resources
-    digital_transformation = ps.SchedulingProblem('DigitalTransformation', horizon=num_dev_teams)
-    r_a = [ps.Worker('A_%i' % (i + 1)) for i in range(num_resource_a)]
-    r_b = [ps.Worker('B_%i' % (i + 1)) for i in range(num_resource_b)]
-
-    # Dev Team Tasks
-    # For each dev_team pick one resource a and one resource b.
-    ts_team_migration = [ps.FixedDurationTask('DevTeam_%i' % (i + 1), duration=1, priority=10) for i in range(num_dev_teams)]
-    for t_team_migration in ts_team_migration:
-        t_team_migration.add_required_resource(ps.SelectWorkers(r_a))
-        t_team_migration.add_required_resource(ps.SelectWorkers(r_b))
+    
+    pb = ps.SchedulingProblem('n_queens_type_scheduling', horizon=problem_size)
+    R = {i : ps.Worker('W-%i'%i) for i in range(problem_size)}
+    T = {(i,j) : ps.FixedDurationTask('T-%i-%i'%(i,j), duration=1) for i in range(n) for j in range(problem_size)}
+    # precedence constrains
+    for i in range(problem_size):
+        for j in range(1, problem_size):
+            c = ps.TaskPrecedence(T[i,j-1], T[i,j], offset=0)
+            pb.add_constraint(c)
+    # resource assignment modulo n
+    for j in range(problem_size):
+        for i in range(problem_size):
+            T[(i+j) % problem_size,j].add_required_resource(R[i])
 
     # create the solver and solve
-    solver = ps.SchedulingSolver(digital_transformation, max_time=mt, logics=args.logics)
+    solver = ps.SchedulingSolver(pb, max_time=mt, logics=args.logics)
     solution = solver.solve()
 
     if not solution:
         break
 
     computation_times.append(time.perf_counter() - init_time)
-    plot_abs.append(num_dev_teams)
+    plot_abs.append(problem_size)
 
     solver.print_statistics()
 
@@ -131,6 +131,6 @@ plt.legend()
 plt.xlabel('n')
 plt.ylabel('time(s)')
 plt.grid(True)
-plt.savefig('bench_dev_team_%s.svg' % bench_id)
+plt.savefig('bench_n_queens_%s.svg' % bench_id)
 if args.plot:
     plt.show()
