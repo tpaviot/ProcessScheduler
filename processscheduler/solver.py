@@ -27,6 +27,22 @@ from processscheduler.objective import MaximizeObjective, MinimizeObjective, Ind
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
 
 #
+# Util function
+#
+def _calc_parabola_vertex(vector_x, vector_y):
+    """Adapted from http://chris35wills.github.io/parabola_python/
+    Return a, b, c such as points 1, 2, 3 satisfies
+    y = ax**2+bx+c
+    """
+    x1, x2, x3 = vector_x
+    y1, y2, y3 = vector_y
+    denom = (x1-x2) * (x1-x3) * (x2-x3)
+    a     = (x3 * (y2-y1) + x2 * (y1-y3) + x1 * (y3-y2)) / denom
+    b     = (x3*x3 * (y1-y2) + x2*x2 * (y3-y1) + x1*x1 * (y2-y3)) / denom
+    c     = (x2 * x3 * (x2-x3) * y1+x3 * x1 * (x3-x1) * y2+x1 * x2 * (x1-x2) * y3) / denom
+    return a, b, c
+
+#
 # Solver class definition
 #
 class SchedulingSolver:
@@ -361,6 +377,8 @@ class SchedulingSolver:
         total_time = 0
         current_variable_value = None
         print('Incremental optimizer:\n======================')
+        three_last_times = []
+
         while True:  # infinite loop, break if unsat of max_depth
             depth += 1
             if max_recursion_depth is not None:
@@ -369,22 +387,49 @@ class SchedulingSolver:
                     break
 
             is_sat, sat_computation_time = self.check_sat()
-            if is_sat != sat:
+
+            if is_sat == unsat and current_variable_value is not None:
+                print("\tFound optimum %i. Stopping iteration." % current_variable_value)
                 break
+            elif is_sat == unsat and current_variable_value is None:
+                print("\tNo solution found. Stopping iteration." % current_variable_value)
+                break
+            elif is_sat == unknown:
+                break
+            #elif is_sat == unknown:
+            #    return False
+            # at this stage, is_sat should be sat
             solution = self._solver.model()
+
+            current_variable_value = solution[variable].as_long()
+            print('\tFound better value:', current_variable_value, 'elapsed time:%.3fs' % total_time)
             total_time += sat_computation_time
             if total_time > self.max_time:
                 warnings.warn('max time exceeded')
                 break
-            current_variable_value = solution[variable].as_long()
-            print(f'\tvalue:{current_variable_value}, elapsed time(s):{total_time}')
+
+            # prevent the solver to start a new round if we expect it to be
+            # very long. The idea is the following: store the laste 3 computation
+            # times, compute and extrapolation. Break the loop if ever the expected
+            # time is too important.
+            if len(three_last_times) < 3:
+                three_last_times.append(total_time)
+            else:
+                three_last_times.pop(0)
+                three_last_times.append(total_time)
+                # Compute the expected value
+                a, b, c = _calc_parabola_vertex([0, 1, 2], three_last_times)
+                expected_next_time = a * 9 + 3 * b + c
+                if expected_next_time > self.max_time:
+                    warnings.warn('time may exceed max time. Stopping iteration.')
+                    break
             self._solver.push()
             if kind == 'min':
                 self.add_constraint(variable < current_variable_value)
+                print('\tChecking better value <%s' % current_variable_value)
             else:
                 self.add_constraint(variable > current_variable_value)
-        if not solution:
-            return False
+                print('\tChecking better value >%s' % current_variable_value)
 
         print('\ttotal number of iterations: %i' % depth)
         if current_variable_value is not None:
