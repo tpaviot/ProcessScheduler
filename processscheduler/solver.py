@@ -176,6 +176,10 @@ class SchedulingSolver:
             for obj in self.problem_context.objectives:
                 variable_to_optimize = obj.target
                 weight = obj.weight
+                if isinstance(obj, MaximizeObjective):
+                    weighted_objectives.append(- weight * variable_to_optimize)
+                else:
+                    weighted_objectives.append(weight * variable_to_optimize)
                 weighted_objectives.append(weight * variable_to_optimize)
             self.add_constraint(equivalent_single_objective == Sum(weighted_objectives))
             # create an indicator
