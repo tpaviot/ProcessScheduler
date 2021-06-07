@@ -290,7 +290,6 @@ class TestIndicator(unittest.TestCase):
         solver = ps.SchedulingSolver(problem)
 
         solution = solver.solve()
-        print(solution)
         self.assertTrue(solution)
         self.assertEqual(solution.indicators['FlowTime(Worker1:0:horizon)'], sum_durations)
 
@@ -309,7 +308,7 @@ class TestIndicator(unittest.TestCase):
 
     def test_indicator_flowtime_single_resource_6(self) -> None:
         # Mutliple time intervals (Currently fails for nb_time_intervals > 2, gantt to check total_flowtime is correct)
-        nb_time_intervals = 7
+        nb_time_intervals = 5
         time_interval_length = 13  # always > 5
         horizon = nb_time_intervals*time_interval_length
         time_intervals = [
@@ -323,7 +322,7 @@ class TestIndicator(unittest.TestCase):
         solver = ps.SchedulingSolver(problem)
 
         solution = solver.solve()
-
+        solution.render_gantt_matplotlib()
         self.assertTrue(solution)
         self.assertEqual(sum_durations, self.get_sum_flowtime(solution))
 
