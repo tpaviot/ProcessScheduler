@@ -19,7 +19,7 @@ from datetime import timedelta, datetime
 import uuid
 from typing import List, Optional
 
-from z3 import And, BoolRef, If, Int, Or, Sum, Implies
+from z3 import And, BoolRef, Int, Or, Sum, Implies
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
 from processscheduler.objective import (Indicator, MaximizeObjective,
@@ -124,6 +124,7 @@ class SchedulingProblem(_NamedUIDObject):
         utilization = (Sum(durations) * 100) / self.horizon  # in percentage
         utilization_indicator = Indicator('Utilization (%s)' % resource.name,
                                            utilization)
+        self.add_constraint(utilization <= 100)
         return utilization_indicator
 
     def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:
@@ -214,7 +215,7 @@ class SchedulingProblem(_NamedUIDObject):
         # for this resource, we look for the minimal starting time of scheduled tasks
         # as well as the maximum
         flowtime = Int('FlowtimeSingleResource%s_%s' % (resource.name, uid))
-        
+
         flowtime_single_resource_indicator = Indicator('FlowTime(%s:%i:%s)' % (resource.name,
                                                                                lower_bound,
                                                                                upper_bound),
