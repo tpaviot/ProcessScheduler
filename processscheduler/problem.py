@@ -218,7 +218,7 @@ class SchedulingProblem(_NamedUIDObject):
         # as well as the maximum
         flowtime = Int('FlowtimeSingleResource%s_%s' % (resource.name, uid))
 
-        flowtime_single_resource_indicator = Indicator('FlowTime(%s:%i:%i)' % (resource.name,
+        flowtime_single_resource_indicator = Indicator('FlowTime(%s:%i:%s)' % (resource.name,
                                                                                lower_bound,
                                                                                upper_bound),
                                                        flowtime)
