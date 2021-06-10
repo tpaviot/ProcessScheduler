@@ -6,4 +6,4 @@ ipykernel
 nbsphinx
 plotly
 kaleido
--e ..
+-e .

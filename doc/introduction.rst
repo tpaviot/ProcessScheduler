@@ -13,7 +13,9 @@ The following features are provided:
 
 - Resource constraints: resource availability,
 
-- First order logic operation between tasks/resources constraints: and/or/xor/not boolean operators, implication, if/then/else
+- First order logic operation between tasks/resources constraints: and/or/xor/not boolean operators, implication, if/then/else,
+
+- Multi objective optimization,
 
 - Gantt chart rendering using matplotlib or plotly,
 
@@ -31,7 +33,7 @@ What's inside
 
 ProcessScheduler processes a model written using the Python programming language. It produces a schedule compliant with a set of constraints over tasks and/or resources.
 
-The scheduling problem is solved using the Microsfot `Z3 Prover <https://github.com/Z3Prover/z3>`_, a MIT licensed `SMT solver <https://en.wikipedia.org/wiki/Satisfiability_modulo_theories>`_. The optimization part of the solver is described in this paper: `Bjorner et al. νZ - An Optimizing SMT Solver (2016) <https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/nbjorner-nuz.pdf>`_. A good introduction to programming Z3 with Python can be read at `z3-py-tutorial <https://ericpony.github.io/z3py-tutorial/guide-examples.htm>`_. Z3 is the only mandatory dependency of ProcessScheduler.
+The scheduling problem is solved using the Microsoft SMT `Z3 Prover <https://github.com/Z3Prover/z3>`_, a MIT licensed `SMT solver <https://en.wikipedia.org/wiki/Satisfiability_modulo_theories>`_. The optimization part of the solver is described in this paper: `Bjorner et al. νZ - An Optimizing SMT Solver (2016) <https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/nbjorner-nuz.pdf>`_. A good introduction to programming Z3 with Python can be read at `z3-py-tutorial <https://ericpony.github.io/z3py-tutorial/guide-examples.htm>`_. Z3 is the only mandatory dependency of ProcessScheduler.
 
 The solution of a scheduling problem can be rendered to a Gantt chart using the `matplotlib <https://www.matplotlib.org>`_ or `plotly <https://plotly.com/>`_ libraries, and exported to any of the common jpg, png, pdf or svg formats. matplotlib and plotly are not installed by default, they are optional dependencies.
 

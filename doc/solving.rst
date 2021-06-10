@@ -85,6 +85,7 @@ Then, we can request for another solution:
     solution = solver.find_another_solution(task_1.start)
     if solution is not None:
         print("New solution for task_1.start:", solution.tasks[task_1.name].start)
+
 .. code-block:: console
 
    Solution for task_1.start: 1
@@ -111,7 +112,7 @@ Call the :func:`render_gantt_matplotlib` to render the solution as a Gantt chart
 Call the :func:`render_gantt_plotly` to render the solution as a Gantt chart using **plotly**.
 Take care that plotly rendering needs **real timepoints** (set at least :attr:`delta_time` at the problem creation).
 
-. code-block:: python
+.. code-block:: python
 
     solution = solver.solve()
     if solution is not None:

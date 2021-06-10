@@ -54,7 +54,7 @@ constraints the solver to schedule task_2 start exactly 2 periods after task_1 i
     If the task(s) is (are) optional(s), all these constraints apply only if the task is scheduled. If the solver does not schedule the task, these constraints does not apply.
 
 Optional tasks constraints
-==========================
+--------------------------
 
 - :class:`OptionalTaskConditionSchedule` creates a constraint that adds a condition for the task to be schdeuled. The condition is a z3 BoolRef
 
