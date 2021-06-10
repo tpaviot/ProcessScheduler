@@ -146,10 +146,11 @@ class SchedulingProblem(_NamedUIDObject):
             raise ValueError('Horizon constrained to be fixed, no horizon optimization possible.')
         return MinimizeObjective('MakeSpan', self.horizon, weight)
 
-    def add_objective_resource_utilization(self, resource: _Resource, weight=1) -> MaximizeObjective:
+    def add_objective_resource_utilization(self, resource: _Resource, weight=1) -> Indicator:
         """Maximize resource occupation."""
         resource_utilization_indicator = self.add_indicator_resource_utilization(resource)
-        return MaximizeObjective('', resource_utilization_indicator, weight)
+        MaximizeObjective('', resource_utilization_indicator, weight)
+        return resource_utilization_indicator
 
     def add_objective_resource_cost(self, list_of_resources: List[_Resource], weight=1) -> MinimizeObjective:
         """ minimise the cost of selected resources
@@ -217,7 +218,7 @@ class SchedulingProblem(_NamedUIDObject):
         # as well as the maximum
         flowtime = Int('FlowtimeSingleResource%s_%s' % (resource.name, uid))
 
-        flowtime_single_resource_indicator = Indicator('FlowTime(%s:%i:%s)' % (resource.name,
+        flowtime_single_resource_indicator = Indicator('FlowTime(%s:%i:%i)' % (resource.name,
                                                                                lower_bound,
                                                                                upper_bound),
                                                        flowtime)
