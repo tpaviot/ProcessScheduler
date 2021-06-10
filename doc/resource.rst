@@ -36,7 +36,7 @@ For example, if two drillers are available, the first one with a producvity of 3
 Cost
 ----
 
-A cost information can be added to any resource. ProcessScheduler can use this information to compute the total cost of a schedule, the cost for a resrouce, or optimize the schedule so that the cost is the lowest (minimiation, see the Objective section). There are currently two different ways to define a resource cost:
+A cost information can be added to any resource. ProcessScheduler can use this information to compute the total cost of a schedule, the cost for a resource, or optimize the schedule so that the cost is the lowest (minimiation, see the Objective section). There are currently two different ways to define a resource cost:
 
 * the class :class:`ConstantCostPerPeriod`: the cost of the resource is constant over time.
 
@@ -44,7 +44,7 @@ A cost information can be added to any resource. ProcessScheduler can use this i
 
     dev_1 = Worker('SeniorDeveloper', cost=ConstantCostPerPeriod(750))
 
-* the class :class:`PolynomialCostFunction`: the cost of the resource evolves as a polynomial function of time. It is useful to represent, for example, energy cost that is known to be unstable (oil) or time dependant (electricity). The :attr:`cost` parameter taks any python function (i.e. a :attr:`callable` object).
+* the class :class:`PolynomialCostFunction`: the cost of the resource evolves as a polynomial function of time. It is useful to represent, for example, energy cost that is known to be unstable (oil) or time dependent (electricity). The :attr:`cost` parameter takes any python function (i.e. a :attr:`callable` object).
 
 .. code-block:: python
 
