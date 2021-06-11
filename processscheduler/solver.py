@@ -17,7 +17,7 @@
 
 import random
 import time
-from typing import Optional
+from typing import Optional, Union
 import uuid
 import warnings
 
@@ -310,7 +310,7 @@ class SchedulingSolver:
 
         return solution
 
-    def solve(self) -> bool:
+    def solve(self) -> Union[bool, SchedulingSolution]:
         """ call the solver and returns the solution, if ever """
         # for all cases
         if self.debug:
