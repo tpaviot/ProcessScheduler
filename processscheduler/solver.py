@@ -395,7 +395,7 @@ class SchedulingSolver:
                 print("\tFound optimum %i. Stopping iteration." % current_variable_value)
                 break
             elif is_sat == unsat and current_variable_value is None:
-                print("\tNo solution found. Stopping iteration." % current_variable_value)
+                print("\tNo solution found. Stopping iteration.")
                 break
             elif is_sat == unknown:
                 break
