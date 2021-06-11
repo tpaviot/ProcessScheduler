@@ -21,7 +21,7 @@ from typing import Optional, Union
 import uuid
 import warnings
 
-from z3 import Int, Solver, SolverFor, Sum, unsat, sat, ArithRef, unknown, set_option, Or
+from z3 import Int, Solver, SolverFor, Sum, unsat, ArithRef, unknown, set_option, Or
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective, Indicator
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
