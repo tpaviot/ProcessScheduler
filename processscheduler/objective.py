@@ -24,7 +24,8 @@ import processscheduler.context as ps_context
 class Indicator(_NamedUIDObject):
     """ an performance indicator, can be evaluated after the solver has finished solving,
     or being optimized (Max or Min) *before* calling the solver. """
-    def __init__(self, name: str, expression: Union[BoolRef, ArithRef]) -> None:
+    def __init__(self, name: str, expression: Union[BoolRef, ArithRef],
+                 bound: Optional[int] = None) -> None:
         super().__init__(name)
         # scheduled start, end and duration set to 0 by default
         # be set after the solver is called
@@ -35,6 +36,10 @@ class Indicator(_NamedUIDObject):
         # by default the scheduled value is set to None
         # set by the solver
         self.scheduled_value = None
+
+        # Bound
+        # None if not bounded, lower bound if Min optimization, upper bound if Max optimization
+        self.bound = bound
 
         self.add_assertion(self.indicator_variable == expression)
 
@@ -47,9 +52,10 @@ class Objective(_NamedUIDObject):
             raise TypeError('the indicator expression must be either a BoolRef, ArithRef or Indicator instance.')
         if isinstance(target, Indicator):
             self.target = target.indicator_variable
+            self.bound = target.bound
         else:
             self.target = target
-
+            self.bound = None
         ps_context.main_context.add_objective(self)
 
 class MaximizeObjective(Objective):
