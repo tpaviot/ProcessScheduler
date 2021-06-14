@@ -19,7 +19,7 @@ from datetime import timedelta, datetime
 import uuid
 from typing import List, Optional
 
-from z3 import And, BoolRef, If, Int, Or, Sum, Implies
+from z3 import And, BoolRef, Int, Or, Sum, Implies
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
 from processscheduler.objective import (Indicator, MaximizeObjective,

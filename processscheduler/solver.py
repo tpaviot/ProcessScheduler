@@ -17,11 +17,11 @@
 
 import random
 import time
-from typing import Optional
+from typing import Optional, Union
 import uuid
 import warnings
 
-from z3 import Int, Solver, SolverFor, Sum, unsat, sat, ArithRef, unknown, set_option, Or
+from z3 import Int, Solver, SolverFor, Sum, unsat, ArithRef, unknown, set_option, Or
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective, Indicator
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
@@ -310,7 +310,7 @@ class SchedulingSolver:
 
         return solution
 
-    def solve(self) -> bool:
+    def solve(self) -> Union[bool, SchedulingSolution]:
         """ call the solver and returns the solution, if ever """
         # for all cases
         if self.debug:
@@ -395,7 +395,7 @@ class SchedulingSolver:
                 print("\tFound optimum %i. Stopping iteration." % current_variable_value)
                 break
             elif is_sat == unsat and current_variable_value is None:
-                print("\tNo solution found. Stopping iteration." % current_variable_value)
+                print("\tNo solution found. Stopping iteration.")
                 break
             elif is_sat == unknown:
                 break
