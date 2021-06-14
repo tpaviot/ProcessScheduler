@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 from z3 import Int, BoolRef, ArithRef
 
 from processscheduler.base import _NamedUIDObject
@@ -25,7 +25,7 @@ class Indicator(_NamedUIDObject):
     """ an performance indicator, can be evaluated after the solver has finished solving,
     or being optimized (Max or Min) *before* calling the solver. """
     def __init__(self, name: str, expression: Union[BoolRef, ArithRef],
-                 bounds: Optional[tuple[Optional[int]]] = None) -> None:
+                 bounds: Optional[Tuple[Optional[int]]] = None) -> None:
         super().__init__(name)
         # scheduled start, end and duration set to 0 by default
         # be set after the solver is called
