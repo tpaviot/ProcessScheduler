@@ -123,7 +123,7 @@ class SchedulingProblem(_NamedUIDObject):
             durations.append(interv_up - interv_low)
         utilization = (Sum(durations) * 100) / self.horizon  # in percentage
         utilization_indicator = Indicator('Utilization (%s)' % resource.name,
-                                          utilization, bound=100)
+                                          utilization, bounds=(0, 100))
         return utilization_indicator
 
     def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:

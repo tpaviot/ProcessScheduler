@@ -381,7 +381,7 @@ class SchedulingSolver:
         current_variable_value = None
         print('Incremental optimizer:\n======================')
         three_last_times = []
-        bound = self.objective.bound
+        bound = self.objective.bounds[0] if kind == 'min' else self.objective.bounds[1]
 
         while True:  # infinite loop, break if unsat of max_depth
             depth += 1
