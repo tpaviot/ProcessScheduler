@@ -494,15 +494,8 @@ is_priority_widget = widgets.Checkbox(
     indent=False,
     layout={'width': '200px'}
 )
-priority_widget = widgets.Select(
-    options=['lex', 'box', 'pareto'],
-    description='Priority:',
-    disabled=False,
-    layout={'width': '200px'}
-)
-optimization_ui = widgets.HBox([widgets.VBox([is_makespan_widget, is_flowtime_widget,
-                                is_cost_widget, is_priority_widget]),
-                                priority_widget])
+optimization_ui = widgets.HBox([is_makespan_widget, is_flowtime_widget,
+                                is_cost_widget, is_priority_widget])
 
 
 #
@@ -548,8 +541,7 @@ def on_solve_task_button_clicked(b):
             pb.add_objective_resource_cost([pb.context.resources])
         solver = SchedulingSolver(pb,
                                   debug=is_debug_solver_widget.value,
-                                  max_time=max_time_widget.value,
-                                  optimize_priority=priority_widget.value,
+                                  max_time=max_time_widget.value,                                  
                                   parallel=is_parallel_solver_widget.value)
         solution = solver.solve()
         # choose the gantt renderer
@@ -561,7 +553,7 @@ def on_solve_task_button_clicked(b):
 
 
 solve_button.on_click(on_solve_task_button_clicked)
-solver_ui = widgets.VBox([widgets.HBox([max_time_widget, priority_widget,
+solver_ui = widgets.VBox([widgets.HBox([max_time_widget,
                           widgets.VBox([is_debug_solver_widget, is_parallel_solver_widget]),
                           solve_button,]),
                           solve_output])
