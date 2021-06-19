@@ -68,7 +68,7 @@ pb.add_constraint(c1) # explicitly add this constraint to the problem
 solver = ps.SchedulingSolver(pb)
 solution = solver.solve()
 
-# displays solution, ascii or matplotlib gantt diagram
+# display solution, ascii or matplotlib gantt diagram
 solution.render_gantt_matplotlib()
 ```
 

@@ -1,5 +1,15 @@
 RELEASE NOTES
 
+Version 0.7.0
+=============
+New features:
+  - new incremental solver for optimization
+  - performance improvements
+  - new Workload constraint
+  - single resource flowtime optimization objective
+  - linear and polynomial cost functions
+  - add a benchmark folder including one benchmark
+
 Version 0.6.1
 =============
 Misc:

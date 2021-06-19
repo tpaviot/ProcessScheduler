@@ -20,7 +20,7 @@ CLASSIFIERS = [
 ]
 
 setup(name='ProcessScheduler',
-      version='0.7.0dev',
+      version='0.7.0',
       description=DESCRIPTION,
       long_description=open("README.md").read(),
       long_description_content_type="text/markdown",

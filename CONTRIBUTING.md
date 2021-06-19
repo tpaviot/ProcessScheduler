@@ -40,4 +40,4 @@ You're welcome to contribute new jupyter notebooks.
 
 *   function and method names follow the ```lowercase_separated_by_underscores``` convention
 *   class names follow the ```UpperCamelCase``` naming convention
-*   Tasks constraints names start either by Task or Tasks (with an ending 's). If the constraint target one single tasks, use the first one. If it targets two or more tasks, use the second.
+*   Tasks constraints names start either by Task or Tasks (with an ending 's'). If the constraint targets one single tasks, use the first one. If it targets two or more tasks, use the second one.
