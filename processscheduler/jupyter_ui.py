@@ -541,7 +541,7 @@ def on_solve_task_button_clicked(b):
             pb.add_objective_resource_cost([pb.context.resources])
         solver = SchedulingSolver(pb,
                                   debug=is_debug_solver_widget.value,
-                                  max_time=max_time_widget.value,                                  
+                                  max_time=max_time_widget.value,
                                   parallel=is_parallel_solver_widget.value)
         solution = solver.solve()
         # choose the gantt renderer

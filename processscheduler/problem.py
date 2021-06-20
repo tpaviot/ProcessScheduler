@@ -214,7 +214,7 @@ class SchedulingProblem(_NamedUIDObject):
         # for this resource, we look for the minimal starting time of scheduled tasks
         # as well as the maximum
         flowtime = Int('FlowtimeSingleResource%s_%s' % (resource.name, uid))
-        
+
         flowtime_single_resource_indicator = Indicator('FlowTime(%s:%i:%s)' % (resource.name,
                                                                                lower_bound,
                                                                                upper_bound),

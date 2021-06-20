@@ -99,7 +99,7 @@ for problem_size in N:
     # Teams and Resources
 
     init_time = time.perf_counter()
-    
+
     pb = ps.SchedulingProblem('n_queens_type_scheduling', horizon=problem_size)
     R = {i : ps.Worker('W-%i'%i) for i in range(problem_size)}
     T = {(i,j) : ps.FixedDurationTask('T-%i-%i'%(i,j), duration=1) for i in range(n) for j in range(problem_size)}

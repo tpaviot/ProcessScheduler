@@ -226,7 +226,7 @@ class TestIndicator(unittest.TestCase):
         return problem, worker_1, dur1 + dur2 + dur3 + dur4 + dur5
 
     def test_indicator_flowtime_single_resource_1(self) -> None:
-        problem, worker_1, sum_durations = self.get_single_resource_utilization_problem('IndicatorFlowtimeSingleResource1')
+        problem, worker_1, _ = self.get_single_resource_utilization_problem('IndicatorFlowtimeSingleResource1')
         # there should not be any task scheduled in this time period
         problem.add_objective_flowtime_single_resource(worker_1, time_interval = [40, 50])
         solver = ps.SchedulingSolver(problem)
@@ -248,7 +248,7 @@ class TestIndicator(unittest.TestCase):
 
     def test_indicator_flowtime_single_resource_3(self) -> None:
         # same as before, but the time interval contains no task
-        problem, worker_1, sum_durations = self.get_single_resource_utilization_problem('IndicatorFlowtimeSingleResource3')
+        problem, worker_1, _ = self.get_single_resource_utilization_problem('IndicatorFlowtimeSingleResource3')
         problem.add_objective_flowtime_single_resource(worker_1, time_interval = [5, 9])
         solver = ps.SchedulingSolver(problem)
 
@@ -322,6 +322,7 @@ class TestIndicator(unittest.TestCase):
 
         self.assertTrue(solution)
         self.assertEqual(sum_durations, self.get_sum_flowtime(solution))
+
 
 if __name__ == "__main__":
     unittest.main()
