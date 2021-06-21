@@ -35,6 +35,7 @@ MANIFEST
 .vscode/
 
 # test outputs
+bench*.svg
 test_*.svg
 test_*.html
 *.smt2
