@@ -382,6 +382,11 @@ class SchedulingSolver:
         print('Incremental optimizer:\n======================')
         three_last_times = []
 
+        if self.objective.bounds is None:
+            bound = None
+        else:
+            bound = self.objective.bounds[0] if kind == 'min' else self.objective.bounds[1]
+
         while True:  # infinite loop, break if unsat of max_depth
             depth += 1
             if max_recursion_depth is not None:
@@ -409,6 +414,10 @@ class SchedulingSolver:
             total_time += sat_computation_time
             if total_time > self.max_time:
                 warnings.warn('max time exceeded')
+                break
+
+            if bound is not None and current_variable_value == bound:
+                print("\tFound optimum %i. Stopping iteration." % current_variable_value)
                 break
 
             # prevent the solver to start a new round if we expect it to be
