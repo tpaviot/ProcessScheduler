@@ -61,8 +61,8 @@ class TestTask(unittest.TestCase):
         pb = ps.SchedulingProblem('CreateVariableDurationTask')
 
         ps.VariableDurationTask('vdt1')
-        vdt_2 = ps.VariableDurationTask('vdt2', length_at_most=4)
-        vdt_3 = ps.VariableDurationTask('vdt3', length_at_least=5)
+        vdt_2 = ps.VariableDurationTask('vdt2', max_duration=4)
+        vdt_3 = ps.VariableDurationTask('vdt3', min_duration=5)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -74,11 +74,11 @@ class TestTask(unittest.TestCase):
     def test_task_types(self) -> None:
         new_problem_or_clear()
         with self.assertRaises(TypeError):
-            ps.VariableDurationTask('vdt5', length_at_most=4.5)
+            ps.VariableDurationTask('vdt5', max_duration=4.5)
         with self.assertRaises(TypeError):
-            ps.VariableDurationTask('vdt6', length_at_most=-1)
+            ps.VariableDurationTask('vdt6', max_duration=-1)
         with self.assertRaises(TypeError):
-            ps.VariableDurationTask('vdt7', length_at_least=-1)
+            ps.VariableDurationTask('vdt7', min_duration=-1)
         with self.assertRaises(TypeError):
             ps.VariableDurationTask('vdt8', work_amount=-1)
         with self.assertRaises(TypeError):

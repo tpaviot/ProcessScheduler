@@ -205,37 +205,37 @@ class UnavailabilityTask(FixedDurationTask):
 class VariableDurationTask(Task):
     """ Task with a priori unknown duration. its duration is computed by the solver """
     def __init__(self, name: str,
-                 length_at_least: Optional[int] = 0,
-                 length_at_most: Optional[int] = None,
+                 min_duration: Optional[int] = 0,
+                 max_duration: Optional[int] = None,
                  work_amount: Optional[int] = 0,
                  priority: Optional[int] = 1,
                  optional: Optional[bool] = False):
         super().__init__(name, optional)
 
-        if is_positive_integer(length_at_most):
-            self.add_assertion(self.duration <= length_at_most)
-        elif length_at_most is not None:
+        if is_positive_integer(max_duration):
+            self.add_assertion(self.duration <= max_duration)
+        elif max_duration is not None:
             raise TypeError('length_as_most should either be a positive integer or None')
 
-        if not is_positive_integer(length_at_least):
-            raise TypeError('length_at_least must be a positive integer')
+        if not is_positive_integer(min_duration):
+            raise TypeError('min_duration must be a positive integer')
 
         if not is_positive_integer(work_amount):
             raise TypeError('work_amount me be a positive integer')
 
-        self.length_at_least = length_at_least
-        self.length_at_most = length_at_most
+        self.min_duration = min_duration
+        self.max_duration = max_duration
         self.work_amount = work_amount
         self.priority = priority
 
         assertions = [self.start + self.duration == self.end,
                       self.start >= 0,
-                      self.duration >= length_at_least]
+                      self.duration >= min_duration]
 
-        if length_at_most is not None:
-            assertions.append(self.duration <= length_at_most)
+        if max_duration is not None:
+            assertions.append(self.duration <= max_duration)
 
-        if length_at_least is not None:
-            assertions.append(self.duration >= length_at_least)
+        if min_duration is not None:
+            assertions.append(self.duration >= min_duration)
 
         self.set_assertions(assertions)
