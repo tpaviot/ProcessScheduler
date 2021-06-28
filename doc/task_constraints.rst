@@ -3,13 +3,13 @@ Task Constraints
 
 ProcessScheduler provides a set of ready-to-use temporal task constraints. They allow expressing common rules such as "the task A must start exactly at the instant 4", "the task B must end at the same time than the task C ends", "the task C must be scheduled exactly 3 periods after the task D is completed" etc.
 
-There are a set of builtin ready-to-use constraints, listed below.
-
 .. note::
 
     Naming convention: if the class name starts with *Task** then the constraint applies to one single task, if the class name starts with *Tasks** it applies to 2 or more task instances.
 
-- :class:`TaskPrecedence`: takes two parameters :attr:`task_1` and :attr:`task_2` and constraints :attr:`task_2` to be scheduled after :attr:`task_1` is completed. The precedence type can either be :const:`'lax'` (default, :attr:`task_2.start` >= :attr:`task_1.end`)), :const:`'strict'` (:attr:`task_2.start` >= :attr:`task_1.end`)) or :const:`'tight'` (:attr:`task_2.start` >= :attr:`task_1.end`, task_2 starts immediately after task_1 is completed). An optional parameter :attr:`offset` can be additionnaly set.
+Time constraints
+----------------
+- :class:`TaskPrecedence`: takes two parameters :attr:`task_1` and :attr:`task_2` and constraints :attr:`task_2` to be scheduled after :attr:`task_1` is completed. The precedence type can either be :const:`'lax'` (default, :attr:`task_2.start` >= :attr:`task_1.end`)), :const:`'strict'` (:attr:`task_2.start` >= :attr:`task_1.end`)) or :const:`'tight'` (:attr:`task_2.start` >= :attr:`task_1.end`, task_2 starts immediately after task_1 is completed). An optional parameter :attr:`offset` can be additionally set.
 
 .. code-block:: python
 
@@ -49,14 +49,19 @@ constraints the solver to schedule task_2 start exactly 2 periods after task_1 i
 
 - :class:`TaskEndBeforeLax`: the constraint :math:`task.end <= value`
 
-.. warning::
+- :class:`ScheduleNTasksInTimeIntervals`: given a set of :math:`m` different tasks, and a list of time intervals, schedule :math:`N` tasks among :math:`m` in this time interval.
+
+.. note::
 
     If the task(s) is (are) optional(s), all these constraints apply only if the task is scheduled. If the solver does not schedule the task, these constraints does not apply.
+    
 
 Optional tasks constraints
 --------------------------
 
-- :class:`OptionalTaskConditionSchedule` creates a constraint that adds a condition for the task to be schdeuled. The condition is a z3 BoolRef
+Following constraints apply to optional tasks only.
+
+- :class:`OptionalTaskConditionSchedule` creates a constraint that adds a condition for the task to be scheduled. The condition is a z3 BoolRef
 
 - the :class:`OptionalTasksDependency` takes two optional tasks :attr:`task_1` and :attr:`task_2`, and ensures that task_1 is schdeuld implies that task_2 is scheduled as well.
 
@@ -65,8 +70,9 @@ Optional tasks constraints
 
 .. note::
 
-    All the Task constraints may be defined as **optional**. This parameter is set to ``False`` by default, which means the task constraint is mandatory. If you set the attribute ``optional`` to ``True`` the the constraint becomes optional, and may/may not apply according to the solver. If you need an optional constraint to be applied, you can force the solver to apply the constraint by adding the constraint:
+    All the Task constraints may be defined as **optional**. This parameter is set to ``False`` by default, which means the task constraint is mandatory. If you set the attribute ``optional`` to ``True`` the the constraint becomes optional, and may/may not apply according to the solver. You can force the schedule to schedule an optional constraint:
 
     .. code:: python
 
         pb.add_constraint([task.applied == True])
+

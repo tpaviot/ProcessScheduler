@@ -23,11 +23,6 @@ The following features are provided:
 
 This document explains how to write the model, run the solver, and finally analyze the solution(s).
 
-
-.. note::
-
-    ProcessScheduler was inspired by the `pyschdedule <https://github.com/timnon/pyschedule>`_ library by Tim Nonner. By choosing to rely on an SMT solver rather than a MIP solver such as CBC/Gurobi/SCIP, ProcessScheduler strongly diverges from its predecessor.
-
 What's inside
 -------------
 
