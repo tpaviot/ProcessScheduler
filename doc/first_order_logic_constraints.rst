@@ -49,15 +49,11 @@ The logical implication (:math:`\implies`) is wrapped by the :func:`implies` fun
 
 is written in Python:
 
-
 .. code-block:: python
 
     problem.add_constraint(implies(t_2.start == 4,
                                    [TasksEndSynced(t_3, t_4)])
 
-
-.. note::
-	The :func:`implies` and :func:`if_then_else` functions names do not conflict with any other function name from another package, thus dont have any underscore suffix.
 
 Finally, an if/then/else statement is available through the function :func:`if_then_else` which takes 3 parameters: a condition and two lists of assertions that applies whether the condition is :const:`True` or :const:`False`.
 
@@ -67,3 +63,5 @@ Finally, an if/then/else statement is available through the function :func:`if_t
                                         [TasksEndSynced(t_3, t_4)], # if the condition is True
                                         [TasksStartSynced(t_3, t_4)]) # if the condition is False
 
+.. note::
+The :func:`implies` and :func:`if_then_else` functions names do not conflict with any other function name from another package, thus dont have any underscore suffix.
