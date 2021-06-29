@@ -15,6 +15,7 @@ A a 100% pure python library to compute resource-constrained task schedules. It 
    resource_assignment
    resource_constraints
    first_order_logic_constraints
+   indicator
    objectives
    solving
    use-case-flow-shop
