@@ -3,7 +3,7 @@ Optimization
 
 An objective is a target value for an :class:`Indicator` or any of the variables defined in the scheduling problem:
 
-- if the target value is known, then the objective can either be :class:`EqualObjective`, :class:`AtLeastObjective` or :class:`AtMostObjective`,
+- if the target value is known, then the objective can either be :class:`ExactObjective`, :class:`MinimumObjective` or :class:`MaximumObjective`,
 
 - it the target value is unknown but you want to find a minimal or maximal value, the the objective can be the result from an optimization resolution, :class:`MaximizeObjective` or :class:`MinimizeObjective`.
 
@@ -29,6 +29,8 @@ The following builtin objectives are available:
 - :func:`add_objective_start_latest`: maximize the start time of the first task to be scheduled,
 
 - :func:`add_objective_flowtime`: minimize flowtime.
+
+- :func:`add_objective_flowtime_single_resource`: minimize flowtime of a single resource on a specific time interval
 
 Single objective optimization
 -----------------------------
