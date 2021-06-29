@@ -48,9 +48,9 @@ def _constraints_to_list_of_assertions(list_of_constraints) -> List[BoolRef]:
 # Nested boolean operators for _NamedUIDObject objects
 # or BoolRef
 #
-def not_(constraint: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
+def not_(constraint: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
     """Boolean negation of the constraint."""
-    return Not(And(_get_assertions(constraint)))
+    return Not(_get_assertions(constraint))
 
 def or_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
     """Boolean 'or' between a list of assertions or constraints.
