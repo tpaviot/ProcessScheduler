@@ -141,7 +141,7 @@ class ResourceUnavailable(_Constraint):
 #
 # SelectWorker specific constraints
 #
-class AllSameSelected(_Constraint):
+class SameWorkers(_Constraint):
     """ Selected workers by both AlternateWorkers are constrained to
     be the same
     """
@@ -155,7 +155,7 @@ class AllSameSelected(_Constraint):
                 self.set_assertions(alternate_workers_1.selection_dict[res_work_1] == alternate_workers_2.selection_dict[res_work_1])
 
 
-class AllDifferentSelected(_Constraint):
+class DistinctWorkers(_Constraint):
     """ Selected workers by both AlternateWorkers are constrained to
     be the same
     """

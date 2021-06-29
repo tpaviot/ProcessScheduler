@@ -447,8 +447,8 @@ class TestSolver(unittest.TestCase):
     #
     # Resource constraints
     #
-    def test_all_same_different_workers(self):
-        pb = ps.SchedulingProblem('AllSameDifferentWorkers')
+    def test_all_same_distinct_workers(self):
+        pb = ps.SchedulingProblem('AllSameDistinctWorkers')
 
         task_1 = ps.FixedDurationTask('task1', duration = 2)
         task_2 = ps.FixedDurationTask('task2', duration = 2)
@@ -468,9 +468,9 @@ class TestSolver(unittest.TestCase):
         task_3.add_required_resource(res_for_t3)
         task_4.add_required_resource(res_for_t4)
 
-        c = ps.AllSameSelected(res_for_t1, res_for_t2)
-        d = ps.AllSameSelected(res_for_t3, res_for_t4)
-        e = ps.AllDifferentSelected(res_for_t2, res_for_t4)
+        c = ps.SameWorkers(res_for_t1, res_for_t2)
+        d = ps.SameWorkers(res_for_t3, res_for_t4)
+        e = ps.DistinctWorkers(res_for_t2, res_for_t4)
         pb.add_constraints([c, d, e])
 
         solver = ps.SchedulingSolver(pb)
