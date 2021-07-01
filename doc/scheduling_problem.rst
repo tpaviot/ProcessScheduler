@@ -6,22 +6,22 @@ The :class:`SchedulingProblem` class is the container for all modeling objects, 
 Time slots as integers
 ----------------------
 
-.. warning::
-
-    ProcessScheduler handles variables represented by **integer** values.
-
 A :class:`SchedulingProblem` instance holds a *time* interval: the lower bound of this interval (the *initial time*) is always 0, the upper bound (the *final time*) can be set by passing the :attr:`horizon` attribute to the
 :func:`__init__` method:
 
 .. code-block:: python
 
-    problem_modeling = SchedulingProblem('MySchedulingProblem', horizon=20)
+    my_problem = SchedulingProblem('MySchedulingProblem', horizon=20)
  
 The time interval is divided into a finite number of *periods*. Each period has a duration of 1. If :math:`horizon` is the horizon, then the number of periods is :math:`horizon` as well, and the number of points in the interval :math:`[0;horizon]` is :math:`horizon+1`.
 
 .. image:: img/TimeLineHorizon.svg
     :align: center
     :width: 90%
+
+.. warning::
+
+    ProcessScheduler handles variables represented by **integer** values.
 
 A period is the finest granularity level that describes the time line, the task durations, and the schedule itself. The time line is dimensionless. It is up to you to map one period to the desired duration, in seconds/minutes/hours. For example:
 

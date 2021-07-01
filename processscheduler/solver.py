@@ -53,8 +53,7 @@ class SchedulingSolver:
                  parallel: Optional[bool] = False,
                  random_seed = False,
                  logics=None,
-                 verbosity=0,
-                 multi_objective_to_single: Optional[bool] = True):
+                 verbosity=0):
         """ Scheduling Solver
 
         debug: True or False, False by default
@@ -65,7 +64,6 @@ class SchedulingSolver:
         self.problem_context = problem.context
         self.debug = debug
         # objectives list
-        self.multi_objective_to_single = multi_objective_to_single
         self.objective= None  # the list of all objectives defined in this problem
         # set_option('smt.arith.auto_config_simplex', True)
         if debug:

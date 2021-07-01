@@ -11,13 +11,19 @@ A :class:`SchedulingSolver` instance takes a :class:`SchedulingProblem` instance
 
     solver = SchedulingSolver(scheduling_problem_instance)
 
-It takes three optional arguments:
+It takes the following optional arguments:
 
 - :attr:`debug`: False by default, if set to True will output many useful information.
 
 - :attr:`max_time`: in seconds, the maximal time allowed to find a solution. Default is 60s.
 
-- :attr:`parallel`: boolean False by default, if True the solver will be executed in multithreaded mode. It *might* be quicker. It might not.
+- :attr:`parallel`: boolean False by default, if True force the solver to be executed in multithreaded mode. It *might* be quicker. It might not.
+
+- :attr:`random_seed`: an integer, default to 0. If set to a value different from 0, enable a random generator to suggest a different solution each time the solver is called.
+
+- :attr:`logics`: a string, None by default. Can be set to any of the supported z3 logics, "QF_IDL", "QF_LIA", etc. see https://smtlib.cs.uiowa.edu/logics.shtml. By default (logics set to None), the solver tries to find the best logics, but there can be significant improvements by setting a specific logics ("QF_IDL" or "QF_UFIDL" seems to give the best performances).
+
+- :attr:`verbosity`: an integer, 0 by default. 1 or 2 increases the solver verbosity. TO be used in a debugging or inspection purpose.
 
 Solve
 -----
@@ -42,7 +48,7 @@ It is obvious that these constraints cannot be both satisfied.
 
 3. The solver takes too long to complete and exceeds the allowed :attr:`max_time`. The :func:`solve` method returns False.
 
-4. The solver successes in finding a schedule that satisfies all the constraints. The :func:`solve` method returns True.
+4. The solver successes in finding a schedule that satisfies all the constraints. The :func:`solve` method returns the solution as a JSON dictionary.
 
 .. note::
    If the solver fails to give a solution, increase the :attr:`max_time` (case 3) or remove some constraints (cases 1 and 2).
@@ -94,11 +100,10 @@ You can recursively call :func:`find_another_solution` to find all possible solu
 
 Run in debug mode
 -----------------
-If the :attr:`debug` attribute is set to True, the z3 solver is run with the unsat_core option. This will result in a much longer computation time, but this will help identifying the constraints which conflict. Because of this higher consumption of resources, the debug flag should be used only if the solver did not fin any solution, after a first resolution gave no answer. 
+If the :attr:`debug` attribute is set to True, the z3 solver is run with the unsat_core option. This will result in a much longer computation time, but this will help identifying the constraints that conflict. Because of this higher consumption of resources, the :attr:`debug` flag should be used only if the solver fails to find a solution.
 
 Render to a Gantt chart
 -----------------------
-
 Call the :func:`render_gantt_matplotlib` to render the solution as a Gantt chart. The time line is from 0 to :attr:`horizon` value, you can choose to render either :attr:`Task` or :attr:`Resource` (default).
 
 .. code-block:: python
@@ -116,6 +121,7 @@ Take care that plotly rendering needs **real timepoints** (set at least :attr:`d
 
     solution = solver.solve()
     if solution is not None:
-        solution.render_gantt_plotly(sort="Start", html_filename="index.html")  # default render_mode is 'Resource'
+        # default render_mode is 'Resource'
+        solution.render_gantt_plotly(sort="Start", html_filename="index.html")
         # a second gantt chart, in 'Task' mode
         solution.render_gantt_plotly(render_mode='Task')

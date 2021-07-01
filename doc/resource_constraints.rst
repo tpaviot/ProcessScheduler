@@ -22,7 +22,7 @@ Any number of time intervals can be passed to this class, just extend the timesl
 .. code-block:: python
 
     c1 = ps.WorkLoad(worker_1, {(0, 6): 2,
-                                        (19, 21): 6})
+                                (19, 21): 6})
 
 The :class:`WorkLoad` is not necessarily a *limitation*. Indeed you can specify that the integer number is actually an exact of minimal value to target. For example, if we need the resource :attr:`worker_1` to be scheduled **at least** into three time slots between instants 0 and 10, then:
 
@@ -44,12 +44,12 @@ The :const:`ca` instance constraints the resource to be unavailable for 1 period
 
 .. note::
 
-    This constrint is a special case for the :class:`WorkLoad` where the :attr:`number_of_time_slots` is set to :attr:`0`.
+    This constraint is a special case for the :class:`WorkLoad` where the :attr:`number_of_time_slots` is set to :attr:`0`.
 
-AllDifferentWorkers
--------------------
+DistinctWorkers
+---------------
 
-A :class:`AllDifferentWorkers` constraint applies to two :class:`SelectWorkers` instances. It constraints the solver to select different workers for each :class:`SelectWorkers`. For instance:
+A :class:`AllDifferentWorkers` constraint applies to two :class:`SelectWorkers` instances, used to assign alternative resources to a task. It constraints the solver to select different workers for each :class:`SelectWorkers`. For instance:
 
 .. code-block:: python
 
@@ -60,12 +60,12 @@ could lead the solver to select worker_1 in both cases. Adding the following lin
 
 .. code-block:: python
 
-    cs = ps.AllDifferentWorkers(s1, s2)
+    cs = ps.DistinctWorkers(s1, s2)
 
-let the solver selects the worker_1 for s1 and worker_2 for s2 or the opposite, worker_2 for s1 and worker_1 for s2. The cases where worker_1 is selected by both s1 and s2 or worker_2by selected by both s1 and s2 are impossible.
+let the solver selects the worker_1 for s1 and worker_2 for s2 or the opposite, worker_2 for s1 and worker_1 for s2. The cases where worker_1 is selected by both s1 and s2 or worker_2 by selected by both s1 and s2 are impossible.
 
-AllSameWorkers
---------------
+SameWorkers
+-----------
 
 A :class:`AllSameWorkers` constraint applies to two :class:`SelectWorkers` instances. It constraints the solver to ensure both different :class:`SelectWorkers` instances select the same worker. For example:
 
@@ -78,6 +78,6 @@ could lead the solver to select worker_1 for s1 and worker_2 for s2. Adding the 
 
 .. code-block:: python
 
-    cs = ps.AllSametWorkers(s1, s2)
+    cs = ps.SameWorkers(s1, s2)
 
 ensures either worker_1 is selected by both s1 and s2, or worker_2 is selected by both s1 and s2.

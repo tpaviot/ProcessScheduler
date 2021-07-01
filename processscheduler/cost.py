@@ -19,6 +19,7 @@ class _Cost(_NamedUIDObject):
     """ The base class for cost definition, to be assigned to a resource instance"""
     def __init__(self):
         super().__init__('')
+        self.f = lambda x: 0  # by default
 
     def plot(self, interval, show_plot=True) -> None:
         """Plot the cost curve using matplotlib."""

@@ -32,8 +32,8 @@ from processscheduler.task_constraint import (TaskPrecedence,
                                               ScheduleNTasksInTimeIntervals)
 from processscheduler.resource_constraint import (WorkLoad,
                                                   ResourceUnavailable,
-                                                  AllSameSelected,
-                                                  AllDifferentSelected)
+                                                  DistinctWorkers,
+                                                  SameWorkers)
 from processscheduler.cost import ConstantCostPerPeriod
 from processscheduler.solver import SchedulingSolver
 
@@ -354,8 +354,8 @@ task_constraint_type_widget = widgets.Dropdown(options=list(task_constraint_type
                                                disabled=False)
 resource_constraint_types = {'WorkLoad': WorkLoad,
                              'ResourceUnavailable': ResourceUnavailable,
-                             'AllSameSelected': AllSameSelected,
-                             'AllDifferentSelected':AllDifferentSelected
+                             'DistinctWorkers': DistinctWorkers,
+                             'SameWorkers': SameWorkers
                              }
 resource_constraint_type_widget = widgets.Dropdown(options=list(resource_constraint_types),
                                                    description='',
