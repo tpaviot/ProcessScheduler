@@ -25,20 +25,23 @@ from z3 import BoolRef, Bool, Implies, PbGe, PbEq, PbLe
 # Utility functions
 #
 def is_strict_positive_integer(value: int) -> bool:
-    """ Return True if the parameter value is an integer > 0 """
+    """Return True if the parameter value is an integer > 0"""
     return isinstance(value, int) and value > 0
 
+
 def is_positive_integer(value: int) -> bool:
-    """ Return True if the parameter value is an integer >= 0 """
+    """Return True if the parameter value is an integer >= 0"""
     return isinstance(value, int) and value >= 0
+
 
 #
 # _NamedUIDObject, name and uid for hashing
 #
 class _NamedUIDObject:
-    """ The base object for most ProcessScheduler classes"""
+    """The base object for most ProcessScheduler classes"""
+
     def __init__(self, name: str) -> None:
-        """ The base name for all ProcessScheduler objects.
+        """The base name for all ProcessScheduler objects.
 
         Provides an assertions list, a uniqueid.
 
@@ -47,16 +50,16 @@ class _NamedUIDObject:
         """
         # check name type
         if not isinstance(name, str):
-            raise TypeError('name must be a str instance')
+            raise TypeError("name must be a str instance")
         # the object name
-        self.name = name # type: str
+        self.name = name  # type: str
 
         # unique identifier
-        self.uid = uuid.uuid4().int # type: int
+        self.uid = uuid.uuid4().int  # type: int
 
         # SMT assertions
         # start and end integer values must be positive
-        self.assertions = [] # type: List[BoolRef]
+        self.assertions = []  # type: List[BoolRef]
         self.assertion_hashes = []
 
     def __hash__(self) -> int:
@@ -67,8 +70,12 @@ class _NamedUIDObject:
 
     def __repr__(self) -> str:
         """Print the object name, its uid and the assertions."""
-        str_to_return = '%s(%s)\n%i assertion(s):\n' % (self.name, type(self), len(self.assertions))
-        assertions_str = ''.join(["%s" % ass for ass in self.assertions])
+        str_to_return = "%s(%s)\n%i assertion(s):\n" % (
+            self.name,
+            type(self),
+            len(self.assertions),
+        )
+        assertions_str = "".join(["%s" % ass for ass in self.assertions])
         return str_to_return + assertions_str
 
     def add_assertion(self, z3_assertion: BoolRef) -> bool:
@@ -82,20 +89,22 @@ class _NamedUIDObject:
         # workaround to avoid heavy hash computations
         assertion_hash = hash(z3_assertion)
         if assertion_hash in self.assertion_hashes:
-            warnings.warn('assertion %s already added.' % z3_assertion)
+            warnings.warn("assertion %s already added." % z3_assertion)
             return False
         self.assertions.append(z3_assertion)
         self.assertion_hashes.append(assertion_hash)
         return True
 
     def get_assertions(self) -> List[BoolRef]:
-        """ Return the assertions list """
+        """Return the assertions list"""
         return self.assertions
 
+
 class _Constraint(_NamedUIDObject):
-    """ The base class for all constraints, including Task and Resource constraints. """
+    """The base class for all constraints, including Task and Resource constraints."""
+
     def __init__(self, optional):
-        super().__init__('')
+        super().__init__("")
 
         self.optional = optional
         # by default, this constraint has to be applied
@@ -107,7 +116,7 @@ class _Constraint(_NamedUIDObject):
         is set to True.
         """
         if self.optional:
-            self.applied = Bool('constraint_%s_applied' % self.uid)
+            self.applied = Bool("constraint_%s_applied" % self.uid)
             self.add_assertion(Implies(self.applied, list_of_z3_assertions))
         else:
             self.applied = True
@@ -118,25 +127,33 @@ class ForceApplyNOptionalConstraints(_Constraint):
     """Given a set of m different optional constraints, force the solver to apply
     at at least/at most/exactly n tasks, with 0 < n <= m. Work for both
     Task and/or Resource constraints."""
-    def __init__(self, list_of_optional_constraints,
-                       nb_constraints_to_apply: Optional[int] = 1,
-                       kind: Optional[str] = 'exact',
-                       optional: Optional[bool] = False) -> None:
+
+    def __init__(
+        self,
+        list_of_optional_constraints,
+        nb_constraints_to_apply: Optional[int] = 1,
+        kind: Optional[str] = "exact",
+        optional: Optional[bool] = False,
+    ) -> None:
         super().__init__(optional)
 
-        problem_function = {'min': PbGe, 'max': PbLe, 'exact': PbEq}
+        problem_function = {"min": PbGe, "max": PbLe, "exact": PbEq}
 
         # first check that all tasks from the list_of_optional_tasks are
         # actually optional
         for constraint in list_of_optional_constraints:
             if not constraint.optional:
-                raise TypeError('The constraint %s must explicitly be set as optional.' % constraint.name)
+                raise TypeError(
+                    "The constraint %s must explicitly be set as optional."
+                    % constraint.name
+                )
 
         # all scheduled variables to take into account
         applied_vars = []
         for constraint in list_of_optional_constraints:
             applied_vars.append(constraint.applied)
 
-        asst = problem_function[kind]([(applied, True) for applied in applied_vars],
-                                      nb_constraints_to_apply)
+        asst = problem_function[kind](
+            [(applied, True) for applied in applied_vars], nb_constraints_to_apply
+        )
         self.set_assertions(asst)

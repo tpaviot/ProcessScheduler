@@ -36,25 +36,32 @@ def _calc_parabola_vertex(vector_x, vector_y):
     """
     x1, x2, x3 = vector_x
     y1, y2, y3 = vector_y
-    denom = (x1-x2) * (x1-x3) * (x2-x3)
-    a     = (x3 * (y2-y1) + x2 * (y1-y3) + x1 * (y3-y2)) / denom
-    b     = (x3*x3 * (y1-y2) + x2*x2 * (y3-y1) + x1*x1 * (y2-y3)) / denom
-    c     = (x2 * x3 * (x2-x3) * y1+x3 * x1 * (x3-x1) * y2+x1 * x2 * (x1-x2) * y3) / denom
+    denom = (x1 - x2) * (x1 - x3) * (x2 - x3)
+    a = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / denom
+    b = (x3 * x3 * (y1 - y2) + x2 * x2 * (y3 - y1) + x1 * x1 * (y2 - y3)) / denom
+    c = (
+        x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3
+    ) / denom
     return a, b, c
+
 
 #
 # Solver class definition
 #
 class SchedulingSolver:
-    """ A solver class """
-    def __init__(self, problem,
-                 debug: Optional[bool] = False,
-                 max_time: Optional[int] = 10,
-                 parallel: Optional[bool] = False,
-                 random_seed = False,
-                 logics=None,
-                 verbosity=0):
-        """ Scheduling Solver
+    """A solver class"""
+
+    def __init__(
+        self,
+        problem,
+        debug: Optional[bool] = False,
+        max_time: Optional[int] = 10,
+        parallel: Optional[bool] = False,
+        random_seed=False,
+        logics=None,
+        verbosity=0,
+    ):
+        """Scheduling Solver
 
         debug: True or False, False by default
         max_time: time in seconds, 60 by default
@@ -64,7 +71,7 @@ class SchedulingSolver:
         self.problem_context = problem.context
         self.debug = debug
         # objectives list
-        self.objective= None  # the list of all objectives defined in this problem
+        self.objective = None  # the list of all objectives defined in this problem
         # set_option('smt.arith.auto_config_simplex', True)
         if debug:
             set_option("verbose", 2)
@@ -72,23 +79,25 @@ class SchedulingSolver:
             set_option("verbose", verbosity)
 
         if random_seed:
-            set_option('sat.random_seed', random.randint(1, 1e4))
-            set_option('smt.random_seed', random.randint(1, 1e4))
+            set_option("sat.random_seed", random.randint(1, 1e4))
+            set_option("smt.random_seed", random.randint(1, 1e4))
         else:
-            set_option('sat.random_seed', 0)
-            set_option('smt.random_seed', 0)
+            set_option("sat.random_seed", 0)
+            set_option("smt.random_seed", 0)
 
         # set timeout
         self.max_time = max_time  # in seconds
         set_option("timeout", int(self.max_time * 1000))  # in milliseconds
 
         # create the solver
-        print('Solver type:\n===========')
+        print("Solver type:\n===========")
 
         # check if the problem is an optimization problem
         self.is_not_optimization_problem = len(self.problem_context.objectives) == 0
         self.is_optimization_problem = len(self.problem_context.objectives) > 0
-        self.is_multi_objective_optimization_problem = len(self.problem_context.objectives) > 1
+        self.is_multi_objective_optimization_problem = (
+            len(self.problem_context.objectives) > 1
+        )
         # the Optimize() solver is used only in the case of a mutli-optimization
         # problem. This enables to choose the priority method.
         # in the case of a single objective optimization, the Optimize() solver
@@ -133,7 +142,9 @@ class SchedulingSolver:
                 start_task_i, end_task_i = busy_intervals[i]
                 for k in range(i + 1, nb_intervals):
                     start_task_k, end_task_k = busy_intervals[k]
-                    self.add_constraint(Or(start_task_k >= end_task_i, start_task_i >= end_task_k))
+                    self.add_constraint(
+                        Or(start_task_k >= end_task_i, start_task_i >= end_task_k)
+                    )
 
         # process indicators
         for indic in self.problem_context.indicators:
@@ -154,14 +165,14 @@ class SchedulingSolver:
         if self.debug:
             if isinstance(cstr, list):
                 for c in cstr:
-                    self._solver.assert_and_track(c, 'asst_%s' % uuid.uuid4().hex[:8])
+                    self._solver.assert_and_track(c, "asst_%s" % uuid.uuid4().hex[:8])
             else:
-                self._solver.assert_and_track(cstr, 'asst_%s' % uuid.uuid4().hex[:8])
+                self._solver.assert_and_track(cstr, "asst_%s" % uuid.uuid4().hex[:8])
         else:
             self._solver.add(cstr)
 
     def create_objective(self) -> bool:
-        """ create optimization objectives """
+        """create optimization objectives"""
         # in case of a single value to optimize
         if self.is_multi_objective_optimization_problem:
             # Replace objectives O_i, O_j, O_k with
@@ -172,46 +183,58 @@ class SchedulingSolver:
                 variable_to_optimize = obj.target
                 weight = obj.weight
                 if isinstance(obj, MaximizeObjective):
-                    weighted_objectives.append(- weight * variable_to_optimize)
+                    weighted_objectives.append(-weight * variable_to_optimize)
                 else:
                     weighted_objectives.append(weight * variable_to_optimize)
             self.add_constraint(equivalent_single_objective == Sum(weighted_objectives))
             # create an indicator
-            equivalent_indicator = Indicator('EquivalentIndicator',
-                                              equivalent_single_objective)
+            equivalent_indicator = Indicator(
+                "EquivalentIndicator", equivalent_single_objective
+            )
             print(weighted_objectives)
-            self.objective = MinimizeObjective("EquivalentObjective", equivalent_indicator)
+            self.objective = MinimizeObjective(
+                "EquivalentObjective", equivalent_indicator
+            )
             self.add_constraint(equivalent_indicator.get_assertions())
         else:
             self.objective = self._problem.context.objectives[0]
 
     def process_work_amount(self) -> None:
-        """ for each task, compute the total work for all required resources """
+        """for each task, compute the total work for all required resources"""
         for task in self.problem_context.tasks:
-            if task.work_amount > 0.:
+            if task.work_amount > 0.0:
                 work_total_for_all_resources = []
                 for required_resource in task.required_resources:
                     # work contribution for the resource
                     interv_low, interv_up = required_resource.busy_intervals[task]
-                    work_contribution = required_resource.productivity * (interv_up - interv_low)
+                    work_contribution = required_resource.productivity * (
+                        interv_up - interv_low
+                    )
                     work_total_for_all_resources.append(work_contribution)
-                self.add_constraint(Sum(work_total_for_all_resources) >= task.work_amount)
+                self.add_constraint(
+                    Sum(work_total_for_all_resources) >= task.work_amount
+                )
 
     def check_sat(self):
-        """ check satisfiability. Returns resulta as True (sat) or False (unsat, unknown).
+        """check satisfiability. Returns resulta as True (sat) or False (unsat, unknown).
         The computation time.
         """
         init_time = time.perf_counter()
-        sat_result  = self._solver.check()
+        sat_result = self._solver.check()
         check_sat_time = time.perf_counter() - init_time
 
         if sat_result == unsat:
-            print("\tNo solution can be found for problem %s.\n\tReason: Unsatisfiable problem: no solution exists" % self._problem.name)
+            print(
+                "\tNo solution can be found for problem %s.\n\tReason: Unsatisfiable problem: no solution exists"
+                % self._problem.name
+            )
 
         if sat_result == unknown:
             reason = self._solver.reason_unknown()
-            print("\tNo solution can be found for problem %s.\n\tReason: %s" % (self._problem.name,
-                                                                                 reason))
+            print(
+                "\tNo solution can be found for problem %s.\n\tReason: %s"
+                % (self._problem.name, reason)
+            )
 
         return sat_result, check_sat_time
 
@@ -234,18 +257,29 @@ class SchedulingSolver:
 
             # times, if ever delta_time and start_time are defined
             if self._problem.delta_time is not None:
-                new_task_solution.duration_time = new_task_solution.duration * self._problem.delta_time
+                new_task_solution.duration_time = (
+                    new_task_solution.duration * self._problem.delta_time
+                )
                 if self._problem.start_time is not None:
-                    new_task_solution.start_time = self._problem.start_time + new_task_solution.start * self._problem.delta_time
-                    new_task_solution.end_time = new_task_solution.start_time + new_task_solution.duration_time
+                    new_task_solution.start_time = (
+                        self._problem.start_time
+                        + new_task_solution.start * self._problem.delta_time
+                    )
+                    new_task_solution.end_time = (
+                        new_task_solution.start_time + new_task_solution.duration_time
+                    )
                 else:
-                    new_task_solution.start_time = new_task_solution.start * self._problem.delta_time
-                    new_task_solution.end_time = new_task_solution.start_time + new_task_solution.duration_time
+                    new_task_solution.start_time = (
+                        new_task_solution.start * self._problem.delta_time
+                    )
+                    new_task_solution.end_time = (
+                        new_task_solution.start_time + new_task_solution.duration_time
+                    )
 
             if task.optional:
                 # ugly hack, necessary because there's no as_bool()
                 # method for Bool objects
-                new_task_solution.scheduled = ("%s" % z3_sol[task.scheduled] == 'True')
+                new_task_solution.scheduled = "%s" % z3_sol[task.scheduled] == "True"
             else:
                 new_task_solution.scheduled = True
 
@@ -263,9 +297,11 @@ class SchedulingSolver:
                     # should not be scheduled
                     resource_is_assigned = False
                 # add this resource to assigned resources, anytime
-                if resource_is_assigned and (req_res.name not in new_task_solution.assigned_resources):
+                if resource_is_assigned and (
+                    req_res.name not in new_task_solution.assigned_resources
+                ):
                     # if it is a cumulative resource, then we transform the resource name
-                    resource_name = req_res.name.split('_CumulativeWorker_')[0]
+                    resource_name = req_res.name.split("_CumulativeWorker_")[0]
                     if resource_name not in new_task_solution.assigned_resources:
                         new_task_solution.assigned_resources.append(resource_name)
 
@@ -275,8 +311,8 @@ class SchedulingSolver:
         for resource in self._problem.context.resources:
             # for each task, create a TaskSolution instance
             # for cumulative workers, we append the current work
-            if '_CumulativeWorker_' in resource.name:
-                cumulative_worker_name = resource.name.split('_CumulativeWorker_')[0]
+            if "_CumulativeWorker_" in resource.name:
+                cumulative_worker_name = resource.name.split("_CumulativeWorker_")[0]
                 if cumulative_worker_name not in solution.resources:
                     new_resource_solution = ResourceSolution(cumulative_worker_name)
                 else:
@@ -290,11 +326,15 @@ class SchedulingSolver:
                 st_var, end_var = resource.busy_intervals[task]
                 start = z3_sol[st_var].as_long()
                 end = z3_sol[end_var].as_long()
-                if start >= 0 and end >= 0 and (task_name, start, end) not in new_resource_solution.assignments:
+                if (
+                    start >= 0
+                    and end >= 0
+                    and (task_name, start, end) not in new_resource_solution.assignments
+                ):
                     new_resource_solution.assignments.append((task_name, start, end))
 
-            if '_CumulativeWorker_' in resource.name:
-                cumulative_worker_name = resource.name.split('_CumulativeWorker_')[0]
+            if "_CumulativeWorker_" in resource.name:
+                cumulative_worker_name = resource.name.split("_CumulativeWorker_")[0]
                 if cumulative_worker_name not in solution.resources:
                     solution.add_resource_solution(new_resource_solution)
             else:
@@ -309,21 +349,21 @@ class SchedulingSolver:
         return solution
 
     def solve(self) -> Union[bool, SchedulingSolution]:
-        """ call the solver and returns the solution, if ever """
+        """call the solver and returns the solution, if ever"""
         # for all cases
         if self.debug:
             self.print_assertions()
 
         if self.is_optimization_problem:
             if self.is_multi_objective_optimization_problem:
-                print('\tObjectives:\n\t======')
+                print("\tObjectives:\n\t======")
                 for obj in self._problem.context.objectives:
-                    print('\t%s' % obj)
+                    print("\t%s" % obj)
             # in this case, use the incremental solver
             if isinstance(self.objective, MinimizeObjective):
-                dd = 'min'
+                dd = "min"
             elif isinstance(self.objective, MaximizeObjective):
-                dd = 'max'
+                dd = "max"
             # print(dir(objective))
             # print(objective.target)
             solution = self.solve_optimize_incremental(self.objective.target, kind=dd)
@@ -333,15 +373,21 @@ class SchedulingSolver:
             # first check satisfiability
             sat_result, sat_computation_time = self.check_sat()
 
-            print('Total computation time:\n=====================')
-            print('\t%s satisfiability checked in %.2fs' % (self._problem.name, sat_computation_time))
+            print("Total computation time:\n=====================")
+            print(
+                "\t%s satisfiability checked in %.2fs"
+                % (self._problem.name, sat_computation_time)
+            )
 
             if sat_result == unsat:
                 if self.debug:
                     unsat_core = self._solver.unsat_core()
-                    print('\t%i unsatisfied assertion(s) (probable conflict):' % len(unsat_core))
+                    print(
+                        "\t%i unsatisfied assertion(s) (probable conflict):"
+                        % len(unsat_core)
+                    )
                     for c in unsat_core:
-                        print('\t->%s' % c)
+                        print("\t->%s" % c)
                 return False
 
             if sat_result == unknown:
@@ -365,57 +411,68 @@ class SchedulingSolver:
 
         return sol
 
-    def solve_optimize_incremental(self,
-                                   variable: ArithRef,
-                                   max_recursion_depth=None,
-                                   kind='min') -> int:
-        """ target a min or max for a variable, without the Optimize solver.
+    def solve_optimize_incremental(
+        self, variable: ArithRef, max_recursion_depth=None, kind="min"
+    ) -> int:
+        """target a min or max for a variable, without the Optimize solver.
         The loop continues ever and ever until the next value is more than 90%"""
-        if kind not in ['min', 'max']:
+        if kind not in ["min", "max"]:
             raise ValueError("choose either 'min' or 'max'")
         depth = 0
         solution = False
         total_time = 0
         current_variable_value = None
-        print('Incremental optimizer:\n======================')
+        print("Incremental optimizer:\n======================")
         three_last_times = []
 
         if self.objective.bounds is None:
             bound = None
         else:
-            bound = self.objective.bounds[0] if kind == 'min' else self.objective.bounds[1]
+            bound = (
+                self.objective.bounds[0] if kind == "min" else self.objective.bounds[1]
+            )
 
         while True:  # infinite loop, break if unsat of max_depth
             depth += 1
             if max_recursion_depth is not None:
                 if depth > max_recursion_depth:
-                    warnings.warn('maximum recursion depth exceeded. There might be a better solution.')
+                    warnings.warn(
+                        "maximum recursion depth exceeded. There might be a better solution."
+                    )
                     break
 
             is_sat, sat_computation_time = self.check_sat()
 
             if is_sat == unsat and current_variable_value is not None:
-                print("\tFound optimum %i. Stopping iteration." % current_variable_value)
+                print(
+                    "\tFound optimum %i. Stopping iteration." % current_variable_value
+                )
                 break
             elif is_sat == unsat and current_variable_value is None:
                 print("\tNo solution found. Stopping iteration.")
                 break
             elif is_sat == unknown:
                 break
-            #elif is_sat == unknown:
+            # elif is_sat == unknown:
             #    return False
             # at this stage, is_sat should be sat
             solution = self._solver.model()
 
             current_variable_value = solution[variable].as_long()
-            print('\tFound better value:', current_variable_value, 'elapsed time:%.3fs' % total_time)
+            print(
+                "\tFound better value:",
+                current_variable_value,
+                "elapsed time:%.3fs" % total_time,
+            )
             total_time += sat_computation_time
             if total_time > self.max_time:
-                warnings.warn('max time exceeded')
+                warnings.warn("max time exceeded")
                 break
 
             if bound is not None and current_variable_value == bound:
-                print("\tFound optimum %i. Stopping iteration." % current_variable_value)
+                print(
+                    "\tFound optimum %i. Stopping iteration." % current_variable_value
+                )
                 break
 
             # prevent the solver to start a new round if we expect it to be
@@ -431,53 +488,53 @@ class SchedulingSolver:
                 a, b, c = _calc_parabola_vertex([0, 1, 2], three_last_times)
                 expected_next_time = a * 9 + 3 * b + c
                 if expected_next_time > self.max_time:
-                    warnings.warn('time may exceed max time. Stopping iteration.')
+                    warnings.warn("time may exceed max time. Stopping iteration.")
                     break
             self._solver.push()
-            if kind == 'min':
+            if kind == "min":
                 self.add_constraint(variable < current_variable_value)
-                print('\tChecking better value <%s' % current_variable_value)
+                print("\tChecking better value <%s" % current_variable_value)
             else:
                 self.add_constraint(variable > current_variable_value)
-                print('\tChecking better value >%s' % current_variable_value)
+                print("\tChecking better value >%s" % current_variable_value)
 
-        print('\ttotal number of iterations: %i' % depth)
+        print("\ttotal number of iterations: %i" % depth)
         if current_variable_value is not None:
-            print('\tvalue: %i' % current_variable_value)
-        print('\t%s satisfiability checked in %.2fs' % (self._problem.name, total_time))
+            print("\tvalue: %i" % current_variable_value)
+        print("\t%s satisfiability checked in %.2fs" % (self._problem.name, total_time))
 
         return solution
 
     def print_assertions(self):
         """A utility method to display solver assertions"""
-        print('Assertions:\n===========')
+        print("Assertions:\n===========")
         for assertion in self._solver.assertions():
-            print('\t->', assertion)
+            print("\t->", assertion)
 
     def print_statistics(self):
         """A utility method that displays solver statistics"""
-        print('Solver satistics:')
+        print("Solver satistics:")
         for key, value in self._solver.statistics():
-            print('\t%s: %s' % (key, value))
+            print("\t%s: %s" % (key, value))
 
     def print_solution(self):
         """A utility method that displays all internal variables for the current solution"""
-        print('Solution:')
+        print("Solution:")
         for decl in self.current_solution.decls():
             var_name = decl.name()
             var_value = self.current_solution[decl]
-            print("\t-> %s=%s" %(var_name, var_value))
+            print("\t-> %s=%s" % (var_name, var_value))
 
     def find_another_solution(self, variable: ArithRef) -> bool:
-        """ let the solver find another solution for the variable """
+        """let the solver find another solution for the variable"""
         if self.current_solution is None:
-            warnings.warn('No current solution. First call the solve() method.')
+            warnings.warn("No current solution. First call the solve() method.")
             return False
         current_variable_value = self.current_solution[variable].as_long()
         self.add_constraint(variable != current_variable_value)
         return self.solve()
 
     def export_to_smt2(self, smt_filename):
-        """ export the model to a smt file to be processed by another SMT solver """
-        with open(smt_filename, 'w') as outfile:
+        """export the model to a smt file to be processed by another SMT solver"""
+        with open(smt_filename, "w") as outfile:
             outfile.write(self._solver.to_smt2())

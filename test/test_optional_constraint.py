@@ -17,10 +17,11 @@ import unittest
 
 import processscheduler as ps
 
+
 class TestOptionalConstraint(unittest.TestCase):
     def test_optional_constraint_start_at_1(self) -> None:
-        pb = ps.SchedulingProblem('OptionalTaskStartAt1', horizon=6)
-        task_1 = ps.FixedDurationTask('task1', duration = 3)
+        pb = ps.SchedulingProblem("OptionalTaskStartAt1", horizon=6)
+        task_1 = ps.FixedDurationTask("task1", duration=3)
         # the following tasks should conflict if they are mandatory
         pb.add_constraint(ps.TaskStartAt(task_1, 1, optional=True))
         pb.add_constraint(ps.TaskStartAt(task_1, 2, optional=True))
@@ -31,8 +32,8 @@ class TestOptionalConstraint(unittest.TestCase):
         self.assertTrue(solution)
 
     def test_force_apply_n_optional_constraints(self) -> None:
-        pb = ps.SchedulingProblem('OptionalTaskStartAt1', horizon=6)
-        task_1 = ps.FixedDurationTask('task1', duration = 3)
+        pb = ps.SchedulingProblem("OptionalTaskStartAt1", horizon=6)
+        task_1 = ps.FixedDurationTask("task1", duration=3)
         # the following tasks should conflict if they are mandatory
         cstr1 = ps.TaskStartAt(task_1, 1, optional=True)
         cstr2 = ps.TaskStartAt(task_1, 2, optional=True)

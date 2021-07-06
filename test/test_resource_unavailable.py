@@ -17,11 +17,12 @@ import unittest
 
 import processscheduler as ps
 
+
 class TestResourceUnavailable(unittest.TestCase):
     def test_resource_unavailable_1(self) -> None:
-        pb = ps.SchedulingProblem('ResourceUnavailable1', horizon=10)
-        task_1 = ps.FixedDurationTask('task1', duration = 3)
-        worker_1 = ps.Worker('Worker1')
+        pb = ps.SchedulingProblem("ResourceUnavailable1", horizon=10)
+        task_1 = ps.FixedDurationTask("task1", duration=3)
+        worker_1 = ps.Worker("Worker1")
         task_1.add_required_resource(worker_1)
         c1 = ps.ResourceUnavailable(worker_1, [(1, 3), (6, 8)])
         pb.add_constraint(c1)
@@ -32,9 +33,9 @@ class TestResourceUnavailable(unittest.TestCase):
         self.assertEqual(solution.tasks[task_1.name].end, 6)
 
     def test_resource_unavailable_2(self) -> None:
-        pb = ps.SchedulingProblem('ResourceUnavailable2', horizon=10)
-        task_1 = ps.FixedDurationTask('task1', duration = 3)
-        worker_1 = ps.Worker('Worker1')
+        pb = ps.SchedulingProblem("ResourceUnavailable2", horizon=10)
+        task_1 = ps.FixedDurationTask("task1", duration=3)
+        worker_1 = ps.Worker("Worker1")
         task_1.add_required_resource(worker_1)
         # difference with the first one: build 2 constraints
         # merged using a and_
@@ -49,9 +50,9 @@ class TestResourceUnavailable(unittest.TestCase):
         self.assertEqual(solution.tasks[task_1.name].end, 6)
 
     def test_resource_unavailable_3(self) -> None:
-        pb = ps.SchedulingProblem('ResourceUnavailable3', horizon=10)
-        task_1 = ps.FixedDurationTask('task1', duration = 3)
-        worker_1 = ps.Worker('Worker1')
+        pb = ps.SchedulingProblem("ResourceUnavailable3", horizon=10)
+        task_1 = ps.FixedDurationTask("task1", duration=3)
+        worker_1 = ps.Worker("Worker1")
         task_1.add_required_resource(worker_1)
         # difference with the previous ones: too much unavailability,
         # so possible solution
@@ -67,12 +68,12 @@ class TestResourceUnavailable(unittest.TestCase):
     def test_cumulative_4(self):
         pb_bs = ps.SchedulingProblem("ResourceUnavailableCumulative1", 10)
         # tasks
-        t1 = ps.FixedDurationTask('T1', duration=2)
-        t2 = ps.FixedDurationTask('T2', duration=2)
-        t3 = ps.FixedDurationTask('T3', duration=2)
+        t1 = ps.FixedDurationTask("T1", duration=2)
+        t2 = ps.FixedDurationTask("T2", duration=2)
+        t3 = ps.FixedDurationTask("T3", duration=2)
 
         # workers
-        r1 = ps.CumulativeWorker('Machine1', size=3)
+        r1 = ps.CumulativeWorker("Machine1", size=3)
 
         # resource assignment
         t1.add_required_resource(r1)
@@ -83,7 +84,7 @@ class TestResourceUnavailable(unittest.TestCase):
         pb_bs.add_constraint(c1)
 
         # plot solution
-        solver = ps.SchedulingSolver(pb_bs)#, debug=True)
+        solver = ps.SchedulingSolver(pb_bs)  # , debug=True)
         solution = solver.solve()
         self.assertFalse(solution)
 

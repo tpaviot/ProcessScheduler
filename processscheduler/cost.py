@@ -15,10 +15,12 @@
 
 from processscheduler.base import _NamedUIDObject, is_positive_integer
 
+
 class _Cost(_NamedUIDObject):
-    """ The base class for cost definition, to be assigned to a resource instance"""
+    """The base class for cost definition, to be assigned to a resource instance"""
+
     def __init__(self):
-        super().__init__('')
+        super().__init__("")
         self.f = lambda x: 0  # by default
 
     def plot(self, interval, show_plot=True) -> None:
@@ -39,36 +41,39 @@ class _Cost(_NamedUIDObject):
         for x_ in x:
             y.append(self.f(x_))
 
-        plt.plot(x, y, label='Cost function')
+        plt.plot(x, y, label="Cost function")
 
         plt.legend()
         plt.grid(True)
-        plt.xlabel('x')
-        plt.ylabel('y')
+        plt.xlabel("x")
+        plt.ylabel("y")
 
         if show_plot:
             plt.show()
+
 
 class ConstantCostPerPeriod(_Cost):
     def __init__(self, value: int) -> None:
         super().__init__()
         if not is_positive_integer(value):
-            raise ValueError('the cost per period must be a positive integer')
+            raise ValueError("the cost per period must be a positive integer")
         self.value = value
         self.f = lambda x: value
 
     def __call__(self, value):
-        """ compute the value of the cost function for a given value"""
+        """compute the value of the cost function for a given value"""
         return self.f(value)
+
 
 class PolynomialCostFunction(_Cost):
     """A function of time under a polynomail form."""
+
     def __init__(self, function: callable) -> None:
         super().__init__()
         if not callable(function):
-            raise TypeError('function must be a callable')
+            raise TypeError("function must be a callable")
         self.f = function
 
     def __call__(self, value):
-        """ compute the value of the cost function for a given value"""
+        """compute the value of the cost function for a given value"""
         return self.f(value)

@@ -17,13 +17,14 @@ import unittest
 
 import processscheduler as ps
 
+
 class TestIndicator(unittest.TestCase):
     def test_indicator_flowtime(self) -> None:
-        problem = ps.SchedulingProblem('IndicatorFlowTime', horizon=2)
-        t_1 = ps.FixedDurationTask('t1', 2)
-        t_2 = ps.FixedDurationTask('t2', 2)
+        problem = ps.SchedulingProblem("IndicatorFlowTime", horizon=2)
+        t_1 = ps.FixedDurationTask("t1", 2)
+        t_2 = ps.FixedDurationTask("t2", 2)
 
-        i_1 = ps.Indicator('FlowTime', t_1.end + t_2.end)
+        i_1 = ps.Indicator("FlowTime", t_1.end + t_2.end)
 
         solution = ps.SchedulingSolver(problem).solve()
 
@@ -31,9 +32,9 @@ class TestIndicator(unittest.TestCase):
         self.assertEqual(solution.indicators[i_1.name], 4)
 
     def test_resource_utilization_indicator_1(self) -> None:
-        problem = ps.SchedulingProblem('IndicatorUtilization1', horizon = 10)
-        t_1 = ps.FixedDurationTask('T1', duration=5)
-        worker_1 = ps.Worker('Worker1')
+        problem = ps.SchedulingProblem("IndicatorUtilization1", horizon=10)
+        t_1 = ps.FixedDurationTask("T1", duration=5)
+        worker_1 = ps.Worker("Worker1")
         t_1.add_required_resource(worker_1)
         utilization_ind = problem.add_indicator_resource_utilization(worker_1)
 
@@ -44,13 +45,13 @@ class TestIndicator(unittest.TestCase):
 
     def test_resource_utilization_indicator_2(self) -> None:
         """Two tasks, two workers."""
-        problem = ps.SchedulingProblem('IndicatorUtilization2', horizon = 10)
+        problem = ps.SchedulingProblem("IndicatorUtilization2", horizon=10)
 
-        t_1 = ps.FixedDurationTask('T1', duration=5)
-        t_2 = ps.FixedDurationTask('T2', duration=5)
+        t_1 = ps.FixedDurationTask("T1", duration=5)
+        t_2 = ps.FixedDurationTask("T2", duration=5)
 
-        worker_1 = ps.Worker('Worker1')
-        worker_2 = ps.Worker('Worker2')
+        worker_1 = ps.Worker("Worker1")
+        worker_2 = ps.Worker("Worker2")
 
         t_1.add_required_resource(worker_1)
         t_2.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
@@ -70,13 +71,13 @@ class TestIndicator(unittest.TestCase):
     def test_resource_utilization_indicator_3(self) -> None:
         """Same as above, but both workers are selectable. Force one with resource
         utilization maximization objective."""
-        problem = ps.SchedulingProblem('IndicatorUtilization3', horizon = 10)
+        problem = ps.SchedulingProblem("IndicatorUtilization3", horizon=10)
 
-        t_1 = ps.FixedDurationTask('T1', duration=5)
-        t_2 = ps.FixedDurationTask('T2', duration=5)
+        t_1 = ps.FixedDurationTask("T1", duration=5)
+        t_2 = ps.FixedDurationTask("T2", duration=5)
 
-        worker_1 = ps.Worker('Worker1')
-        worker_2 = ps.Worker('Worker2')
+        worker_1 = ps.Worker("Worker1")
+        worker_2 = ps.Worker("Worker2")
 
         t_1.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
         t_2.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
@@ -84,7 +85,7 @@ class TestIndicator(unittest.TestCase):
         utilization_res_1 = problem.add_indicator_resource_utilization(worker_1)
         utilization_res_2 = problem.add_indicator_resource_utilization(worker_2)
 
-        ps.MaximizeObjective('MaximieResource1Utilization', utilization_res_1)
+        ps.MaximizeObjective("MaximieResource1Utilization", utilization_res_1)
 
         solution = ps.SchedulingSolver(problem).solve()
 
@@ -94,12 +95,12 @@ class TestIndicator(unittest.TestCase):
 
     def test_resource_utilization_indicator_4(self) -> None:
         """20 optional tasks, one worker. Force resource utilization maximization objective."""
-        problem = ps.SchedulingProblem('IndicatorUtilization4', horizon = 20)
+        problem = ps.SchedulingProblem("IndicatorUtilization4", horizon=20)
 
-        worker = ps.Worker('Worker')
+        worker = ps.Worker("Worker")
 
         for i in range(20):
-            t = ps.FixedDurationTask(f'T{i+1}', duration = 1, optional = True)
+            t = ps.FixedDurationTask(f"T{i+1}", duration=1, optional=True)
             t.add_required_resource(worker)
 
         utilization_res = problem.add_indicator_resource_utilization(worker)
@@ -133,12 +134,12 @@ class TestIndicator(unittest.TestCase):
     #     self.assertEqual(solution.indicators[utilization_res.name], 100)
 
     def test_optimize_indicator(self) -> None:
-        problem = ps.SchedulingProblem('SolvePriorities', horizon=10)
-        task_1 = ps.FixedDurationTask('task1', duration=2, priority=1)
-        task_2 = ps.FixedDurationTask('task2', duration=2, priority=10, optional=True)
-        task_3 = ps.FixedDurationTask('task3', duration=2, priority=100, optional=True)
+        problem = ps.SchedulingProblem("SolvePriorities", horizon=10)
+        task_1 = ps.FixedDurationTask("task1", duration=2, priority=1)
+        task_2 = ps.FixedDurationTask("task2", duration=2, priority=10, optional=True)
+        task_3 = ps.FixedDurationTask("task3", duration=2, priority=100, optional=True)
 
-        worker = ps.Worker('AWorker')
+        worker = ps.Worker("AWorker")
         task_1.add_required_resource(worker)
         task_2.add_required_resource(worker)
         task_3.add_required_resource(worker)
@@ -151,8 +152,8 @@ class TestIndicator(unittest.TestCase):
         self.assertTrue(solution)
 
     def test_incremental_optimizer_1(self) -> None:
-        problem = ps.SchedulingProblem('IncrementalOptimizer1', horizon=100)
-        task_1 = ps.FixedDurationTask('task1', duration=2)
+        problem = ps.SchedulingProblem("IncrementalOptimizer1", horizon=100)
+        task_1 = ps.FixedDurationTask("task1", duration=2)
 
         task_1_start_ind = ps.Indicator("Task1Start", task_1.start)
         problem.maximize_indicator(task_1_start_ind)
@@ -166,13 +167,13 @@ class TestIndicator(unittest.TestCase):
     def test_resource_utilization_maximization_incremental_1(self) -> None:
         """Same as above, but both workers are selectable. Force one with resource
         utilization maximization objective."""
-        problem = ps.SchedulingProblem('IndicatorMaximizeIncremental', horizon = 10)
+        problem = ps.SchedulingProblem("IndicatorMaximizeIncremental", horizon=10)
 
-        t_1 = ps.FixedDurationTask('T1', duration=5)
-        t_2 = ps.FixedDurationTask('T2', duration=5)
+        t_1 = ps.FixedDurationTask("T1", duration=5)
+        t_2 = ps.FixedDurationTask("T2", duration=5)
 
-        worker_1 = ps.Worker('Worker1')
-        worker_2 = ps.Worker('Worker2')
+        worker_1 = ps.Worker("Worker1")
+        worker_2 = ps.Worker("Worker2")
 
         t_1.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
         t_2.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
@@ -190,7 +191,7 @@ class TestIndicator(unittest.TestCase):
         self.assertEqual(solution.indicators[utilization_res_2.name], 0)
 
     def get_single_resource_utilization_problem(self, problem_name):
-        problem = ps.SchedulingProblem('IndicatorFlowtimeSingleResource1', horizon = 50)
+        problem = ps.SchedulingProblem("IndicatorFlowtimeSingleResource1", horizon=50)
 
         dur1 = 5
         dur2 = 5
@@ -198,12 +199,12 @@ class TestIndicator(unittest.TestCase):
         dur4 = 3
         dur5 = 2
 
-        t_1 = ps.FixedDurationTask('T1', duration=dur1)
-        t_2 = ps.FixedDurationTask('T2', duration=dur2)
-        t_3 = ps.FixedDurationTask('T3', duration=dur3)
-        t_4 = ps.FixedDurationTask('T4', duration=dur4)
-        t_5 = ps.FixedDurationTask('T5', duration=dur5)
-        worker_1 = ps.Worker('Worker1')
+        t_1 = ps.FixedDurationTask("T1", duration=dur1)
+        t_2 = ps.FixedDurationTask("T2", duration=dur2)
+        t_3 = ps.FixedDurationTask("T3", duration=dur3)
+        t_4 = ps.FixedDurationTask("T4", duration=dur4)
+        t_5 = ps.FixedDurationTask("T5", duration=dur5)
+        worker_1 = ps.Worker("Worker1")
 
         t_1.add_required_resource(worker_1)
         t_2.add_required_resource(worker_1)
@@ -226,60 +227,71 @@ class TestIndicator(unittest.TestCase):
         return problem, worker_1, dur1 + dur2 + dur3 + dur4 + dur5
 
     def test_indicator_flowtime_single_resource_1(self) -> None:
-        problem, worker_1, _ = self.get_single_resource_utilization_problem('IndicatorFlowtimeSingleResource1')
+        problem, worker_1, _ = self.get_single_resource_utilization_problem(
+            "IndicatorFlowtimeSingleResource1"
+        )
         # there should not be any task scheduled in this time period
-        problem.add_objective_flowtime_single_resource(worker_1, time_interval = [40, 50])
+        problem.add_objective_flowtime_single_resource(worker_1, time_interval=[40, 50])
         solver = ps.SchedulingSolver(problem)
 
         solution = solver.solve()
         self.assertTrue(solution)
         # the flowtime should be 0
-        self.assertEqual(solution.indicators['FlowTime(Worker1:40:50)'], 0)
+        self.assertEqual(solution.indicators["FlowTime(Worker1:40:50)"], 0)
 
     def test_indicator_flowtime_single_resource_2(self) -> None:
         # same as before, but the time interval contains all the tasks
-        problem, worker_1, sum_durations = self.get_single_resource_utilization_problem('IndicatorFlowtimeSingleResource2')
-        problem.add_objective_flowtime_single_resource(worker_1, time_interval = [10, 40])
+        problem, worker_1, sum_durations = self.get_single_resource_utilization_problem(
+            "IndicatorFlowtimeSingleResource2"
+        )
+        problem.add_objective_flowtime_single_resource(worker_1, time_interval=[10, 40])
         solver = ps.SchedulingSolver(problem)
 
         solution = solver.solve()
         self.assertTrue(solution)
-        self.assertEqual(solution.indicators['FlowTime(Worker1:10:40)'], sum_durations)
+        self.assertEqual(solution.indicators["FlowTime(Worker1:10:40)"], sum_durations)
 
     def test_indicator_flowtime_single_resource_3(self) -> None:
         # same as before, but the time interval contains no task
-        problem, worker_1, _ = self.get_single_resource_utilization_problem('IndicatorFlowtimeSingleResource3')
-        problem.add_objective_flowtime_single_resource(worker_1, time_interval = [5, 9])
+        problem, worker_1, _ = self.get_single_resource_utilization_problem(
+            "IndicatorFlowtimeSingleResource3"
+        )
+        problem.add_objective_flowtime_single_resource(worker_1, time_interval=[5, 9])
         solver = ps.SchedulingSolver(problem)
 
         solution = solver.solve()
         self.assertTrue(solution)
         print(solution)
-        self.assertEqual(solution.indicators['FlowTime(Worker1:5:9)'], 0)
+        self.assertEqual(solution.indicators["FlowTime(Worker1:5:9)"], 0)
 
     def test_indicator_flowtime_single_resource_4(self) -> None:
         # without any time_interval provided, should use the whole range [0, horizon]
-        problem, worker_1, sum_durations = self.get_single_resource_utilization_problem('IndicatorFlowtimeSingleResource4')
+        problem, worker_1, sum_durations = self.get_single_resource_utilization_problem(
+            "IndicatorFlowtimeSingleResource4"
+        )
         problem.add_objective_flowtime_single_resource(worker_1)
         solver = ps.SchedulingSolver(problem)
 
         solution = solver.solve()
         print(solution)
         self.assertTrue(solution)
-        self.assertEqual(solution.indicators['FlowTime(Worker1:0:horizon)'], sum_durations)
-
+        self.assertEqual(
+            solution.indicators["FlowTime(Worker1:0:horizon)"], sum_durations
+        )
 
     @staticmethod
     def get_single_resource_utilization_problem_2(time_intervals):
         horizon = time_intervals[-1][-1] + 3
-        nb_tasks = [5 for interval in time_intervals if interval[1]-interval[0] > 3]
-        problem = ps.SchedulingProblem('IndicatorFlowtimeSingleResource', horizon=horizon)
-        worker_1 = ps.Worker('Worker1')
+        nb_tasks = [5 for interval in time_intervals if interval[1] - interval[0] > 3]
+        problem = ps.SchedulingProblem(
+            "IndicatorFlowtimeSingleResource", horizon=horizon
+        )
+        worker_1 = ps.Worker("Worker1")
 
         tasks: list[ps.FixedDurationTask] = []
         for interval, nb_tasks_i in zip(time_intervals, nb_tasks):
             for _ in range(nb_tasks_i):
-                tasks.append(ps.FixedDurationTask('T%s' % len(tasks), duration=1))
+                tasks.append(ps.FixedDurationTask("T%s" % len(tasks), duration=1))
                 tasks[-1].add_required_resource(worker_1)
                 problem.add_constraint(ps.TaskStartAfterLax(tasks[-1], interval[0]))
                 problem.add_constraint(ps.TaskEndBeforeLax(tasks[-1], interval[1]))
@@ -287,15 +299,26 @@ class TestIndicator(unittest.TestCase):
 
     @staticmethod
     def get_sum_flowtime(solution) -> int:
-        return sum([solution.indicators[indicator_id]
-                    for indicator_id in solution.indicators if 'FlowTime' in indicator_id])
+        return sum(
+            [
+                solution.indicators[indicator_id]
+                for indicator_id in solution.indicators
+                if "FlowTime" in indicator_id
+            ]
+        )
 
     def test_indicator_flowtime_single_resource_5(self) -> None:
         # 2 time interval objectives
         time_intervals = [(11, 20), (21, 34)]
-        problem, worker_1, sum_durations = self.get_single_resource_utilization_problem_2(time_intervals)
+        (
+            problem,
+            worker_1,
+            sum_durations,
+        ) = self.get_single_resource_utilization_problem_2(time_intervals)
         for interval in time_intervals:
-            problem.add_objective_flowtime_single_resource(worker_1, time_interval=interval)
+            problem.add_objective_flowtime_single_resource(
+                worker_1, time_interval=interval
+            )
 
         solver = ps.SchedulingSolver(problem)
         solution = solver.solve()
@@ -307,14 +330,21 @@ class TestIndicator(unittest.TestCase):
         # Mutliple time intervals (Currently fails for nb_time_intervals > 2, gantt to check total_flowtime is correct)
         nb_time_intervals = 7
         time_interval_length = 13  # always > 5
-        horizon = nb_time_intervals*time_interval_length
+        horizon = nb_time_intervals * time_interval_length
         time_intervals = [
             (i, i + time_interval_length)
-            for i in range(0, horizon, time_interval_length)]
+            for i in range(0, horizon, time_interval_length)
+        ]
 
-        problem, worker_1, sum_durations = self.get_single_resource_utilization_problem_2(time_intervals)
+        (
+            problem,
+            worker_1,
+            sum_durations,
+        ) = self.get_single_resource_utilization_problem_2(time_intervals)
         for interval in time_intervals:
-            problem.add_objective_flowtime_single_resource(worker_1, time_interval=interval)
+            problem.add_objective_flowtime_single_resource(
+                worker_1, time_interval=interval
+            )
 
         solver = ps.SchedulingSolver(problem)
 

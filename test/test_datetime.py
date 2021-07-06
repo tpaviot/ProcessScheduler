@@ -18,14 +18,20 @@ import unittest
 
 import processscheduler as ps
 
+
 class TestDatetime(unittest.TestCase):
     def test_datetime_1(self):
-        """ take the single task/single resource and display output """
-        problem = ps.SchedulingProblem('DateTimeBase', horizon=7, delta_time=timedelta(minutes=15), start_time=datetime.now())
-        task = ps.FixedDurationTask('task', duration=7)
-        #problem.add_task(task)
-        worker = ps.Worker('worker')
-        #problem.add_resource(worker)
+        """take the single task/single resource and display output"""
+        problem = ps.SchedulingProblem(
+            "DateTimeBase",
+            horizon=7,
+            delta_time=timedelta(minutes=15),
+            start_time=datetime.now(),
+        )
+        task = ps.FixedDurationTask("task", duration=7)
+        # problem.add_task(task)
+        worker = ps.Worker("worker")
+        # problem.add_resource(worker)
         task.add_required_resource(worker)
         solver = ps.SchedulingSolver(problem)
         solution = solver.solve()
@@ -33,12 +39,14 @@ class TestDatetime(unittest.TestCase):
         print(solution)
 
     def test_datetime_time(self):
-        """ take the single task/single resource and display output """
-        problem = ps.SchedulingProblem('DateTimeBase', horizon=7, delta_time=timedelta(minutes=15))
-        task = ps.FixedDurationTask('task', duration=7)
-        #problem.add_task(task)
-        worker = ps.Worker('worker')
-        #problem.add_resource(worker)
+        """take the single task/single resource and display output"""
+        problem = ps.SchedulingProblem(
+            "DateTimeBase", horizon=7, delta_time=timedelta(minutes=15)
+        )
+        task = ps.FixedDurationTask("task", duration=7)
+        # problem.add_task(task)
+        worker = ps.Worker("worker")
+        # problem.add_resource(worker)
         task.add_required_resource(worker)
         solver = ps.SchedulingSolver(problem)
         solution = solver.solve()
@@ -46,11 +54,13 @@ class TestDatetime(unittest.TestCase):
         print(solution)
 
     def test_datetime_export_to_json(self):
-        problem = ps.SchedulingProblem('DateTimeJson', delta_time=timedelta(hours=1), start_time=datetime.now())
-        task = ps.FixedDurationTask('task', duration=7)
-        #problem.add_task(task)
-        worker = ps.Worker('worker')
-        #problem.add_resource(worker)
+        problem = ps.SchedulingProblem(
+            "DateTimeJson", delta_time=timedelta(hours=1), start_time=datetime.now()
+        )
+        task = ps.FixedDurationTask("task", duration=7)
+        # problem.add_task(task)
+        worker = ps.Worker("worker")
+        # problem.add_resource(worker)
         task.add_required_resource(worker)
         solver = ps.SchedulingSolver(problem)
         solution = solver.solve()

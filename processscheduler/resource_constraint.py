@@ -25,11 +25,15 @@ from processscheduler.base import _Constraint
 
 
 class WorkLoad(_Constraint):
-    """ set a mini/maxi/exact number of slots a resource can be scheduled."""
-    def __init__(self, resource,
-                       dict_time_intervals_and_bound,
-                       kind: Optional[str] = 'max',
-                       optional: Optional[bool] = False) -> None:
+    """set a mini/maxi/exact number of slots a resource can be scheduled."""
+
+    def __init__(
+        self,
+        resource,
+        dict_time_intervals_and_bound,
+        kind: Optional[str] = "max",
+        optional: Optional[bool] = False,
+    ) -> None:
         """WorkLoad constraints can be used to restrict the number tasks which are executed during a certain time period.
         The resource can be a single Worker or a CumulativeWorker.
 
@@ -41,7 +45,7 @@ class WorkLoad(_Constraint):
         """
         super().__init__(optional)
 
-        if kind not in ['exact', 'max', 'min']:
+        if kind not in ["exact", "max", "min"]:
             raise ValueError("kind must either be 'exact', 'min' or 'max'")
 
         if isinstance(resource, Worker):
@@ -62,60 +66,77 @@ class WorkLoad(_Constraint):
                 for start_task_i, end_task_i in worker.get_busy_intervals():
                     # this variable allows to compute the occupation
                     # of the resource during the time interval
-                    dur = Int('Overlap_%i_%i_%s' % (time_interval_lower_bound,
-                                                    time_interval_upper_bound,
-                                                    uuid.uuid4().hex[:8]))
+                    dur = Int(
+                        "Overlap_%i_%i_%s"
+                        % (
+                            time_interval_lower_bound,
+                            time_interval_upper_bound,
+                            uuid.uuid4().hex[:8],
+                        )
+                    )
                     # prevent solutions where duration would be negative
                     self.set_assertions(dur >= 0)
                     # 4 different cases to take into account
-                    cond1 = And(start_task_i >= time_interval_lower_bound,
-                                end_task_i <= time_interval_upper_bound)
-                    asst1 = Implies(cond1,
-                                    dur == end_task_i - start_task_i)
+                    cond1 = And(
+                        start_task_i >= time_interval_lower_bound,
+                        end_task_i <= time_interval_upper_bound,
+                    )
+                    asst1 = Implies(cond1, dur == end_task_i - start_task_i)
                     self.set_assertions(asst1)
                     # overlap at lower bound
-                    cond2 = And(start_task_i < time_interval_lower_bound,
-                                end_task_i > time_interval_lower_bound)
-                    asst2 = Implies(cond2,
-                                    dur == end_task_i - time_interval_lower_bound)
+                    cond2 = And(
+                        start_task_i < time_interval_lower_bound,
+                        end_task_i > time_interval_lower_bound,
+                    )
+                    asst2 = Implies(
+                        cond2, dur == end_task_i - time_interval_lower_bound
+                    )
                     self.set_assertions(asst2)
                     # overlap at upper bound
-                    cond3 = And(start_task_i < time_interval_upper_bound,
-                                end_task_i > time_interval_upper_bound)
-                    asst3 = Implies(cond3,
-                                    dur == time_interval_upper_bound - start_task_i)
+                    cond3 = And(
+                        start_task_i < time_interval_upper_bound,
+                        end_task_i > time_interval_upper_bound,
+                    )
+                    asst3 = Implies(
+                        cond3, dur == time_interval_upper_bound - start_task_i
+                    )
                     self.set_assertions(asst3)
                     # all overlap
-                    cond4 = And(start_task_i < time_interval_lower_bound,
-                                end_task_i > time_interval_upper_bound)
-                    asst4 = Implies(cond4,
-                                    dur == time_interval_upper_bound - time_interval_lower_bound)
+                    cond4 = And(
+                        start_task_i < time_interval_lower_bound,
+                        end_task_i > time_interval_upper_bound,
+                    )
+                    asst4 = Implies(
+                        cond4,
+                        dur == time_interval_upper_bound - time_interval_lower_bound,
+                    )
                     self.set_assertions(asst4)
 
                     # make these constraints mutual: no overlap
-                    self.set_assertions(Implies(Not(Or([cond1, cond2, cond3, cond4])), dur == 0))
+                    self.set_assertions(
+                        Implies(Not(Or([cond1, cond2, cond3, cond4])), dur == 0)
+                    )
 
                     # finally, store this variable in the duratins list
                     durations.append(dur)
 
             # workload constraint depends on the kind
-            if kind == 'exact':
+            if kind == "exact":
                 wl_constrt = Sum(durations) == number_of_time_slots
-            elif kind == 'max':
+            elif kind == "max":
                 wl_constrt = Sum(durations) <= number_of_time_slots
-            elif kind == 'min':
+            elif kind == "min":
                 wl_constrt = Sum(durations) >= number_of_time_slots
 
             self.set_assertions(wl_constrt)
 
 
 class ResourceUnavailable(_Constraint):
-    """ set unavailablity or a resource, in terms of busy intervals
-    """
-    def __init__(self,
-                 resource,
-                 list_of_time_intervals,
-                 optional: Optional[bool] = False) -> None:
+    """set unavailablity or a resource, in terms of busy intervals"""
+
+    def __init__(
+        self, resource, list_of_time_intervals, optional: Optional[bool] = False
+    ) -> None:
         """
 
         :param resource: the resource
@@ -134,36 +155,50 @@ class ResourceUnavailable(_Constraint):
             # add constraints on each busy interval
             for worker in workers:
                 for start_task_i, end_task_i in worker.get_busy_intervals():
-                    self.set_assertions(Xor(start_task_i >= interval_upper_bound,
-                                                                end_task_i <= interval_lower_bound))
+                    self.set_assertions(
+                        Xor(
+                            start_task_i >= interval_upper_bound,
+                            end_task_i <= interval_lower_bound,
+                        )
+                    )
 
 
 #
 # SelectWorker specific constraints
 #
 class SameWorkers(_Constraint):
-    """ Selected workers by both AlternateWorkers are constrained to
+    """Selected workers by both AlternateWorkers are constrained to
     be the same
     """
-    def __init__(self, alternate_workers_1, alternate_workers_2,
-                 optional: Optional[bool] = False):
+
+    def __init__(
+        self, alternate_workers_1, alternate_workers_2, optional: Optional[bool] = False
+    ):
         super().__init__(optional)
         # we check resources in alt work 1, if it is present in
         # Select worker 2 as well, then add a constraint
         for res_work_1 in alternate_workers_1.selection_dict:
             if res_work_1 in alternate_workers_2.selection_dict:
-                self.set_assertions(alternate_workers_1.selection_dict[res_work_1] == alternate_workers_2.selection_dict[res_work_1])
+                self.set_assertions(
+                    alternate_workers_1.selection_dict[res_work_1]
+                    == alternate_workers_2.selection_dict[res_work_1]
+                )
 
 
 class DistinctWorkers(_Constraint):
-    """ Selected workers by both AlternateWorkers are constrained to
+    """Selected workers by both AlternateWorkers are constrained to
     be the same
     """
-    def __init__(self, alternate_workers_1, alternate_workers_2,
-                 optional: Optional[bool] = False):
+
+    def __init__(
+        self, alternate_workers_1, alternate_workers_2, optional: Optional[bool] = False
+    ):
         super().__init__(optional)
         # we check resources in alt work 1, if it is present in
         # alterna worker 2 as well, then add a constraint
         for res_work_1 in alternate_workers_1.selection_dict:
             if res_work_1 in alternate_workers_2.selection_dict:
-                self.set_assertions(alternate_workers_1.selection_dict[res_work_1] != alternate_workers_2.selection_dict[res_work_1])
+                self.set_assertions(
+                    alternate_workers_1.selection_dict[res_work_1]
+                    != alternate_workers_2.selection_dict[res_work_1]
+                )
