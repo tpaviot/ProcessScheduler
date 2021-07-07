@@ -22,11 +22,11 @@ from typing import List, Optional, Union
 from z3 import And, BoolRef, Int, Or, Sum, Implies, ArithRef
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
-from processscheduler.objective import (Indicator, MaximizeObjective,
-                                        MinimizeObjective)
+from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective
 from processscheduler.resource import _Resource, CumulativeWorker
 from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
 import processscheduler.context as ps_context
+
 
 class SchedulingProblem(_NamedUIDObject):
     """A scheduling problem
@@ -39,12 +39,15 @@ class SchedulingProblem(_NamedUIDObject):
     :param datetime_format: an optional string
 
     """
-    def __init__(self, name: str,
-                 horizon: Optional[int] = None,
-                 delta_time: Optional[timedelta] = None,
-                 start_time: Optional[datetime] = None,
-                 end_time: Optional[datetime] = None
-                 ):
+
+    def __init__(
+        self,
+        name: str,
+        horizon: Optional[int] = None,
+        delta_time: Optional[timedelta] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+    ):
         super().__init__(name)
         # the problem context, where all will be stored
         # at creation
@@ -53,21 +56,21 @@ class SchedulingProblem(_NamedUIDObject):
         ps_context.main_context = self.context
 
         # define the horizon variable
-        self.horizon = Int('horizon')
+        self.horizon = Int("horizon")
         self.fixed_horizon = False  # set to True is horizon is fixed
         if is_strict_positive_integer(horizon):  # fixed_horizon
             self.context.add_constraint(self.horizon == horizon)
             self.fixed_horizon = True
         elif horizon is not None:
-            raise TypeError('horizon must either be a strict positive integer or None')
+            raise TypeError("horizon must either be a strict positive integer or None")
 
         # check time data
         if delta_time is not None and not isinstance(delta_time, timedelta):
-            raise TypeError('delta_time must be a timedelta instance')
+            raise TypeError("delta_time must be a timedelta instance")
         if start_time is not None and not isinstance(start_time, datetime):
-            raise TypeError('start_time must be a datetime instance')
+            raise TypeError("start_time must be a datetime instance")
         if end_time is not None and not isinstance(end_time, datetime):
-            raise TypeError('delta_time must be a datetime instance')
+            raise TypeError("delta_time must be a datetime instance")
 
         self.delta_time = delta_time
         self.start_time = start_time
@@ -77,12 +80,14 @@ class SchedulingProblem(_NamedUIDObject):
         self.context.add_constraint(constraint)
 
     def add_constraints(self, list_of_constraints: List[BoolRef]) -> None:
-        """ adds constraints to the problem """
+        """adds constraints to the problem"""
         for cstr in list_of_constraints:
             self.context.add_constraint(cstr)
 
-    def add_indicator_resource_cost(self, list_of_resources: List[_Resource]) -> Indicator:
-        """ compute the total cost of a set of resources """
+    def add_indicator_resource_cost(
+        self, list_of_resources: List[_Resource]
+    ) -> Indicator:
+        """compute the total cost of a set of resources"""
         partial_costs = []
 
         def get_resource_cost(res):
@@ -96,7 +101,11 @@ class SchedulingProblem(_NamedUIDObject):
                     p.append(period_cost)
                 # Polynomial cost. Compute the area of the trapeze
                 if isinstance(res.cost, PolynomialCostFunction):
-                    period_cost = (res.cost(interv_low) + res.cost(interv_up)) * (interv_up - interv_low) / 2
+                    period_cost = (
+                        (res.cost(interv_low) + res.cost(interv_up))
+                        * (interv_up - interv_low)
+                        / 2
+                    )
                     p.append(period_cost)
             return p
 
@@ -104,13 +113,14 @@ class SchedulingProblem(_NamedUIDObject):
             if isinstance(resource, CumulativeWorker):
                 for res in resource.cumulative_workers:
                     partial_costs.extend(get_resource_cost(res))
-            else: # for a single worker
+            else:  # for a single worker
                 partial_costs.extend(get_resource_cost(resource))
 
-        resource_names = ','.join([resource.name for resource in list_of_resources])
+        resource_names = ",".join([resource.name for resource in list_of_resources])
         cost_indicator_variable = Sum(partial_costs)
-        cost_indicator = Indicator('Total Cost (%s)' % resource_names,
-                                   cost_indicator_variable)
+        cost_indicator = Indicator(
+            "Total Cost (%s)" % resource_names, cost_indicator_variable
+        )
         return cost_indicator
 
     def add_indicator_resource_utilization(self, resource: _Resource) -> Indicator:
@@ -122,45 +132,52 @@ class SchedulingProblem(_NamedUIDObject):
         for interv_low, interv_up in resource.busy_intervals.values():
             durations.append(interv_up - interv_low)
         utilization = (Sum(durations) * 100) / self.horizon  # in percentage
-        utilization_indicator = Indicator('Utilization (%s)' % resource.name,
-                                          utilization, bounds=(0, 100))
+        utilization_indicator = Indicator(
+            "Utilization (%s)" % resource.name, utilization, bounds=(0, 100)
+        )
         return utilization_indicator
 
     def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:
-        """Maximize indicator """
-        return MaximizeObjective('', indicator)
+        """Maximize indicator"""
+        return MaximizeObjective("", indicator)
 
     def minimize_indicator(self, indicator: Indicator) -> MinimizeObjective:
         """Minimize indicator"""
-        return MinimizeObjective('', indicator)
+        return MinimizeObjective("", indicator)
 
     #
     # Optimization objectives
     #
     def add_objective_makespan(self, weight=1) -> Union[ArithRef, Indicator]:
-        """ makespan objective
-        """
+        """makespan objective"""
         if self.fixed_horizon:
-            raise ValueError('Horizon constrained to be fixed, no horizon optimization possible.')
-        MinimizeObjective('MakeSpan', self.horizon, weight)
+            raise ValueError(
+                "Horizon constrained to be fixed, no horizon optimization possible."
+            )
+        MinimizeObjective("MakeSpan", self.horizon, weight)
         return self.horizon
 
-    def add_objective_resource_utilization(self, resource: _Resource, weight=1) -> Union[ArithRef, Indicator]:
+    def add_objective_resource_utilization(
+        self, resource: _Resource, weight=1
+    ) -> Union[ArithRef, Indicator]:
         """Maximize resource occupation."""
-        resource_utilization_indicator = self.add_indicator_resource_utilization(resource)
-        MaximizeObjective('', resource_utilization_indicator, weight)
+        resource_utilization_indicator = self.add_indicator_resource_utilization(
+            resource
+        )
+        MaximizeObjective("", resource_utilization_indicator, weight)
         return resource_utilization_indicator
 
-    def add_objective_resource_cost(self, list_of_resources: List[_Resource], weight=1) -> Union[ArithRef, Indicator]:
-        """ minimise the cost of selected resources
-        """
+    def add_objective_resource_cost(
+        self, list_of_resources: List[_Resource], weight=1
+    ) -> Union[ArithRef, Indicator]:
+        """minimise the cost of selected resources"""
         cost_indicator = self.add_indicator_resource_cost(list_of_resources)
-        MinimizeObjective('', cost_indicator, weight)
+        MinimizeObjective("", cost_indicator, weight)
         return cost_indicator
 
     def add_objective_priorities(self, weight=1) -> Union[ArithRef, Indicator]:
-        """ optimize the solution such that all task with a higher
-        priority value are scheduled before other tasks """
+        """optimize the solution such that all task with a higher
+        priority value are scheduled before other tasks"""
         all_priorities = []
         for task in self.context.tasks:
             if task.optional:
@@ -168,35 +185,39 @@ class SchedulingProblem(_NamedUIDObject):
             else:
                 all_priorities.append(task.end * task.priority)
         priority_sum = Sum(all_priorities)
-        priority_indicator = Indicator('PriorityTotal', priority_sum)
-        MinimizeObjective('', priority_indicator, weight)
+        priority_indicator = Indicator("PriorityTotal", priority_sum)
+        MinimizeObjective("", priority_indicator, weight)
         return priority_indicator
 
     def add_objective_start_latest(self, weight=1) -> Union[ArithRef, Indicator]:
-        """ maximize the minimum start time, i.e. all the tasks
-        are scheduled as late as possible """
-        mini = Int('SmallestStartTime')
-        smallest_start_time = Indicator('SmallestStartTime', mini)
-        smallest_start_time.add_assertion(Or([mini == task.start for task in self.context.tasks]))
+        """maximize the minimum start time, i.e. all the tasks
+        are scheduled as late as possible"""
+        mini = Int("SmallestStartTime")
+        smallest_start_time = Indicator("SmallestStartTime", mini)
+        smallest_start_time.add_assertion(
+            Or([mini == task.start for task in self.context.tasks])
+        )
         for tsk in self.context.tasks:
             smallest_start_time.add_assertion(mini <= tsk.start)
-        MaximizeObjective('', smallest_start_time, weight)
+        MaximizeObjective("", smallest_start_time, weight)
         return smallest_start_time
 
     def add_objective_start_earliest(self, weight=1) -> Union[ArithRef, Indicator]:
-        """ minimize the greatest start time, i.e. tasks are schedules
-        as early as possible """
-        maxi = Int('GreatestStartTime')
-        greatest_start_time = Indicator('GreatestStartTime', maxi)
-        greatest_start_time.add_assertion(Or([maxi == task.start for task in self.context.tasks]))
+        """minimize the greatest start time, i.e. tasks are schedules
+        as early as possible"""
+        maxi = Int("GreatestStartTime")
+        greatest_start_time = Indicator("GreatestStartTime", maxi)
+        greatest_start_time.add_assertion(
+            Or([maxi == task.start for task in self.context.tasks])
+        )
         for tsk in self.context.tasks:
             greatest_start_time.add_assertion(maxi >= tsk.start)
-        MinimizeObjective('', greatest_start_time, weight)
+        MinimizeObjective("", greatest_start_time, weight)
         return greatest_start_time
 
     def add_objective_flowtime(self, weight=1) -> Union[ArithRef, Indicator]:
-        """ the flowtime is the sum of all ends, minimize. Be carful that
-        it is contradictory with makespan """
+        """the flowtime is the sum of all ends, minimize. Be carful that
+        it is contradictory with makespan"""
         task_ends = []
         for task in self.context.tasks:
             if task.optional:
@@ -204,11 +225,13 @@ class SchedulingProblem(_NamedUIDObject):
             else:
                 task_ends.append(task.end)
         flow_time_expr = Sum(task_ends)
-        flow_time = Indicator('FlowTime', flow_time_expr)
-        MinimizeObjective('', flow_time, weight)
+        flow_time = Indicator("FlowTime", flow_time_expr)
+        MinimizeObjective("", flow_time, weight)
         return flow_time
 
-    def add_objective_flowtime_single_resource(self, resource, time_interval=None, weight=1) -> Union[ArithRef, Indicator]:
+    def add_objective_flowtime_single_resource(
+        self, resource, time_interval=None, weight=1
+    ) -> Union[ArithRef, Indicator]:
         """Optimize flowtime for a single resource, for all the tasks scheduled in the
         time interval provided. Is ever no time interval is passed to the function, the
         flowtime is minimized for all the tasks scheduled in the workplan."""
@@ -220,39 +243,58 @@ class SchedulingProblem(_NamedUIDObject):
         uid = uuid.uuid4().hex
         # for this resource, we look for the minimal starting time of scheduled tasks
         # as well as the maximum
-        flowtime = Int('FlowtimeSingleResource%s_%s' % (resource.name, uid))
+        flowtime = Int("FlowtimeSingleResource%s_%s" % (resource.name, uid))
 
-        flowtime_single_resource_indicator = Indicator('FlowTime(%s:%i:%s)' % (resource.name,
-                                                                               lower_bound,
-                                                                               upper_bound),
-                                                       flowtime)
+        flowtime_single_resource_indicator = Indicator(
+            "FlowTime(%s:%i:%s)" % (resource.name, lower_bound, upper_bound), flowtime
+        )
         # find the max end time in the time_interval
-        maxi = Int('GreatestTaskEndTimeInTimePeriodForResource%s_%s' % (resource.name, uid))
+        maxi = Int(
+            "GreatestTaskEndTimeInTimePeriodForResource%s_%s" % (resource.name, uid)
+        )
 
         asst_max = []
         for task in resource.busy_intervals:
-            asst_max.append(Implies(And(task.end <= upper_bound, task.start >= lower_bound),
-                                    maxi == task.end))
+            asst_max.append(
+                Implies(
+                    And(task.end <= upper_bound, task.start >= lower_bound),
+                    maxi == task.end,
+                )
+            )
         flowtime_single_resource_indicator.add_assertion(Or(asst_max))
         for task in resource.busy_intervals:
-            flowtime_single_resource_indicator.add_assertion(Implies(And(task.end <= upper_bound, task.start >= lower_bound),
-                                                                     maxi >= task.end))
+            flowtime_single_resource_indicator.add_assertion(
+                Implies(
+                    And(task.end <= upper_bound, task.start >= lower_bound),
+                    maxi >= task.end,
+                )
+            )
 
         # and the mini
-        mini = Int('SmallestTaskEndTimeInTimePeriodForResource%s_%s' % (resource.name, uid))
+        mini = Int(
+            "SmallestTaskEndTimeInTimePeriodForResource%s_%s" % (resource.name, uid)
+        )
 
         asst_min = []
         for task in resource.busy_intervals:
-            asst_min.append(Implies(And(task.end <= upper_bound, task.start <= lower_bound),
-                                    mini == task.start))
+            asst_min.append(
+                Implies(
+                    And(task.end <= upper_bound, task.start <= lower_bound),
+                    mini == task.start,
+                )
+            )
         flowtime_single_resource_indicator.add_assertion(Or(asst_min))
         for task in resource.busy_intervals:
-            flowtime_single_resource_indicator.add_assertion(Implies(And(task.end <= upper_bound, task.start >= lower_bound),
-                                                                     mini <= task.start))
+            flowtime_single_resource_indicator.add_assertion(
+                Implies(
+                    And(task.end <= upper_bound, task.start >= lower_bound),
+                    mini <= task.start,
+                )
+            )
 
         # the quantity to optimize
         flowtime_single_resource_indicator.add_assertion(flowtime == maxi - mini)
         flowtime_single_resource_indicator.add_assertion(flowtime >= 0)
 
-        MinimizeObjective('', flowtime_single_resource_indicator, weight)
+        MinimizeObjective("", flowtime_single_resource_indicator, weight)
         return flowtime_single_resource_indicator

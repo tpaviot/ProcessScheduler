@@ -31,8 +31,11 @@ def _get_assertions(constraint: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
     elif isinstance(constraint, _NamedUIDObject):
         assertion = constraint.get_assertions()
     else:
-        raise TypeError("constraint must either be a _NamedUIDObject or BoolRef instance")
+        raise TypeError(
+            "constraint must either be a _NamedUIDObject or BoolRef instance"
+        )
     return assertion
+
 
 def _constraints_to_list_of_assertions(list_of_constraints) -> List[BoolRef]:
     """Convert a list of constraints or assertions to a list of assertions."""
@@ -44,6 +47,8 @@ def _constraints_to_list_of_assertions(list_of_constraints) -> List[BoolRef]:
         elif isinstance(assertions, BoolRef):
             list_of_boolrefs_to_return.append(assertions)
     return list_of_boolrefs_to_return
+
+
 #
 # Nested boolean operators for _NamedUIDObject objects
 # or BoolRef
@@ -52,12 +57,14 @@ def not_(constraint: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
     """Boolean negation of the constraint."""
     return Not(And(_get_assertions(constraint)))
 
+
 def or_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
     """Boolean 'or' between a list of assertions or constraints.
 
     At least one assertion in the list must be satisfied.
     """
     return Or(_constraints_to_list_of_assertions(list_of_constraints))
+
 
 def and_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
     """Boolean 'and' between a list of assertions or constraints.
@@ -66,6 +73,7 @@ def and_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
     """
     return And(_constraints_to_list_of_assertions(list_of_constraints))
 
+
 def xor_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
     """Boolean 'xor' between two assertions or constraints.
 
@@ -73,34 +81,43 @@ def xor_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
     must have exactly 2 elements.
     """
     if len(list_of_constraints) != 2:
-        raise TypeError('You list size must be 2. Be sure you have 2 constraints in the list.')
+        raise TypeError(
+            "You list size must be 2. Be sure you have 2 constraints in the list."
+        )
 
     constraint_1 = list_of_constraints[0]
     constraint_2 = list_of_constraints[1]
 
-    return Xor(And(_get_assertions(constraint_1)),
-               And(_get_assertions(constraint_2)))
+    return Xor(And(_get_assertions(constraint_1)), And(_get_assertions(constraint_2)))
+
 
 #
 # Logical consequence
 #
-def implies(condition: Union[BoolRef, _NamedUIDObject],
-            consequence_list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
+def implies(
+    condition: Union[BoolRef, _NamedUIDObject],
+    consequence_list_of_constraints: List[Union[BoolRef, _NamedUIDObject]],
+) -> BoolRef:
     """Return an implie instance
 
     Args:
         condition: a constraint or a boolref
         consequence_list_of_constraints: a list of all implications if condition is True
     """
-    return Implies(And(_get_assertions(condition)),
-                   And(_constraints_to_list_of_assertions(consequence_list_of_constraints)))
+    return Implies(
+        And(_get_assertions(condition)),
+        And(_constraints_to_list_of_assertions(consequence_list_of_constraints)),
+    )
+
 
 #
 # If/then/else
 #
-def if_then_else(condition: Union[BoolRef, _NamedUIDObject],
-                 then_list_of_constraints: List[Union[BoolRef, _NamedUIDObject]],
-                 else_list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
+def if_then_else(
+    condition: Union[BoolRef, _NamedUIDObject],
+    then_list_of_constraints: List[Union[BoolRef, _NamedUIDObject]],
+    else_list_of_constraints: List[Union[BoolRef, _NamedUIDObject]],
+) -> BoolRef:
     """If/Then/Else statement.
 
     Args:
@@ -108,6 +125,8 @@ def if_then_else(condition: Union[BoolRef, _NamedUIDObject],
         then_list_of_constraints: a list of all implications if condition is True
         else_list_of_constraints: a list of all implications if condition is False
     """
-    return If(And(_get_assertions(condition)),
-              And(_constraints_to_list_of_assertions(then_list_of_constraints)),
-              And(_constraints_to_list_of_assertions(else_list_of_constraints)))
+    return If(
+        And(_get_assertions(condition)),
+        And(_constraints_to_list_of_assertions(then_list_of_constraints)),
+        And(_constraints_to_list_of_assertions(else_list_of_constraints)),
+    )

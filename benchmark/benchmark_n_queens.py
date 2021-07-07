@@ -15,26 +15,15 @@ import z3
 # Argument parser
 #
 parser = argparse.ArgumentParser()
-parser.add_argument('-p', '--plot',
-    default=True,
-    help='Display results in a matplotlib chart'
+parser.add_argument(
+    "-p", "--plot", default=True, help="Display results in a matplotlib chart"
 )
-parser.add_argument('-n', '--nmax',
-    default=40,
-    help='max dev team'
+parser.add_argument("-n", "--nmax", default=40, help="max dev team")
+parser.add_argument("-s", "--step", default=5, help="step")
+parser.add_argument(
+    "-mt", "--max_time", default=60, help="Maximum time in seconds to find a solution"
 )
-parser.add_argument('-s', '--step',
-    default=5,
-    help='step'
-)
-parser.add_argument('-mt', '--max_time',
-    default=60,
-    help='Maximum time in seconds to find a solution'
-)
-parser.add_argument('-l', '--logics',
-    default=None,
-    help='SMT logics'
-)
+parser.add_argument("-l", "--logics", default=None, help="SMT logics")
 
 args = parser.parse_args()
 
@@ -68,10 +57,12 @@ print("Id:", bench_id)
 print("Software:")
 print("\tPython version:", platform.python_version())
 print("\tProcessScheduler version:", ps.__VERSION__)
-commit_short_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
+commit_short_hash = subprocess.check_output(
+    ["git", "rev-parse", "--short", "HEAD"]
+).strip()
 print("\tz3 version:", z3.Z3_get_full_version())
 
-print("\tProcessScheduler commit number:", commit_short_hash.decode('utf-8'))
+print("\tProcessScheduler commit number:", commit_short_hash.decode("utf-8"))
 os_info = platform.uname()
 print("OS:")
 print("\tOS:", os_info.system)
@@ -92,7 +83,7 @@ print(f"\tTotal memory: {get_size(svmem.total)}")
 computation_times = []
 plot_abs = []
 
-N = list(range(10, n, step)) # from 4 to N, step 2
+N = list(range(10, n, step))  # from 4 to N, step 2
 
 for problem_size in N:
     print("-> Problem size:", problem_size)
@@ -100,18 +91,22 @@ for problem_size in N:
 
     init_time = time.perf_counter()
 
-    pb = ps.SchedulingProblem('n_queens_type_scheduling', horizon=problem_size)
-    R = {i : ps.Worker('W-%i'%i) for i in range(problem_size)}
-    T = {(i,j) : ps.FixedDurationTask('T-%i-%i'%(i,j), duration=1) for i in range(n) for j in range(problem_size)}
+    pb = ps.SchedulingProblem("n_queens_type_scheduling", horizon=problem_size)
+    R = {i: ps.Worker("W-%i" % i) for i in range(problem_size)}
+    T = {
+        (i, j): ps.FixedDurationTask("T-%i-%i" % (i, j), duration=1)
+        for i in range(n)
+        for j in range(problem_size)
+    }
     # precedence constrains
     for i in range(problem_size):
         for j in range(1, problem_size):
-            c = ps.TaskPrecedence(T[i,j-1], T[i,j], offset=0)
+            c = ps.TaskPrecedence(T[i, j - 1], T[i, j], offset=0)
             pb.add_constraint(c)
     # resource assignment modulo n
     for j in range(problem_size):
         for i in range(problem_size):
-            T[(i+j) % problem_size,j].add_required_resource(R[i])
+            T[(i + j) % problem_size, j].add_required_resource(R[i])
 
     # create the solver and solve
     solver = ps.SchedulingSolver(pb, max_time=mt, logics=args.logics)
@@ -126,11 +121,11 @@ for problem_size in N:
     solver.print_statistics()
 
 plt.title("Benchmark SelectWorkers %s:%s" % (bench_date, bench_id))
-plt.plot(plot_abs, computation_times, 'D-', label="Computing time")
+plt.plot(plot_abs, computation_times, "D-", label="Computing time")
 plt.legend()
-plt.xlabel('n')
-plt.ylabel('time(s)')
+plt.xlabel("n")
+plt.ylabel("time(s)")
 plt.grid(True)
-plt.savefig('bench_n_queens_%s.svg' % bench_id)
+plt.savefig("bench_n_queens_%s.svg" % bench_id)
 if args.plot:
     plt.show()

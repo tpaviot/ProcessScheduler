@@ -16,7 +16,7 @@ copyright = "2020-2021, Thomas Paviot"
 author = "Thomas Paviot"
 
 # The full version, including alpha/beta/rc tags
-version = '0.7.0'
+version = "0.7.0"
 release = version
 
 # -- RTD configuration ------------------------------------------------
@@ -37,10 +37,10 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.inheritance_diagram",
     "sphinx_autodoc_typehints",
-    "nbsphinx"
+    "nbsphinx",
 ]
 
-nbsphinx_execute = 'always'
+nbsphinx_execute = "always"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -66,9 +66,9 @@ else:
 
 always_document_param_types = True
 
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
-highlight_language = 'autohotkey'
+highlight_language = "autohotkey"
 
 
 # -- epub --------------------------
@@ -84,9 +84,9 @@ epub_copyright = copyright
 # Options are theme-specific and customize the look and feel of the theme.
 html_theme_options = {
     # Toc options
-    'collapse_navigation': True,
-    'sticky_navigation': True,
-    'navigation_depth': 2,
-    'includehidden': True,
-    'titles_only': False
+    "collapse_navigation": True,
+    "sticky_navigation": True,
+    "navigation_depth": 2,
+    "includehidden": True,
+    "titles_only": False,
 }

@@ -21,18 +21,26 @@ from z3 import Int, BoolRef, ArithRef
 from processscheduler.base import _NamedUIDObject
 import processscheduler.context as ps_context
 
+
 class Indicator(_NamedUIDObject):
-    """ an performance indicator, can be evaluated after the solver has finished solving,
-    or being optimized (Max or Min) *before* calling the solver. """
-    def __init__(self, name: str, expression: Union[BoolRef, ArithRef],
-                 bounds: Optional[Tuple[Optional[int]]] = None) -> None:
+    """an performance indicator, can be evaluated after the solver has finished solving,
+    or being optimized (Max or Min) *before* calling the solver."""
+
+    def __init__(
+        self,
+        name: str,
+        expression: Union[BoolRef, ArithRef],
+        bounds: Optional[Tuple[Optional[int]]] = None,
+    ) -> None:
         super().__init__(name)
         # scheduled start, end and duration set to 0 by default
         # be set after the solver is called
         if not isinstance(expression, (BoolRef, ArithRef)):
-            raise TypeError('the indicator expression must be either a BoolRef or ArithRef.')
+            raise TypeError(
+                "the indicator expression must be either a BoolRef or ArithRef."
+            )
         self.name = name
-        self.indicator_variable = Int('Indicator_%s' % name)
+        self.indicator_variable = Int("Indicator_%s" % name)
         # by default the scheduled value is set to None
         # set by the solver
         self.scheduled_value = None
@@ -47,11 +55,14 @@ class Indicator(_NamedUIDObject):
 
         ps_context.main_context.add_indicator(self)
 
+
 class Objective(_NamedUIDObject):
-    def __init__(self, name:str, target: Union[ArithRef, Indicator]) -> None:
+    def __init__(self, name: str, target: Union[ArithRef, Indicator]) -> None:
         super().__init__(name)
         if not isinstance(target, (ArithRef, Indicator)):
-            raise TypeError('the indicator expression must be either a BoolRef, ArithRef or Indicator instance.')
+            raise TypeError(
+                "the indicator expression must be either a BoolRef, ArithRef or Indicator instance."
+            )
         if isinstance(target, Indicator):
             self.target = target.indicator_variable
             self.bounds = target.bounds
@@ -60,12 +71,18 @@ class Objective(_NamedUIDObject):
             self.bounds = None
         ps_context.main_context.add_objective(self)
 
+
 class MaximizeObjective(Objective):
-    def __init__(self, name:str, target: Union[ArithRef, Indicator], weight: Optional[int] = 1) -> None:
+    def __init__(
+        self, name: str, target: Union[ArithRef, Indicator], weight: Optional[int] = 1
+    ) -> None:
         super().__init__(name, target)
         self.weight = weight
 
+
 class MinimizeObjective(Objective):
-    def __init__(self, name:str, target: Union[ArithRef, Indicator], weight: Optional[int] = 1) -> None:
+    def __init__(
+        self, name: str, target: Union[ArithRef, Indicator], weight: Optional[int] = 1
+    ) -> None:
         super().__init__(name, target)
         self.weight = weight

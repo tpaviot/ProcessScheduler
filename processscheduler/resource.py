@@ -19,9 +19,12 @@ from typing import Dict, List, Optional, Tuple
 
 from z3 import ArithRef, Bool, PbEq, PbGe, PbLe
 
-from processscheduler.base import (_NamedUIDObject, is_positive_integer,
-                                   is_strict_positive_integer)
-from processscheduler.cost import (_Cost, ConstantCostPerPeriod)
+from processscheduler.base import (
+    _NamedUIDObject,
+    is_positive_integer,
+    is_strict_positive_integer,
+)
+from processscheduler.cost import _Cost, ConstantCostPerPeriod
 import processscheduler.context as ps_context
 
 #
@@ -34,78 +37,90 @@ def _distribute_p_over_n(p, n):
     if isinstance(p, int):
         int_div = p // n
         to_return = [int_div + p % n]
-        for _ in range(n-1):
+        for _ in range(n - 1):
             to_return.append(int_div)
         return to_return
     elif isinstance(p, ConstantCostPerPeriod):
         int_div = p.value // n
         to_return = [ConstantCostPerPeriod(int_div + p.value % n)]
-        for _ in range(n-1):
+        for _ in range(n - 1):
             to_return.append(ConstantCostPerPeriod(int_div))
         return to_return
+
+
 #
 # Resources class definition
 #
 class _Resource(_NamedUIDObject):
-    """ base class for the representation of a resource """
+    """base class for the representation of a resource"""
+
     def __init__(self, name: str) -> None:
         super().__init__(name)
         # for each resource, we define a dict that stores
         # all tasks and busy intervals of the resource.
         # busy intervals can be for example [(1,3), (5, 7)]
-        self.busy_intervals = {} # type: Dict[Task, Tuple[ArithRef, ArithRef]]
+        self.busy_intervals = {}  # type: Dict[Task, Tuple[ArithRef, ArithRef]]
 
     def add_busy_interval(self, task, interval: Tuple[ArithRef, ArithRef]) -> None:
-        """ add an interval in which the resource is busy """
+        """add an interval in which the resource is busy"""
         self.busy_intervals[task] = interval
 
     def get_busy_intervals(self) -> List[Tuple[ArithRef, ArithRef]]:
-        """ returns the list of all busy intervals """
+        """returns the list of all busy intervals"""
         return list(self.busy_intervals.values())
 
+
 class Worker(_Resource):
-    """ A worker is an atomic resource that cannot be split into smaller parts.
-    Typical workers are human beings, machines etc. """
-    def __init__(self,
-                 name: str,
-                 productivity: Optional[int] = 1,
-                 cost: Optional[int] = None) -> None:
+    """A worker is an atomic resource that cannot be split into smaller parts.
+    Typical workers are human beings, machines etc."""
+
+    def __init__(
+        self, name: str, productivity: Optional[int] = 1, cost: Optional[int] = None
+    ) -> None:
         super().__init__(name)
         if not is_positive_integer(productivity):
-            raise TypeError('productivity must be an integer >= 0')
+            raise TypeError("productivity must be an integer >= 0")
         if cost is None:
             self.cost = None
         elif not isinstance(cost, _Cost):
-            raise TypeError('cost must be a _Cost instance')
+            raise TypeError("cost must be a _Cost instance")
         self.productivity = productivity
         self.cost = cost
 
         # only worker are add to the main context, not SelectWorkers
         # add this resource to the current context
         if ps_context.main_context is None:
-            raise AssertionError('No context available. First create a SchedulingProblem')
+            raise AssertionError(
+                "No context available. First create a SchedulingProblem"
+            )
         ps_context.main_context.add_resource(self)
 
-class SelectWorkers(_Resource):
-    """ Class representing the selection of n workers chosen among a list
-    of possible workers """
-    def __init__(self,
-                 list_of_workers: List[_Resource],
-                 nb_workers_to_select: Optional[int] = 1,
-                 kind: Optional[str] = 'exact'):
-        """ create an instance of the SelectWorkers class. """
-        super().__init__('')
 
-        problem_function = {'min': PbGe, 'max': PbLe, 'exact': PbEq}
+class SelectWorkers(_Resource):
+    """Class representing the selection of n workers chosen among a list
+    of possible workers"""
+
+    def __init__(
+        self,
+        list_of_workers: List[_Resource],
+        nb_workers_to_select: Optional[int] = 1,
+        kind: Optional[str] = "exact",
+    ):
+        """create an instance of the SelectWorkers class."""
+        super().__init__("")
+
+        problem_function = {"min": PbGe, "max": PbLe, "exact": PbEq}
 
         if kind not in problem_function:
             raise ValueError("kind must be either 'exact', 'min' or 'max'")
 
         if not is_strict_positive_integer(nb_workers_to_select):
-            raise TypeError('nb_workers must be an integer > 0')
+            raise TypeError("nb_workers must be an integer > 0")
 
         if nb_workers_to_select > len(list_of_workers):
-            raise ValueError('nb_workers must be <= the number of workers provided in list_of_workers.')
+            raise ValueError(
+                "nb_workers must be <= the number of workers provided in list_of_workers."
+            )
 
         # build the list of workers that will be the base of the selection
         # instances from this list mght either be Workers or CumulativeWorkers. If
@@ -123,7 +138,7 @@ class SelectWorkers(_Resource):
 
         # create as many booleans as resources in the list
         for worker in self.list_of_workers:
-            worker_is_selected = Bool('Selected_%s_%i' % (worker.name, self.uid))
+            worker_is_selected = Bool("Selected_%s_%i" % (worker.name, self.uid))
             self.selection_dict[worker] = worker_is_selected
 
         # create the assertion : exactly n boolean flags are allowed to be True,
@@ -131,16 +146,21 @@ class SelectWorkers(_Resource):
         # see https://github.com/Z3Prover/z3/issues/694
         # and https://stackoverflow.com/questions/43081929/k-out-of-n-constraint-in-z3py
         selection_list = list(self.selection_dict.values())
-        self.selection_assertion = problem_function[kind]([(selected, True) for selected in selection_list],
-                                                          nb_workers_to_select)
+        self.selection_assertion = problem_function[kind](
+            [(selected, True) for selected in selection_list], nb_workers_to_select
+        )
+
 
 class CumulativeWorker(_Resource):
-    """ A cumulative worker can process multiple tasks in parallel."""
-    def __init__(self,
-                 name: str,
-                 size: int,
-                 productivity: Optional[int] = 1,
-                 cost: Optional[int] = None) -> None:
+    """A cumulative worker can process multiple tasks in parallel."""
+
+    def __init__(
+        self,
+        name: str,
+        size: int,
+        productivity: Optional[int] = 1,
+        cost: Optional[int] = None,
+    ) -> None:
         super().__init__(name)
 
         if not (isinstance(size, int) and size >= 2):
@@ -150,7 +170,7 @@ class CumulativeWorker(_Resource):
             self.cost = None
 
         elif not isinstance(cost, _Cost):
-            raise TypeError('cost must be a _Cost instance')
+            raise TypeError("cost must be a _Cost instance")
 
         self.size = size
         # productivity and cost_per_period are distributed over
@@ -162,14 +182,18 @@ class CumulativeWorker(_Resource):
         costs_per_period = _distribute_p_over_n(cost, size)
 
         # we create as much elementary workers as the cumulative size
-        self.cumulative_workers = [Worker('%s_CumulativeWorker_%i' % (name, i+1),
-                                          productivity=productivities[i],
-                                          cost=costs_per_period[i])
-                                   for i in range(size)]
+        self.cumulative_workers = [
+            Worker(
+                "%s_CumulativeWorker_%i" % (name, i + 1),
+                productivity=productivities[i],
+                cost=costs_per_period[i],
+            )
+            for i in range(size)
+        ]
 
     def get_select_workers(self):
         """Each time the cumulative resource is assigned to a task, a SelectWorker
         instance is assigned to the task."""
-        return SelectWorkers(self.cumulative_workers,
-                             nb_workers_to_select=1,
-                             kind='min')
+        return SelectWorkers(
+            self.cumulative_workers, nb_workers_to_select=1, kind="min"
+        )

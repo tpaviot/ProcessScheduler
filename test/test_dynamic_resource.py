@@ -17,18 +17,19 @@ import unittest
 
 import processscheduler as ps
 
+
 class TestDynamicResource(unittest.TestCase):
     def test_dynamic_1(self) -> None:
-        pb = ps.SchedulingProblem('DynamicTest1')
-        task_1 = ps.FixedDurationTask('task1', duration = 10, work_amount=10)
-        task_2 = ps.FixedDurationTask('task2', duration = 5)
-        task_3 = ps.FixedDurationTask('task3', duration = 5)
+        pb = ps.SchedulingProblem("DynamicTest1")
+        task_1 = ps.FixedDurationTask("task1", duration=10, work_amount=10)
+        task_2 = ps.FixedDurationTask("task2", duration=5)
+        task_3 = ps.FixedDurationTask("task3", duration=5)
 
         pb.add_constraint(ps.TaskStartAt(task_3, 0))
         pb.add_constraint(ps.TaskEndAt(task_2, 10))
 
-        worker_1 = ps.Worker('Worker1', productivity=1)
-        worker_2 = ps.Worker('Worker2', productivity=1)
+        worker_1 = ps.Worker("Worker1", productivity=1)
+        worker_2 = ps.Worker("Worker2", productivity=1)
 
         task_1.add_required_resources([worker_1, worker_2], dynamic=True)
         task_2.add_required_resource(worker_1)
@@ -44,18 +45,18 @@ class TestDynamicResource(unittest.TestCase):
         # same test as previously
         # but the task_1 workers are non dynamic.
         # so the horizon must be 20.
-        pb = ps.SchedulingProblem('NonDynamicTest1')
-        task_1 = ps.FixedDurationTask('task1', duration = 10, work_amount=10)
-        task_2 = ps.FixedDurationTask('task2', duration = 5)
-        task_3 = ps.FixedDurationTask('task3', duration = 5)
+        pb = ps.SchedulingProblem("NonDynamicTest1")
+        task_1 = ps.FixedDurationTask("task1", duration=10, work_amount=10)
+        task_2 = ps.FixedDurationTask("task2", duration=5)
+        task_3 = ps.FixedDurationTask("task3", duration=5)
 
         pb.add_constraint(ps.TaskStartAt(task_3, 0))
         pb.add_constraint(ps.TaskEndAt(task_2, 10))
 
-        worker_1 = ps.Worker('Worker1', productivity=1)
-        worker_2 = ps.Worker('Worker2', productivity=1)
+        worker_1 = ps.Worker("Worker1", productivity=1)
+        worker_2 = ps.Worker("Worker2", productivity=1)
 
-        task_1.add_required_resources([worker_1, worker_2]) # dynamic False by default
+        task_1.add_required_resources([worker_1, worker_2])  # dynamic False by default
         task_2.add_required_resource(worker_1)
         task_3.add_required_resource(worker_2)
 

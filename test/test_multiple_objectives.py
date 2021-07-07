@@ -23,16 +23,17 @@ import processscheduler as ps
 # the maximum of task_2.end is 20 (in this case task_2.start is 0)
 # what happens if we look for the maximum of both task_1 and task_2 ends ?
 
+
 class MultiObjective(unittest.TestCase):
     def test_multi_two_tasks_1(self) -> None:
-        pb = ps.SchedulingProblem('MultiObjective1', horizon=20)
-        task_1 = ps.FixedDurationTask('task1', duration = 3)
-        task_2 = ps.FixedDurationTask('task2', duration = 3)
+        pb = ps.SchedulingProblem("MultiObjective1", horizon=20)
+        task_1 = ps.FixedDurationTask("task1", duration=3)
+        task_2 = ps.FixedDurationTask("task2", duration=3)
 
         pb.add_constraint(task_1.end == 20 - task_2.start)
 
         # Maximize only task_1 end
-        ind = ps.Indicator('Task1End', task_1.end)
+        ind = ps.Indicator("Task1End", task_1.end)
         pb.maximize_indicator(ind)
 
         solution = ps.SchedulingSolver(pb).solve()
@@ -43,14 +44,14 @@ class MultiObjective(unittest.TestCase):
 
     def test_multi_two_tasks_lex(self) -> None:
         # the same model, optimize task2 end
-        pb = ps.SchedulingProblem('MultiObjective2', horizon=20)
-        task_1 = ps.FixedDurationTask('task1', duration = 3)
-        task_2 = ps.FixedDurationTask('task2', duration = 3)
+        pb = ps.SchedulingProblem("MultiObjective2", horizon=20)
+        task_1 = ps.FixedDurationTask("task1", duration=3)
+        task_2 = ps.FixedDurationTask("task2", duration=3)
 
         pb.add_constraint(task_1.end == 20 - task_2.start)
 
         # Maximize only task_2 end
-        ind = ps.Indicator('Task2End', task_2.end)
+        ind = ps.Indicator("Task2End", task_2.end)
         pb.maximize_indicator(ind)
 
         solution = ps.SchedulingSolver(pb).solve()

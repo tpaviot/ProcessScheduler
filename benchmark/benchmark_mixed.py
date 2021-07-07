@@ -15,26 +15,15 @@ import z3
 # Argument parser
 #
 parser = argparse.ArgumentParser()
-parser.add_argument('-p', '--plot',
-                    default=True,
-                    help='Display results in a matplotlib chart'
-                    )
-parser.add_argument('-n', '--nmax',
-                    default=100,
-                    help='max dev team'
-                    )
-parser.add_argument('-s', '--step',
-                    default=10,
-                    help='step'
-                    )
-parser.add_argument('-mt', '--max_time',
-                    default=60,
-                    help='Maximum time in seconds to find a solution'
-                    )
-parser.add_argument('-l', '--logics',
-                    default=None,
-                    help='SMT logics'
-                    )
+parser.add_argument(
+    "-p", "--plot", default=True, help="Display results in a matplotlib chart"
+)
+parser.add_argument("-n", "--nmax", default=100, help="max dev team")
+parser.add_argument("-s", "--step", default=10, help="step")
+parser.add_argument(
+    "-mt", "--max_time", default=60, help="Maximum time in seconds to find a solution"
+)
+parser.add_argument("-l", "--logics", default=None, help="SMT logics")
 
 args = parser.parse_args()
 
@@ -70,10 +59,12 @@ print("Id:", bench_id)
 print("Software:")
 print("\tPython version:", platform.python_version())
 print("\tProcessScheduler version:", ps.__VERSION__)
-commit_short_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
+commit_short_hash = subprocess.check_output(
+    ["git", "rev-parse", "--short", "HEAD"]
+).strip()
 print("\tz3 version:", z3.Z3_get_full_version())
 
-print("\tProcessScheduler commit number:", commit_short_hash.decode('utf-8'))
+print("\tProcessScheduler commit number:", commit_short_hash.decode("utf-8"))
 os_info = platform.uname()
 print("OS:")
 print("\tOS:", os_info.system)
@@ -99,36 +90,36 @@ for horizon in range(20, n, step):
     MAX_TASKS_IN_PROBLEM = 4
     NB_WORKERS = 10
     NB_TASKS_PER_WORKER = 10
-    PERIODS = [(10*i, 10*(i+1)) for i in range(int(horizon/10))]  # Periods of 10 slots from 0 to horizon
+    PERIODS = [
+        (10 * i, 10 * (i + 1)) for i in range(int(horizon / 10))
+    ]  # Periods of 10 slots from 0 to horizon
     init_time = time.perf_counter()
 
     # Create problem and initialize constraints
-    pb = ps.SchedulingProblem(name='performance_analyzer', horizon=horizon)
+    pb = ps.SchedulingProblem(name="performance_analyzer", horizon=horizon)
     constraints = []
 
     # Create resources and assign tasks
-    general_worker = ps.Worker('general')
+    general_worker = ps.Worker("general")
     workers = []
     for i in range(NB_WORKERS):
-        name = f'worker_{i+1}'
+        name = f"worker_{i+1}"
         worker = ps.Worker(name)
 
         # Create tasks and assign resources
         tasks = []
         for j in range(NB_TASKS_PER_WORKER):
-            tasks.append(ps.FixedDurationTask(f'{name}__{j:02d}', duration=1, optional=True))
+            tasks.append(
+                ps.FixedDurationTask(f"{name}__{j:02d}", duration=1, optional=True)
+            )
             tasks[-1].add_required_resources([general_worker, worker])
 
-        workers.append({
-            'name': name,
-            'worker': worker,
-            'tasks': tasks
-        })
+        workers.append({"name": name, "worker": worker, "tasks": tasks})
 
     workload = {period: MAX_TASKS_PER_PERIOD for period in PERIODS}
     workload[(0, horizon)] = MAX_TASKS_IN_PROBLEM
     for worker in workers:
-        constraints.append(ps.WorkLoad(worker['worker'], workload, kind='max'))
+        constraints.append(ps.WorkLoad(worker["worker"], workload, kind="max"))
 
     # Add constraints, define objective and solve problem
     pb.add_constraints(constraints)
@@ -144,11 +135,11 @@ for horizon in range(20, n, step):
     solver.print_statistics()
 
 plt.title("Benchmark_mixed_constraints %s:%s" % (bench_date, bench_id))
-plt.plot(plot_abs, computation_times, 'D-', label="Computing time")
+plt.plot(plot_abs, computation_times, "D-", label="Computing time")
 plt.legend()
-plt.xlabel('n')
-plt.ylabel('time(s)')
+plt.xlabel("n")
+plt.ylabel("time(s)")
 plt.grid(True)
-plt.savefig('bench_%s.svg' % bench_id)
+plt.savefig("bench_%s.svg" % bench_id)
 if args.plot:
     plt.show()

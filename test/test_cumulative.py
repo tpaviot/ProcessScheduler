@@ -18,6 +18,7 @@ import unittest
 import processscheduler as ps
 from processscheduler.resource import _distribute_p_over_n
 
+
 class TestCumulative(unittest.TestCase):
     def test_distribute_p_over_n(self):
         res1 = _distribute_p_over_n(7, 3)
@@ -32,28 +33,28 @@ class TestCumulative(unittest.TestCase):
         self.assertEqual(res4, [11, 9, 9])
 
     def test_create_cumulative(self):
-        """ take the single task/single resource and display output """
-        ps.SchedulingProblem('CreateCumulative', horizon=10)
-        cumulative_worker = ps.CumulativeWorker('MachineA', size=4)
+        """take the single task/single resource and display output"""
+        ps.SchedulingProblem("CreateCumulative", horizon=10)
+        cumulative_worker = ps.CumulativeWorker("MachineA", size=4)
         self.assertEqual(len(cumulative_worker.cumulative_workers), 4)
 
     def test_create_cumulative_wrong_type(self):
-        """ take the single task/single resource and display output """
-        ps.SchedulingProblem('CreateCumulativeWrongType', horizon=10)
+        """take the single task/single resource and display output"""
+        ps.SchedulingProblem("CreateCumulativeWrongType", horizon=10)
         with self.assertRaises(ValueError):
-            ps.CumulativeWorker('MachineA', size=1)
+            ps.CumulativeWorker("MachineA", size=1)
         with self.assertRaises(ValueError):
-            ps.CumulativeWorker('MachineA', size=2.5)
+            ps.CumulativeWorker("MachineA", size=2.5)
 
     def test_cumulative_1(self):
         pb_bs = ps.SchedulingProblem("Cumulative1", 3)
         # tasks
-        t1 = ps.FixedDurationTask('T1', duration=2)
-        t2 = ps.FixedDurationTask('T2', duration=2)
-        t3 = ps.FixedDurationTask('T3', duration=2)
+        t1 = ps.FixedDurationTask("T1", duration=2)
+        t2 = ps.FixedDurationTask("T2", duration=2)
+        t3 = ps.FixedDurationTask("T3", duration=2)
 
         # workers
-        r1 = ps.CumulativeWorker('Machine1', size=3)
+        r1 = ps.CumulativeWorker("Machine1", size=3)
         # resource assignment
         t1.add_required_resource(r1)
         t2.add_required_resource(r1)
@@ -70,11 +71,11 @@ class TestCumulative(unittest.TestCase):
     def test_cumulative_2(self):
         pb_bs = ps.SchedulingProblem("Cumulative2", 3)
         # tasks
-        t1 = ps.FixedDurationTask('T1', duration=2)
-        t2 = ps.FixedDurationTask('T2', duration=2)
+        t1 = ps.FixedDurationTask("T1", duration=2)
+        t2 = ps.FixedDurationTask("T2", duration=2)
 
         # workers
-        r1 = ps.CumulativeWorker('Machine1', size=2)
+        r1 = ps.CumulativeWorker("Machine1", size=2)
         # resource assignment
         t1.add_required_resource(r1)
         t2.add_required_resource(r1)
@@ -92,12 +93,12 @@ class TestCumulative(unittest.TestCase):
         t2 should not be scheduled."""
         pb_bs = ps.SchedulingProblem("OptionalCumulative", 2)
         # tasks
-        t1 = ps.FixedDurationTask('T1', duration=2)
-        t2 = ps.FixedDurationTask('T2', duration=2, optional=True)
-        t3 = ps.FixedDurationTask('T3', duration=2)
+        t1 = ps.FixedDurationTask("T1", duration=2)
+        t2 = ps.FixedDurationTask("T2", duration=2, optional=True)
+        t3 = ps.FixedDurationTask("T3", duration=2)
 
         # workers
-        r1 = ps.CumulativeWorker('Machine1', size=2)
+        r1 = ps.CumulativeWorker("Machine1", size=2)
         # resource assignment
         t1.add_required_resource(r1)
         t2.add_required_resource(r1)
@@ -116,12 +117,12 @@ class TestCumulative(unittest.TestCase):
     def test_cumulative_select_worker_1(self):
         pb_bs = ps.SchedulingProblem("CumulativeSelectWorker", 2)
         # tasks
-        t1 = ps.FixedDurationTask('T1', duration=2)
-        t2 = ps.FixedDurationTask('T2', duration=2)
+        t1 = ps.FixedDurationTask("T1", duration=2)
+        t2 = ps.FixedDurationTask("T2", duration=2)
 
         # workers
-        r1 = ps.CumulativeWorker('Machine1', size=2)
-        r2 = ps.CumulativeWorker('Machine2', size=2)
+        r1 = ps.CumulativeWorker("Machine1", size=2)
+        r2 = ps.CumulativeWorker("Machine2", size=2)
         # resource assignment
         t1.add_required_resource(ps.SelectWorkers([r1, r2], 1))
         t2.add_required_resource(ps.SelectWorkers([r1, r2], 1))
@@ -134,12 +135,12 @@ class TestCumulative(unittest.TestCase):
     def test_cumulative_hosp(self):
         n = 16
         capa = 4
-        pb_bs = ps.SchedulingProblem("Hospital", horizon= int(n / capa))
+        pb_bs = ps.SchedulingProblem("Hospital", horizon=int(n / capa))
         # workers
-        r1 = ps.CumulativeWorker('Room', size=capa)
+        r1 = ps.CumulativeWorker("Room", size=capa)
 
         for i in range(n):
-            t = ps.FixedDurationTask('T%i' % (i+1), duration=1)
+            t = ps.FixedDurationTask("T%i" % (i + 1), duration=1)
             t.add_required_resource(r1)
 
         solver = ps.SchedulingSolver(pb_bs)
@@ -149,9 +150,9 @@ class TestCumulative(unittest.TestCase):
     def test_cumulative_productivity(self):
         """Horizon should be 4, 100/29=3.44."""
         problem = ps.SchedulingProblem("CumulativeProductivity")
-        t_1 = ps.VariableDurationTask('t1', work_amount=100)
+        t_1 = ps.VariableDurationTask("t1", work_amount=100)
 
-        worker_1 = ps.CumulativeWorker('CumulWorker', size=3, productivity=29)
+        worker_1 = ps.CumulativeWorker("CumulWorker", size=3, productivity=29)
         t_1.add_required_resource(worker_1)
 
         problem.add_objective_makespan()

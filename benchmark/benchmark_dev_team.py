@@ -15,26 +15,15 @@ import z3
 # Argument parser
 #
 parser = argparse.ArgumentParser()
-parser.add_argument('-p', '--plot',
-    default=True,
-    help='Display results in a matplotlib chart'
+parser.add_argument(
+    "-p", "--plot", default=True, help="Display results in a matplotlib chart"
 )
-parser.add_argument('-n', '--nmax',
-    default=100,
-    help='max dev team'
+parser.add_argument("-n", "--nmax", default=100, help="max dev team")
+parser.add_argument("-s", "--step", default=10, help="step")
+parser.add_argument(
+    "-mt", "--max_time", default=60, help="Maximum time in seconds to find a solution"
 )
-parser.add_argument('-s', '--step',
-    default=10,
-    help='step'
-)
-parser.add_argument('-mt', '--max_time',
-    default=60,
-    help='Maximum time in seconds to find a solution'
-)
-parser.add_argument('-l', '--logics',
-    default=None,
-    help='SMT logics'
-)
+parser.add_argument("-l", "--logics", default=None, help="SMT logics")
 
 args = parser.parse_args()
 
@@ -68,10 +57,12 @@ print("Id:", bench_id)
 print("Software:")
 print("\tPython version:", platform.python_version())
 print("\tProcessScheduler version:", ps.__VERSION__)
-commit_short_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).strip()
+commit_short_hash = subprocess.check_output(
+    ["git", "rev-parse", "--short", "HEAD"]
+).strip()
 print("\tz3 version:", z3.Z3_get_full_version())
 
-print("\tProcessScheduler commit number:", commit_short_hash.decode('utf-8'))
+print("\tProcessScheduler commit number:", commit_short_hash.decode("utf-8"))
 os_info = platform.uname()
 print("OS:")
 print("\tOS:", os_info.system)
@@ -92,7 +83,7 @@ print(f"\tTotal memory: {get_size(svmem.total)}")
 computation_times = []
 plot_abs = []
 
-N = list(range(10, n, step)) # from 4 to N, step 2
+N = list(range(10, n, step))  # from 4 to N, step 2
 
 for num_dev_teams in N:
     print("-> Num dev teams:", num_dev_teams)
@@ -102,19 +93,26 @@ for num_dev_teams in N:
 
     init_time = time.perf_counter()
     # Resources
-    digital_transformation = ps.SchedulingProblem('DigitalTransformation', horizon=num_dev_teams)
-    r_a = [ps.Worker('A_%i' % (i + 1)) for i in range(num_resource_a)]
-    r_b = [ps.Worker('B_%i' % (i + 1)) for i in range(num_resource_b)]
+    digital_transformation = ps.SchedulingProblem(
+        "DigitalTransformation", horizon=num_dev_teams
+    )
+    r_a = [ps.Worker("A_%i" % (i + 1)) for i in range(num_resource_a)]
+    r_b = [ps.Worker("B_%i" % (i + 1)) for i in range(num_resource_b)]
 
     # Dev Team Tasks
     # For each dev_team pick one resource a and one resource b.
-    ts_team_migration = [ps.FixedDurationTask('DevTeam_%i' % (i + 1), duration=1, priority=10) for i in range(num_dev_teams)]
+    ts_team_migration = [
+        ps.FixedDurationTask("DevTeam_%i" % (i + 1), duration=1, priority=10)
+        for i in range(num_dev_teams)
+    ]
     for t_team_migration in ts_team_migration:
         t_team_migration.add_required_resource(ps.SelectWorkers(r_a))
         t_team_migration.add_required_resource(ps.SelectWorkers(r_b))
 
     # create the solver and solve
-    solver = ps.SchedulingSolver(digital_transformation, max_time=mt, logics=args.logics)
+    solver = ps.SchedulingSolver(
+        digital_transformation, max_time=mt, logics=args.logics
+    )
     solution = solver.solve()
 
     if not solution:
@@ -126,11 +124,11 @@ for num_dev_teams in N:
     solver.print_statistics()
 
 plt.title("Benchmark SelectWorkers %s:%s" % (bench_date, bench_id))
-plt.plot(plot_abs, computation_times, 'D-', label="Computing time")
+plt.plot(plot_abs, computation_times, "D-", label="Computing time")
 plt.legend()
-plt.xlabel('n')
-plt.ylabel('time(s)')
+plt.xlabel("n")
+plt.ylabel("time(s)")
 plt.grid(True)
-plt.savefig('bench_dev_team_%s.svg' % bench_id)
+plt.savefig("bench_dev_team_%s.svg" % bench_id)
 if args.plot:
     plt.show()

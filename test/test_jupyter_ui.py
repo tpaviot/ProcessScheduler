@@ -18,6 +18,7 @@ import unittest
 import processscheduler.jupyter_ui as jupui
 from ipywidgets import VBox
 
+
 class TestJupyerUI(unittest.TestCase):
     def test_load_jupyter_ui(self) -> None:
         self.assertTrue(isinstance(jupui.task_ui, VBox))
