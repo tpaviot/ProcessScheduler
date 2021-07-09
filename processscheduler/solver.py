@@ -191,7 +191,6 @@ class SchedulingSolver:
             equivalent_indicator = Indicator(
                 "EquivalentIndicator", equivalent_single_objective
             )
-            print(weighted_objectives)
             self.objective = MinimizeObjective(
                 "EquivalentObjective", equivalent_indicator
             )
