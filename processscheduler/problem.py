@@ -19,7 +19,7 @@ from datetime import timedelta, datetime
 import uuid
 from typing import List, Optional, Union
 
-from z3 import And, BoolRef, Int, Or, Sum, Implies, ArithRef
+from z3 import And, BoolRef, If, Int, Or, Sum, Implies, ArithRef
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
 from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective
@@ -83,6 +83,20 @@ class SchedulingProblem(_NamedUIDObject):
         """adds constraints to the problem"""
         for cstr in list_of_constraints:
             self.context.add_constraint(cstr)
+
+    def add_indicator_number_tasks_assigned(self, resource: _Resource):
+        """compute the number of tasks as resource is assigned"""
+        # this list contains
+        scheduled_tasks = []
+        for interv_low, interv_up in resource.busy_intervals.values():
+            scheduled_tasks.append(If(interv_low > -1, 1, 0))
+        nb_tasks_assigned_indicator_variable = Sum(scheduled_tasks)
+        nb_tasks_assigned_indicator = Indicator(
+            "Nb tasks assigned (%s)" % resource.name,
+            nb_tasks_assigned_indicator_variable,
+        )
+
+        return nb_tasks_assigned_indicator
 
     def add_indicator_resource_cost(
         self, list_of_resources: List[_Resource]
