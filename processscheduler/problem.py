@@ -19,7 +19,7 @@ from datetime import timedelta, datetime
 import uuid
 from typing import List, Optional, Union
 
-from z3 import And, BoolRef, Int, Or, Sum, Implies, ArithRef
+from z3 import And, BoolRef, If, Int, Or, Sum, Implies, ArithRef
 
 from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
 from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective
@@ -84,6 +84,21 @@ class SchedulingProblem(_NamedUIDObject):
         for cstr in list_of_constraints:
             self.context.add_constraint(cstr)
 
+    def add_indicator_number_tasks_assigned(self, resource: _Resource):
+        """compute the number of tasks as resource is assigned"""
+        # this list contains
+        scheduled_tasks = [
+            If(start > -1, 1, 0) for start, end in resource.busy_intervals.values()
+        ]
+
+        nb_tasks_assigned_indicator_variable = Sum(scheduled_tasks)
+        nb_tasks_assigned_indicator = Indicator(
+            "Nb Tasks Assigned (%s)" % resource.name,
+            nb_tasks_assigned_indicator_variable,
+        )
+
+        return nb_tasks_assigned_indicator
+
     def add_indicator_resource_cost(
         self, list_of_resources: List[_Resource]
     ) -> Indicator:
@@ -128,9 +143,10 @@ class SchedulingProblem(_NamedUIDObject):
 
         The percentage is rounded to an int value.
         """
-        durations = []
-        for interv_low, interv_up in resource.busy_intervals.values():
-            durations.append(interv_up - interv_low)
+        durations = [
+            interv_up - interv_low
+            for interv_low, interv_up in resource.busy_intervals.values()
+        ]
         utilization = (Sum(durations) * 100) / self.horizon  # in percentage
         utilization_indicator = Indicator(
             "Utilization (%s)" % resource.name, utilization, bounds=(0, 100)

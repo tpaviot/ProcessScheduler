@@ -353,6 +353,24 @@ class TestIndicator(unittest.TestCase):
         self.assertTrue(solution)
         self.assertEqual(sum_durations, self.get_sum_flowtime(solution))
 
+    # number of tasks assigned to a resource
+    def test_indicator_nb_tasks_assigned_to_resource_1(self) -> None:
+        n = 5
+        problem = ps.SchedulingProblem("IndicatorUtilization5", horizon=n)
+        worker = ps.Worker("Worker1")
+
+        for i in range(n):
+            t = ps.FixedDurationTask(f"T{i+1}", duration=1)
+            t.add_required_resource(worker)
+
+        nbt = problem.add_indicator_number_tasks_assigned(worker)
+
+        solver = ps.SchedulingSolver(problem)
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(solution.indicators["Nb Tasks Assigned (Worker1)"], n)
+
 
 if __name__ == "__main__":
     unittest.main()
