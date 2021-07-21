@@ -87,12 +87,13 @@ class SchedulingProblem(_NamedUIDObject):
     def add_indicator_number_tasks_assigned(self, resource: _Resource):
         """compute the number of tasks as resource is assigned"""
         # this list contains
-        scheduled_tasks = []
-        for interv_low, interv_up in resource.busy_intervals.values():
-            scheduled_tasks.append(If(interv_low > -1, 1, 0))
+        scheduled_tasks = [
+            If(start > -1, 1, 0) for start, end in resource.busy_intervals.values()
+        ]
+
         nb_tasks_assigned_indicator_variable = Sum(scheduled_tasks)
         nb_tasks_assigned_indicator = Indicator(
-            "Nb tasks assigned (%s)" % resource.name,
+            "Nb Tasks Assigned (%s)" % resource.name,
             nb_tasks_assigned_indicator_variable,
         )
 
@@ -142,9 +143,10 @@ class SchedulingProblem(_NamedUIDObject):
 
         The percentage is rounded to an int value.
         """
-        durations = []
-        for interv_low, interv_up in resource.busy_intervals.values():
-            durations.append(interv_up - interv_low)
+        durations = [
+            interv_up - interv_low
+            for interv_low, interv_up in resource.busy_intervals.values()
+        ]
         utilization = (Sum(durations) * 100) / self.horizon  # in percentage
         utilization_indicator = Indicator(
             "Utilization (%s)" % resource.name, utilization, bounds=(0, 100)

@@ -369,7 +369,7 @@ class TestIndicator(unittest.TestCase):
         solution = solver.solve()
 
         self.assertTrue(solution)
-        self.assertEqual(solution.indicators["Nb tasks assigned (Worker1)"], n)
+        self.assertEqual(solution.indicators["Nb Tasks Assigned (Worker1)"], n)
 
 
 if __name__ == "__main__":
