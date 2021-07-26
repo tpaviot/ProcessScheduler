@@ -31,31 +31,58 @@ class TestBuffer(unittest.TestCase):
         with self.assertRaises(ValueError):
             buffer = ps.Buffer("Buffer1", initial_state=10)
 
-    def test_consume_buffer(self) -> None:
-        pb = ps.SchedulingProblem("ConsumeBuffer")
+    def test_consume_buffer_1(self) -> None:
+        pb = ps.SchedulingProblem("ConsumeBuffer1")
 
         task_1 = ps.FixedDurationTask("task1", duration=3)
+        task_2 = ps.FixedDurationTask("task2", duration=3)
+        task_3 = ps.FixedDurationTask("task3", duration=3)
         buffer = ps.Buffer("Buffer1", initial_state=10)
 
-        c = ps.TaskConsumeBuffer(task_1, buffer, quantity=3)
-        pb.add_constraint(c)
+        pb.add_constraint(ps.TaskStartAt(task_1, 5))
+        pb.add_constraint(ps.TaskStartAt(task_2, 10))
+        pb.add_constraint(ps.TaskStartAt(task_3, 15))
+        c1 = ps.TaskConsumeBuffer(task_1, buffer, quantity=3)
+        pb.add_constraint(c1)
+
+        c2 = ps.TaskConsumeBuffer(task_2, buffer, quantity=2)
+        pb.add_constraint(c2)
+
+        c3 = ps.TaskConsumeBuffer(task_3, buffer, quantity=1)
+        pb.add_constraint(c3)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertTrue(solution)
+        self.assertEqual(solution.buffers[buffer.name].state, [10, 7, 5, 4])
+        self.assertEqual(solution.buffers[buffer.name].state_change_times, [5, 10, 15])
 
-    def test_feed_buffer(self) -> None:
-        pb = ps.SchedulingProblem("FeedBuffer")
+    def test_feed_buffer_1(self) -> None:
+        pb = ps.SchedulingProblem("FeedBuffer1")
 
         task_1 = ps.FixedDurationTask("task1", duration=3)
+        task_2 = ps.FixedDurationTask("task2", duration=3)
+        task_3 = ps.FixedDurationTask("task3", duration=3)
         buffer = ps.Buffer("Buffer1", initial_state=10)
 
-        c = ps.TaskFeedBuffer(task_1, buffer, quantity=8)
-        pb.add_constraint(c)
+        pb.add_constraint(ps.TaskStartAt(task_1, 5))
+        pb.add_constraint(ps.TaskStartAt(task_2, 10))
+        pb.add_constraint(ps.TaskStartAt(task_3, 15))
+        c1 = ps.TaskFeedBuffer(task_1, buffer, quantity=3)
+        pb.add_constraint(c1)
+
+        c2 = ps.TaskFeedBuffer(task_2, buffer, quantity=2)
+        pb.add_constraint(c2)
+
+        c3 = ps.TaskFeedBuffer(task_3, buffer, quantity=1)
+        pb.add_constraint(c3)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertTrue(solution)
+        self.assertEqual(solution.buffers[buffer.name].state, [10, 13, 15, 16])
+        self.assertEqual(solution.buffers[buffer.name].state_change_times, [8, 13, 18])
+
 
 if __name__ == "__main__":
     unittest.main()

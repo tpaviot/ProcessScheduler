@@ -225,12 +225,12 @@ class SchedulingSolver:
             for t in buffer.consuming_tasks:
                 self.add_constraint(
                     buffer_mapping
-                    == Store(buffer_mapping, t.start, -buffer.consuming_tasks[t])
+                    == Store(buffer_mapping, t.start, - buffer.consuming_tasks[t])
                 )
             for t in buffer.producing_tasks:
                 self.add_constraint(
                     buffer_mapping
-                    == Store(buffer_mapping, t.start, +buffer.producing_tasks[t])
+                    == Store(buffer_mapping, t.end, + buffer.producing_tasks[t])
                 )
 
             # create the
