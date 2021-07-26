@@ -40,7 +40,12 @@ from z3 import (
 )
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective, Indicator
-from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
+from processscheduler.solution import (
+    SchedulingSolution,
+    TaskSolution,
+    ResourceSolution,
+    BufferSolution,
+)
 
 #
 # Util functions
@@ -429,6 +434,22 @@ class SchedulingSolver:
             else:
                 solution.add_resource_solution(new_resource_solution)
 
+        # process buffers
+        for buffer in self._problem.context.buffers:
+            buffer_name = buffer.name
+            new_buffer_solution = BufferSolution(buffer_name)
+            # change_state_times
+            cst_lst = []
+            for sct_z3_var in buffer.state_changes_time:
+                cst_lst.append(z3_sol[sct_z3_var].as_long())
+            new_buffer_solution.state_change_times = cst_lst
+            # state values
+            sv_lst = []
+            for sv_z3_var in buffer.buffer_states:
+                sv_lst.append(z3_sol[sv_z3_var].as_long())
+            new_buffer_solution.state = sv_lst
+
+            solution.add_buffer_solution(new_buffer_solution)
         # process indicators
         for indicator in self._problem.context.indicators:
             indicator_name = indicator.name

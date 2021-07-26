@@ -36,10 +36,10 @@ class Buffer(_NamedUIDObject):
         # busy intervals can be for example [(1,3), (5, 7)]
         self.initial_state = initial_state
         # a dict that contains all tasks that consume this buffer
-        # consuming tasks contribute to reduce the buffer level
+        # consuming tasks contribute to reduce the buffer state
         self.consuming_tasks = {}
         # a dict that contains all tasks that feed this buffer
-        # producing tasks contribute to increase the buffer level
+        # producing tasks contribute to increase the buffer state
         self.producing_tasks = {}
         # a list that contains the instants where the buffer state changes
         self.state_changes_time = []

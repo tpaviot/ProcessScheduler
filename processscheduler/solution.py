@@ -60,6 +60,18 @@ class ResourceSolution:
         self.assignments = []
 
 
+class BufferSolution:
+    """Class to represent the solution for a Buffer."""
+
+    def __init__(self, name: str):
+        self.name = name
+        # a collection of instants where the buffer state changes
+        self.state_change_times = []
+        # a collection that represents the buffer state along the
+        # whole schedule. Represented a integer values
+        self.state = []
+
+
 class SchedulingSolution:
     """A class that represent the solution of a scheduling problem. Can be rendered
     to a matplotlib Gantt chart, or exported to json
@@ -72,6 +84,7 @@ class SchedulingSolution:
         self.horizon = 0
         self.tasks = {}  # the dict of tasks
         self.resources = {}  # the dict of all resources
+        self.buffers = {}  # the dict of all buffers
         self.indicators = {}  # the dict of inicators values
 
     def __repr__(self):
@@ -121,6 +134,7 @@ class SchedulingSolution:
 
         d["tasks"] = self.tasks
         d["resources"] = self.resources
+        d["buffers"] = self.buffers
         d["indicators"] = self.indicators
         return json.dumps(d, indent=4, sort_keys=True, cls=SolutionJSONEncoder)
 
@@ -135,6 +149,9 @@ class SchedulingSolution:
     def add_resource_solution(self, resource_solution: ResourceSolution) -> None:
         """Add resource solution."""
         self.resources[resource_solution.name] = resource_solution
+
+    def add_buffer_solution(self, buffer_solution: BufferSolution) -> None:
+        self.buffers[buffer_solution.name] = buffer_solution
 
     def render_gantt_plotly(
         self,

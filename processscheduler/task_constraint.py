@@ -373,6 +373,7 @@ class TaskConsumeBuffer(_Constraint):
 
         buffer.consuming_tasks[task] = quantity
 
+
 class TaskFeedBuffer(_Constraint):
     """task.end <= value"""
 

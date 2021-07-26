@@ -94,6 +94,7 @@ class SchedulingContext:
             raise ValueError("a buffer with the name %s already exists." % buffer.name)
         self.buffers.append(buffer)
 
+
 # Define a global context
 # None by default
 # the scheduling problem will set
