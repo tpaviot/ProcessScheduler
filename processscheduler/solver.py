@@ -21,7 +21,23 @@ from typing import Optional, Union
 import uuid
 import warnings
 
-from z3 import And, FreshInt, If, Int, Solver, SolverFor, Sum, unsat, ArithRef, unknown, set_option, Or
+from z3 import (
+    And,
+    ArithRef,
+    Array,
+    FreshInt,
+    If,
+    Int,
+    IntSort,
+    Or,
+    Solver,
+    SolverFor,
+    Store,
+    Sum,
+    unsat,
+    unknown,
+    set_option,
+)
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective, Indicator
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
@@ -43,6 +59,7 @@ def _calc_parabola_vertex(vector_x, vector_y):
         x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3
     ) / denom
     return a, b, c
+
 
 def _sort_bubble(IntSort_list, solver):
     """Take a list of int variables, return the list of new variables
@@ -191,26 +208,57 @@ class SchedulingSolver:
         # process buffers
         for buffer in self.problem_context.buffers:
             # for each buffer, get all task starts
-            tasks_starts_consume = [t.start for t in buffer.consuming_tasks]
+            tasks_start_consume = [t.start for t in buffer.consuming_tasks]
             tasks_end_feed = [t.end for t in buffer.producing_tasks]
+            #
+            # create an array that stores the mapping between start times and
+            # quantities
+            #
+            buffer_mapping = Array(
+                "Buffer_%s_mapping" % buffer.name, IntSort(), IntSort()
+            )
+            for t in buffer.consuming_tasks:
+                self.add_constraint(
+                    buffer_mapping
+                    == Store(buffer_mapping, t.start, -buffer.consuming_tasks[t])
+                )
+            for t in buffer.producing_tasks:
+                self.add_constraint(
+                    buffer_mapping
+                    == Store(buffer_mapping, t.start, +buffer.producing_tasks[t])
+                )
+
             # create the
             # for the buffer, create differente state changes
-            sorted_times = _sort_bubble(tasks_starts_consume + tasks_end_feed, self._solver)
+            sorted_times = _sort_bubble(
+                tasks_start_consume + tasks_end_feed, self._solver
+            )
             # create as many buffer state changes as sorted_times
-            buffer.state_changes_time = [Int("%s_sc_time_%i" %(buffer.name, k)) for k in range(len(sorted_times))]
+            buffer.state_changes_time = [
+                Int("%s_sc_time_%i" % (buffer.name, k))
+                for k in range(len(sorted_times))
+            ]
 
+            # add the constraints that give the buffer state change times
             for a, b in zip(sorted_times, buffer.state_changes_time):
                 self.add_constraint(a == b)
 
             # compute the different buffer states according to state changes
-            buffer.buffer_states = [Int("%s_state_%i" %(buffer.name, k)) for k in range(len(buffer.state_changes_time) + 1)]
+            buffer.buffer_states = [
+                Int("%s_state_%i" % (buffer.name, k))
+                for k in range(len(buffer.state_changes_time) + 1)
+            ]
             # add constraints for buffer states
             # the first buffer state is equal to the buffer initial level
             self.add_constraint(buffer.buffer_states[0] == buffer.initial_state)
             # and, for the other, the buffer state i+1 is the buffer state i +/- the buffer change
-            for i in range(len(buffer.buffer_states)-1):
+            for i in range(len(buffer.buffer_states) - 1):
                 quantity = 3
-                self.add_constraint(buffer.buffer_states[i+1] == buffer.buffer_states[i] + quantity)
+                self.add_constraint(
+                    buffer.buffer_states[i + 1]
+                    == buffer.buffer_states[i]
+                    + buffer_mapping[buffer.state_changes_time[i]]
+                )
 
         # optimization
         if self.is_optimization_problem:
@@ -255,7 +303,6 @@ class SchedulingSolver:
             self.add_constraint(equivalent_indicator.get_assertions())
         else:
             self.objective = self._problem.context.objectives[0]
-
 
     def check_sat(self):
         """check satisfiability. Returns resulta as True (sat) or False (unsat, unknown).
