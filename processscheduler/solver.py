@@ -21,13 +21,13 @@ from typing import Optional, Union
 import uuid
 import warnings
 
-from z3 import Int, Solver, SolverFor, Sum, unsat, ArithRef, unknown, set_option, Or
+from z3 import And, FreshInt, If, Int, Solver, SolverFor, Sum, unsat, ArithRef, unknown, set_option, Or
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective, Indicator
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
 
 #
-# Util function
+# Util functions
 #
 def _calc_parabola_vertex(vector_x, vector_y):
     """Adapted from http://chris35wills.github.io/parabola_python/
@@ -43,6 +43,29 @@ def _calc_parabola_vertex(vector_x, vector_y):
         x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3
     ) / denom
     return a, b, c
+
+def _sort_bubble(IntSort_list, solver):
+    """Take a list of int variables, return the list of new variables
+    sorting using the bubble recursive sort"""
+    sorted_list = IntSort_list.copy()
+
+    def bubble_up(ar):
+        arr = ar.copy()
+        for i in range(len(arr) - 1):
+            x = arr[i]
+            y = arr[i + 1]
+            # compare and swap x and y
+            x1, y1 = FreshInt(), FreshInt()
+            c = If(x <= y, And(x1 == x, y1 == y), And(x1 == y, y1 == x))
+            # store values
+            arr[i] = x1
+            arr[i + 1] = y1
+            solver.add(c)
+        return arr
+
+    for _ in range(len(sorted_list)):
+        sorted_list = bubble_up(sorted_list)
+    return sorted_list
 
 
 #
@@ -72,6 +95,8 @@ class SchedulingSolver:
         self.debug = debug
         # objectives list
         self.objective = None  # the list of all objectives defined in this problem
+        self.current_solution = None  # no solution until the problem is solved
+
         # set_option('smt.arith.auto_config_simplex', True)
         if debug:
             set_option("verbose", 2)
@@ -115,9 +140,6 @@ class SchedulingSolver:
         if debug:
             set_option(unsat_core=True)
 
-        # self._solver.set("sat.cardinality.solver", True)
-        # self._solver.set("sat.core.minimize", True)
-        # self._solver.set("sat.core.minimize_partial", True)
         if parallel:
             set_option("parallel.enable", True)  # enable parallel computation
 
@@ -150,13 +172,49 @@ class SchedulingSolver:
         for indic in self.problem_context.indicators:
             self.add_constraint(indic.get_assertions())
 
-        self.process_work_amount()
+        # work amounts
+        # for each task, compute the total work for all required resources"""
+        for task in self.problem_context.tasks:
+            if task.work_amount > 0.0:
+                work_total_for_all_resources = []
+                for required_resource in task.required_resources:
+                    # work contribution for the resource
+                    interv_low, interv_up = required_resource.busy_intervals[task]
+                    work_contribution = required_resource.productivity * (
+                        interv_up - interv_low
+                    )
+                    work_total_for_all_resources.append(work_contribution)
+                self.add_constraint(
+                    Sum(work_total_for_all_resources) >= task.work_amount
+                )
 
+        # process buffers
+        for buffer in self.problem_context.buffers:
+            # for each buffer, get all task starts
+            tasks_starts_consume = [t.start for t in buffer.consuming_tasks]
+            tasks_end_feed = [t.end for t in buffer.producing_tasks]
+            # create the
+            # for the buffer, create differente state changes
+            sorted_times = _sort_bubble(tasks_starts_consume + tasks_end_feed, self._solver)
+            # create as many buffer state changes as sorted_times
+            buffer.state_changes_time = [Int("%s_sc_time_%i" %(buffer.name, k)) for k in range(len(sorted_times))]
+
+            for a, b in zip(sorted_times, buffer.state_changes_time):
+                self.add_constraint(a == b)
+
+            # compute the different buffer states according to state changes
+            buffer.buffer_states = [Int("%s_state_%i" %(buffer.name, k)) for k in range(len(buffer.state_changes_time) + 1)]
+            # add constraints for buffer states
+            # the first buffer state is equal to the buffer initial level
+            self.add_constraint(buffer.buffer_states[0] == buffer.initial_state)
+            # and, for the other, the buffer state i+1 is the buffer state i +/- the buffer change
+            for i in range(len(buffer.buffer_states)-1):
+                quantity = 3
+                self.add_constraint(buffer.buffer_states[i+1] == buffer.buffer_states[i] + quantity)
+
+        # optimization
         if self.is_optimization_problem:
             self.create_objective()
-
-        # each time the solver is called, the current_solution is stored
-        self.current_solution = None
 
     def add_constraint(self, cstr) -> bool:
         # set the method to use to add constraints
@@ -198,21 +256,6 @@ class SchedulingSolver:
         else:
             self.objective = self._problem.context.objectives[0]
 
-    def process_work_amount(self) -> None:
-        """for each task, compute the total work for all required resources"""
-        for task in self.problem_context.tasks:
-            if task.work_amount > 0.0:
-                work_total_for_all_resources = []
-                for required_resource in task.required_resources:
-                    # work contribution for the resource
-                    interv_low, interv_up = required_resource.busy_intervals[task]
-                    work_contribution = required_resource.productivity * (
-                        interv_up - interv_low
-                    )
-                    work_total_for_all_resources.append(work_contribution)
-                self.add_constraint(
-                    Sum(work_total_for_all_resources) >= task.work_amount
-                )
 
     def check_sat(self):
         """check satisfiability. Returns resulta as True (sat) or False (unsat, unknown).
@@ -394,12 +437,6 @@ class SchedulingSolver:
 
             # then get the solution
             solution = self._solver.model()
-
-            # if self.objective:
-            #     print('Optimization results:\n=====================')
-            #     print('\t->Objective values:')
-            #     for objective_name, objective_value in self.objectives:  # if ever no objectives, this line will do nothing
-            #         print('\t\t->%s: %s' % (objective_name, objective_value.value()))
 
         self.current_solution = solution
         sol = self.build_solution(solution)

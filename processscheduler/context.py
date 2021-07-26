@@ -42,7 +42,10 @@ class SchedulingContext:
         self.constraints = []  # type: List[BoolRef]
         # list of define indicators
         self.indicators = []  # type: List[Indicator]
+        # list of objectives
         self.objectives = []  # type: List[Union[Indicator, ArithRef]]
+        # list of buffers
+        self.buffers = []  # type: List[Buffer]
 
     def add_indicator(self, indicator) -> bool:
         """add an indicatr to the problem"""
@@ -84,6 +87,12 @@ class SchedulingContext:
     def add_objective(self, objective) -> None:
         self.objectives.append(objective)
 
+    def add_buffer(self, buffer) -> None:
+        """add a single task to the problem. There must not be two tasks with the same name"""
+        all_buffer_names = [b.name for b in self.buffers]
+        if buffer.name in all_buffer_names:
+            raise ValueError("a buffer with the name %s already exists." % buffer.name)
+        self.buffers.append(buffer)
 
 # Define a global context
 # None by default

@@ -350,3 +350,43 @@ class ScheduleNTasksInTimeIntervals(_Constraint):
             [(scheduled, True) for scheduled in all_bools], nb_tasks_to_schedule
         )
         self.set_assertions(asst_pb)
+
+
+#
+# Task buffer constraints
+#
+class TaskConsumeBuffer(_Constraint):
+    """task.end <= value"""
+
+    def __init__(
+        self,
+        task,
+        buffer,
+        quantity,
+        optional: Optional[bool] = False,
+    ) -> None:
+        super().__init__(optional)
+        self.quantity = quantity
+        self.task = task
+        self.buffer = buffer
+        self.quantity = quantity
+
+        buffer.consuming_tasks[task] = quantity
+
+class TaskFeedBuffer(_Constraint):
+    """task.end <= value"""
+
+    def __init__(
+        self,
+        task,
+        buffer,
+        quantity,
+        optional: Optional[bool] = False,
+    ) -> None:
+        super().__init__(optional)
+        self.quantity = quantity
+        self.task = task
+        self.buffer = buffer
+        self.quantity = quantity
+
+        buffer.producing_tasks[task] = quantity
