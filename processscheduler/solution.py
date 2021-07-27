@@ -304,8 +304,10 @@ class SchedulingSolution:
             plot_ticklabels = list(tasks_to_render.keys())
             nbr_y_values = len(tasks_to_render)
 
-        gantt = plt.subplots(1, 1, figsize=fig_size)[1]
-        gantt.set_title(plot_title)
+        if self.buffers:
+            gantt_chart, buffer_chart = plt.subplots(2, 1, figsize=fig_size)[1]
+        else:
+            gantt_chart.set_title(plot_title)
 
         # x axis, use real date and times if possible
         if self.problem.delta_time is not None:
@@ -323,18 +325,18 @@ class SchedulingSolution:
                     "%s" % (i * self.problem.delta_time)
                     for i in range(self.horizon + 1)
                 ]
-            gantt.set_xlim(0, self.horizon)
+            gantt_chart.set_xlim(0, self.horizon)
             plt.xticks(range(self.horizon + 1), times_str, rotation=60)
             plt.subplots_adjust(bottom=0.15)
-            gantt.set_xlabel("Time", fontsize=12)
+            gantt_chart.set_xlabel("Time", fontsize=12)
         else:
             # otherwise use integers
-            gantt.set_xlim(0, self.horizon)
-            gantt.set_xticks(range(self.horizon + 1))
+            gantt_chart.set_xlim(0, self.horizon)
+            gantt_chart.set_xticks(range(self.horizon + 1))
             # Setting label
-            gantt.set_xlabel("Time (%i periods)" % self.horizon, fontsize=12)
+            gantt_chart.set_xlabel("Time (%i periods)" % self.horizon, fontsize=12)
 
-        gantt.set_ylabel(plot_ylabel, fontsize=12)
+        gantt_chart.set_ylabel(plot_ylabel, fontsize=12)
 
         # colormap definition
         cmap = LinearSegmentedColormap.from_list(
@@ -347,11 +349,11 @@ class SchedulingSolution:
             task_colors[task_name] = cmap(i)
         # the task color is defined from the task name, this way the task has
         # already the same color, even if it is defined after
-        gantt.set_ylim(0, 2 * nbr_y_values)
-        gantt.set_yticks(range(1, 2 * nbr_y_values, 2))
-        gantt.set_yticklabels(plot_ticklabels)
+        gantt_chart.set_ylim(0, 2 * nbr_y_values)
+        gantt_chart.set_yticks(range(1, 2 * nbr_y_values, 2))
+        gantt_chart.set_yticklabels(plot_ticklabels)
         # in Resources mode, create one line per resource on the y axis
-        gantt.grid(axis="x", linestyle="dashed")
+        gantt_chart.grid(axis="x", linestyle="dashed")
 
         def draw_broken_barh_with_text(start, length, bar_color, text, hatch=None):
             # first compute the bar dimension
@@ -359,7 +361,7 @@ class SchedulingSolution:
                 bar_dimension = (start - 0.05, 0.1)
             else:
                 bar_dimension = (start, length)
-            gantt.broken_barh(
+            gantt_chart.broken_barh(
                 [bar_dimension],
                 (i * 2, 2),
                 edgecolor="black",
@@ -368,7 +370,7 @@ class SchedulingSolution:
                 hatch=hatch,
                 alpha=0.5,
             )
-            gantt.text(
+            gantt_chart.text(
                 x=start + length / 2,
                 y=i * 2 + 1,
                 s=text,
@@ -412,24 +414,26 @@ class SchedulingSolution:
         # display indicator values in the legend area
         if self.indicators and show_indicators:
             for indicator_name in self.indicators:
-                gantt.plot(
+                gantt_chart.plot(
                     [],
                     [],
                     " ",
                     label="%s: %i" % (indicator_name, self.indicators[indicator_name]),
                 )
-            gantt.legend(title="Indicators", title_fontsize="large", framealpha=0.5)
+            gantt_chart.legend(
+                title="Indicators", title_fontsize="large", framealpha=0.5
+            )
 
         # buffers, show a plot for all buffers
         if self.buffers:
             nb_buffers = len(self.buffers)
-            figs, axs = plt.subplots(1, figsize=fig_size)
-            axs.set_title("Buffers")
-            axs.set_xlim(0, self.horizon)
-            axs.set_xticks(range(self.horizon + 1))
-            axs.grid(True)
-            axs.set_xlabel("Timeline")
-            axs.set_ylabel("Buffer level")
+            # figs, axs = plt.subplots(1, figsize=fig_size)
+            buffer_chart.set_title("Buffers")
+            buffer_chart.set_xlim(0, self.horizon)
+            buffer_chart.set_xticks(range(self.horizon + 1))
+            buffer_chart.grid(True)
+            buffer_chart.set_xlabel("Timeline")
+            buffer_chart.set_ylabel("Buffer level")
 
             buff_plot_index = 0
             for buffer in self.buffers.values():
@@ -443,8 +447,8 @@ class SchedulingSolution:
                     Y += [y, y, np.nan]
                     i += 1
 
-                plt.plot(X, Y, label="%s" % buffer.name)
-            axs.legend()
+                plt.plot(X, Y, linewidth=2, label="%s" % buffer.name)
+            buffer_chart.legend()
         if fig_filename is not None:
             plt.savefig(fig_filename)
 
