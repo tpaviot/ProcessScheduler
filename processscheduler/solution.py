@@ -247,6 +247,10 @@ class SchedulingSolution:
                 height=fig_size[1],
             )
 
+        # buffers, show an histogram
+        if self.buffers:
+            print("POPO il y a des buffers!!")
+
         if fig_filename is not None:
             fig.write_image(fig_filename)
 
@@ -271,6 +275,7 @@ class SchedulingSolution:
         """
         try:
             import matplotlib.pyplot as plt
+            import numpy as np
             from matplotlib.colors import LinearSegmentedColormap
         except ImportError:
             raise ModuleNotFoundError("matplotlib is not installed.")
@@ -415,6 +420,31 @@ class SchedulingSolution:
                 )
             gantt.legend(title="Indicators", title_fontsize="large", framealpha=0.5)
 
+        # buffers, show a plot for all buffers
+        if self.buffers:
+            nb_buffers = len(self.buffers)
+            figs, axs = plt.subplots(1, figsize=fig_size)
+            axs.set_title("Buffers")
+            axs.set_xlim(0, self.horizon)
+            axs.set_xticks(range(self.horizon + 1))
+            axs.grid(True)
+            axs.set_xlabel("Timeline")
+            axs.set_ylabel("Buffer level")
+
+            buff_plot_index = 0
+            for buffer in self.buffers.values():
+                all_x = [0] + buffer.state_change_times + [self.horizon]
+                # build data from the state and state_change_times
+                i = 0
+                X = []
+                Y = []
+                for y in buffer.state:
+                    X += [all_x[i], all_x[i + 1], np.nan]
+                    Y += [y, y, np.nan]
+                    i += 1
+
+                plt.plot(X, Y, label="%s" % buffer.name)
+            axs.legend()
         if fig_filename is not None:
             plt.savefig(fig_filename)
 
