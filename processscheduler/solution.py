@@ -307,7 +307,8 @@ class SchedulingSolution:
         if self.buffers:
             gantt_chart, buffer_chart = plt.subplots(2, 1, figsize=fig_size)[1]
         else:
-            gantt_chart.set_title(plot_title)
+            gantt_chart = plt.subplots(1, 1, figsize=fig_size)[1]
+        gantt_chart.set_title(plot_title)
 
         # x axis, use real date and times if possible
         if self.problem.delta_time is not None:
