@@ -29,12 +29,22 @@ import processscheduler.context as ps_context
 class Buffer(_NamedUIDObject):
     """A buffer can be used by tasks which can be consumer or producer for this buffer"""
 
-    def __init__(self, name: str, initial_state: int) -> None:
+    def __init__(
+        self,
+        name: str,
+        initial_state: Optional[int] = None,
+        final_state: Optional[int] = None,
+        lower_bound: Optional[int] = None,
+        upper_bound: Optional[int] = None,
+    ) -> None:
         super().__init__(name)
         # for each resource, we define a dict that stores
         # all tasks and busy intervals of the resource.
         # busy intervals can be for example [(1,3), (5, 7)]
         self.initial_state = initial_state
+        self.final_state = final_state
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
         # a dict that contains all tasks that consume this buffer
         # consuming tasks contribute to reduce the buffer state
         self.consuming_tasks = {}

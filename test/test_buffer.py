@@ -143,6 +143,35 @@ class TestBuffer(unittest.TestCase):
         # plot buffers
         solution.render_gantt_matplotlib(show_plot=False)
 
+    def test_buffer_bounds_1(self) -> None:
+        # n tasks take 1, n tasks feed one. Bounds 0 to 1
+        pb = ps.SchedulingProblem("BufferBounds1")
+
+        n = 3
+        consuming_tasks = [
+            ps.FixedDurationTask("ConsumingTask_%i" % i, duration=3) for i in range(n)
+        ]
+        feed_tasks = [
+            ps.FixedDurationTask("FeedTask_%i" % i, duration=3) for i in range(n)
+        ]
+        # create buffer
+        buffer = ps.Buffer("Buffer1", lower_bound=0, upper_bound=1)
+
+        for t in consuming_tasks:
+            pb.add_constraint(ps.TaskConsumeBuffer(t, buffer, quantity=1))
+
+        for t in feed_tasks:
+            pb.add_constraint(ps.TaskFeedBuffer(t, buffer, quantity=1))
+
+        pb.add_objective_makespan()
+
+        solver = ps.SchedulingSolver(
+            pb, max_time=300, parallel=True
+        )  # , debug=True)#, logics="QF_UFIDL")
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertEqual(solution.horizon, 9)
+
 
 if __name__ == "__main__":
     unittest.main()

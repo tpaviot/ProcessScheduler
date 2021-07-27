@@ -225,12 +225,12 @@ class SchedulingSolver:
             for t in buffer.consuming_tasks:
                 self.add_constraint(
                     buffer_mapping
-                    == Store(buffer_mapping, t.start, - buffer.consuming_tasks[t])
+                    == Store(buffer_mapping, t.start, -buffer.consuming_tasks[t])
                 )
             for t in buffer.producing_tasks:
                 self.add_constraint(
                     buffer_mapping
-                    == Store(buffer_mapping, t.end, + buffer.producing_tasks[t])
+                    == Store(buffer_mapping, t.end, +buffer.producing_tasks[t])
                 )
 
             # create the
@@ -255,7 +255,16 @@ class SchedulingSolver:
             ]
             # add constraints for buffer states
             # the first buffer state is equal to the buffer initial level
-            self.add_constraint(buffer.buffer_states[0] == buffer.initial_state)
+            if buffer.initial_state is not None:
+                self.add_constraint(buffer.buffer_states[0] == buffer.initial_state)
+            if buffer.final_state is not None:
+                self.add_constraint(buffer.buffer_states[-1] == buffer.final_state)
+            if buffer.lower_bound is not None:
+                for st in buffer.buffer_states:
+                    self.add_constraint(st >= buffer.lower_bound)
+            if buffer.upper_bound is not None:
+                for st in buffer.buffer_states:
+                    self.add_constraint(st <= buffer.upper_bound)
             # and, for the other, the buffer state i+1 is the buffer state i +/- the buffer change
             for i in range(len(buffer.buffer_states) - 1):
                 quantity = 3
