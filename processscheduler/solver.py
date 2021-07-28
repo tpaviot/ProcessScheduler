@@ -212,13 +212,12 @@ class SchedulingSolver:
 
         # process buffers
         for buffer in self.problem_context.buffers:
-            # for each buffer, get all task starts
-            tasks_start_consume = [t.start for t in buffer.consuming_tasks]
-            tasks_end_feed = [t.end for t in buffer.producing_tasks]
             #
             # create an array that stores the mapping between start times and
-            # quantities
-            #
+            # quantities. For example, if a start T1 starts at 2 and consumes
+            # 8, and T3 ends at 6 and consumes 5 then the mapping array
+            # will look like : A[2]=8 and A[6]=-5
+            # SO far, no way to have the same start time at different inst
             buffer_mapping = Array(
                 "Buffer_%s_mapping" % buffer.name, IntSort(), IntSort()
             )
@@ -232,9 +231,10 @@ class SchedulingSolver:
                     buffer_mapping
                     == Store(buffer_mapping, t.end, +buffer.producing_tasks[t])
                 )
-
-            # create the
-            # for the buffer, create differente state changes
+            # sort consume/feed times in asc order
+            tasks_start_consume = [t.start for t in buffer.consuming_tasks]
+            tasks_end_feed = [t.end for t in buffer.producing_tasks]
+            
             sorted_times = _sort_bubble(
                 tasks_start_consume + tasks_end_feed, self._solver
             )
@@ -245,8 +245,8 @@ class SchedulingSolver:
             ]
 
             # add the constraints that give the buffer state change times
-            for a, b in zip(sorted_times, buffer.state_changes_time):
-                self.add_constraint(a == b)
+            for st, bfst in zip(sorted_times, buffer.state_changes_time):
+                self.add_constraint(st == bfst)
 
             # compute the different buffer states according to state changes
             buffer.buffer_states = [
@@ -267,7 +267,6 @@ class SchedulingSolver:
                     self.add_constraint(st <= buffer.upper_bound)
             # and, for the other, the buffer state i+1 is the buffer state i +/- the buffer change
             for i in range(len(buffer.buffer_states) - 1):
-                quantity = 3
                 self.add_constraint(
                     buffer.buffer_states[i + 1]
                     == buffer.buffer_states[i]
