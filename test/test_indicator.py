@@ -300,11 +300,9 @@ class TestIndicator(unittest.TestCase):
     @staticmethod
     def get_sum_flowtime(solution) -> int:
         return sum(
-            [
-                solution.indicators[indicator_id]
-                for indicator_id in solution.indicators
-                if "FlowTime" in indicator_id
-            ]
+            solution.indicators[indicator_id]
+            for indicator_id in solution.indicators
+            if "FlowTime" in indicator_id
         )
 
     def test_indicator_flowtime_single_resource_5(self) -> None:

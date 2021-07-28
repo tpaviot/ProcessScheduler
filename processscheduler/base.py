@@ -75,7 +75,7 @@ class _NamedUIDObject:
             type(self),
             len(self.assertions),
         )
-        assertions_str = "".join(["%s" % ass for ass in self.assertions])
+        assertions_str = "".join("%s" % ass for ass in self.assertions)
         return str_to_return + assertions_str
 
     def add_assertion(self, z3_assertion: BoolRef) -> bool:
@@ -149,9 +149,9 @@ class ForceApplyNOptionalConstraints(_Constraint):
                 )
 
         # all scheduled variables to take into account
-        applied_vars = []
-        for constraint in list_of_optional_constraints:
-            applied_vars.append(constraint.applied)
+        applied_vars = [
+            constraint.applied for constraint in list_of_optional_constraints
+        ]
 
         asst = problem_function[kind](
             [(applied, True) for applied in applied_vars], nb_constraints_to_apply

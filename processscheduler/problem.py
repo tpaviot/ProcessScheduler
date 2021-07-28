@@ -92,12 +92,10 @@ class SchedulingProblem(_NamedUIDObject):
         ]
 
         nb_tasks_assigned_indicator_variable = Sum(scheduled_tasks)
-        nb_tasks_assigned_indicator = Indicator(
+        return Indicator(
             "Nb Tasks Assigned (%s)" % resource.name,
             nb_tasks_assigned_indicator_variable,
         )
-
-        return nb_tasks_assigned_indicator
 
     def add_indicator_resource_cost(
         self, list_of_resources: List[_Resource]
@@ -148,10 +146,9 @@ class SchedulingProblem(_NamedUIDObject):
             for interv_low, interv_up in resource.busy_intervals.values()
         ]
         utilization = (Sum(durations) * 100) / self.horizon  # in percentage
-        utilization_indicator = Indicator(
+        return Indicator(
             "Utilization (%s)" % resource.name, utilization, bounds=(0, 100)
         )
-        return utilization_indicator
 
     def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:
         """Maximize indicator"""
@@ -269,14 +266,10 @@ class SchedulingProblem(_NamedUIDObject):
             "GreatestTaskEndTimeInTimePeriodForResource%s_%s" % (resource.name, uid)
         )
 
-        asst_max = []
-        for task in resource.busy_intervals:
-            asst_max.append(
-                Implies(
+        asst_max = [Implies(
                     And(task.end <= upper_bound, task.start >= lower_bound),
                     maxi == task.end,
-                )
-            )
+                ) for task in resource.busy_intervals]
         flowtime_single_resource_indicator.add_assertion(Or(asst_max))
         for task in resource.busy_intervals:
             flowtime_single_resource_indicator.add_assertion(
@@ -291,14 +284,10 @@ class SchedulingProblem(_NamedUIDObject):
             "SmallestTaskEndTimeInTimePeriodForResource%s_%s" % (resource.name, uid)
         )
 
-        asst_min = []
-        for task in resource.busy_intervals:
-            asst_min.append(
-                Implies(
+        asst_min = [Implies(
                     And(task.end <= upper_bound, task.start <= lower_bound),
                     mini == task.start,
-                )
-            )
+                ) for task in resource.busy_intervals]
         flowtime_single_resource_indicator.add_assertion(Or(asst_min))
         for task in resource.busy_intervals:
             flowtime_single_resource_indicator.add_assertion(

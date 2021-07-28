@@ -37,10 +37,7 @@ class _Cost(_NamedUIDObject):
 
         lower_bound, upper_bound = interval
         x = np.linspace(lower_bound, upper_bound, 1000)
-        y = []
-        for x_ in x:
-            y.append(self.f(x_))
-
+        y = [self.f(x_) for x_ in x]
         plt.plot(x, y, label="Cost function")
 
         plt.legend()
