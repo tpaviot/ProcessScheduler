@@ -21,7 +21,7 @@ from typing import Optional, Union
 import uuid
 import warnings
 
-from z3 import Int, Solver, SolverFor, Sum, unsat, ArithRef, unknown, set_option, Or
+from z3 import Store, Array, And, ForAll, Implies, Int, IntSort, Solver, SolverFor, Sum, unsat, ArithRef, unknown, set_option, Or
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective, Indicator
 from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
@@ -138,13 +138,25 @@ class SchedulingSolver:
         for ress in self.problem_context.resources:
             busy_intervals = ress.get_busy_intervals()
             nb_intervals = len(busy_intervals)
-            for i in range(nb_intervals):
-                start_task_i, end_task_i = busy_intervals[i]
-                for k in range(i + 1, nb_intervals):
-                    start_task_k, end_task_k = busy_intervals[k]
-                    self.add_constraint(
-                        Or(start_task_k >= end_task_i, start_task_i >= end_task_k)
-                    )
+
+            if True:
+                for i in range(nb_intervals):
+                    start_task_i, end_task_i = busy_intervals[i]
+                    for k in range(i + 1, nb_intervals):
+                        start_task_k, end_task_k = busy_intervals[k]
+                        self.add_constraint(
+                            Or(start_task_k >= end_task_i, start_task_i >= end_task_k)
+                        )
+            # create a new array for this resource
+            else:
+                A = Array('Occupation_%s' % ress.name, IntSort(), IntSort())
+                x = Int('indices_ress_%s' % ress.name)
+                task_id = 0
+                for i in range(nb_intervals):
+                    start_task_i, end_task_i = busy_intervals[i]
+                    axiom1 = ForAll([x], Implies(And(x >= 0, x>=start_task_i, x<=end_task_i), Store(A, x, task_id) == A))
+                    self.add_constraint(axiom1)
+                    task_id += 1
 
         # process indicators
         for indic in self.problem_context.indicators:
