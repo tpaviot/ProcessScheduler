@@ -42,6 +42,7 @@ from processscheduler.resource_constraint import (
     DistinctWorkers,
     ResourceUnavailable,
     WorkLoad,
+    ResourceTasksDistance,
 )
 from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
 from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
