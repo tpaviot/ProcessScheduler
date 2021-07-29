@@ -107,6 +107,42 @@ class TestResourceTasksDistance(unittest.TestCase):
         self.assertTrue(t3_start == 10 or t3_start == 14)
         self.assertTrue(t2_start == 10 or t2_start == 15)
 
+    def test_resource_tasks_distance_4(self) -> None:
+        """Adding one or more non scheduled optional tasks should not change anything"""
+        pb = ps.SchedulingProblem("ResourceTasksDistance4OptionalTasks", horizon=20)
+        task_1 = ps.FixedDurationTask("task1", duration=8)
+        task_2 = ps.FixedDurationTask("task2", duration=4)
+        task_3 = ps.FixedDurationTask("task3", duration=3, optional=True)
+        task_4 = ps.FixedDurationTask("task4", duration=2, optional=True)
+        task_5 = ps.FixedDurationTask("task5", duration=1, optional=True)
+        worker_1 = ps.Worker("Worker1")
+        task_1.add_required_resource(worker_1)
+        task_2.add_required_resource(worker_1)
+
+        c1 = ps.ResourceTasksDistance(worker_1, distance=4, mode="exact")
+        pb.add_constraint(c1)
+
+        pb.add_constraint(ps.TaskStartAt(task_1, 1))
+
+        solver = ps.SchedulingSolver(pb)
+        # for optional tasks to not be scheduled
+        solver.add_constraint(task_3.scheduled == False)
+        solver.add_constraint(task_4.scheduled == False)
+        solver.add_constraint(task_5.scheduled == False)
+
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+
+        t1_start = solution.tasks[task_1.name].start
+        t2_start = solution.tasks[task_2.name].start
+        t1_end = solution.tasks[task_1.name].end
+        t2_end = solution.tasks[task_2.name].end
+        self.assertEqual(t1_start, 1)
+        self.assertEqual(t1_end, 9)
+        self.assertEqual(t2_start, 13)
+        self.assertEqual(t2_end, 17)
+
 
 if __name__ == "__main__":
     unittest.main()
