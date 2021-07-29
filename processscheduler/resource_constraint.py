@@ -197,34 +197,25 @@ class ResourceTasksDistance(_Constraint):
             ends.append(end_var)
         # sort both lists
         sorted_starts, c1 = sort_list_of_z3_var(starts)
-        for c in c1:
-            self.set_assertions(c)
         sorted_ends, c2 = sort_list_of_z3_var(ends)
-        for c in c2:
+        for c in c1 + c2:
             self.set_assertions(c)
         # from now, starts and ends are sorted in asc order
         # the space between two consecutive tasks is the sorted_start[i+1]-sorted_end[i]
         # we just have to constraint this variable
-        c3 = []
         for i in range(1, len(sorted_starts)):
             if mode == "min":
-                new_cstr = Implies(
-                    And(sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0),
-                    sorted_starts[i] - sorted_ends[i - 1] >= distance,
-                )
+                asst = sorted_starts[i] - sorted_ends[i - 1] >= distance
             elif mode == "max":
-                new_cstr = Implies(
-                    And(sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0),
-                    sorted_starts[i] - sorted_ends[i - 1] <= distance,
-                )
+                asst = sorted_starts[i] - sorted_ends[i - 1] <= distance
             elif mode == "exact":
-                new_cstr = Implies(
-                    And(sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0),
-                    sorted_starts[i] - sorted_ends[i - 1] == distance,
-                )
-            c3.append(new_cstr)
-        for c in c3:
-            self.set_assertions(c)
+                asst = sorted_starts[i] - sorted_ends[i - 1] == distance
+            # add the constraint only if start and ends are positive integers,
+            # that is to say they correspond to a scheduled optional task
+            new_cstr = Implies(
+                And(sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0), asst
+            )
+            self.set_assertions(new_cstr)
 
 
 #
