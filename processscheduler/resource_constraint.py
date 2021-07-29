@@ -176,12 +176,14 @@ class ResourceUnavailable(_Constraint):
 
 
 class ResourceTasksDistance(_Constraint):
-    """ """
+    """Force a minimal/exact/maximal number time unitary periods between tasks for a single resource. This
+    distance constraint is restricted to a certain number of time intervals"""
 
     def __init__(
         self,
         worker,
         distance: int,
+        time_periods: Optional[list] = None,
         optional: Optional[bool] = False,
         mode: Optional[str] = "exact",
     ):
@@ -210,11 +212,30 @@ class ResourceTasksDistance(_Constraint):
                 asst = sorted_starts[i] - sorted_ends[i - 1] <= distance
             elif mode == "exact":
                 asst = sorted_starts[i] - sorted_ends[i - 1] == distance
-            # add the constraint only if start and ends are positive integers,
-            # that is to say they correspond to a scheduled optional task
-            new_cstr = Implies(
-                And(sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0), asst
-            )
+            #  anothe set of conditions, related to the time periods
+            conditions = []
+            if time_periods is not None:
+                for (
+                    lower_bound,
+                    upper_bound,
+                ) in time_periods:  # time_period should be a list also or a tuple
+                    conditions.append(
+                        And(
+                            sorted_starts[i] >= lower_bound,
+                            sorted_ends[i - 1] >= lower_bound,
+                            sorted_starts[i] <= upper_bound,
+                            sorted_ends[i - 1] <= upper_bound,
+                        )
+                    )
+            else:
+                # add the constraint only if start and ends are positive integers,
+                # that is to say they correspond to a scheduled optional task
+                condition_only_scheduled_tasks = And(
+                    sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0
+                )
+                conditions = [condition_only_scheduled_tasks]
+            # finally create the constraint
+            new_cstr = Implies(Or(conditions), asst)
             self.set_assertions(new_cstr)
 
 

@@ -143,6 +143,142 @@ class TestResourceTasksDistance(unittest.TestCase):
         self.assertEqual(t2_start, 13)
         self.assertEqual(t2_end, 17)
 
+    def test_resource_tasks_distance_single_time_period_1(self) -> None:
+        """Adding one or more non scheduled optional tasks should not change anything"""
+        pb = ps.SchedulingProblem("ResourceTasksDistanceSingleTimePeriod1")
+        task_1 = ps.FixedDurationTask("task1", duration=1)
+        task_2 = ps.FixedDurationTask("task2", duration=1)
+
+        worker_1 = ps.Worker("Worker1")
+        task_1.add_required_resource(worker_1)
+        task_2.add_required_resource(worker_1)
+
+        c1 = ps.ResourceTasksDistance(
+            worker_1, distance=4, mode="exact", time_periods=[[10, 18]]
+        )
+        pb.add_constraint(c1)
+        pb.add_constraint(ps.TaskPrecedence(task_1, task_2))
+        # we add a makespan objective: the two tasks should be scheduled with an horizon of 2
+        # because they are outside the time period
+        pb.add_objective_makespan()
+
+        solver = ps.SchedulingSolver(pb)
+
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+        t1_start = solution.tasks[task_1.name].start
+        t2_start = solution.tasks[task_2.name].start
+        t1_end = solution.tasks[task_1.name].end
+        t2_end = solution.tasks[task_2.name].end
+        self.assertEqual(t1_start, 0)
+        self.assertEqual(t1_end, 1)
+        self.assertEqual(t2_start, 1)
+        self.assertEqual(t2_end, 2)
+
+    def test_resource_tasks_distance_single_time_period_2(self) -> None:
+        """The same as above, except that we force the tasks to be scheduled
+        in the time period so that the distance applies"""
+        pb = ps.SchedulingProblem("ResourceTasksDistanceSingleTimePeriod2")
+        task_1 = ps.FixedDurationTask("task1", duration=1)
+        task_2 = ps.FixedDurationTask("task2", duration=1)
+
+        worker_1 = ps.Worker("Worker1")
+        task_1.add_required_resource(worker_1)
+        task_2.add_required_resource(worker_1)
+
+        c1 = ps.ResourceTasksDistance(
+            worker_1, distance=4, mode="exact", time_periods=[[10, 18]]
+        )
+        pb.add_constraint(c1)
+
+        # force task 1 to start at 10 (in the time period intervak)
+        pb.add_constraint(ps.TaskStartAt(task_1, 10))
+        # task_2 must be scheduled after task_1
+        pb.add_constraint(ps.TaskPrecedence(task_1, task_2))
+
+        # add a makespan objective, to be sure, to schedule task_2 in the time interal
+        pb.add_objective_makespan()
+
+        # as a consequence, task2 should be scheduled 4 periods after and start at 15
+        solver = ps.SchedulingSolver(pb)
+
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(solution.tasks[task_2.name].start, 15)
+        self.assertEqual(solution.tasks[task_2.name].end, 16)
+
+    def test_resource_tasks_distance_double_time_period_1(self) -> None:
+        """1 resource, 4 tasks, two time intervals for the ResourceTaskDistance"""
+        pb = ps.SchedulingProblem("ResourceTasksDistanceMultiTimePeriod1")
+        tasks = [ps.FixedDurationTask("task%i" % i, duration=1) for i in range(4)]
+
+        worker_1 = ps.Worker("Worker1")
+        for t in tasks:
+            t.add_required_resource(worker_1)
+
+        c1 = ps.ResourceTasksDistance(
+            worker_1, distance=4, mode="exact", time_periods=[[10, 20], [30, 40]]
+        )
+        pb.add_constraint(c1)
+
+        # add a makespan objective, all tasks should be scheduled from 0 to 4
+        pb.add_objective_makespan()
+
+        # as a consequence, task2 should be scheduled 4 periods after and start at 15
+        solver = ps.SchedulingSolver(pb)
+
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(solution.horizon, 4)
+
+    def test_resource_tasks_distance_double_time_period_2(self) -> None:
+        """Same as above, but force the tasks to be scheduled within the time intervals"""
+        pb = ps.SchedulingProblem("ResourceTasksDistanceMultiTimePeriod2")
+        tasks = [ps.FixedDurationTask("task%i" % i, duration=1) for i in range(4)]
+
+        worker_1 = ps.Worker("Worker1")
+        for t in tasks:
+            t.add_required_resource(worker_1)
+
+        c1 = ps.ResourceTasksDistance(
+            worker_1, distance=4, mode="exact", time_periods=[[10, 20], [30, 40]]
+        )
+        pb.add_constraint(c1)
+
+        # add a makespan objective, all tasks should be scheduled from 0 to 4
+        pb.add_constraint(ps.TaskStartAt(tasks[0], 10))
+        pb.add_constraint(ps.TaskStartAfterLax(tasks[1], 10))
+        pb.add_constraint(ps.TaskEndBeforeLax(tasks[1], 20))
+        pb.add_constraint(ps.TaskStartAt(tasks[2], 30))
+        pb.add_constraint(ps.TaskStartAfterLax(tasks[3], 30))
+        pb.add_constraint(ps.TaskEndBeforeLax(tasks[3], 40))
+        # as a consequence, task2 should be scheduled 4 periods after and start at 15
+        solver = ps.SchedulingSolver(pb)
+
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(solution.horizon, 36)
+        t0_start = solution.tasks[tasks[0].name].start
+        t1_start = solution.tasks[tasks[1].name].start
+        t2_start = solution.tasks[tasks[2].name].start
+        t3_start = solution.tasks[tasks[3].name].start
+        t0_end = solution.tasks[tasks[0].name].end
+        t1_end = solution.tasks[tasks[1].name].end
+        t2_end = solution.tasks[tasks[2].name].end
+        t3_end = solution.tasks[tasks[3].name].end
+        self.assertEqual(t0_start, 10)
+        self.assertEqual(t0_end, 11)
+        self.assertEqual(t1_start, 15)
+        self.assertEqual(t1_end, 16)
+        self.assertEqual(t2_start, 30)
+        self.assertEqual(t2_end, 31)
+        self.assertEqual(t3_start, 35)
+        self.assertEqual(t3_end, 36)
+
 
 if __name__ == "__main__":
     unittest.main()
