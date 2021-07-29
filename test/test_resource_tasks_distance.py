@@ -104,8 +104,8 @@ class TestResourceTasksDistance(unittest.TestCase):
 
         self.assertEqual(t1_start, 2)
         self.assertEqual(t1_end, 10)
-        self.assertTrue(t3_start == 10 or t3_start == 14)
-        self.assertTrue(t2_start == 10 or t2_start == 15)
+        self.assertTrue(t3_start in [10, 14])
+        self.assertTrue(t2_start in [10, 15])
 
     def test_resource_tasks_distance_4(self) -> None:
         """Adding one or more non scheduled optional tasks should not change anything"""

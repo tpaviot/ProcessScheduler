@@ -53,8 +53,7 @@ def build_complex_problem(name: str, n: int) -> ps.SchedulingProblem:
 def _solve_problem(problem, debug=True):
     """create a solver instance, return True if sat else False"""
     solver = ps.SchedulingSolver(problem, debug)
-    solution = solver.solve()
-    return solution
+    return solver.solve()
 
 
 class TestSolver(unittest.TestCase):

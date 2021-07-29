@@ -230,9 +230,10 @@ def on_create_resource_button_clicked(b):
             cost=ConstantCostPerPeriod(resource_cost_per_period_widget.value),
         )
     # rebuild option list for the task list
-    resources_list_of_tuples = []
-    for resource in pb.context.resources:
-        resources_list_of_tuples.append((resource.name, resource))
+    resources_list_of_tuples = [
+        (resource.name, resource) for resource in pb.context.resources
+    ]
+
     resources_select_widget.options = resources_list_of_tuples
     with resource_output:
         print("Resource", new_resource.name, "successfully created.")
@@ -281,9 +282,7 @@ def on_change_task_type(change):
         new_value = "%s" % change["new"]
         if new_value == "FixedDurationTask":
             task_duration_widget.disabled = False
-        elif new_value == "ZeroDurationTask":
-            task_duration_widget.disabled = True
-        elif new_value == "VariableDurationTask":
+        elif new_value in ["ZeroDurationTask", "VariableDurationTask"]:
             task_duration_widget.disabled = True
 
 
@@ -340,9 +339,7 @@ def on_create_task_button_clicked(b):
             optional=task_optional,
         )
     # rebuild option list for the task list
-    tasks_list_of_tuples = []
-    for task in pb.context.tasks:
-        tasks_list_of_tuples.append((task.name, task))
+    tasks_list_of_tuples = [(task.name, task) for task in pb.context.tasks]
     tasks_select_widget.options = tasks_list_of_tuples
     with task_output:
         print("Task", task_name, "successfully created.")
@@ -443,10 +440,11 @@ def assign_all_workers_resource_button_clicked(b) -> bool:
         selected_task.add_required_resources(selected_resources)
         print(
             "Assign",
-            ",".join([s.name for s in selected_resources]),
+            ",".join(s.name for s in selected_resources),
             "to task",
             selected_task.name,
         )
+
     return True
 
 
@@ -499,10 +497,11 @@ def assign_alternative_workers_resource_button_clicked(b) -> bool:
         print(
             "Assign %i (%s) resources among"
             % (nb_workers_widget.value, select_worker_type_widget.value),
-            ",".join([s.name for s in selected_resources]),
+            ",".join(s.name for s in selected_resources),
             "to task",
             selected_task.name,
         )
+
         return True
 
 
