@@ -28,10 +28,7 @@ def sort_list_of_z3_var(lst):
     """Sort a list of integers that hav different values"""
     n = len(lst)
     a = [FreshInt() for i in range(n)]
-    constraints = []
-    # add the related constraints
-    for i in range(n):
-        constraints.append(Or([a[i] == lst[j] for j in range(n)]))
+    constraints = [Or([a[i] == lst[j] for j in range(n)]) for i in range(n)]
     constraints.append(And([a[i] < a[i + 1] for i in range(n - 1)]))
     return a, constraints
 
