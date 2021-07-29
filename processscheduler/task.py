@@ -54,7 +54,9 @@ class Task(_NamedUIDObject):
             raise AssertionError(
                 "No context available. First create a SchedulingProblem"
             )
-        ps_context.main_context.add_task(self)
+        # the task_number is an integer that is incremented each time
+        # a task is created. The first task has number 1, the second number 2 etc.
+        self.task_number = ps_context.main_context.add_task(self)
 
         # the counter used for negative integers
         self._current_negative_integer = 0
@@ -161,8 +163,11 @@ class Task(_NamedUIDObject):
         nothing is done, if the case is optional, scheduling the task to the past"""
         if self.optional:  # in this case the previous assertions maybe skipped
             self.scheduled = Bool("%s_scheduled" % self.name)
+            # the first task is moved to -1, the second to -2
+            # etc.
+            point_in_past = - self.task_number
             not_scheduled_assertion = And(
-                self.start == -1, self.end == -1, self.duration == 0  # to past
+                self.start == point_in_past, self.end == point_in_past, self.duration == 0  # to past
             )
             self.add_assertion(
                 If(self.scheduled, And(list_of_z3_assertions), not_scheduled_assertion)

@@ -53,12 +53,13 @@ class SchedulingContext:
             return False
         return True
 
-    def add_task(self, task) -> None:
+    def add_task(self, task) -> int:
         """add a single task to the problem. There must not be two tasks with the same name"""
         all_task_names = [t.name for t in self.tasks]
         if task.name in all_task_names:
             raise ValueError("a task with the name %s already exists." % task.name)
         self.tasks.append(task)
+        return len(self.tasks)
 
     def add_resource(self, resource) -> None:
         """add a single resource to the problem"""
