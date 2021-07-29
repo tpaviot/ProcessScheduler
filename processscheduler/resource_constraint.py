@@ -18,10 +18,22 @@
 from typing import Optional
 import uuid
 
-from z3 import And, Implies, Int, Not, Or, Sum, Xor
+from z3 import And, FreshInt, Implies, Int, Not, Or, Sum, Xor
 
 from processscheduler.resource import Worker, CumulativeWorker
 from processscheduler.base import _Constraint
+
+
+def sort_list_of_z3_var(lst):
+    """Sort a list of integers that hav different values"""
+    n = len(lst)
+    a = [FreshInt() for i in range(n)]
+    constraints = []
+    # add the related constraints
+    for i in range(n):
+        constraints.append(Or([a[i] == lst[j] for j in range(n)]))
+    constraints.append(And([a[i] < a[i + 1] for i in range(n - 1)]))
+    return a, constraints
 
 
 class WorkLoad(_Constraint):
@@ -161,6 +173,58 @@ class ResourceUnavailable(_Constraint):
                             end_task_i <= interval_lower_bound,
                         )
                     )
+
+
+class ResourceTasksDistance(_Constraint):
+    """ """
+
+    def __init__(
+        self,
+        worker,
+        distance: int,
+        optional: Optional[bool] = False,
+        mode: Optional[str] = "exact",
+    ):
+        if mode not in {"min", "max", "exact"}:
+            raise Exception("Mode should be min, max or exact")
+
+        super().__init__(optional)
+
+        starts = []
+        ends = []
+        for start_var, end_var in worker.busy_intervals.values():
+            starts.append(start_var)
+            ends.append(end_var)
+        # sort both lists
+        sorted_starts, c1 = sort_list_of_z3_var(starts)
+        for c in c1:
+            self.set_assertions(c)
+        sorted_ends, c2 = sort_list_of_z3_var(ends)
+        for c in c2:
+            self.set_assertions(c)
+        # from now, starts and ends are sorted in asc order
+        # the space between two consecutive tasks is the sorted_start[i+1]-sorted_end[i]
+        # we just have to constraint this variable
+        c3 = []
+        for i in range(1, len(sorted_starts)):
+            if mode == "min":
+                new_cstr = Implies(
+                    And(sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0),
+                    sorted_starts[i] - sorted_ends[i - 1] >= distance,
+                )
+            elif mode == "max":
+                new_cstr = Implies(
+                    And(sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0),
+                    sorted_starts[i] - sorted_ends[i - 1] <= distance,
+                )
+            elif mode == "exact":
+                new_cstr = Implies(
+                    And(sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0),
+                    sorted_starts[i] - sorted_ends[i - 1] == distance,
+                )
+            c3.append(new_cstr)
+        for c in c3:
+            self.set_assertions(c)
 
 
 #
