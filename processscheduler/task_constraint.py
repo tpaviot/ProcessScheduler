@@ -355,8 +355,8 @@ class ScheduleNTasksInTimeIntervals(_Constraint):
 #
 # Task buffer constraints
 #
-class TaskConsumeBuffer(_Constraint):
-    """task.end <= value"""
+class TaskUnloadBuffer(_Constraint):
+    """A tasks that unloads a buffer"""
 
     def __init__(
         self,
@@ -371,11 +371,11 @@ class TaskConsumeBuffer(_Constraint):
         self.buffer = buffer
         self.quantity = quantity
 
-        buffer.consuming_tasks[task] = quantity
+        buffer.unloading_tasks[task] = quantity
 
 
-class TaskFeedBuffer(_Constraint):
-    """task.end <= value"""
+class TaskLoadBuffer(_Constraint):
+    """A task that loads a buffer"""
 
     def __init__(
         self,
@@ -390,4 +390,4 @@ class TaskFeedBuffer(_Constraint):
         self.buffer = buffer
         self.quantity = quantity
 
-        buffer.producing_tasks[task] = quantity
+        buffer.loading_tasks[task] = quantity

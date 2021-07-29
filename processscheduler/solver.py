@@ -221,22 +221,22 @@ class SchedulingSolver:
             buffer_mapping = Array(
                 "Buffer_%s_mapping" % buffer.name, IntSort(), IntSort()
             )
-            for t in buffer.consuming_tasks:
+            for t in buffer.unloading_tasks:
                 self.add_constraint(
                     buffer_mapping
-                    == Store(buffer_mapping, t.start, -buffer.consuming_tasks[t])
+                    == Store(buffer_mapping, t.start, -buffer.unloading_tasks[t])
                 )
-            for t in buffer.producing_tasks:
+            for t in buffer.loading_tasks:
                 self.add_constraint(
                     buffer_mapping
-                    == Store(buffer_mapping, t.end, +buffer.producing_tasks[t])
+                    == Store(buffer_mapping, t.end, +buffer.loading_tasks[t])
                 )
             # sort consume/feed times in asc order
-            tasks_start_consume = [t.start for t in buffer.consuming_tasks]
-            tasks_end_feed = [t.end for t in buffer.producing_tasks]
+            tasks_start_unload = [t.start for t in buffer.unloading_tasks]
+            tasks_end_load = [t.end for t in buffer.loading_tasks]
             
             sorted_times = _sort_bubble(
-                tasks_start_consume + tasks_end_feed, self._solver
+                tasks_start_unload + tasks_end_load, self._solver
             )
             # create as many buffer state changes as sorted_times
             buffer.state_changes_time = [

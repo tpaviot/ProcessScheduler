@@ -39,7 +39,7 @@ class TestBuffer(unittest.TestCase):
         buffer = ps.Buffer("Buffer1", initial_state=10)
 
         pb.add_constraint(ps.TaskStartAt(task_1, 5))
-        c1 = ps.TaskConsumeBuffer(task_1, buffer, quantity=3)
+        c1 = ps.TaskUnloadBuffer(task_1, buffer, quantity=3)
         pb.add_constraint(c1)
 
         solver = ps.SchedulingSolver(pb)
@@ -59,13 +59,13 @@ class TestBuffer(unittest.TestCase):
         pb.add_constraint(ps.TaskStartAt(task_1, 5))
         pb.add_constraint(ps.TaskStartAt(task_2, 10))
         pb.add_constraint(ps.TaskStartAt(task_3, 15))
-        c1 = ps.TaskConsumeBuffer(task_1, buffer, quantity=3)
+        c1 = ps.TaskUnloadBuffer(task_1, buffer, quantity=3)
         pb.add_constraint(c1)
 
-        c2 = ps.TaskConsumeBuffer(task_2, buffer, quantity=2)
+        c2 = ps.TaskUnloadBuffer(task_2, buffer, quantity=2)
         pb.add_constraint(c2)
 
-        c3 = ps.TaskConsumeBuffer(task_3, buffer, quantity=1)
+        c3 = ps.TaskUnloadBuffer(task_3, buffer, quantity=1)
         pb.add_constraint(c3)
 
         solver = ps.SchedulingSolver(pb)
@@ -82,7 +82,7 @@ class TestBuffer(unittest.TestCase):
         buffer = ps.Buffer("Buffer1", initial_state=10)
 
         pb.add_constraint(ps.TaskStartAt(task_1, 5))
-        c1 = ps.TaskFeedBuffer(task_1, buffer, quantity=3)
+        c1 = ps.TaskLoadBuffer(task_1, buffer, quantity=3)
         pb.add_constraint(c1)
 
         solver = ps.SchedulingSolver(pb)
@@ -102,13 +102,13 @@ class TestBuffer(unittest.TestCase):
         pb.add_constraint(ps.TaskStartAt(task_1, 5))
         pb.add_constraint(ps.TaskStartAt(task_2, 10))
         pb.add_constraint(ps.TaskStartAt(task_3, 15))
-        c1 = ps.TaskFeedBuffer(task_1, buffer, quantity=3)
+        c1 = ps.TaskLoadBuffer(task_1, buffer, quantity=3)
         pb.add_constraint(c1)
 
-        c2 = ps.TaskFeedBuffer(task_2, buffer, quantity=2)
+        c2 = ps.TaskLoadBuffer(task_2, buffer, quantity=2)
         pb.add_constraint(c2)
 
-        c3 = ps.TaskFeedBuffer(task_3, buffer, quantity=1)
+        c3 = ps.TaskLoadBuffer(task_3, buffer, quantity=1)
         pb.add_constraint(c3)
 
         solver = ps.SchedulingSolver(pb)
@@ -126,10 +126,10 @@ class TestBuffer(unittest.TestCase):
         buffer_2 = ps.Buffer("Buffer2", initial_state=0)
 
         pb.add_constraint(ps.TaskStartAt(task_1, 5))
-        c1 = ps.TaskConsumeBuffer(task_1, buffer_1, quantity=3)
+        c1 = ps.TaskUnloadBuffer(task_1, buffer_1, quantity=3)
         pb.add_constraint(c1)
 
-        c2 = ps.TaskFeedBuffer(task_1, buffer_2, quantity=2)
+        c2 = ps.TaskLoadBuffer(task_1, buffer_2, quantity=2)
         pb.add_constraint(c2)
 
         solver = ps.SchedulingSolver(pb)
@@ -148,20 +148,20 @@ class TestBuffer(unittest.TestCase):
         pb = ps.SchedulingProblem("BufferBounds1")
 
         n = 3
-        consuming_tasks = [
+        unloading_tasks = [
             ps.FixedDurationTask("ConsumingTask_%i" % i, duration=3) for i in range(n)
         ]
-        feed_tasks = [
+        loading_tasks = [
             ps.FixedDurationTask("FeedTask_%i" % i, duration=3) for i in range(n)
         ]
         # create buffer
         buffer = ps.Buffer("Buffer1", lower_bound=0, upper_bound=1)
 
-        for t in consuming_tasks:
-            pb.add_constraint(ps.TaskConsumeBuffer(t, buffer, quantity=1))
+        for t in unloading_tasks:
+            pb.add_constraint(ps.TaskUnloadBuffer(t, buffer, quantity=1))
 
-        for t in feed_tasks:
-            pb.add_constraint(ps.TaskFeedBuffer(t, buffer, quantity=1))
+        for t in loading_tasks:
+            pb.add_constraint(ps.TaskLoadBuffer(t, buffer, quantity=1))
 
         pb.add_objective_makespan()
 

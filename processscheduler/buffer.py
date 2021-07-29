@@ -46,11 +46,11 @@ class Buffer(_NamedUIDObject):
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
         # a dict that contains all tasks that consume this buffer
-        # consuming tasks contribute to reduce the buffer state
-        self.consuming_tasks = {}
+        # unloading tasks contribute to decrement the buffer state
+        self.unloading_tasks = {}
         # a dict that contains all tasks that feed this buffer
-        # producing tasks contribute to increase the buffer state
-        self.producing_tasks = {}
+        # loading tasks contribute to increment the buffer state
+        self.loading_tasks = {}
         # a list that contains the instants where the buffer state changes
         self.state_changes_time = []
         # a list that contains the buffer state between each state change
@@ -64,8 +64,8 @@ class Buffer(_NamedUIDObject):
             )
         ps_context.main_context.add_buffer(self)
 
-    def add_consuming_task(self, task) -> None:
-        self.consuming_tasks.append(task)
+    def add_unloading_task(self, task) -> None:
+        self.unloading_tasks.append(task)
 
-    def add_producing_task(self, task) -> None:
-        self.producing_tasks.append(task)
+    def add_loading_task(self, task) -> None:
+        self.loading_tasks.append(task)
