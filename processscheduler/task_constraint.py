@@ -54,10 +54,7 @@ class TaskPrecedence(_Constraint):
         self.offset = offset
         self.kind = kind
 
-        if offset > 0:
-            lower = task_before.end + offset
-        else:
-            lower = task_before.end
+        lower = task_before.end + offset if offset > 0 else task_before.end
         upper = task_after.start
 
         if kind == "lax":
@@ -280,10 +277,7 @@ class ForceScheduleNOptionalTasks(_Constraint):
                     "This class %s must excplicitely be set as optional." % task.name
                 )
         # all scheduled variables to take into account
-        sched_vars = []
-        for task in list_of_optional_tasks:
-            sched_vars.append(task.scheduled)
-
+        sched_vars = [task.scheduled for task in list_of_optional_tasks]
         asst = problem_function[kind](
             [(scheduled, True) for scheduled in sched_vars], nb_tasks_to_schedule
         )
