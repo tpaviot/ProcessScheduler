@@ -25,7 +25,7 @@ from typing import Optional, Tuple
 
 class SolutionJSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, datetime) or isinstance(obj, (time, timedelta)):
+        if isinstance(obj, (datetime, time, timedelta)):
             return "%s" % obj
         return obj.__dict__
 
@@ -93,20 +93,20 @@ class SchedulingSolution:
     def get_all_tasks_but_unavailable(self):
         """Return all tasks except those of the type UnavailabilityTask
         used to represent a ResourceUnavailable constraint."""
-        tasks_to_return = {}
-        for task in self.tasks:
-            if "NotAvailable" not in task:
-                tasks_to_return[task] = self.tasks[task]
-        return tasks_to_return
+        return {
+            task: self.tasks[task]
+            for task in self.tasks
+            if "NotAvailable" not in task
+        }
 
     def get_scheduled_tasks(self):
         """Return scheduled tasks."""
         tasks_not_unavailable = self.get_all_tasks_but_unavailable()
-        tasks_to_return = {}
-        for task in tasks_not_unavailable:
-            if tasks_not_unavailable[task].scheduled:
-                tasks_to_return[task] = tasks_not_unavailable[task]
-        return tasks_to_return
+        return {
+            task: tasks_not_unavailable[task]
+            for task in tasks_not_unavailable
+            if tasks_not_unavailable[task].scheduled
+        }
 
     def to_json_string(self) -> str:
         """Export the solution to a json string."""
@@ -116,20 +116,19 @@ class SchedulingSolution:
         d["horizon"] = self.horizon
         # time data
         problem_properties["problem_timedelta"] = self.problem.delta_time
-        if self.problem.delta_time is not None:
-            if self.problem.start_time is not None:
-                problem_properties["problem_start_time"] = self.problem.start_time
-                problem_properties["problem_end_time"] = (
-                    self.problem.start_time + self.horizon * self.problem.delta_time
-                )
-            else:
-                problem_properties["problem_start_time"] = time(0)
-                problem_properties["problem_end_time"] = (
-                    self.horizon * self.problem.delta_time
-                )
-        else:
+        if self.problem.delta_time is None:
             problem_properties["problem_start_time"] = None
             problem_properties["problem_end_time"] = None
+        elif self.problem.start_time is not None:
+            problem_properties["problem_start_time"] = self.problem.start_time
+            problem_properties["problem_end_time"] = (
+                self.problem.start_time + self.horizon * self.problem.delta_time
+            )
+        else:
+            problem_properties["problem_start_time"] = time(0)
+            problem_properties["problem_end_time"] = (
+                self.horizon * self.problem.delta_time
+            )
         d["problem_properties"] = problem_properties
 
         d["tasks"] = self.tasks
@@ -206,10 +205,7 @@ class SchedulingSolution:
                 )
 
         r = lambda: random.randint(0, 255)
-        colors = []
-        for _ in range(len(df)):
-            colors.append("#%02X%02X%02X" % (r(), r(), r()))
-
+        colors = ["#%02X%02X%02X" % (r(), r(), r()) for _ in df]
         if sort is not None:
             if sort in ["Task", "Resource"]:
                 df = sorted(df, key=lambda i: i[sort], reverse=False)
@@ -358,10 +354,7 @@ class SchedulingSolution:
 
         def draw_broken_barh_with_text(start, length, bar_color, text, hatch=None):
             # first compute the bar dimension
-            if length == 0:  # zero duration tasks, to be visible
-                bar_dimension = (start - 0.05, 0.1)
-            else:
-                bar_dimension = (start, length)
+            bar_dimension = (start - 0.05, 0.1) if length == 0 else (start, length)
             gantt_chart.broken_barh(
                 [bar_dimension],
                 (i * 2, 2),

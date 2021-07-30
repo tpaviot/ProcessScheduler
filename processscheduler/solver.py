@@ -367,17 +367,13 @@ class SchedulingSolver:
                         self._problem.start_time
                         + new_task_solution.start * self._problem.delta_time
                     )
-                    new_task_solution.end_time = (
-                        new_task_solution.start_time + new_task_solution.duration_time
-                    )
                 else:
                     new_task_solution.start_time = (
                         new_task_solution.start * self._problem.delta_time
                     )
-                    new_task_solution.end_time = (
-                        new_task_solution.start_time + new_task_solution.duration_time
-                    )
-
+                new_task_solution.end_time = (
+                    new_task_solution.start_time + new_task_solution.duration_time
+                )
             if task.optional:
                 # ugly hack, necessary because there's no as_bool()
                 # method for Bool objects
@@ -387,17 +383,12 @@ class SchedulingSolver:
 
             # process resource assignments
             for req_res in task.required_resources:
-                # by default, resource_should_be_assigned is set to True
-                # if will be set to False if the resource is an alternative worker
-                resource_is_assigned = True
                 # among those workers, some of them
                 # are busy "in the past", that is to say they
                 # should not be assigned to the related task
                 # for each interval
                 lower_bound, _ = req_res.busy_intervals[task]
-                if z3_sol[lower_bound].as_long() < 0:
-                    # should not be scheduled
-                    resource_is_assigned = False
+                resource_is_assigned = z3_sol[lower_bound].as_long() >= 0
                 # add this resource to assigned resources, anytime
                 if resource_is_assigned and (
                     req_res.name not in new_task_solution.assigned_resources
@@ -447,14 +438,14 @@ class SchedulingSolver:
             buffer_name = buffer.name
             new_buffer_solution = BufferSolution(buffer_name)
             # change_state_times
-            cst_lst = []
-            for sct_z3_var in buffer.state_changes_time:
-                cst_lst.append(z3_sol[sct_z3_var].as_long())
+            cst_lst = [
+                z3_sol[sct_z3_var].as_long()
+                for sct_z3_var in buffer.state_changes_time
+            ]
+
             new_buffer_solution.state_change_times = cst_lst
             # state values
-            sv_lst = []
-            for sv_z3_var in buffer.buffer_states:
-                sv_lst.append(z3_sol[sv_z3_var].as_long())
+            sv_lst = [z3_sol[sv_z3_var].as_long() for sv_z3_var in buffer.buffer_states]
             new_buffer_solution.state = sv_lst
 
             solution.add_buffer_solution(new_buffer_solution)
@@ -546,12 +537,11 @@ class SchedulingSolver:
 
         while True:  # infinite loop, break if unsat of max_depth
             depth += 1
-            if max_recursion_depth is not None:
-                if depth > max_recursion_depth:
-                    warnings.warn(
-                        "maximum recursion depth exceeded. There might be a better solution."
-                    )
-                    break
+            if max_recursion_depth is not None and depth > max_recursion_depth:
+                warnings.warn(
+                    "maximum recursion depth exceeded. There might be a better solution."
+                )
+                break
 
             is_sat, sat_computation_time = self.check_sat()
 
@@ -560,7 +550,7 @@ class SchedulingSolver:
                     "\tFound optimum %i. Stopping iteration." % current_variable_value
                 )
                 break
-            elif is_sat == unsat and current_variable_value is None:
+            elif is_sat == unsat:
                 print("\tNo solution found. Stopping iteration.")
                 break
             elif is_sat == unknown:
