@@ -21,22 +21,22 @@ import processscheduler as ps
 class TestBuffer(unittest.TestCase):
     def test_instanciate_buffer(self) -> None:
         pb = ps.SchedulingProblem("BufferBasic", horizon=12)
-        buffer = ps.Buffer("Buffer1", initial_state=10)
+        buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
 
     def test_instanciate_buffer_error(self) -> None:
         pb = ps.SchedulingProblem("BufferError", horizon=12)
-        buffer = ps.Buffer("Buffer1", initial_state=10)
+        buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
         # a buffer with that name already exist, adding a new
         # one with the same name should raise an ValueError exception
         with self.assertRaises(ValueError):
-            buffer = ps.Buffer("Buffer1", initial_state=10)
+            buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
 
-    def test_consume_buffer_1(self) -> None:
+    def test_unload_buffer_1(self) -> None:
         # only one buffer and one task
-        pb = ps.SchedulingProblem("ConsumeBuffer1")
+        pb = ps.SchedulingProblem("UnloadBuffer1")
 
         task_1 = ps.FixedDurationTask("task1", duration=3)
-        buffer = ps.Buffer("Buffer1", initial_state=10)
+        buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
 
         pb.add_constraint(ps.TaskStartAt(task_1, 5))
         c1 = ps.TaskUnloadBuffer(task_1, buffer, quantity=3)
@@ -48,13 +48,13 @@ class TestBuffer(unittest.TestCase):
         self.assertEqual(solution.buffers[buffer.name].state, [10, 7])
         self.assertEqual(solution.buffers[buffer.name].state_change_times, [5])
 
-    def test_consume_buffer_2(self) -> None:
-        pb = ps.SchedulingProblem("ConsumeBuffer2")
+    def test_unload_buffer_2(self) -> None:
+        pb = ps.SchedulingProblem("UnloadBuffer2")
 
         task_1 = ps.FixedDurationTask("task1", duration=3)
         task_2 = ps.FixedDurationTask("task2", duration=3)
         task_3 = ps.FixedDurationTask("task3", duration=3)
-        buffer = ps.Buffer("Buffer1", initial_state=10)
+        buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
 
         pb.add_constraint(ps.TaskStartAt(task_1, 5))
         pb.add_constraint(ps.TaskStartAt(task_2, 10))
@@ -74,12 +74,12 @@ class TestBuffer(unittest.TestCase):
         self.assertEqual(solution.buffers[buffer.name].state, [10, 7, 5, 4])
         self.assertEqual(solution.buffers[buffer.name].state_change_times, [5, 10, 15])
 
-    def test_feed_buffer_1(self) -> None:
+    def test_load_buffer_1(self) -> None:
         # only one buffer and one task
-        pb = ps.SchedulingProblem("FeedBuffer1")
+        pb = ps.SchedulingProblem("LoadBuffer1")
 
         task_1 = ps.FixedDurationTask("task1", duration=3)
-        buffer = ps.Buffer("Buffer1", initial_state=10)
+        buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
 
         pb.add_constraint(ps.TaskStartAt(task_1, 5))
         c1 = ps.TaskLoadBuffer(task_1, buffer, quantity=3)
@@ -91,13 +91,13 @@ class TestBuffer(unittest.TestCase):
         self.assertEqual(solution.buffers[buffer.name].state, [10, 13])
         self.assertEqual(solution.buffers[buffer.name].state_change_times, [8])
 
-    def test_feed_buffer_2(self) -> None:
-        pb = ps.SchedulingProblem("FeedBuffer2")
+    def test_load_buffer_2(self) -> None:
+        pb = ps.SchedulingProblem("LoadBuffer2")
 
         task_1 = ps.FixedDurationTask("task1", duration=3)
         task_2 = ps.FixedDurationTask("task2", duration=3)
         task_3 = ps.FixedDurationTask("task3", duration=3)
-        buffer = ps.Buffer("Buffer1", initial_state=10)
+        buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
 
         pb.add_constraint(ps.TaskStartAt(task_1, 5))
         pb.add_constraint(ps.TaskStartAt(task_2, 10))
@@ -117,13 +117,13 @@ class TestBuffer(unittest.TestCase):
         self.assertEqual(solution.buffers[buffer.name].state, [10, 13, 15, 16])
         self.assertEqual(solution.buffers[buffer.name].state_change_times, [8, 13, 18])
 
-    def test_consume_feed_buffers_1(self) -> None:
+    def test_load_unload_feed_buffers_1(self) -> None:
         # one task that consumes and feed two different buffers
-        pb = ps.SchedulingProblem("ConsumeFeedBuffer1")
+        pb = ps.SchedulingProblem("LoadUnloadBuffer1")
 
         task_1 = ps.FixedDurationTask("task1", duration=3)
-        buffer_1 = ps.Buffer("Buffer1", initial_state=10)
-        buffer_2 = ps.Buffer("Buffer2", initial_state=0)
+        buffer_1 = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
+        buffer_2 = ps.NonConcurrentBuffer("Buffer2", initial_state=0)
 
         pb.add_constraint(ps.TaskStartAt(task_1, 5))
         c1 = ps.TaskUnloadBuffer(task_1, buffer_1, quantity=3)
@@ -149,13 +149,13 @@ class TestBuffer(unittest.TestCase):
 
         n = 3
         unloading_tasks = [
-            ps.FixedDurationTask("ConsumingTask_%i" % i, duration=3) for i in range(n)
+            ps.FixedDurationTask("LoadTask_%i" % i, duration=3) for i in range(n)
         ]
         loading_tasks = [
-            ps.FixedDurationTask("FeedTask_%i" % i, duration=3) for i in range(n)
+            ps.FixedDurationTask("UnloadTask_%i" % i, duration=3) for i in range(n)
         ]
         # create buffer
-        buffer = ps.Buffer("Buffer1", lower_bound=0, upper_bound=1)
+        buffer = ps.NonConcurrentBuffer("Buffer1", lower_bound=0, upper_bound=1)
 
         for t in unloading_tasks:
             pb.add_constraint(ps.TaskUnloadBuffer(t, buffer, quantity=1))

@@ -26,8 +26,8 @@ import processscheduler.context as ps_context
 #
 # Buffer class definition
 #
-class Buffer(_NamedUIDObject):
-    """A buffer can be used by tasks which can be consumer or producer for this buffer"""
+class NonConcurrentBuffer(_NamedUIDObject):
+    """A buffer that cannot be accessed by different tasks at the same time"""
 
     def __init__(
         self,
