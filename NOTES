@@ -4,6 +4,10 @@ Current dev
 ===========
 New features:
   - new ResourceTasksDistance constraint
+  - new NonConcurrentBuffer class
+
+Misc:
+  - move random_seed parameter name to random_values. Random improved
 
 Version 0.7.1
 =============
