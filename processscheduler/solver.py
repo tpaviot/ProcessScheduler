@@ -21,13 +21,34 @@ from typing import Optional, Union
 import uuid
 import warnings
 
-from z3 import Int, Solver, SolverFor, Sum, unsat, ArithRef, unknown, set_option, Or
+from z3 import (
+    And,
+    ArithRef,
+    Array,
+    FreshInt,
+    If,
+    Int,
+    IntSort,
+    Or,
+    Solver,
+    SolverFor,
+    Store,
+    Sum,
+    unsat,
+    unknown,
+    set_option,
+)
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective, Indicator
-from processscheduler.solution import SchedulingSolution, TaskSolution, ResourceSolution
+from processscheduler.solution import (
+    SchedulingSolution,
+    TaskSolution,
+    ResourceSolution,
+    BufferSolution,
+)
 
 #
-# Util function
+# Util functions
 #
 def _calc_parabola_vertex(vector_x, vector_y):
     """Adapted from http://chris35wills.github.io/parabola_python/
@@ -43,6 +64,30 @@ def _calc_parabola_vertex(vector_x, vector_y):
         x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3
     ) / denom
     return a, b, c
+
+
+def _sort_bubble(IntSort_list, solver):
+    """Take a list of int variables, return the list of new variables
+    sorting using the bubble recursive sort"""
+    sorted_list = IntSort_list.copy()
+
+    def bubble_up(ar):
+        arr = ar.copy()
+        for i in range(len(arr) - 1):
+            x = arr[i]
+            y = arr[i + 1]
+            # compare and swap x and y
+            x1, y1 = FreshInt(), FreshInt()
+            c = If(x <= y, And(x1 == x, y1 == y), And(x1 == y, y1 == x))
+            # store values
+            arr[i] = x1
+            arr[i + 1] = y1
+            solver.add(c)
+        return arr
+
+    for _ in range(len(sorted_list)):
+        sorted_list = bubble_up(sorted_list)
+    return sorted_list
 
 
 #
@@ -72,6 +117,8 @@ class SchedulingSolver:
         self.debug = debug
         # objectives list
         self.objective = None  # the list of all objectives defined in this problem
+        self.current_solution = None  # no solution until the problem is solved
+
         # set_option('smt.arith.auto_config_simplex', True)
         if debug:
             set_option("verbose", 2)
@@ -115,9 +162,6 @@ class SchedulingSolver:
         if debug:
             set_option(unsat_core=True)
 
-        # self._solver.set("sat.cardinality.solver", True)
-        # self._solver.set("sat.core.minimize", True)
-        # self._solver.set("sat.core.minimize_partial", True)
         if parallel:
             set_option("parallel.enable", True)  # enable parallel computation
 
@@ -150,13 +194,88 @@ class SchedulingSolver:
         for indic in self.problem_context.indicators:
             self.add_constraint(indic.get_assertions())
 
-        self.process_work_amount()
+        # work amounts
+        # for each task, compute the total work for all required resources"""
+        for task in self.problem_context.tasks:
+            if task.work_amount > 0.0:
+                work_total_for_all_resources = []
+                for required_resource in task.required_resources:
+                    # work contribution for the resource
+                    interv_low, interv_up = required_resource.busy_intervals[task]
+                    work_contribution = required_resource.productivity * (
+                        interv_up - interv_low
+                    )
+                    work_total_for_all_resources.append(work_contribution)
+                self.add_constraint(
+                    Sum(work_total_for_all_resources) >= task.work_amount
+                )
 
+        # process buffers
+        for buffer in self.problem_context.buffers:
+            #
+            # create an array that stores the mapping between start times and
+            # quantities. For example, if a start T1 starts at 2 and consumes
+            # 8, and T3 ends at 6 and consumes 5 then the mapping array
+            # will look like : A[2]=8 and A[6]=-5
+            # SO far, no way to have the same start time at different inst
+            buffer_mapping = Array(
+                "Buffer_%s_mapping" % buffer.name, IntSort(), IntSort()
+            )
+            for t in buffer.unloading_tasks:
+                self.add_constraint(
+                    buffer_mapping
+                    == Store(buffer_mapping, t.start, -buffer.unloading_tasks[t])
+                )
+            for t in buffer.loading_tasks:
+                self.add_constraint(
+                    buffer_mapping
+                    == Store(buffer_mapping, t.end, +buffer.loading_tasks[t])
+                )
+            # sort consume/feed times in asc order
+            tasks_start_unload = [t.start for t in buffer.unloading_tasks]
+            tasks_end_load = [t.end for t in buffer.loading_tasks]
+            
+            sorted_times = _sort_bubble(
+                tasks_start_unload + tasks_end_load, self._solver
+            )
+            # create as many buffer state changes as sorted_times
+            buffer.state_changes_time = [
+                Int("%s_sc_time_%i" % (buffer.name, k))
+                for k in range(len(sorted_times))
+            ]
+
+            # add the constraints that give the buffer state change times
+            for st, bfst in zip(sorted_times, buffer.state_changes_time):
+                self.add_constraint(st == bfst)
+
+            # compute the different buffer states according to state changes
+            buffer.buffer_states = [
+                Int("%s_state_%i" % (buffer.name, k))
+                for k in range(len(buffer.state_changes_time) + 1)
+            ]
+            # add constraints for buffer states
+            # the first buffer state is equal to the buffer initial level
+            if buffer.initial_state is not None:
+                self.add_constraint(buffer.buffer_states[0] == buffer.initial_state)
+            if buffer.final_state is not None:
+                self.add_constraint(buffer.buffer_states[-1] == buffer.final_state)
+            if buffer.lower_bound is not None:
+                for st in buffer.buffer_states:
+                    self.add_constraint(st >= buffer.lower_bound)
+            if buffer.upper_bound is not None:
+                for st in buffer.buffer_states:
+                    self.add_constraint(st <= buffer.upper_bound)
+            # and, for the other, the buffer state i+1 is the buffer state i +/- the buffer change
+            for i in range(len(buffer.buffer_states) - 1):
+                self.add_constraint(
+                    buffer.buffer_states[i + 1]
+                    == buffer.buffer_states[i]
+                    + buffer_mapping[buffer.state_changes_time[i]]
+                )
+
+        # optimization
         if self.is_optimization_problem:
             self.create_objective()
-
-        # each time the solver is called, the current_solution is stored
-        self.current_solution = None
 
     def add_constraint(self, cstr) -> bool:
         # set the method to use to add constraints
@@ -197,22 +316,6 @@ class SchedulingSolver:
             self.add_constraint(equivalent_indicator.get_assertions())
         else:
             self.objective = self._problem.context.objectives[0]
-
-    def process_work_amount(self) -> None:
-        """for each task, compute the total work for all required resources"""
-        for task in self.problem_context.tasks:
-            if task.work_amount > 0.0:
-                work_total_for_all_resources = []
-                for required_resource in task.required_resources:
-                    # work contribution for the resource
-                    interv_low, interv_up = required_resource.busy_intervals[task]
-                    work_contribution = required_resource.productivity * (
-                        interv_up - interv_low
-                    )
-                    work_total_for_all_resources.append(work_contribution)
-                self.add_constraint(
-                    Sum(work_total_for_all_resources) >= task.work_amount
-                )
 
     def check_sat(self):
         """check satisfiability. Returns resulta as True (sat) or False (unsat, unknown).
@@ -264,17 +367,13 @@ class SchedulingSolver:
                         self._problem.start_time
                         + new_task_solution.start * self._problem.delta_time
                     )
-                    new_task_solution.end_time = (
-                        new_task_solution.start_time + new_task_solution.duration_time
-                    )
                 else:
                     new_task_solution.start_time = (
                         new_task_solution.start * self._problem.delta_time
                     )
-                    new_task_solution.end_time = (
-                        new_task_solution.start_time + new_task_solution.duration_time
-                    )
-
+                new_task_solution.end_time = (
+                    new_task_solution.start_time + new_task_solution.duration_time
+                )
             if task.optional:
                 # ugly hack, necessary because there's no as_bool()
                 # method for Bool objects
@@ -284,17 +383,12 @@ class SchedulingSolver:
 
             # process resource assignments
             for req_res in task.required_resources:
-                # by default, resource_should_be_assigned is set to True
-                # if will be set to False if the resource is an alternative worker
-                resource_is_assigned = True
                 # among those workers, some of them
                 # are busy "in the past", that is to say they
                 # should not be assigned to the related task
                 # for each interval
                 lower_bound, _ = req_res.busy_intervals[task]
-                if z3_sol[lower_bound].as_long() < 0:
-                    # should not be scheduled
-                    resource_is_assigned = False
+                resource_is_assigned = z3_sol[lower_bound].as_long() >= 0
                 # add this resource to assigned resources, anytime
                 if resource_is_assigned and (
                     req_res.name not in new_task_solution.assigned_resources
@@ -339,6 +433,22 @@ class SchedulingSolver:
             else:
                 solution.add_resource_solution(new_resource_solution)
 
+        # process buffers
+        for buffer in self._problem.context.buffers:
+            buffer_name = buffer.name
+            new_buffer_solution = BufferSolution(buffer_name)
+            # change_state_times
+            cst_lst = [
+                z3_sol[sct_z3_var].as_long()
+                for sct_z3_var in buffer.state_changes_time
+            ]
+
+            new_buffer_solution.state_change_times = cst_lst
+            # state values
+            sv_lst = [z3_sol[sv_z3_var].as_long() for sv_z3_var in buffer.buffer_states]
+            new_buffer_solution.state = sv_lst
+
+            solution.add_buffer_solution(new_buffer_solution)
         # process indicators
         for indicator in self._problem.context.indicators:
             indicator_name = indicator.name
@@ -395,12 +505,6 @@ class SchedulingSolver:
             # then get the solution
             solution = self._solver.model()
 
-            # if self.objective:
-            #     print('Optimization results:\n=====================')
-            #     print('\t->Objective values:')
-            #     for objective_name, objective_value in self.objectives:  # if ever no objectives, this line will do nothing
-            #         print('\t\t->%s: %s' % (objective_name, objective_value.value()))
-
         self.current_solution = solution
         sol = self.build_solution(solution)
 
@@ -433,12 +537,11 @@ class SchedulingSolver:
 
         while True:  # infinite loop, break if unsat of max_depth
             depth += 1
-            if max_recursion_depth is not None:
-                if depth > max_recursion_depth:
-                    warnings.warn(
-                        "maximum recursion depth exceeded. There might be a better solution."
-                    )
-                    break
+            if max_recursion_depth is not None and depth > max_recursion_depth:
+                warnings.warn(
+                    "maximum recursion depth exceeded. There might be a better solution."
+                )
+                break
 
             is_sat, sat_computation_time = self.check_sat()
 
@@ -447,7 +550,7 @@ class SchedulingSolver:
                     "\tFound optimum %i. Stopping iteration." % current_variable_value
                 )
                 break
-            elif is_sat == unsat and current_variable_value is None:
+            elif is_sat == unsat:
                 print("\tNo solution found. Stopping iteration.")
                 break
             elif is_sat == unknown:

@@ -48,4 +48,5 @@ from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
 from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
 from processscheduler.problem import SchedulingProblem
 from processscheduler.solver import SchedulingSolver
+from processscheduler.buffer import NonConcurrentBuffer
 from processscheduler.context import main_context, SchedulingContext, clear_main_context

@@ -54,10 +54,7 @@ class TaskPrecedence(_Constraint):
         self.offset = offset
         self.kind = kind
 
-        if offset > 0:
-            lower = task_before.end + offset
-        else:
-            lower = task_before.end
+        lower = task_before.end + offset if offset > 0 else task_before.end
         upper = task_after.start
 
         if kind == "lax":
@@ -280,10 +277,7 @@ class ForceScheduleNOptionalTasks(_Constraint):
                     "This class %s must excplicitely be set as optional." % task.name
                 )
         # all scheduled variables to take into account
-        sched_vars = []
-        for task in list_of_optional_tasks:
-            sched_vars.append(task.scheduled)
-
+        sched_vars = [task.scheduled for task in list_of_optional_tasks]
         asst = problem_function[kind](
             [(scheduled, True) for scheduled in sched_vars], nb_tasks_to_schedule
         )
@@ -350,3 +344,44 @@ class ScheduleNTasksInTimeIntervals(_Constraint):
             [(scheduled, True) for scheduled in all_bools], nb_tasks_to_schedule
         )
         self.set_assertions(asst_pb)
+
+
+#
+# Task buffer constraints
+#
+class TaskUnloadBuffer(_Constraint):
+    """A tasks that unloads a buffer"""
+
+    def __init__(
+        self,
+        task,
+        buffer,
+        quantity,
+        optional: Optional[bool] = False,
+    ) -> None:
+        super().__init__(optional)
+        self.quantity = quantity
+        self.task = task
+        self.buffer = buffer
+        self.quantity = quantity
+
+        buffer.unloading_tasks[task] = quantity
+
+
+class TaskLoadBuffer(_Constraint):
+    """A task that loads a buffer"""
+
+    def __init__(
+        self,
+        task,
+        buffer,
+        quantity,
+        optional: Optional[bool] = False,
+    ) -> None:
+        super().__init__(optional)
+        self.quantity = quantity
+        self.task = task
+        self.buffer = buffer
+        self.quantity = quantity
+
+        buffer.loading_tasks[task] = quantity
