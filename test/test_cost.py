@@ -301,7 +301,7 @@ class TestCost(unittest.TestCase):
         cost_ind = problem.add_indicator_resource_cost([worker_1])
         problem.minimize_indicator(cost_ind)
 
-        solver = ps.SchedulingSolver(problem, parallel=True, random_seed=True)
+        solver = ps.SchedulingSolver(problem, random_values=True)
 
         solution = solver.solve()
 

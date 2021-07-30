@@ -102,9 +102,9 @@ class SchedulingSolver:
         debug: Optional[bool] = False,
         max_time: Optional[int] = 10,
         parallel: Optional[bool] = False,
-        random_seed=False,
-        logics=None,
-        verbosity=0,
+        random_values: Optional[bool] = False,
+        logics: Optional[str] = None,
+        verbosity: Optional[int] = 0,
     ):
         """Scheduling Solver
 
@@ -112,7 +112,7 @@ class SchedulingSolver:
         max_time: time in seconds, 60 by default
         parallel: True to enable mutlthreading, False by default
         """
-        self._problem = problem
+        self.problem = problem
         self.problem_context = problem.context
         self.debug = debug
         # objectives list
@@ -125,12 +125,14 @@ class SchedulingSolver:
         else:
             set_option("verbose", verbosity)
 
-        if random_seed:
-            set_option("sat.random_seed", random.randint(1, 1e4))
-            set_option("smt.random_seed", random.randint(1, 1e4))
+        if random_values:
+            set_option("sat.random_seed", random.randint(1, 1e3))
+            set_option("smt.random_seed", random.randint(1, 1e3))
+            set_option("smt.arith.random_initial_value", True)
         else:
             set_option("sat.random_seed", 0)
             set_option("smt.random_seed", 0)
+            set_option("smt.arith.random_initial_value", False)
 
         # set timeout
         self.max_time = max_time  # in seconds
@@ -168,7 +170,7 @@ class SchedulingSolver:
         # add all tasks assertions to the solver
         for task in self.problem_context.tasks:
             self.add_constraint(task.get_assertions())
-            self.add_constraint(task.end <= self._problem.horizon)
+            self.add_constraint(task.end <= self.problem.horizon)
 
         # then process tasks constraints
         for constraint in self.problem_context.constraints:
@@ -234,7 +236,7 @@ class SchedulingSolver:
             # sort consume/feed times in asc order
             tasks_start_unload = [t.start for t in buffer.unloading_tasks]
             tasks_end_load = [t.end for t in buffer.loading_tasks]
-            
+
             sorted_times = _sort_bubble(
                 tasks_start_unload + tasks_end_load, self._solver
             )
@@ -315,7 +317,7 @@ class SchedulingSolver:
             )
             self.add_constraint(equivalent_indicator.get_assertions())
         else:
-            self.objective = self._problem.context.objectives[0]
+            self.objective = self.problem.context.objectives[0]
 
     def check_sat(self):
         """check satisfiability. Returns resulta as True (sat) or False (unsat, unknown).
@@ -328,27 +330,27 @@ class SchedulingSolver:
         if sat_result == unsat:
             print(
                 "\tNo solution can be found for problem %s.\n\tReason: Unsatisfiable problem: no solution exists"
-                % self._problem.name
+                % self.problem.name
             )
 
         if sat_result == unknown:
             reason = self._solver.reason_unknown()
             print(
                 "\tNo solution can be found for problem %s.\n\tReason: %s"
-                % (self._problem.name, reason)
+                % (self.problem.name, reason)
             )
 
         return sat_result, check_sat_time
 
     def build_solution(self, z3_sol):
         """create and return a SchedulingSolution instance"""
-        solution = SchedulingSolution(self._problem)
+        solution = SchedulingSolution(self.problem)
 
         # set the horizon solution
-        solution.horizon = z3_sol[self._problem.horizon].as_long()
+        solution.horizon = z3_sol[self.problem.horizon].as_long()
 
         # process tasks
-        for task in self._problem.context.tasks:
+        for task in self.problem.context.tasks:
             # for each task, create a TaskSolution instance
             new_task_solution = TaskSolution(task.name)
             new_task_solution.type = type(task).__name__
@@ -358,18 +360,18 @@ class SchedulingSolver:
             new_task_solution.optional = task.optional
 
             # times, if ever delta_time and start_time are defined
-            if self._problem.delta_time is not None:
+            if self.problem.delta_time is not None:
                 new_task_solution.duration_time = (
-                    new_task_solution.duration * self._problem.delta_time
+                    new_task_solution.duration * self.problem.delta_time
                 )
-                if self._problem.start_time is not None:
+                if self.problem.start_time is not None:
                     new_task_solution.start_time = (
-                        self._problem.start_time
-                        + new_task_solution.start * self._problem.delta_time
+                        self.problem.start_time
+                        + new_task_solution.start * self.problem.delta_time
                     )
                 else:
                     new_task_solution.start_time = (
-                        new_task_solution.start * self._problem.delta_time
+                        new_task_solution.start * self.problem.delta_time
                     )
                 new_task_solution.end_time = (
                     new_task_solution.start_time + new_task_solution.duration_time
@@ -401,7 +403,7 @@ class SchedulingSolver:
             solution.add_task_solution(new_task_solution)
 
         # process resources
-        for resource in self._problem.context.resources:
+        for resource in self.problem.context.resources:
             # for each task, create a TaskSolution instance
             # for cumulative workers, we append the current work
             if "_CumulativeWorker_" in resource.name:
@@ -434,13 +436,12 @@ class SchedulingSolver:
                 solution.add_resource_solution(new_resource_solution)
 
         # process buffers
-        for buffer in self._problem.context.buffers:
+        for buffer in self.problem.context.buffers:
             buffer_name = buffer.name
             new_buffer_solution = BufferSolution(buffer_name)
             # change_state_times
             cst_lst = [
-                z3_sol[sct_z3_var].as_long()
-                for sct_z3_var in buffer.state_changes_time
+                z3_sol[sct_z3_var].as_long() for sct_z3_var in buffer.state_changes_time
             ]
 
             new_buffer_solution.state_change_times = cst_lst
@@ -450,7 +451,7 @@ class SchedulingSolver:
 
             solution.add_buffer_solution(new_buffer_solution)
         # process indicators
-        for indicator in self._problem.context.indicators:
+        for indicator in self.problem.context.indicators:
             indicator_name = indicator.name
             indicator_value = z3_sol[indicator.indicator_variable].as_long()
             solution.add_indicator_solution(indicator_name, indicator_value)
@@ -466,7 +467,7 @@ class SchedulingSolver:
         if self.is_optimization_problem:
             if self.is_multi_objective_optimization_problem:
                 print("\tObjectives:\n\t======")
-                for obj in self._problem.context.objectives:
+                for obj in self.problem.context.objectives:
                     print("\t%s" % obj)
             # in this case, use the incremental solver
             if isinstance(self.objective, MinimizeObjective):
@@ -485,7 +486,7 @@ class SchedulingSolver:
             print("Total computation time:\n=====================")
             print(
                 "\t%s satisfiability checked in %.2fs"
-                % (self._problem.name, sat_computation_time)
+                % (self.problem.name, sat_computation_time)
             )
 
             if sat_result == unsat:
@@ -515,7 +516,10 @@ class SchedulingSolver:
         return sol
 
     def solve_optimize_incremental(
-        self, variable: ArithRef, max_recursion_depth=None, kind="min"
+        self,
+        variable: ArithRef,
+        max_recursion_depth: Optional[int] = None,
+        kind: Optional[str] = "min",
     ) -> int:
         """target a min or max for a variable, without the Optimize solver.
         The loop continues ever and ever until the next value is more than 90%"""
@@ -555,14 +559,12 @@ class SchedulingSolver:
                 break
             elif is_sat == unknown:
                 break
-            # elif is_sat == unknown:
-            #    return False
             # at this stage, is_sat should be sat
             solution = self._solver.model()
 
             current_variable_value = solution[variable].as_long()
             print(
-                "\tFound better value:",
+                "\tFound value:",
                 current_variable_value,
                 "elapsed time:%.3fs" % total_time,
             )
@@ -603,7 +605,7 @@ class SchedulingSolver:
         print("\ttotal number of iterations: %i" % depth)
         if current_variable_value is not None:
             print("\tvalue: %i" % current_variable_value)
-        print("\t%s satisfiability checked in %.2fs" % (self._problem.name, total_time))
+        print("\t%s satisfiability checked in %.2fs" % (self.problem.name, total_time))
 
         return solution
 
@@ -636,7 +638,7 @@ class SchedulingSolver:
         self.add_constraint(variable != current_variable_value)
         return self.solve()
 
-    def export_to_smt2(self, smt_filename):
+    def export_to_smt2(self, smt_filename: str):
         """export the model to a smt file to be processed by another SMT solver"""
         with open(smt_filename, "w") as outfile:
             outfile.write(self._solver.to_smt2())
