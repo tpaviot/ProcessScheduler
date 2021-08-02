@@ -94,9 +94,7 @@ class SchedulingSolution:
         """Return all tasks except those of the type UnavailabilityTask
         used to represent a ResourceUnavailable constraint."""
         return {
-            task: self.tasks[task]
-            for task in self.tasks
-            if "NotAvailable" not in task
+            task: self.tasks[task] for task in self.tasks if "NotAvailable" not in task
         }
 
     def get_scheduled_tasks(self):

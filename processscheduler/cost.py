@@ -13,7 +13,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from processscheduler.base import _NamedUIDObject, is_positive_integer
+from processscheduler.base import _NamedUIDObject
+from processscheduler.util import is_positive_integer
 
 
 class _Cost(_NamedUIDObject):

@@ -19,11 +19,8 @@ from typing import Dict, List, Optional, Tuple
 
 from z3 import ArithRef, Bool, PbEq, PbGe, PbLe
 
-from processscheduler.base import (
-    _NamedUIDObject,
-    is_positive_integer,
-    is_strict_positive_integer,
-)
+from processscheduler.base import _NamedUIDObject
+from processscheduler.util import is_strict_positive_integer, is_positive_integer
 from processscheduler.cost import _Cost, ConstantCostPerPeriod
 import processscheduler.context as ps_context
 

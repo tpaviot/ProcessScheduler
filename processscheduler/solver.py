@@ -43,7 +43,7 @@ from processscheduler.solution import (
     ResourceSolution,
     BufferSolution,
 )
-from processscheduler.util import calc_parabola_from_two_points, sort_bubble
+from processscheduler.util import calc_parabola_from_two_points, sort_no_duplicates
 
 #
 # Solver class definition
@@ -192,9 +192,10 @@ class SchedulingSolver:
             tasks_start_unload = [t.start for t in buffer.unloading_tasks]
             tasks_end_load = [t.end for t in buffer.loading_tasks]
 
-            sorted_times = sort_bubble(
-                tasks_start_unload + tasks_end_load, self._solver
+            sorted_times, sort_assertions = sort_no_duplicates(
+                tasks_start_unload + tasks_end_load
             )
+            self.add_constraint(sort_assertions)
             # create as many buffer state changes as sorted_times
             buffer.state_changes_time = [
                 Int("%s_sc_time_%i" % (buffer.name, k))

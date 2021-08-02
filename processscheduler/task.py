@@ -19,13 +19,9 @@ from typing import List, Optional
 
 from z3 import Bool, BoolRef, Int, And, If
 
-from processscheduler.base import (
-    _NamedUIDObject,
-    is_strict_positive_integer,
-    is_positive_integer,
-)
+from processscheduler.base import _NamedUIDObject
+from processscheduler.util import is_strict_positive_integer, is_positive_integer
 from processscheduler.resource import _Resource, Worker, CumulativeWorker, SelectWorkers
-
 import processscheduler.context as ps_context
 
 
@@ -165,9 +161,11 @@ class Task(_NamedUIDObject):
             self.scheduled = Bool("%s_scheduled" % self.name)
             # the first task is moved to -1, the second to -2
             # etc.
-            point_in_past = - self.task_number
+            point_in_past = -self.task_number
             not_scheduled_assertion = And(
-                self.start == point_in_past, self.end == point_in_past, self.duration == 0  # to past
+                self.start == point_in_past,
+                self.end == point_in_past,
+                self.duration == 0,  # to past
             )
             self.add_assertion(
                 If(self.scheduled, And(list_of_z3_assertions), not_scheduled_assertion)

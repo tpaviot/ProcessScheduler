@@ -21,7 +21,8 @@ from typing import List, Optional, Union
 
 from z3 import And, BoolRef, If, Int, Or, Sum, Implies, ArithRef
 
-from processscheduler.base import _NamedUIDObject, is_strict_positive_integer
+from processscheduler.base import _NamedUIDObject
+from processscheduler.util import is_strict_positive_integer, is_positive_integer
 from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective
 from processscheduler.resource import _Resource, CumulativeWorker
 from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
