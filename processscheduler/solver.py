@@ -22,11 +22,8 @@ import uuid
 import warnings
 
 from z3 import (
-    And,
     ArithRef,
     Array,
-    FreshInt,
-    If,
     Int,
     IntSort,
     Or,
@@ -46,49 +43,7 @@ from processscheduler.solution import (
     ResourceSolution,
     BufferSolution,
 )
-
-#
-# Util functions
-#
-def _calc_parabola_vertex(vector_x, vector_y):
-    """Adapted from http://chris35wills.github.io/parabola_python/
-    Return a, b, c such as points 1, 2, 3 satisfies
-    y = ax**2+bx+c
-    """
-    x1, x2, x3 = vector_x
-    y1, y2, y3 = vector_y
-    denom = (x1 - x2) * (x1 - x3) * (x2 - x3)
-    a = (x3 * (y2 - y1) + x2 * (y1 - y3) + x1 * (y3 - y2)) / denom
-    b = (x3 * x3 * (y1 - y2) + x2 * x2 * (y3 - y1) + x1 * x1 * (y2 - y3)) / denom
-    c = (
-        x2 * x3 * (x2 - x3) * y1 + x3 * x1 * (x3 - x1) * y2 + x1 * x2 * (x1 - x2) * y3
-    ) / denom
-    return a, b, c
-
-
-def _sort_bubble(IntSort_list, solver):
-    """Take a list of int variables, return the list of new variables
-    sorting using the bubble recursive sort"""
-    sorted_list = IntSort_list.copy()
-
-    def bubble_up(ar):
-        arr = ar.copy()
-        for i in range(len(arr) - 1):
-            x = arr[i]
-            y = arr[i + 1]
-            # compare and swap x and y
-            x1, y1 = FreshInt(), FreshInt()
-            c = If(x <= y, And(x1 == x, y1 == y), And(x1 == y, y1 == x))
-            # store values
-            arr[i] = x1
-            arr[i + 1] = y1
-            solver.add(c)
-        return arr
-
-    for _ in range(len(sorted_list)):
-        sorted_list = bubble_up(sorted_list)
-    return sorted_list
-
+from processscheduler.util import calc_parabola_from_two_points, sort_bubble
 
 #
 # Solver class definition
@@ -237,7 +192,7 @@ class SchedulingSolver:
             tasks_start_unload = [t.start for t in buffer.unloading_tasks]
             tasks_end_load = [t.end for t in buffer.loading_tasks]
 
-            sorted_times = _sort_bubble(
+            sorted_times = sort_bubble(
                 tasks_start_unload + tasks_end_load, self._solver
             )
             # create as many buffer state changes as sorted_times
@@ -589,7 +544,7 @@ class SchedulingSolver:
                 three_last_times.pop(0)
                 three_last_times.append(total_time)
                 # Compute the expected value
-                a, b, c = _calc_parabola_vertex([0, 1, 2], three_last_times)
+                a, b, c = calc_parabola_from_two_points([0, 1, 2], three_last_times)
                 expected_next_time = a * 9 + 3 * b + c
                 if expected_next_time > self.max_time:
                     warnings.warn("time may exceed max time. Stopping iteration.")

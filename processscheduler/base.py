@@ -22,19 +22,6 @@ import warnings
 from z3 import BoolRef, Bool, Implies, PbGe, PbEq, PbLe
 
 #
-# Utility functions
-#
-def is_strict_positive_integer(value: int) -> bool:
-    """Return True if the parameter value is an integer > 0"""
-    return isinstance(value, int) and value > 0
-
-
-def is_positive_integer(value: int) -> bool:
-    """Return True if the parameter value is an integer >= 0"""
-    return isinstance(value, int) and value >= 0
-
-
-#
 # _NamedUIDObject, name and uid for hashing
 #
 class _NamedUIDObject:

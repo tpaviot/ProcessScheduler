@@ -18,22 +18,11 @@
 from typing import Optional
 import uuid
 
-from z3 import And, FreshInt, Implies, Int, Not, Or, Sum, Xor
+from z3 import And, Implies, Int, Not, Or, Sum, Xor
 
 from processscheduler.resource import Worker, CumulativeWorker
 from processscheduler.base import _Constraint
-
-
-def sort_list_of_z3_var(lst):
-    """Sort a list of integers that hav different values"""
-    n = len(lst)
-    a = [FreshInt() for i in range(n)]
-    constraints = []
-    # add the related constraints
-    for i in range(n):
-        constraints.append(Or([a[i] == lst[j] for j in range(n)]))
-    constraints.append(And([a[i] < a[i + 1] for i in range(n - 1)]))
-    return a, constraints
+from processscheduler.util import sort_no_duplicates
 
 
 class WorkLoad(_Constraint):
@@ -198,8 +187,8 @@ class ResourceTasksDistance(_Constraint):
             starts.append(start_var)
             ends.append(end_var)
         # sort both lists
-        sorted_starts, c1 = sort_list_of_z3_var(starts)
-        sorted_ends, c2 = sort_list_of_z3_var(ends)
+        sorted_starts, c1 = sort_no_duplicates(starts)
+        sorted_ends, c2 = sort_no_duplicates(ends)
         for c in c1 + c2:
             self.set_assertions(c)
         # from now, starts and ends are sorted in asc order
