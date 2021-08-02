@@ -85,11 +85,11 @@ print(f"\tTotal memory: {get_size(svmem.total)}")
 computation_times = []
 plot_abs = []
 
+MAX_TASKS_PER_PERIOD = 2
+MAX_TASKS_IN_PROBLEM = 4
+NB_WORKERS = 10
+NB_TASKS_PER_WORKER = 10
 for horizon in range(20, n, step):
-    MAX_TASKS_PER_PERIOD = 2
-    MAX_TASKS_IN_PROBLEM = 4
-    NB_WORKERS = 10
-    NB_TASKS_PER_WORKER = 10
     PERIODS = [
         (10 * i, 10 * (i + 1)) for i in range(int(horizon / 10))
     ]  # Periods of 10 slots from 0 to horizon
@@ -97,8 +97,6 @@ for horizon in range(20, n, step):
 
     # Create problem and initialize constraints
     pb = ps.SchedulingProblem(name="performance_analyzer", horizon=horizon)
-    constraints = []
-
     # Create resources and assign tasks
     general_worker = ps.Worker("general")
     workers = []
@@ -118,8 +116,11 @@ for horizon in range(20, n, step):
 
     workload = {period: MAX_TASKS_PER_PERIOD for period in PERIODS}
     workload[(0, horizon)] = MAX_TASKS_IN_PROBLEM
-    for worker in workers:
-        constraints.append(ps.WorkLoad(worker["worker"], workload, kind="max"))
+    constraints = [
+        ps.WorkLoad(worker["worker"], workload, kind="max")
+        for worker in workers
+    ]
+
 
     # Add constraints, define objective and solve problem
     pb.add_constraints(constraints)

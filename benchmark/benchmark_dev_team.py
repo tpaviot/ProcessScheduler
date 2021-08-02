@@ -85,12 +85,12 @@ plot_abs = []
 
 N = list(range(10, n, step))  # from 4 to N, step 2
 
+# Teams and Resources
+num_resource_a = 2
+num_resource_b = 2
+
 for num_dev_teams in N:
     print("-> Num dev teams:", num_dev_teams)
-    # Teams and Resources
-    num_resource_a = 2
-    num_resource_b = 2
-
     init_time = time.perf_counter()
     # Resources
     digital_transformation = ps.SchedulingProblem(
