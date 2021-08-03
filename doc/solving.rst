@@ -19,7 +19,7 @@ It takes the following optional arguments:
 
 - :attr:`parallel`: boolean False by default, if True force the solver to be executed in multithreaded mode. It *might* be quicker. It might not.
 
-- :attr:`random_seed`: an integer, default to 0. If set to a value different from 0, enable a random generator to suggest a different solution each time the solver is called.
+- :attr:`random_values`: a boolean, default to :const:`False`. If set to :const:`True`, enable a builtin generator to set random initial values. By setting this attribute to :const:`True`, one expects the solver to give a different solution each time it is called.
 
 - :attr:`logics`: a string, None by default. Can be set to any of the supported z3 logics, "QF_IDL", "QF_LIA", etc. see https://smtlib.cs.uiowa.edu/logics.shtml. By default (logics set to None), the solver tries to find the best logics, but there can be significant improvements by setting a specific logics ("QF_IDL" or "QF_UFIDL" seems to give the best performances).
 

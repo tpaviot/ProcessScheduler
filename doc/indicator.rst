@@ -15,7 +15,7 @@ An :class:`Indicator` instance is created by passing the indicator name as well 
 
 Indicator values are computed by the solver, and are part of the solution. If the solution rendered as a matplotlib Gantt chart, the indicator values are displayed on the upper right corner of the chart.
 
-Indicators can also be bounded, although it is optional to do so. Imagin, for instance, an indicator that can only assume values from 0 to 100. Then, if we are maximizing (or minimizing) this indicator in our problem, we want the solver to know that 100 (or 0) is the best value it can achieve. Therefore, we would write:
+Indicators can also be bounded, although it is optional to do so. Imagine, for instance, an indicator that can only assume values from 0 to 100. Then, if we are maximizing (or minimizing) this indicator in our problem, we want the solver to know that 100 (or 0) is the best value it can achieve. Therefore, we would write:
 
 .. code-block:: python
 

@@ -64,4 +64,5 @@ Finally, an if/then/else statement is available through the function :func:`if_t
                                         [TasksStartSynced(t_3, t_4)]) # if the condition is False
 
 .. note::
-The :func:`implies` and :func:`if_then_else` functions names do not conflict with any other function name from another package, thus dont have any underscore suffix.
+
+    The :func:`implies` and :func:`if_then_else` functions names do not conflict with any other function name from another package, thus dont have any underscore suffix.
