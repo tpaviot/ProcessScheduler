@@ -19,10 +19,12 @@ User-end documentation available at https://processscheduler.readthedocs.io/
 ## Features
 
 *   tasks: zero duration task, fixed duration task, variable duration task, work amount, optional task,
-*   resources: worker, cumulative workers, workers selection, cost_per_period and productivity attributes,
+*   resources: worker, cumulative workers, workers selection, productivity attribute,
+*   advanced cost functions,
+*   buffer: NonConcurrentBuffer,
 *   task constraints: precedence, start synced, end synced, start at, end at, start after, end before,
-*   optional tasks and task constraints: task schedule condition, tasks schedule dependencies,
-*   resource and optional resource constraints: AllSameSelected, AllDifferentSelected,
+*   resource constraints: AllSameSelected, AllDifferentSelected,
+*   everything can be set as optional (tasks, resources, constraints),
 *   first-order-logic operations (not, or, xor, and, implies, if/then/else) between task or resource constraints,
 *   builtin and customized indicators (resource utilization, resource cost),
 *   single and multiobjective optimization (makespan, flowtime, earliest, latest, resource cost, etc.),
