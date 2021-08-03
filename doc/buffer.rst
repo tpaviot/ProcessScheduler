@@ -25,7 +25,7 @@ Both :attr:`initial_level`, :attr:`lower_bound` and :attr:`upper_bound` are opti
 
 Buffer constraints
 ------------------
-Buffers are loaded/unloaded by tasks. As a consequence, special tasks constraints are used to connect tasks to buffers: :class:`TaskUnloadBuffer` and :class:`TaskLoadBuffer`. Both classes take the tass instance, the target buffer, and a :attr:`quantity`. Load/Unload constraints can be created as follows:
+Buffers are loaded/unloaded by tasks. As a consequence, special tasks constraints are used to connect tasks to buffers: :class:`TaskUnloadBuffer` and :class:`TaskLoadBuffer`. Both classes take the task instance, the target buffer, and a :attr:`quantity`. Load/Unload constraints can be created as follows:
 
 .. code-block:: python
 
