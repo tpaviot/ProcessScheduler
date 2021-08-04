@@ -1,7 +1,7 @@
 RELEASE NOTES
 
-Current dev
-===========
+Version 0.8.0
+=============
 New features:
   - new ResourceTasksDistance constraint
   - new NonConcurrentBuffer class
