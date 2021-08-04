@@ -64,8 +64,8 @@ class NonConcurrentBuffer(_NamedUIDObject):
             )
         ps_context.main_context.add_buffer(self)
 
-    def add_unloading_task(self, task) -> None:
-        self.unloading_tasks.append(task)
+    def add_unloading_task(self, task, quantity) -> None:
+        self.unloading_tasks[task] = quantity
 
-    def add_loading_task(self, task) -> None:
-        self.loading_tasks.append(task)
+    def add_loading_task(self, task, quantity) -> None:
+        self.loading_tasks[task] = quantity

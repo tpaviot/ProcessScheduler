@@ -54,13 +54,15 @@ def calc_parabola_from_two_points(vector_x, vector_y):
     return a, b, c
 
 
-def sort_bubble(IntSort_list, solver):
+def sort_bubble(z3_int_list):
     """Take a list of int variables, return the list of new variables
     sorting using the bubble recursive sort"""
-    sorted_list = IntSort_list.copy()
+    sorted_list = z3_int_list.copy()
+    glob_asst = []
 
     def bubble_up(ar):
         arr = ar.copy()
+        local_asst = []
         for i in range(len(arr) - 1):
             x = arr[i]
             y = arr[i + 1]
@@ -70,18 +72,21 @@ def sort_bubble(IntSort_list, solver):
             # store values
             arr[i] = x1
             arr[i + 1] = y1
-            solver.add(c)
-        return arr
+            local_asst.append(c)
+        return arr, local_asst
 
     for _ in range(len(sorted_list)):
-        sorted_list = bubble_up(sorted_list)
-    return sorted_list
+        sorted_list, asst = bubble_up(sorted_list)
+        glob_asst.extend(asst)
+
+    return sorted_list, glob_asst
 
 
-def sort_no_duplicates(lst):
+def sort_no_duplicates(z3_int_list):
     """Sort a list of integers that have distinct values"""
-    n = len(lst)
+    n = len(z3_int_list)
     a = [FreshInt() for i in range(n)]
-    constraints = [Or([a[i] == lst[j] for j in range(n)]) for i in range(n)]
+    constraints = [Or([a[i] == z3_int_list[j] for j in range(n)]) for i in range(n)]
     constraints.append(And([a[i] < a[i + 1] for i in range(n - 1)]))
+
     return a, constraints

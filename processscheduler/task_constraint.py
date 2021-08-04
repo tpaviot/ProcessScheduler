@@ -393,7 +393,7 @@ class TaskUnloadBuffer(_Constraint):
         self.buffer = buffer
         self.quantity = quantity
 
-        buffer.unloading_tasks[task] = quantity
+        buffer.add_unloading_task(task, quantity)
 
 
 class TaskLoadBuffer(_Constraint):
@@ -412,4 +412,4 @@ class TaskLoadBuffer(_Constraint):
         self.buffer = buffer
         self.quantity = quantity
 
-        buffer.loading_tasks[task] = quantity
+        buffer.add_loading_task(task, quantity)
