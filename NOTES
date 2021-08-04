@@ -9,6 +9,7 @@ New features:
 
 Misc:
   - move random_seed parameter name to random_values. Random improved
+  - new resource_constrained_project_scheduling notebook
 
 Version 0.7.1
 =============
