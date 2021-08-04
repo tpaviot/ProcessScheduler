@@ -21,7 +21,7 @@ import processscheduler as ps
 class TestBuffer(unittest.TestCase):
     def test_instanciate_buffer(self) -> None:
         ps.SchedulingProblem("BufferBasic", horizon=12)
-        buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
+        ps.NonConcurrentBuffer("Buffer1", initial_state=10)
 
     def test_instanciate_buffer_error(self) -> None:
         ps.SchedulingProblem("BufferError", horizon=12)
