@@ -225,11 +225,17 @@ class TestTask(unittest.TestCase):
         self.assertIsInstance(precedence_constraint, ps.TaskPrecedence)
 
     def test_create_task_precedence_strict(self) -> None:
-        new_problem_or_clear()
+        pb = ps.SchedulingProblem("TaskPrecedenceStrict")
         t_1 = ps.FixedDurationTask("t1", duration=2)
         t_2 = ps.FixedDurationTask("t2", duration=3)
-        precedence_constraint = ps.TaskPrecedence(t_1, t_2, offset=1, kind="strict")
-        self.assertIsInstance(precedence_constraint, ps.TaskPrecedence)
+        pb.add_constraint(ps.TaskPrecedence(t_1, t_2, offset=1, kind="strict"))
+        pb.add_objective_makespan()
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertEqual(
+            solution.tasks[t_2.name].start, solution.tasks[t_1.name].end + 2
+        )
 
     def test_create_task_precedence_raise_exception_kind(self) -> None:
         new_problem_or_clear()
@@ -246,25 +252,36 @@ class TestTask(unittest.TestCase):
             ps.TaskPrecedence(t_1, t_2, offset=1.5, kind="lax")  # should be int
 
     def test_tasks_dont_overlap(self) -> None:
-        new_problem_or_clear()
-        t_1 = ps.FixedDurationTask("t1", duration=2)
-        t_2 = ps.FixedDurationTask("t2", duration=3)
-        constraint = ps.TasksDontOverlap(t_1, t_2)
-        self.assertIsInstance(constraint, ps.TasksDontOverlap)
+        pb = ps.SchedulingProblem("TasksDontOverlap")
+        t_1 = ps.FixedDurationTask("t1", duration=7)
+        t_2 = ps.FixedDurationTask("t2", duration=11)
+        pb.add_constraint(ps.TasksDontOverlap(t_1, t_2))
+        pb.add_objective_makespan()
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertEqual(solution.horizon, 18)
 
     def test_tasks_start_sync(self) -> None:
-        new_problem_or_clear()
+        pb = ps.SchedulingProblem("TasksStartSync")
         t_1 = ps.FixedDurationTask("t1", duration=2)
         t_2 = ps.FixedDurationTask("t2", duration=3)
-        constraint = ps.TasksStartSynced(t_1, t_2)
-        self.assertIsInstance(constraint, ps.TasksStartSynced)
+        pb.add_constraint(ps.TaskStartAt(t_1, 7))
+        pb.add_constraint(ps.TasksStartSynced(t_1, t_2))
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertEqual(solution.tasks[t_1.name].start, solution.tasks[t_2.name].start)
 
     def test_tasks_end_sync(self) -> None:
-        new_problem_or_clear()
+        pb = ps.SchedulingProblem("TasksEndSync")
         t_1 = ps.FixedDurationTask("t1", duration=2)
         t_2 = ps.FixedDurationTask("t2", duration=3)
-        constraint = ps.TasksEndSynced(t_1, t_2)
-        self.assertIsInstance(constraint, ps.TasksEndSynced)
+        pb.add_constraint(ps.TasksEndSynced(t_1, t_2))
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertEqual(solution.tasks[t_1.name].end, solution.tasks[t_2.name].end)
 
     def test_schedule_n_task_raise_exception(self) -> None:
         new_problem_or_clear()
@@ -274,6 +291,31 @@ class TestTask(unittest.TestCase):
             )
         with self.assertRaises(TypeError):
             ps.ScheduleNTasksInTimeIntervals([], 1, "list_of_time_intervals")
+
+    #
+    # List of tasks constraints
+    #
+    def test_tasks_contiguous(self) -> None:
+        pb = ps.SchedulingProblem("TasksContiguous")
+        n = 7
+        tasks_w1 = [ps.FixedDurationTask("t_w1_%i" % i, duration=3) for i in range(n)]
+        tasks_w2 = [ps.FixedDurationTask("t_w2_%i" % i, duration=5) for i in range(n)]
+        worker_1 = ps.Worker("Worker1")
+        worker_2 = ps.Worker("Worker2")
+        for t in tasks_w1:
+            t.add_required_resource(worker_1)
+        for t in tasks_w2:
+            t.add_required_resource(worker_2)
+
+        c1 = ps.TasksContiguous(tasks_w1 + tasks_w2)
+        pb.add_constraint(c1)
+
+        pb.add_objective_makespan()
+
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        self.assertEqual(solution.horizon, 56)
 
 
 if __name__ == "__main__":

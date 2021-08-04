@@ -49,6 +49,8 @@ constraints the solver to schedule task_2 start exactly 2 periods after task_1 i
 
 - :class:`TaskEndBeforeLax`: the constraint :math:`task.end <= value`
 
+- :class:`TasksContiguous`: take a liste of tasks, force the schedule so that tasks are contiguous
+
 - :class:`ScheduleNTasksInTimeIntervals`: given a set of :math:`m` different tasks, and a list of time intervals, schedule :math:`N` tasks among :math:`m` in this time interval.
 
 - :class:`ResourceTasksDistance`: take a mandatory attribute :attr:`distance` (integer), an optional :attr:`time_periods` (list of couples of integers e.g. [[0, 1], [5, 19]]). All tasks, that use the given resource, scheduled within the :attr:`time_periods` must have a maximal distance of :attr:`distance` (distance being considered as the time between two consecutive tasks).

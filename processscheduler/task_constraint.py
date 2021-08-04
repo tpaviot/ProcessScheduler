@@ -18,9 +18,10 @@
 import uuid
 from typing import Optional
 
-from z3 import And, Bool, Not, BoolRef, Implies, If, Xor, PbEq, PbGe, PbLe
+from z3 import And, Bool, BoolRef, If, Implies, Not, Or, PbEq, PbGe, PbLe, Xor
 
 from processscheduler.base import _Constraint
+from processscheduler.util import sort_no_duplicates
 
 #
 # Tasks constraints for two or more classes
@@ -111,7 +112,7 @@ class TasksEndSynced(_Constraint):
 
 
 class TasksDontOverlap(_Constraint):
-    """two tasks must not overlap, i.e. one needs to be completed before
+    """Two tasks must not overlap, i.e. one needs to be completed before
     the other can be processed"""
 
     def __init__(self, task_1, task_2, optional: Optional[bool] = False) -> None:
@@ -128,6 +129,33 @@ class TasksDontOverlap(_Constraint):
             )
         else:
             self.set_assertions(scheduled_assertion)
+
+
+class TasksContiguous(_Constraint):
+    """A list of tasks are scheduled contiguously."""
+
+    def __init__(self, list_of_tasks, optional: Optional[bool] = False) -> None:
+        super().__init__(optional)
+
+        starts = [t.start for t in list_of_tasks]
+        ends = [t.end for t in list_of_tasks]
+        # sort both lists
+        sorted_starts, c1 = sort_no_duplicates(starts)
+        sorted_ends, c2 = sort_no_duplicates(ends)
+        for c in c1 + c2:
+            self.set_assertions(c)
+        # from now, starts and ends are sorted in asc order
+        # the space between two consecutive tasks is the sorted_start[i+1]-sorted_end[i]
+        # we just have to constraint this variable
+        for i in range(1, len(sorted_starts)):
+            asst = sorted_starts[i] == sorted_ends[i - 1]
+            #  anothe set of conditions, related to the time periods
+            condition_only_scheduled_tasks = And(
+                sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0
+            )
+            # finally create the constraint
+            new_cstr = Implies(Or(condition_only_scheduled_tasks), asst)
+            self.set_assertions(new_cstr)
 
 
 #
