@@ -26,7 +26,7 @@ class TestCost(unittest.TestCase):
 
     def test_cost_assertion_fail(self) -> None:
         with self.assertRaises(ValueError):
-            ress_cost = ps.ConstantCostPerPeriod(-4)
+            ps.ConstantCostPerPeriod(-4)
 
     def test_cost_polynomial_1(self) -> None:
         ps.SchedulingProblem("PolynomialCost1", horizon=12)
