@@ -12,7 +12,7 @@ End-user:
 
 [X] Optional tasks: tasks that may or may not be scheduled
 
-[ ] Inventories: input/output for tasks
+[X] Buffers: input/output for tasks
 
 [X] Add a plotly/pandas gantt renderer with real dates and times
 
@@ -29,13 +29,13 @@ End-user:
 function (cost(t)=a*t+b) for example. Indeed many industrial costs may change over time as quadratic or exponential
 functions, seasonality etc.
 
-[W] incremental solver: optimizer that uses a different method than the Optimize solver, which can
+[X] incremental solver: optimizer that uses a different method than the Optimize solver, which can
 be quite long to converge to a solution
 
 Dev:
 ====
 
-[ ] Performance benchmark
+[X] Performance benchmark
 
 [X] Improve class hierarchy and inheritance
 
@@ -47,5 +47,8 @@ Misc/unordered:
 ===============
 
 [ ] Resource status. A status is a set of real/boolean parameters (for instance the position of a point, the heat of an oven). That would enable to create tasks that change a resource status, from example "Move a crane from point A to point B" or "heat the oven from 25°C to 1300°C", given a certain time or speed.
+
+[ ] Add a 'MobileWorker' class. A mobile worker has a parameter position that changes across time. Position
+can be 1d (linear), 2d or 3d. Possible to use this class to represent cranes or trucks.
 
 [ ] Test CapacityConstraint for cumulative workers
