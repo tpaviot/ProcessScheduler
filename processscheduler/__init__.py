@@ -16,7 +16,7 @@
 __VERSION__ = "0.7.1"
 
 try:
-    from z3 import BoolRef
+    import z3
 except ModuleNotFoundError as z3_not_found:
     raise ImportError("z3 not found. It is a mandatory dependency") from z3_not_found
 

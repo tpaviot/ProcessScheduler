@@ -99,8 +99,6 @@ class TestResourceTasksDistance(unittest.TestCase):
         t2_start = solution.tasks[task_2.name].start
         t3_start = solution.tasks[task_3.name].start
         t1_end = solution.tasks[task_1.name].end
-        t2_end = solution.tasks[task_2.name].end
-        t3_end = solution.tasks[task_3.name].end
 
         self.assertEqual(t1_start, 2)
         self.assertEqual(t1_end, 10)

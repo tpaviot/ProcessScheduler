@@ -361,7 +361,7 @@ class TestIndicator(unittest.TestCase):
             t = ps.FixedDurationTask(f"T{i+1}", duration=1)
             t.add_required_resource(worker)
 
-        nbt = problem.add_indicator_number_tasks_assigned(worker)
+        problem.add_indicator_number_tasks_assigned(worker)
 
         solver = ps.SchedulingSolver(problem)
         solution = solver.solve()

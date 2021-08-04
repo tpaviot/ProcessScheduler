@@ -418,8 +418,6 @@ class SchedulingSolution:
 
         # buffers, show a plot for all buffers
         if self.buffers:
-            nb_buffers = len(self.buffers)
-            # figs, axs = plt.subplots(1, figsize=fig_size)
             buffer_chart.set_title("Buffers")
             buffer_chart.set_xlim(0, self.horizon)
             buffer_chart.set_xticks(range(self.horizon + 1))
@@ -427,7 +425,6 @@ class SchedulingSolution:
             buffer_chart.set_xlabel("Timeline")
             buffer_chart.set_ylabel("Buffer level")
 
-            buff_plot_index = 0
             for buffer in self.buffers.values():
                 all_x = [0] + buffer.state_change_times + [self.horizon]
                 # build data from the state and state_change_times

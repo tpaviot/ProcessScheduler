@@ -17,10 +17,7 @@
 
 from typing import Dict, List, Optional, Tuple
 
-from z3 import FreshInt, If, And
-
 from processscheduler.base import _NamedUIDObject
-
 import processscheduler.context as ps_context
 
 #

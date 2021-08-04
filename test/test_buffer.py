@@ -20,16 +20,16 @@ import processscheduler as ps
 
 class TestBuffer(unittest.TestCase):
     def test_instanciate_buffer(self) -> None:
-        pb = ps.SchedulingProblem("BufferBasic", horizon=12)
+        ps.SchedulingProblem("BufferBasic", horizon=12)
         buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
 
     def test_instanciate_buffer_error(self) -> None:
-        pb = ps.SchedulingProblem("BufferError", horizon=12)
-        buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
+        ps.SchedulingProblem("BufferError", horizon=12)
+        ps.NonConcurrentBuffer("Buffer1", initial_state=10)
         # a buffer with that name already exist, adding a new
         # one with the same name should raise an ValueError exception
         with self.assertRaises(ValueError):
-            buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
+            ps.NonConcurrentBuffer("Buffer1", initial_state=10)
 
     def test_unload_buffer_1(self) -> None:
         # only one buffer and one task
