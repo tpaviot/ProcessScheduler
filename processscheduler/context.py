@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Dict, List, Union
+from typing import List, Union
 import warnings
 
 from z3 import BoolRef, ArithRef
@@ -34,11 +34,12 @@ class SchedulingContext:
         self.clear()
 
     def clear(self):
+        """Initialize context content"""
         # the list of tasks to be scheduled in this scenario
-        self.tasks = []  # type: Dict[str, Task]
+        self.tasks = []  # type: List[Task]
         # the list of resources available in this scenario
-        self.resources = []  # type: Dict[str, _Resource]
-        # the constraints are defined in the scenario
+        self.resources = []  # type: List[_Resource]
+        # the list of constraints available in this scenario
         self.constraints = []  # type: List[BoolRef]
         # list of define indicators
         self.indicators = []  # type: List[Indicator]
@@ -48,7 +49,7 @@ class SchedulingContext:
         self.buffers = []  # type: List[Buffer]
 
     def add_indicator(self, indicator) -> bool:
-        """add an indicatr to the problem"""
+        """Add an indicatr to the problem"""
         if indicator not in self.indicators:
             self.indicators.append(indicator)
         else:
@@ -57,24 +58,22 @@ class SchedulingContext:
         return True
 
     def add_task(self, task) -> int:
-        """add a single task to the problem. There must not be two tasks with the same name"""
-        all_task_names = [t.name for t in self.tasks]
-        if task.name in all_task_names:
+        """Add a single task to the problem. There must not be two tasks with the same name"""
+        if task.name in [t.name for t in self.tasks]:
             raise ValueError("a task with the name %s already exists." % task.name)
         self.tasks.append(task)
         return len(self.tasks)
 
     def add_resource(self, resource) -> None:
-        """add a single resource to the problem"""
-        all_resource_names = [t.name for t in self.resources]
-        if resource.name in all_resource_names:
+        """Add a single resource to the problem"""
+        if resource.name in [t.name for t in self.resources]:
             raise ValueError(
                 "a resource with the name %s already exists." % resource.name
             )
         self.resources.append(resource)
 
     def add_constraint(self, constraint) -> None:
-        """add a constraint to the problem"""
+        """Add a constraint to the problem"""
         if isinstance(constraint, _Constraint):
             self.constraints.append(constraint.get_assertions())
         elif isinstance(constraint, BoolRef):
@@ -85,22 +84,22 @@ class SchedulingContext:
             )
 
     def add_objective(self, objective) -> None:
+        """Add an optimization objective"""
         self.objectives.append(objective)
 
     def add_buffer(self, buffer) -> None:
-        """add a single task to the problem. There must not be two tasks with the same name"""
-        all_buffer_names = [b.name for b in self.buffers]
-        if buffer.name in all_buffer_names:
+        """Add a single task to the problem. There must not be two tasks with the same name"""
+        if buffer.name in [b.name for b in self.buffers]:
             raise ValueError("a buffer with the name %s already exists." % buffer.name)
         self.buffers.append(buffer)
 
 
 # Define a global context
 # None by default
-# the scheduling problem will set
-# this variable
+# the scheduling problem will set this variable
 main_context = None
 
 
 def clear_main_context() -> None:
+    """Clear current context"""
     main_context.clear()
