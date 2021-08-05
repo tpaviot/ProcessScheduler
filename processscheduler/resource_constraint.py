@@ -21,11 +21,11 @@ import uuid
 from z3 import And, Implies, Int, Not, Or, Sum, Xor
 
 from processscheduler.resource import Worker, CumulativeWorker
-from processscheduler.base import _Constraint
+from processscheduler.constraint import ResourceConstraint
 from processscheduler.util import sort_no_duplicates
 
 
-class WorkLoad(_Constraint):
+class WorkLoad(ResourceConstraint):
     """set a mini/maxi/exact number of slots a resource can be scheduled."""
 
     def __init__(
@@ -132,7 +132,7 @@ class WorkLoad(_Constraint):
             self.set_assertions(wl_constrt)
 
 
-class ResourceUnavailable(_Constraint):
+class ResourceUnavailable(ResourceConstraint):
     """set unavailablity or a resource, in terms of busy intervals"""
 
     def __init__(
@@ -164,7 +164,7 @@ class ResourceUnavailable(_Constraint):
                     )
 
 
-class ResourceTasksDistance(_Constraint):
+class ResourceTasksDistance(ResourceConstraint):
     """Force a minimal/exact/maximal number time unitary periods between tasks for a single resource. This
     distance constraint is restricted to a certain number of time intervals"""
 
@@ -231,7 +231,7 @@ class ResourceTasksDistance(_Constraint):
 #
 # SelectWorker specific constraints
 #
-class SameWorkers(_Constraint):
+class SameWorkers(ResourceConstraint):
     """Selected workers by both AlternateWorkers are constrained to
     be the same
     """
@@ -250,7 +250,7 @@ class SameWorkers(_Constraint):
                 )
 
 
-class DistinctWorkers(_Constraint):
+class DistinctWorkers(ResourceConstraint):
     """Selected workers by both AlternateWorkers are constrained to
     be the same
     """
