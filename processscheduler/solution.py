@@ -20,7 +20,7 @@ import json
 from pathlib import Path
 import random
 
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 
 class SolutionJSONEncoder(json.JSONEncoder):
@@ -33,43 +33,43 @@ class SolutionJSONEncoder(json.JSONEncoder):
 class TaskSolution:
     """Class to represent the solution for a scheduled Task."""
 
-    def __init__(self, name: str):
-        self.name = name
+    def __init__(self, name: str) -> None:
+        self.name = name  # type: str
         self.type = ""  # the name of the task type
-        self.start = 0  # an integer
-        self.end = 0  # an integer
-        self.duration = 0  # an integer
+        self.start = 0  # type: int
+        self.end = 0  # type: int
+        self.duration = 0  # type: int
 
-        self.start_time = ""  # a string
-        self.end_time = ""  # a string
-        self.duration_time = ""  # a string
+        self.start_time = ""  # type: str
+        self.end_time = ""  # type: str
+        self.duration_time = ""  # type: str
 
-        self.optional = False
-        self.scheduled = False
+        self.optional = False  # type: bool
+        self.scheduled = False  # type: bool
         # the name of assigned resources
-        self.assigned_resources = []
+        self.assigned_resources = []  # type: List[str]
 
 
 class ResourceSolution:
     """Class to represent the solution for the resource assignments."""
 
     def __init__(self, name: str):
-        self.name = name
-        self.type = ""  # the name of the task type
+        self.name = name  # type: str
+        self.type = ""  # type: str
         # an assignment is a list of tuples : [(Task_name, start, end), (task_2name, start2, end2) etc.]
-        self.assignments = []
+        self.assignments = []  # type: List[Tuple[str, int, int]]
 
 
 class BufferSolution:
     """Class to represent the solution for a Buffer."""
 
     def __init__(self, name: str):
-        self.name = name
+        self.name = name  # type: str
         # a collection of instants where the buffer state changes
-        self.state_change_times = []
+        self.state_change_times = []  # type: List[int]
         # a collection that represents the buffer state along the
         # whole schedule. Represented a integer values
-        self.state = []
+        self.state = []  # type: List[int]
 
 
 class SchedulingSolution:
@@ -79,13 +79,13 @@ class SchedulingSolution:
 
     def __init__(self, problem):
         """problem: a scheduling problem."""
-        self.problem_name = problem.name
+        self.problem_name = problem.name  # type: str
         self.problem = problem
-        self.horizon = 0
-        self.tasks = {}  # the dict of tasks
-        self.resources = {}  # the dict of all resources
-        self.buffers = {}  # the dict of all buffers
-        self.indicators = {}  # the dict of inicators values
+        self.horizon = 0  # type: int
+        self.tasks = {}  # type: Dict[str, TaskSolution]
+        self.resources = {}  # type: Dict[str, ResourceSolution]
+        self.buffers = {}  # type: Dict[str, BufferSolution]
+        self.indicators = {}  # type: Dict[str, int]
 
     def __repr__(self):
         return self.to_json_string()

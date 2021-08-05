@@ -17,7 +17,7 @@
 
 from typing import List, Optional
 
-from z3 import Bool, BoolRef, Int, And, If
+from z3 import ArithRef, Bool, BoolRef, Int, And, If
 
 from processscheduler.base import _NamedUIDObject
 from processscheduler.util import is_strict_positive_integer, is_positive_integer
@@ -37,13 +37,16 @@ class Task(_NamedUIDObject):
         self.required_resources = []  # type: List[Resource]
 
         # z3 Int variables
-        self.start = Int("%s_start" % name)
-        self.end = Int("%s_end" % name)
-        self.duration = Int("%s_duration" % name)
+        self.start = Int("%s_start" % name)  # type: ArithRef
+        self.end = Int("%s_end" % name)  # type: ArithRef
+        self.duration = Int("%s_duration" % name)  # type: ArithRef
 
-        # by default, this task has to be scheduled
-        self.optional = optional
-        self.scheduled = True
+        # by default, the task is mandatory
+        self.scheduled = True  # type: Union[bool, BoolRef]
+
+        # but it can be se as optional. In that case, the self.scheduled
+        # above flag will be overridden as a z3 BoolRef
+        self.optional = optional  # type: bool
 
         # add this task to the current context
         if ps_context.main_context is None:
@@ -52,15 +55,17 @@ class Task(_NamedUIDObject):
             )
         # the task_number is an integer that is incremented each time
         # a task is created. The first task has number 1, the second number 2 etc.
-        self.task_number = ps_context.main_context.add_task(self)
+        self.task_number = ps_context.main_context.add_task(self)  # type: int
 
         # the counter used for negative integers
-        self._current_negative_integer = 0
+        # negative integers are used to schedule optional tasks
+        # for such tasks, they are actually scheduled in the past
+        # with start_time = end_time is a negative point in the timeline
+        self._current_negative_integer = 0  # type: int
 
-    def _get_unique_negative_integer(self):
+    def _get_unique_negative_integer(self) -> int:
         """Returns a new negative integer each time this method is called."""
-        # decrement the current counter
-        self._current_negative_integer -= 1
+        self._current_negative_integer -= 1  # decrement the current counter
         return self._current_negative_integer
 
     def add_required_resource(self, resource: Resource, dynamic=False) -> None:
@@ -156,22 +161,21 @@ class Task(_NamedUIDObject):
 
     def set_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
         """Take a list of constraint to satisfy. Create two cases: if the task is scheduled,
-        nothing is done, if the case is optional, scheduling the task to the past"""
+        nothing is done; if the task is optional, move task to the past"""
         if self.optional:  # in this case the previous assertions maybe skipped
             self.scheduled = Bool("%s_scheduled" % self.name)
             # the first task is moved to -1, the second to -2
             # etc.
             point_in_past = -self.task_number
             not_scheduled_assertion = And(
-                self.start == point_in_past,
-                self.end == point_in_past,
-                self.duration == 0,  # to past
+                self.start == point_in_past,  # to past
+                self.end == point_in_past,  # to past
+                self.duration == 0,
             )
             self.add_assertion(
                 If(self.scheduled, And(list_of_z3_assertions), not_scheduled_assertion)
             )
         else:
-            self.scheduled = True
             self.add_assertion(And(list_of_z3_assertions))
 
 

@@ -201,7 +201,7 @@ class ResourceTasksDistance(ResourceConstraint):
                 asst = sorted_starts[i] - sorted_ends[i - 1] <= distance
             elif mode == "exact":
                 asst = sorted_starts[i] - sorted_ends[i - 1] == distance
-            #  anothe set of conditions, related to the time periods
+            #  another set of conditions, related to the time periods
             conditions = []
             if time_periods is not None:
                 for (

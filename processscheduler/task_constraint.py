@@ -149,7 +149,7 @@ class TasksContiguous(TaskConstraint):
         # we just have to constraint this variable
         for i in range(1, len(sorted_starts)):
             asst = sorted_starts[i] == sorted_ends[i - 1]
-            #  anothe set of conditions, related to the time periods
+            #  another set of conditions, related to the time periods
             condition_only_scheduled_tasks = And(
                 sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0
             )

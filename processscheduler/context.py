@@ -48,7 +48,7 @@ class SchedulingContext:
         # list of buffers
         self.buffers = []  # type: List[Buffer]
 
-    def add_indicator(self, indicator) -> bool:
+    def add_indicator(self, indicator: "Indicator") -> bool:
         """Add an indicatr to the problem"""
         if indicator not in self.indicators:
             self.indicators.append(indicator)
@@ -57,14 +57,14 @@ class SchedulingContext:
             return False
         return True
 
-    def add_task(self, task) -> int:
+    def add_task(self, task: "Task") -> int:
         """Add a single task to the problem. There must not be two tasks with the same name"""
         if task.name in [t.name for t in self.tasks]:
             raise ValueError("a task with the name %s already exists." % task.name)
         self.tasks.append(task)
         return len(self.tasks)
 
-    def add_resource(self, resource) -> None:
+    def add_resource(self, resource: "Resource") -> None:
         """Add a single resource to the problem"""
         if resource.name in [t.name for t in self.resources]:
             raise ValueError(
@@ -72,7 +72,7 @@ class SchedulingContext:
             )
         self.resources.append(resource)
 
-    def add_constraint(self, constraint) -> None:
+    def add_constraint(self, constraint: "Constraint") -> None:
         """Add a constraint to the problem. A constraint can be either
         a z3 assertion or a processscheduler Constraint instance."""
         if isinstance(constraint, Constraint):
@@ -84,11 +84,11 @@ class SchedulingContext:
                 "You must provide either a _Constraint or BoolRef instance."
             )
 
-    def add_objective(self, objective) -> None:
+    def add_objective(self, objective: "Objective") -> None:
         """Add an optimization objective"""
         self.objectives.append(objective)
 
-    def add_buffer(self, buffer) -> None:
+    def add_buffer(self, buffer: "Buffer") -> None:
         """Add a single task to the problem. There must not be two tasks with the same name"""
         if buffer.name in [b.name for b in self.buffers]:
             raise ValueError("a buffer with the name %s already exists." % buffer.name)
@@ -103,4 +103,5 @@ main_context = None
 
 def clear_main_context() -> None:
     """Clear current context"""
-    main_context.clear()
+    if main_context is not None:
+        main_context.clear()
