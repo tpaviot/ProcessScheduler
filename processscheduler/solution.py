@@ -15,19 +15,11 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import time, timedelta, datetime
-import json
 from pathlib import Path
 import random
-
 from typing import List, Optional, Tuple
 
-
-class SolutionJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, (datetime, time, timedelta)):
-            return "%s" % obj
-        return obj.__dict__
+from processscheduler.json_io import solution_to_json_string
 
 
 class TaskSolution:
@@ -108,32 +100,7 @@ class SchedulingSolution:
 
     def to_json_string(self) -> str:
         """Export the solution to a json string."""
-        d = {}
-        # problem properties
-        problem_properties = {}
-        d["horizon"] = self.horizon
-        # time data
-        problem_properties["problem_timedelta"] = self.problem.delta_time
-        if self.problem.delta_time is None:
-            problem_properties["problem_start_time"] = None
-            problem_properties["problem_end_time"] = None
-        elif self.problem.start_time is not None:
-            problem_properties["problem_start_time"] = self.problem.start_time
-            problem_properties["problem_end_time"] = (
-                self.problem.start_time + self.horizon * self.problem.delta_time
-            )
-        else:
-            problem_properties["problem_start_time"] = time(0)
-            problem_properties["problem_end_time"] = (
-                self.horizon * self.problem.delta_time
-            )
-        d["problem_properties"] = problem_properties
-
-        d["tasks"] = self.tasks
-        d["resources"] = self.resources
-        d["buffers"] = self.buffers
-        d["indicators"] = self.indicators
-        return json.dumps(d, indent=4, sort_keys=True, cls=SolutionJSONEncoder)
+        return solution_to_json_string(self)
 
     def add_indicator_solution(self, indicator_name: str, indicator_value: int) -> None:
         """Add indicator solution."""
