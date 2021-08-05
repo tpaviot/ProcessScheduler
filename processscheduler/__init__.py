@@ -31,6 +31,7 @@ from processscheduler.first_order_logic import (
 )
 from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective
 from processscheduler.task import (
+    Task,
     ZeroDurationTask,
     FixedDurationTask,
     VariableDurationTask,
