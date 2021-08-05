@@ -20,7 +20,7 @@ import warnings
 
 from z3 import BoolRef, ArithRef
 
-from processscheduler.task_constraint import _Constraint
+from processscheduler.constraint import Constraint
 
 
 class SchedulingContext:
@@ -73,8 +73,9 @@ class SchedulingContext:
         self.resources.append(resource)
 
     def add_constraint(self, constraint) -> None:
-        """Add a constraint to the problem"""
-        if isinstance(constraint, _Constraint):
+        """Add a constraint to the problem. A constraint can be either
+        a z3 assertion or a processscheduler Constraint instance."""
+        if isinstance(constraint, Constraint):
             self.constraints.append(constraint.get_assertions())
         elif isinstance(constraint, BoolRef):
             self.constraints.append(constraint)
