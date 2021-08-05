@@ -1,5 +1,10 @@
 RELEASE NOTES
 
+Current dev
+===========
+Misc:
+  - refactor the Constraint class hierarchy
+
 Version 0.8.0
 =============
 New features:
