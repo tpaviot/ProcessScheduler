@@ -21,7 +21,7 @@ from z3 import Bool, BoolRef, Int, And, If
 
 from processscheduler.base import _NamedUIDObject
 from processscheduler.util import is_strict_positive_integer, is_positive_integer
-from processscheduler.resource import _Resource, Worker, CumulativeWorker, SelectWorkers
+from processscheduler.resource import Resource, Worker, CumulativeWorker, SelectWorkers
 import processscheduler.context as ps_context
 
 
@@ -34,7 +34,7 @@ class Task(_NamedUIDObject):
         self.priority = 1  # by default
 
         # required resources to perform the task
-        self.required_resources = []  # type: List[_Resource]
+        self.required_resources = []  # type: List[Resource]
 
         # z3 Int variables
         self.start = Int("%s_start" % name)
@@ -63,16 +63,16 @@ class Task(_NamedUIDObject):
         self._current_negative_integer -= 1
         return self._current_negative_integer
 
-    def add_required_resource(self, resource: _Resource, dynamic=False) -> None:
+    def add_required_resource(self, resource: Resource, dynamic=False) -> None:
         """
         Add a required resource to the current task.
 
         Args:
-            resource: any of one of the _Resource derivatives class (Worker, SelectWorkers etc.)
+            resource: any of one of the Resource derivatives class (Worker, SelectWorkers etc.)
         If dynamic flag (False by default) is set to True, then the resource is dynamic
         and can join the task any time between its start and end times.
         """
-        if not isinstance(resource, _Resource):
+        if not isinstance(resource, Resource):
             raise TypeError("you must pass a Resource instance")
 
         if resource in self.required_resources:
@@ -140,7 +140,7 @@ class Task(_NamedUIDObject):
             self.required_resources.append(resource)
 
     def add_required_resources(
-        self, list_of_resources: List[_Resource], dynamic=False
+        self, list_of_resources: List[Resource], dynamic=False
     ) -> None:
         """
         Add a set of required resources to the current task.

@@ -24,7 +24,7 @@ from z3 import And, BoolRef, If, Int, Or, Sum, Implies, ArithRef
 from processscheduler.base import _NamedUIDObject
 from processscheduler.util import is_strict_positive_integer
 from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective
-from processscheduler.resource import _Resource, CumulativeWorker
+from processscheduler.resource import Resource, CumulativeWorker
 from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
 import processscheduler.context as ps_context
 
@@ -85,7 +85,7 @@ class SchedulingProblem(_NamedUIDObject):
         for cstr in list_of_constraints:
             self.context.add_constraint(cstr)
 
-    def add_indicator_number_tasks_assigned(self, resource: _Resource):
+    def add_indicator_number_tasks_assigned(self, resource: Resource):
         """compute the number of tasks as resource is assigned"""
         # this list contains
         scheduled_tasks = [
@@ -99,7 +99,7 @@ class SchedulingProblem(_NamedUIDObject):
         )
 
     def add_indicator_resource_cost(
-        self, list_of_resources: List[_Resource]
+        self, list_of_resources: List[Resource]
     ) -> Indicator:
         """compute the total cost of a set of resources"""
         partial_costs = []
@@ -137,7 +137,7 @@ class SchedulingProblem(_NamedUIDObject):
         )
         return cost_indicator
 
-    def add_indicator_resource_utilization(self, resource: _Resource) -> Indicator:
+    def add_indicator_resource_utilization(self, resource: Resource) -> Indicator:
         """Compute the total utilization of a single resource.
 
         The percentage is rounded to an int value.
@@ -172,7 +172,7 @@ class SchedulingProblem(_NamedUIDObject):
         return self.horizon
 
     def add_objective_resource_utilization(
-        self, resource: _Resource, weight=1
+        self, resource: Resource, weight=1
     ) -> Union[ArithRef, Indicator]:
         """Maximize resource occupation."""
         resource_utilization_indicator = self.add_indicator_resource_utilization(
@@ -182,7 +182,7 @@ class SchedulingProblem(_NamedUIDObject):
         return resource_utilization_indicator
 
     def add_objective_resource_cost(
-        self, list_of_resources: List[_Resource], weight=1
+        self, list_of_resources: List[Resource], weight=1
     ) -> Union[ArithRef, Indicator]:
         """minimise the cost of selected resources"""
         cost_indicator = self.add_indicator_resource_cost(list_of_resources)

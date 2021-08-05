@@ -48,7 +48,7 @@ def _distribute_p_over_n(p, n):
 #
 # Resources class definition
 #
-class _Resource(_NamedUIDObject):
+class Resource(_NamedUIDObject):
     """base class for the representation of a resource"""
 
     def __init__(self, name: str) -> None:
@@ -67,7 +67,7 @@ class _Resource(_NamedUIDObject):
         return list(self.busy_intervals.values())
 
 
-class Worker(_Resource):
+class Worker(Resource):
     """A worker is an atomic resource that cannot be split into smaller parts.
     Typical workers are human beings, machines etc."""
 
@@ -93,13 +93,13 @@ class Worker(_Resource):
         ps_context.main_context.add_resource(self)
 
 
-class SelectWorkers(_Resource):
+class SelectWorkers(Resource):
     """Class representing the selection of n workers chosen among a list
     of possible workers"""
 
     def __init__(
         self,
-        list_of_workers: List[_Resource],
+        list_of_workers: List[Resource],
         nb_workers_to_select: Optional[int] = 1,
         kind: Optional[str] = "exact",
     ):
@@ -148,7 +148,7 @@ class SelectWorkers(_Resource):
         )
 
 
-class CumulativeWorker(_Resource):
+class CumulativeWorker(Resource):
     """A cumulative worker can process multiple tasks in parallel."""
 
     def __init__(

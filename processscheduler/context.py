@@ -38,7 +38,7 @@ class SchedulingContext:
         # the list of tasks to be scheduled in this scenario
         self.tasks = []  # type: List[Task]
         # the list of resources available in this scenario
-        self.resources = []  # type: List[_Resource]
+        self.resources = []  # type: List[Resource]
         # the list of constraints available in this scenario
         self.constraints = []  # type: List[BoolRef]
         # list of define indicators
