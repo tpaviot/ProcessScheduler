@@ -20,7 +20,7 @@ import processscheduler as ps
 
 class TestJsonImportExport(unittest.TestCase):
     def test_json_export_1(self):
-        pb = ps.SchedulingProblem("ConsumeFeedBuffer1", horizon=10)
+        pb = ps.SchedulingProblem("JSONExport1", horizon=10)
         # tasks
         task_1 = ps.FixedDurationTask("task1", duration=3)
         task_2 = ps.VariableDurationTask("task2")
@@ -31,13 +31,16 @@ class TestJsonImportExport(unittest.TestCase):
         # resources
         worker_1 = ps.Worker("Worker1")
         worker_2 = ps.Worker("Worker2")
-        sw = ps.SelectWorkers([worker_1, worker_2])
+        worker_3 = ps.Worker("Worker3")
+        sw_1 = ps.SelectWorkers([worker_1, worker_2])
+        sw_2 = ps.SelectWorkers([worker_2, worker_3], 2, kind="max")
         cumul1 = ps.CumulativeWorker("CumulMachine1", size=3)
         cumul2 = ps.CumulativeWorker("CumulMachine2", size=7)
 
         solver = ps.SchedulingSolver(pb)
 
-        ps.export_json(pb, solver, "popo")
+        ps.export_json_to_file(pb, solver, "test_export_1.json")
+        #
 
 
 if __name__ == "__main__":

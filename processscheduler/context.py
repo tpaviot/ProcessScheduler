@@ -81,10 +81,6 @@ class SchedulingContext:
 
     def add_resource_select_workers(self, resource: "SelectWorker") -> None:
         """Add a single resource to the problem"""
-        if resource.name in [t.name for t in self.select_workers]:
-            raise ValueError(
-                "a resource with the name %s already exists." % resource.name
-            )
         self.select_workers.append(resource)
 
     def add_resource_cumulative_worker(self, resource: "SelectWorker") -> None:

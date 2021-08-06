@@ -61,7 +61,13 @@ def solution_to_json_string(solution):
 #
 # Problem and Solver export to json
 #
-def export_json(scheduling_problem, scheduling_solver, json_filename):
+def export_json_to_file(scheduling_problem, scheduling_solver, json_filename):
+    json_string = export_json_to_string(scheduling_problem, scheduling_solver)
+    with open(json_filename, "w") as outfile:
+        outfile.write(json_string)
+
+
+def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
     d = {}
     # SchedulingProblem general properties
     problem_properties = {}
