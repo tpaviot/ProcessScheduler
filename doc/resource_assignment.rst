@@ -43,7 +43,7 @@ The :class:`SelectWorkers` class let the solver decide which resource(s) to assi
     driller_3 = Worker('Driller3')
     # the DrillHolePhi10mm task can be processed by the Driller1 OR the Driller2 OR the Driller 3
     drilling_hole.add_required_resource(SelectWorkers([driller_1, driller_2, driller_3],
-                                        nb_workers=1,
+                                        nb_workers_to_select=1,
                                         kind='exact'))
 
 This tells the solver to assign *exactly 1* resource among the list of the three workers able to process the task. The :attr:`kind` parameter can take either :const:`'exact'` (default value), :const:`'min'` or :const:`'max'` values.
