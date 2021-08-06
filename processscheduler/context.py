@@ -37,8 +37,15 @@ class SchedulingContext:
         """Initialize context content"""
         # the list of tasks to be scheduled in this scenario
         self.tasks = []  # type: List[Task]
-        # the list of resources available in this scenario
+        # the list of resources of type Worker available in this scenario
+        #
+        # Resources
+        #
         self.resources = []  # type: List[Resource]
+        # the list of resources of type Worker available in this scenario
+        self.select_workers = []  # type: List[SelectWorkers]
+        # the list of resources of type Worker available in this scenario
+        self.cumulative_workers = []  # type: List[CumulativeWorker]
         # the list of constraints available in this scenario
         self.constraints = []  # type: List[BoolRef]
         # list of define indicators
@@ -64,13 +71,29 @@ class SchedulingContext:
         self.tasks.append(task)
         return len(self.tasks)
 
-    def add_resource(self, resource: "Resource") -> None:
+    def add_resource(self, resource: "Worker") -> None:
         """Add a single resource to the problem"""
         if resource.name in [t.name for t in self.resources]:
             raise ValueError(
                 "a resource with the name %s already exists." % resource.name
             )
         self.resources.append(resource)
+
+    def add_resource_select_workers(self, resource: "SelectWorker") -> None:
+        """Add a single resource to the problem"""
+        if resource.name in [t.name for t in self.select_workers]:
+            raise ValueError(
+                "a resource with the name %s already exists." % resource.name
+            )
+        self.select_workers.append(resource)
+
+    def add_resource_cumulative_worker(self, resource: "SelectWorker") -> None:
+        """Add a single resource to the problem"""
+        if resource.name in [t.name for t in self.select_workers]:
+            raise ValueError(
+                "a resource with the name %s already exists." % resource.name
+            )
+        self.cumulative_workers.append(resource)
 
     def add_constraint(self, constraint: "Constraint") -> None:
         """Add a constraint to the problem. A constraint can be either

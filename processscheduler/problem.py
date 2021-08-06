@@ -56,6 +56,8 @@ class SchedulingProblem(_NamedUIDObject):
         # set this context as global
         ps_context.main_context = self.context
 
+        # store the horizon value to be exported to json
+        self.horizon_defined_value = horizon
         # define the horizon variable
         self.horizon = Int("horizon")
         self.fixed_horizon = False  # set to True is horizon is fixed

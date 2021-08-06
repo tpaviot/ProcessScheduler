@@ -218,10 +218,14 @@ class FixedDurationTask(Task):
         super().__init__(name, optional)
         if not is_strict_positive_integer(duration):
             raise TypeError("duration must be a strict positive integer")
+        self.duration_defined_value = duration
+
         if not is_positive_integer(work_amount):
             raise TypeError("work_amount me be a positive integer")
-
         self.work_amount = work_amount
+
+        if not is_positive_integer(work_amount):
+            raise TypeError("work_amount me be a positive integer")
         self.priority = priority
 
         assertions = [
