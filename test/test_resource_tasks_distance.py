@@ -117,16 +117,14 @@ class TestResourceTasksDistance(unittest.TestCase):
         task_1.add_required_resource(worker_1)
         task_2.add_required_resource(worker_1)
 
-        c1 = ps.ResourceTasksDistance(worker_1, distance=4, mode="exact")
-        pb.add_constraint(c1)
-
-        pb.add_constraint(ps.TaskStartAt(task_1, 1))
+        ps.ResourceTasksDistance(worker_1, distance=4, mode="exact")
+        ps.TaskStartAt(task_1, 1)
 
         solver = ps.SchedulingSolver(pb)
         # for optional tasks to not be scheduled
-        solver.add_constraint(task_3.scheduled == False)
-        solver.add_constraint(task_4.scheduled == False)
-        solver.add_constraint(task_5.scheduled == False)
+        solver.append_z3_assertion(task_3.scheduled == False)
+        solver.append_z3_assertion(task_4.scheduled == False)
+        solver.append_z3_assertion(task_5.scheduled == False)
 
         solution = solver.solve()
 
@@ -151,11 +149,10 @@ class TestResourceTasksDistance(unittest.TestCase):
         task_1.add_required_resource(worker_1)
         task_2.add_required_resource(worker_1)
 
-        c1 = ps.ResourceTasksDistance(
+        ps.ResourceTasksDistance(
             worker_1, distance=4, mode="exact", time_periods=[[10, 18]]
         )
-        pb.add_constraint(c1)
-        pb.add_constraint(ps.TaskPrecedence(task_1, task_2))
+        ps.TaskPrecedence(task_1, task_2)
         # we add a makespan objective: the two tasks should be scheduled with an horizon of 2
         # because they are outside the time period
         pb.add_objective_makespan()

@@ -20,6 +20,7 @@ from typing import Union, List
 from z3 import And, Xor, Or, Not, If, Implies, BoolRef
 
 from processscheduler.base import _NamedUIDObject
+import processscheduler.context as ps_context
 
 #
 # Utility functions
@@ -55,7 +56,9 @@ def _constraints_to_list_of_assertions(list_of_constraints) -> List[BoolRef]:
 #
 def not_(constraint: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
     """Boolean negation of the constraint."""
-    return Not(And(_get_assertions(constraint)))
+    not_asst = Not(And(_get_assertions(constraint)))
+    ps_context.main_context.append_z3_assertion(not_asst)
+    return not_asst
 
 
 def or_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
@@ -63,7 +66,9 @@ def or_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
 
     At least one assertion in the list must be satisfied.
     """
-    return Or(_constraints_to_list_of_assertions(list_of_constraints))
+    or_asst = Or(_constraints_to_list_of_assertions(list_of_constraints))
+    ps_context.main_context.append_z3_assertion(or_asst)
+    return or_asst
 
 
 def and_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
@@ -71,7 +76,9 @@ def and_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
 
     All assertions must be satisfied.
     """
-    return And(_constraints_to_list_of_assertions(list_of_constraints))
+    and_asst = And(_constraints_to_list_of_assertions(list_of_constraints))
+    ps_context.main_context.append_z3_assertion(and_asst)
+    return and_asst
 
 
 def xor_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
@@ -88,7 +95,11 @@ def xor_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
     constraint_1 = list_of_constraints[0]
     constraint_2 = list_of_constraints[1]
 
-    return Xor(And(_get_assertions(constraint_1)), And(_get_assertions(constraint_2)))
+    xor_asst = Xor(
+        And(_get_assertions(constraint_1)), And(_get_assertions(constraint_2))
+    )
+    ps_context.main_context.append_z3_assertion(xor_asst)
+    return xor_asst
 
 
 #
@@ -104,10 +115,12 @@ def implies(
         condition: a constraint or a boolref
         consequence_list_of_constraints: a list of all implications if condition is True
     """
-    return Implies(
+    implies_asst = Implies(
         And(_get_assertions(condition)),
         And(_constraints_to_list_of_assertions(consequence_list_of_constraints)),
     )
+    ps_context.main_context.append_z3_assertion(implies_asst)
+    return implies_asst
 
 
 #
@@ -125,8 +138,10 @@ def if_then_else(
         then_list_of_constraints: a list of all implications if condition is True
         else_list_of_constraints: a list of all implications if condition is False
     """
-    return If(
+    ite_asst = If(
         And(_get_assertions(condition)),
         And(_constraints_to_list_of_assertions(then_list_of_constraints)),
         And(_constraints_to_list_of_assertions(else_list_of_constraints)),
     )
+    ps_context.main_context.append_z3_assertion(ite_asst)
+    return ite_asst

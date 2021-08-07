@@ -74,8 +74,8 @@ class TestSolver(unittest.TestCase):
         task = ps.VariableDurationTask("task")
 
         # add two constraints to set start and end
-        problem.add_constraint(ps.TaskStartAt(task, 1))
-        problem.add_constraint(ps.TaskEndAt(task, 4))
+        ps.TaskStartAt(task, 1)
+        ps.TaskEndAt(task, 4)
 
         solution = _solve_problem(problem)
         self.assertTrue(solution)
@@ -92,8 +92,8 @@ class TestSolver(unittest.TestCase):
         task_2 = ps.FixedDurationTask("task2", duration=3)
 
         # add two constraints to set start and end
-        problem.add_constraint(ps.TaskStartAt(task_1, 0))
-        problem.add_constraint(ps.TaskPrecedence(task_before=task_1, task_after=task_2))
+        ps.TaskStartAt(task_1, 0)
+        ps.TaskPrecedence(task_before=task_1, task_after=task_2)
         solution = _solve_problem(problem)
         self.assertTrue(solution)
 
@@ -213,8 +213,8 @@ class TestSolver(unittest.TestCase):
 
         # add two constraints to set start and end
         # impossible to satisfy both
-        problem.add_constraint(ps.TaskStartAt(task, 1))
-        problem.add_constraint(ps.TaskEndAt(task, 4))
+        ps.TaskStartAt(task, 1)
+        ps.TaskEndAt(task, 4)
 
         self.assertFalse(_solve_problem(problem))
 
@@ -285,7 +285,7 @@ class TestSolver(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=2)
         task_2 = ps.FixedDurationTask("task2", duration=3)
 
-        problem.add_constraint(ps.TaskPrecedence(task_1, task_2))
+        ps.TaskPrecedence(task_1, task_2)
 
         problem.add_objective_start_latest()
         solution = _solve_problem(problem)
@@ -301,9 +301,9 @@ class TestSolver(unittest.TestCase):
         task_2 = ps.FixedDurationTask("task2", duration=2, priority=10)
         task_3 = ps.FixedDurationTask("task3", duration=2, priority=100)
 
-        problem.add_constraint(ps.TasksDontOverlap(task_1, task_2))
-        problem.add_constraint(ps.TasksDontOverlap(task_2, task_3))
-        problem.add_constraint(ps.TasksDontOverlap(task_1, task_3))
+        ps.TasksDontOverlap(task_1, task_2)
+        ps.TasksDontOverlap(task_2, task_3)
+        ps.TasksDontOverlap(task_1, task_3)
 
         problem.add_objective_priorities()
 
@@ -328,7 +328,7 @@ class TestSolver(unittest.TestCase):
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask("task1", duration=3)
 
-        problem.add_constraint(ps.not_(ps.TaskStartAt(task_1, 0)))
+        ps.not_(ps.TaskStartAt(task_1, 0))
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         # check that the task is not scheduled to start à 0
@@ -340,10 +340,8 @@ class TestSolver(unittest.TestCase):
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask("task1", duration=2)
         # problem.add_task(task_1)
-        problem.add_constraint(
-            ps.and_(
-                [ps.not_(ps.TaskStartAt(task_1, 0)), ps.not_(ps.TaskStartAt(task_1, 1))]
-            )
+        ps.and_(
+            [ps.not_(ps.TaskStartAt(task_1, 0)), ps.not_(ps.TaskStartAt(task_1, 1))]
         )
         solution = _solve_problem(problem)
         self.assertTrue(solution)
@@ -358,10 +356,8 @@ class TestSolver(unittest.TestCase):
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask("task1", duration=2)
         task_2 = ps.FixedDurationTask("task2", duration=2)
-        problem.add_constraint(ps.TaskStartAt(task_1, 1))
-        problem.add_constraint(
-            ps.implies(task_1.start == 1, [ps.TaskStartAt(task_2, 4)])
-        )
+        ps.TaskStartAt(task_1, 1)
+        ps.implies(task_1.start == 1, [ps.TaskStartAt(task_2, 4)])
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         # the only solution is to start at 2
@@ -376,14 +372,12 @@ class TestSolver(unittest.TestCase):
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask("task1", duration=2)
         task_2 = ps.FixedDurationTask("task2", duration=2)
-        problem.add_constraint(ps.TaskStartAt(task_1, 1))
-        problem.add_constraint(
-            ps.if_then_else(
-                task_1.start == 0,  # this condition is False
-                [ps.TaskStartAt(task_2, 4)],  # assertion not set
-                [ps.TaskStartAt(task_2, 2)],
-            )
-        )  # this one
+        ps.TaskStartAt(task_1, 1)
+        ps.if_then_else(
+            task_1.start == 0,  # this condition is False
+            [ps.TaskStartAt(task_2, 4)],  # assertion not set
+            [ps.TaskStartAt(task_2, 2)],
+        )
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         # the only solution is to start at 2
@@ -487,10 +481,9 @@ class TestSolver(unittest.TestCase):
         task_3.add_required_resource(res_for_t3)
         task_4.add_required_resource(res_for_t4)
 
-        c = ps.SameWorkers(res_for_t1, res_for_t2)
-        d = ps.SameWorkers(res_for_t3, res_for_t4)
-        e = ps.DistinctWorkers(res_for_t2, res_for_t4)
-        pb.add_constraints([c, d, e])
+        ps.SameWorkers(res_for_t1, res_for_t2)
+        ps.SameWorkers(res_for_t3, res_for_t4)
+        ps.DistinctWorkers(res_for_t2, res_for_t4)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()

@@ -37,7 +37,7 @@ class Constraint(_NamedUIDObject):
         else:
             self.applied = True
 
-        # store this constraint
+        # store this constraint into the current context
         ps_context.main_context.add_constraint(self)
 
     def set_z3_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:

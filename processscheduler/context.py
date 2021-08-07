@@ -93,12 +93,15 @@ class SchedulingContext:
             )
         self.cumulative_workers.append(resource)
 
+    def append_z3_assertion(self, z3_asst):
+        self.z3_assertions.append(z3_asst)
+
     def add_constraint(self, constraint: "Constraint") -> None:
         """Add a constraint to the problem. A constraint can be either
         a z3 assertion or a processscheduler Constraint instance."""
         if isinstance(constraint, Constraint):
             self.constraints.append(constraint)
-            self.z3_assertions.append(constraint.get_z3_assertions())
+            # self.z3_assertions.append(constraint.get_z3_assertions())
         elif isinstance(constraint, BoolRef):
             self.z3_assertions.append(constraint)
         else:

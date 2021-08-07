@@ -121,18 +121,14 @@ class SchedulingSolver:
         if parallel:
             set_option("parallel.enable", True)  # enable parallel computation
 
-        # add all tasks assertions to the solver
+        # add all tasks z3 assertions to the solver
         for task in self.problem_context.tasks:
-            self.add_constraint(task.get_z3_assertions())
-            self.add_constraint(task.end <= self.problem.horizon)
+            self.append_z3_assertion(task.get_z3_assertions())
+            self.append_z3_assertion(task.end <= self.problem.horizon)
 
-        # then process tasks constraints
-        for constraint in self.problem_context.z3_assertions:
-            self.add_constraint(constraint)
-
-        # process resources requirements
+        # process resources assertions
         for ress in self.problem_context.resources:
-            self.add_constraint(ress.get_z3_assertions())
+            self.append_z3_assertion(ress.get_z3_assertions())
 
         # process resource intervals
         for ress in self.problem_context.resources:
@@ -142,13 +138,17 @@ class SchedulingSolver:
                 start_task_i, end_task_i = busy_intervals[i]
                 for k in range(i + 1, nb_intervals):
                     start_task_k, end_task_k = busy_intervals[k]
-                    self.add_constraint(
+                    self.append_z3_assertion(
                         Or(start_task_k >= end_task_i, start_task_i >= end_task_k)
                     )
 
+        # add z3 assertions for constraints
+        for constraint in self.problem_context.constraints:
+            self.append_z3_assertion(constraint.get_z3_assertions())
+
         # process indicators
         for indic in self.problem_context.indicators:
-            self.add_constraint(indic.get_z3_assertions())
+            self.append_z3_assertion(indic.get_z3_assertions())
 
         # work amounts
         # for each task, compute the total work for all required resources"""
@@ -162,7 +162,7 @@ class SchedulingSolver:
                         interv_up - interv_low
                     )
                     work_total_for_all_resources.append(work_contribution)
-                self.add_constraint(
+                self.append_z3_assertion(
                     Sum(work_total_for_all_resources) >= task.work_amount
                 )
 
@@ -178,12 +178,12 @@ class SchedulingSolver:
                 "Buffer_%s_mapping" % buffer.name, IntSort(), IntSort()
             )
             for t in buffer.unloading_tasks:
-                self.add_constraint(
+                self.append_z3_assertion(
                     buffer_mapping
                     == Store(buffer_mapping, t.start, -buffer.unloading_tasks[t])
                 )
             for t in buffer.loading_tasks:
-                self.add_constraint(
+                self.append_z3_assertion(
                     buffer_mapping
                     == Store(buffer_mapping, t.end, +buffer.loading_tasks[t])
                 )
@@ -194,7 +194,7 @@ class SchedulingSolver:
             sorted_times, sort_assertions = sort_no_duplicates(
                 tasks_start_unload + tasks_end_load
             )
-            self.add_constraint(sort_assertions)
+            self.append_z3_assertion(sort_assertions)
             # create as many buffer state changes as sorted_times
             buffer.state_changes_time = [
                 Int("%s_sc_time_%i" % (buffer.name, k))
@@ -203,7 +203,7 @@ class SchedulingSolver:
 
             # add the constraints that give the buffer state change times
             for st, bfst in zip(sorted_times, buffer.state_changes_time):
-                self.add_constraint(st == bfst)
+                self.append_z3_assertion(st == bfst)
 
             # compute the different buffer states according to state changes
             buffer.buffer_states = [
@@ -213,39 +213,45 @@ class SchedulingSolver:
             # add constraints for buffer states
             # the first buffer state is equal to the buffer initial level
             if buffer.initial_state is not None:
-                self.add_constraint(buffer.buffer_states[0] == buffer.initial_state)
+                self.append_z3_assertion(
+                    buffer.buffer_states[0] == buffer.initial_state
+                )
             if buffer.final_state is not None:
-                self.add_constraint(buffer.buffer_states[-1] == buffer.final_state)
+                self.append_z3_assertion(buffer.buffer_states[-1] == buffer.final_state)
             if buffer.lower_bound is not None:
                 for st in buffer.buffer_states:
-                    self.add_constraint(st >= buffer.lower_bound)
+                    self.append_z3_assertion(st >= buffer.lower_bound)
             if buffer.upper_bound is not None:
                 for st in buffer.buffer_states:
-                    self.add_constraint(st <= buffer.upper_bound)
+                    self.append_z3_assertion(st <= buffer.upper_bound)
             # and, for the other, the buffer state i+1 is the buffer state i +/- the buffer change
             for i in range(len(buffer.buffer_states) - 1):
-                self.add_constraint(
+                self.append_z3_assertion(
                     buffer.buffer_states[i + 1]
                     == buffer.buffer_states[i]
                     + buffer_mapping[buffer.state_changes_time[i]]
                 )
 
+        # Finally add other assertions (FOL, user defined)
+        for z3_assertion in self.problem_context.z3_assertions:
+            self.append_z3_assertion(z3_assertion)
+
         # optimization
         if self.is_optimization_problem:
             self.create_objective()
 
-    def add_constraint(self, cstr) -> bool:
+    def append_z3_assertion(self, asst) -> bool:
         # set the method to use to add constraints
         # in debug mode this is assert_and_track, to be able to trace
         # unsat core, in regular mode this is the add function
         if self.debug:
-            if isinstance(cstr, list):
-                for c in cstr:
+            if isinstance(asst, list):
+                for c in asst:
                     self._solver.assert_and_track(c, "asst_%s" % uuid.uuid4().hex[:8])
             else:
-                self._solver.assert_and_track(cstr, "asst_%s" % uuid.uuid4().hex[:8])
+                self._solver.assert_and_track(asst, "asst_%s" % uuid.uuid4().hex[:8])
         else:
-            self._solver.add(cstr)
+            self._solver.add(asst)
 
     def create_objective(self) -> bool:
         """create optimization objectives"""
@@ -262,7 +268,9 @@ class SchedulingSolver:
                     weighted_objectives.append(-weight * variable_to_optimize)
                 else:
                     weighted_objectives.append(weight * variable_to_optimize)
-            self.add_constraint(equivalent_single_objective == Sum(weighted_objectives))
+            self.append_z3_assertion(
+                equivalent_single_objective == Sum(weighted_objectives)
+            )
             # create an indicator
             equivalent_indicator = Indicator(
                 "EquivalentIndicator", equivalent_single_objective
@@ -270,7 +278,7 @@ class SchedulingSolver:
             self.objective = MinimizeObjective(
                 "EquivalentObjective", equivalent_indicator
             )
-            self.add_constraint(equivalent_indicator.get_z3_assertions())
+            self.append_z3_assertion(equivalent_indicator.get_z3_assertions())
         else:
             self.objective = self.problem.context.objectives[0]
 
@@ -551,10 +559,10 @@ class SchedulingSolver:
                     break
             self._solver.push()
             if kind == "min":
-                self.add_constraint(variable < current_variable_value)
+                self.append_z3_assertion(variable < current_variable_value)
                 print("\tChecking better value <%s" % current_variable_value)
             else:
-                self.add_constraint(variable > current_variable_value)
+                self.append_z3_assertion(variable > current_variable_value)
                 print("\tChecking better value >%s" % current_variable_value)
 
         print("\ttotal number of iterations: %i" % depth)
@@ -590,7 +598,7 @@ class SchedulingSolver:
             warnings.warn("No current solution. First call the solve() method.")
             return False
         current_variable_value = self.current_solution[variable].as_long()
-        self.add_constraint(variable != current_variable_value)
+        self.append_z3_assertion(variable != current_variable_value)
         return self.solve()
 
     def export_to_smt2(self, smt_filename: str):
