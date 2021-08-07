@@ -74,7 +74,6 @@ class SchedulingSolver:
         self.objective = None  # the list of all objectives defined in this problem
         self.current_solution = None  # no solution until the problem is solved
 
-        # set_option('smt.arith.auto_config_simplex', True)
         if debug:
             set_option("verbose", 2)
         else:
@@ -519,12 +518,12 @@ class SchedulingSolver:
             solution = self._solver.model()
 
             current_variable_value = solution[variable].as_long()
+            total_time += sat_computation_time
             print(
                 "\tFound value:",
                 current_variable_value,
                 "elapsed time:%.3fs" % total_time,
             )
-            total_time += sat_computation_time
             if total_time > self.max_time:
                 warnings.warn("max time exceeded")
                 break
