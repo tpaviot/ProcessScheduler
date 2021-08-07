@@ -31,7 +31,10 @@ class Constraint(_NamedUIDObject):
 
         self.optional = optional
         # by default, this constraint has to be applied
-        self.applied = True
+        if self.optional:
+            self.applied = Bool("constraint_%s_applied" % self.uid)
+        else:
+            self.applied = True
 
     def set_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
         """Take a list of constraint to satisfy. If the constraint is optional then
@@ -39,10 +42,8 @@ class Constraint(_NamedUIDObject):
         is set to True.
         """
         if self.optional:
-            self.applied = Bool("constraint_%s_applied" % self.uid)
             self.add_assertion(Implies(self.applied, list_of_z3_assertions))
         else:
-            self.applied = True
             self.add_assertion(list_of_z3_assertions)
 
 
