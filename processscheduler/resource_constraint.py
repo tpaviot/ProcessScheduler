@@ -76,14 +76,14 @@ class WorkLoad(ResourceConstraint):
                         )
                     )
                     # prevent solutions where duration would be negative
-                    self.set_assertions(dur >= 0)
+                    self.set_z3_assertions(dur >= 0)
                     # 4 different cases to take into account
                     cond1 = And(
                         start_task_i >= time_interval_lower_bound,
                         end_task_i <= time_interval_upper_bound,
                     )
                     asst1 = Implies(cond1, dur == end_task_i - start_task_i)
-                    self.set_assertions(asst1)
+                    self.set_z3_assertions(asst1)
                     # overlap at lower bound
                     cond2 = And(
                         start_task_i < time_interval_lower_bound,
@@ -92,7 +92,7 @@ class WorkLoad(ResourceConstraint):
                     asst2 = Implies(
                         cond2, dur == end_task_i - time_interval_lower_bound
                     )
-                    self.set_assertions(asst2)
+                    self.set_z3_assertions(asst2)
                     # overlap at upper bound
                     cond3 = And(
                         start_task_i < time_interval_upper_bound,
@@ -101,7 +101,7 @@ class WorkLoad(ResourceConstraint):
                     asst3 = Implies(
                         cond3, dur == time_interval_upper_bound - start_task_i
                     )
-                    self.set_assertions(asst3)
+                    self.set_z3_assertions(asst3)
                     # all overlap
                     cond4 = And(
                         start_task_i < time_interval_lower_bound,
@@ -111,10 +111,10 @@ class WorkLoad(ResourceConstraint):
                         cond4,
                         dur == time_interval_upper_bound - time_interval_lower_bound,
                     )
-                    self.set_assertions(asst4)
+                    self.set_z3_assertions(asst4)
 
                     # make these constraints mutual: no overlap
-                    self.set_assertions(
+                    self.set_z3_assertions(
                         Implies(Not(Or([cond1, cond2, cond3, cond4])), dur == 0)
                     )
 
@@ -129,7 +129,7 @@ class WorkLoad(ResourceConstraint):
             elif kind == "min":
                 wl_constrt = Sum(durations) >= number_of_time_slots
 
-            self.set_assertions(wl_constrt)
+            self.set_z3_assertions(wl_constrt)
 
 
 class ResourceUnavailable(ResourceConstraint):
@@ -156,7 +156,7 @@ class ResourceUnavailable(ResourceConstraint):
             # add constraints on each busy interval
             for worker in workers:
                 for start_task_i, end_task_i in worker.get_busy_intervals():
-                    self.set_assertions(
+                    self.set_z3_assertions(
                         Xor(
                             start_task_i >= interval_upper_bound,
                             end_task_i <= interval_lower_bound,
@@ -190,7 +190,7 @@ class ResourceTasksDistance(ResourceConstraint):
         sorted_starts, c1 = sort_no_duplicates(starts)
         sorted_ends, c2 = sort_no_duplicates(ends)
         for c in c1 + c2:
-            self.set_assertions(c)
+            self.set_z3_assertions(c)
         # from now, starts and ends are sorted in asc order
         # the space between two consecutive tasks is the sorted_start[i+1]-sorted_end[i]
         # we just have to constraint this variable
@@ -225,7 +225,7 @@ class ResourceTasksDistance(ResourceConstraint):
                 conditions = [condition_only_scheduled_tasks]
             # finally create the constraint
             new_cstr = Implies(Or(conditions), asst)
-            self.set_assertions(new_cstr)
+            self.set_z3_assertions(new_cstr)
 
 
 #
@@ -244,7 +244,7 @@ class SameWorkers(ResourceConstraint):
         # Select worker 2 as well, then add a constraint
         for res_work_1 in alternate_workers_1.selection_dict:
             if res_work_1 in alternate_workers_2.selection_dict:
-                self.set_assertions(
+                self.set_z3_assertions(
                     alternate_workers_1.selection_dict[res_work_1]
                     == alternate_workers_2.selection_dict[res_work_1]
                 )
@@ -263,7 +263,7 @@ class DistinctWorkers(ResourceConstraint):
         # alterna worker 2 as well, then add a constraint
         for res_work_1 in alternate_workers_1.selection_dict:
             if res_work_1 in alternate_workers_2.selection_dict:
-                self.set_assertions(
+                self.set_z3_assertions(
                     alternate_workers_1.selection_dict[res_work_1]
                     != alternate_workers_2.selection_dict[res_work_1]
                 )

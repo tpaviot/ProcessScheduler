@@ -123,11 +123,11 @@ class Task(_NamedUIDObject):
                 # define the assertion ...
                 assertion = If(selected_variable, schedule_as_usual, move_to_past)
                 # ... and store it into the task assertions list
-                self.add_assertion(assertion)
+                self.append_z3_assertion(assertion)
                 # finally, add each worker to the "required" resource list
                 self.required_resources.append(worker)
             # also, don't forget to add the AlternativeWorker assertion
-            self.add_assertion(resource.selection_assertion)
+            self.append_z3_assertion(resource.selection_assertion)
         elif isinstance(resource, Worker):
             resource_busy_start = Int("%s_busy_%s_start" % (resource.name, self.name))
             resource_busy_end = Int("%s_busy_%s_end" % (resource.name, self.name))
@@ -135,12 +135,12 @@ class Task(_NamedUIDObject):
             resource.add_busy_interval(self, (resource_busy_start, resource_busy_end))
             # set the busy resource to keep synced with the task
             if dynamic:
-                self.add_assertion(resource_busy_end <= self.end)
-                self.add_assertion(resource_busy_start >= self.start)
+                self.append_z3_assertion(resource_busy_end <= self.end)
+                self.append_z3_assertion(resource_busy_start >= self.start)
             else:
-                # self.add_assertion(resource_busy_start + self.duration == resource_busy_end)
-                self.add_assertion(resource_busy_end == self.end)
-                self.add_assertion(resource_busy_start == self.start)
+                # self.append_z3_assertion(resource_busy_start + self.duration == resource_busy_end)
+                self.append_z3_assertion(resource_busy_end == self.end)
+                self.append_z3_assertion(resource_busy_start == self.start)
             # finally, store this resource into the resource list
             self.required_resources.append(resource)
 
@@ -172,11 +172,11 @@ class Task(_NamedUIDObject):
                 self.end == point_in_past,  # to past
                 self.duration == 0,
             )
-            self.add_assertion(
+            self.append_z3_assertion(
                 If(self.scheduled, And(list_of_z3_assertions), not_scheduled_assertion)
             )
         else:
-            self.add_assertion(And(list_of_z3_assertions))
+            self.append_z3_assertion(And(list_of_z3_assertions))
 
 
 class ZeroDurationTask(Task):
@@ -262,7 +262,7 @@ class VariableDurationTask(Task):
         super().__init__(name, optional)
 
         if is_positive_integer(max_duration):
-            self.add_assertion(self.duration <= max_duration)
+            self.append_z3_assertion(self.duration <= max_duration)
         elif max_duration is not None:
             raise TypeError(
                 "length_as_most should either be a positive integer or None"

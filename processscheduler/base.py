@@ -46,8 +46,8 @@ class _NamedUIDObject:
 
         # SMT assertions
         # start and end integer values must be positive
-        self.assertions = []  # type: List[BoolRef]
-        self.assertion_hashes = []
+        self.z3_assertions = []  # type: List[BoolRef]
+        self.z3_assertion_hashes = []
 
     def __hash__(self) -> int:
         return self.uid
@@ -60,12 +60,12 @@ class _NamedUIDObject:
         str_to_return = "%s(%s)\n%i assertion(s):\n" % (
             self.name,
             type(self),
-            len(self.assertions),
+            len(self.z3_assertions),
         )
-        assertions_str = "".join("%s" % ass for ass in self.assertions)
+        assertions_str = "".join("%s" % ass for ass in self.z3_assertions)
         return str_to_return + assertions_str
 
-    def add_assertion(self, z3_assertion: BoolRef) -> bool:
+    def append_z3_assertion(self, z3_assertion: BoolRef) -> bool:
         """
         Add a z3 assertion to the list of assertions to be satisfied.
 
@@ -75,13 +75,13 @@ class _NamedUIDObject:
         # check if the assertion is in the list
         # workaround to avoid heavy hash computations
         assertion_hash = hash(z3_assertion)
-        if assertion_hash in self.assertion_hashes:
+        if assertion_hash in self.z3_assertion_hashes:
             warnings.warn("assertion %s already added." % z3_assertion)
             return False
-        self.assertions.append(z3_assertion)
-        self.assertion_hashes.append(assertion_hash)
+        self.z3_assertions.append(z3_assertion)
+        self.z3_assertion_hashes.append(assertion_hash)
         return True
 
-    def get_assertions(self) -> List[BoolRef]:
+    def get_z3_assertions(self) -> List[BoolRef]:
         """Return the assertions list"""
-        return self.assertions
+        return self.z3_assertions

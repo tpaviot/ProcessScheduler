@@ -46,8 +46,10 @@ class SchedulingContext:
         self.select_workers = []  # type: List[SelectWorkers]
         # the list of resources of type Worker available in this scenario
         self.cumulative_workers = []  # type: List[CumulativeWorker]
-        # the list of constraints available in this scenario
-        self.constraints = []  # type: List[BoolRef]
+        # list of all constraints
+        self.constraints = []  # type: List[Constraint]
+        # the list of z3 assertions
+        self.z3_assertions = []  # type: List[BoolRef]
         # list of define indicators
         self.indicators = []  # type: List[Indicator]
         # list of objectives
@@ -95,9 +97,10 @@ class SchedulingContext:
         """Add a constraint to the problem. A constraint can be either
         a z3 assertion or a processscheduler Constraint instance."""
         if isinstance(constraint, Constraint):
-            self.constraints.append(constraint.get_assertions())
-        elif isinstance(constraint, BoolRef):
             self.constraints.append(constraint)
+            self.z3_assertions.append(constraint.get_z3_assertions())
+        elif isinstance(constraint, BoolRef):
+            self.z3_assertions.append(constraint)
         else:
             raise TypeError(
                 "You must provide either a _Constraint or BoolRef instance."

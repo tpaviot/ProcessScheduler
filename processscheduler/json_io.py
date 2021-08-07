@@ -76,7 +76,7 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
     problem_properties["delta_time"] = scheduling_problem.delta_time
     problem_properties["start_time"] = scheduling_problem.start_time
     problem_properties["end_time"] = scheduling_problem.end_time
-    d["ProblemGeneralDefinitions"] = problem_properties
+    d["ProblemParameters"] = problem_properties
     # Tasks
     tasks = {}
     for task in scheduling_problem.context.tasks:
@@ -127,8 +127,16 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
         new_cw["cost"] = cw.cost
         cumulative_workers[cw.name] = new_cw
     resources["CumulativeWorkers"] = cumulative_workers
-
     d["Resources"] = resources
+    #
+    # Constraints
+    #
+    constraints = []
+    for constraint in scheduling_problem.context.constraints:
+        new_cstr = {}
+        new_cstr["type"] = type(constraint).__name__
+        constraints.append(new_cstr)
+    d["Constraints"] = constraints
 
     return json.dumps(d, indent=4, sort_keys=True)
 

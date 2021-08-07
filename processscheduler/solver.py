@@ -123,16 +123,16 @@ class SchedulingSolver:
 
         # add all tasks assertions to the solver
         for task in self.problem_context.tasks:
-            self.add_constraint(task.get_assertions())
+            self.add_constraint(task.get_z3_assertions())
             self.add_constraint(task.end <= self.problem.horizon)
 
         # then process tasks constraints
-        for constraint in self.problem_context.constraints:
+        for constraint in self.problem_context.z3_assertions:
             self.add_constraint(constraint)
 
         # process resources requirements
         for ress in self.problem_context.resources:
-            self.add_constraint(ress.get_assertions())
+            self.add_constraint(ress.get_z3_assertions())
 
         # process resource intervals
         for ress in self.problem_context.resources:
@@ -148,7 +148,7 @@ class SchedulingSolver:
 
         # process indicators
         for indic in self.problem_context.indicators:
-            self.add_constraint(indic.get_assertions())
+            self.add_constraint(indic.get_z3_assertions())
 
         # work amounts
         # for each task, compute the total work for all required resources"""
@@ -270,7 +270,7 @@ class SchedulingSolver:
             self.objective = MinimizeObjective(
                 "EquivalentObjective", equivalent_indicator
             )
-            self.add_constraint(equivalent_indicator.get_assertions())
+            self.add_constraint(equivalent_indicator.get_z3_assertions())
         else:
             self.objective = self.problem.context.objectives[0]
 

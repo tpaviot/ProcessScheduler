@@ -29,7 +29,7 @@ def _get_assertions(constraint: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
     if isinstance(constraint, BoolRef):
         assertion = constraint
     elif isinstance(constraint, _NamedUIDObject):
-        assertion = constraint.get_assertions()
+        assertion = constraint.get_z3_assertions()
     else:
         raise TypeError(
             "constraint must either be a _NamedUIDObject or BoolRef instance"

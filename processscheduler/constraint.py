@@ -19,6 +19,7 @@ from typing import Optional, List
 
 from z3 import Bool, BoolRef, Implies, PbEq, PbGe, PbLe
 from processscheduler.base import _NamedUIDObject
+import processscheduler.context as ps_context
 
 #
 # Base Constraint class
@@ -36,15 +37,16 @@ class Constraint(_NamedUIDObject):
         else:
             self.applied = True
 
-    def set_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
-        """Take a list of constraint to satisfy. If the constraint is optional then
-        the list of z3 assertions apply under the condition that the applied flag
-        is set to True.
-        """
+        # store this constraint
+        ps_context.main_context.add_constraint(self)
+
+    def set_z3_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
+        """Each constraint comes with a set of z3 assertions
+        to satisfy."""
         if self.optional:
-            self.add_assertion(Implies(self.applied, list_of_z3_assertions))
+            self.append_z3_assertion(Implies(self.applied, list_of_z3_assertions))
         else:
-            self.add_assertion(list_of_z3_assertions)
+            self.append_z3_assertion(list_of_z3_assertions)
 
 
 class ResourceConstraint(Constraint):
@@ -91,4 +93,4 @@ class ForceApplyNOptionalConstraints(Constraint):
         asst = problem_function[kind](
             [(applied, True) for applied in applied_vars], nb_constraints_to_apply
         )
-        self.set_assertions(asst)
+        self.set_z3_assertions(asst)

@@ -210,11 +210,11 @@ class SchedulingProblem(_NamedUIDObject):
         are scheduled as late as possible"""
         mini = Int("SmallestStartTime")
         smallest_start_time = Indicator("SmallestStartTime", mini)
-        smallest_start_time.add_assertion(
+        smallest_start_time.append_z3_assertion(
             Or([mini == task.start for task in self.context.tasks])
         )
         for tsk in self.context.tasks:
-            smallest_start_time.add_assertion(mini <= tsk.start)
+            smallest_start_time.append_z3_assertion(mini <= tsk.start)
         MaximizeObjective("", smallest_start_time, weight)
         return smallest_start_time
 
@@ -223,11 +223,11 @@ class SchedulingProblem(_NamedUIDObject):
         as early as possible"""
         maxi = Int("GreatestStartTime")
         greatest_start_time = Indicator("GreatestStartTime", maxi)
-        greatest_start_time.add_assertion(
+        greatest_start_time.append_z3_assertion(
             Or([maxi == task.start for task in self.context.tasks])
         )
         for tsk in self.context.tasks:
-            greatest_start_time.add_assertion(maxi >= tsk.start)
+            greatest_start_time.append_z3_assertion(maxi >= tsk.start)
         MinimizeObjective("", greatest_start_time, weight)
         return greatest_start_time
 
@@ -276,9 +276,9 @@ class SchedulingProblem(_NamedUIDObject):
             )
             for task in resource.busy_intervals
         ]
-        flowtime_single_resource_indicator.add_assertion(Or(asst_max))
+        flowtime_single_resource_indicator.append_z3_assertion(Or(asst_max))
         for task in resource.busy_intervals:
-            flowtime_single_resource_indicator.add_assertion(
+            flowtime_single_resource_indicator.append_z3_assertion(
                 Implies(
                     And(task.end <= upper_bound, task.start >= lower_bound),
                     maxi >= task.end,
@@ -297,9 +297,9 @@ class SchedulingProblem(_NamedUIDObject):
             )
             for task in resource.busy_intervals
         ]
-        flowtime_single_resource_indicator.add_assertion(Or(asst_min))
+        flowtime_single_resource_indicator.append_z3_assertion(Or(asst_min))
         for task in resource.busy_intervals:
-            flowtime_single_resource_indicator.add_assertion(
+            flowtime_single_resource_indicator.append_z3_assertion(
                 Implies(
                     And(task.end <= upper_bound, task.start >= lower_bound),
                     mini <= task.start,
@@ -307,8 +307,8 @@ class SchedulingProblem(_NamedUIDObject):
             )
 
         # the quantity to optimize
-        flowtime_single_resource_indicator.add_assertion(flowtime == maxi - mini)
-        flowtime_single_resource_indicator.add_assertion(flowtime >= 0)
+        flowtime_single_resource_indicator.append_z3_assertion(flowtime == maxi - mini)
+        flowtime_single_resource_indicator.append_z3_assertion(flowtime >= 0)
 
         MinimizeObjective("", flowtime_single_resource_indicator, weight)
         return flowtime_single_resource_indicator
