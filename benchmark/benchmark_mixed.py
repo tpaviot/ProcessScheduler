@@ -116,14 +116,11 @@ for horizon in range(20, n, step):
 
     workload = {period: MAX_TASKS_PER_PERIOD for period in PERIODS}
     workload[(0, horizon)] = MAX_TASKS_IN_PROBLEM
-    constraints = [
+    
+    for worker in workers:
         ps.WorkLoad(worker["worker"], workload, kind="max")
-        for worker in workers
-    ]
-
 
     # Add constraints, define objective and solve problem
-    pb.add_constraints(constraints)
     pb.add_objective_resource_utilization(general_worker)
     solver = ps.SchedulingSolver(pb)
     solution = solver.solve()

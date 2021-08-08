@@ -101,8 +101,7 @@ for problem_size in N:
     # precedence constrains
     for i in range(problem_size):
         for j in range(1, problem_size):
-            c = ps.TaskPrecedence(T[i, j - 1], T[i, j], offset=0)
-            pb.add_constraint(c)
+            ps.TaskPrecedence(T[i, j - 1], T[i, j], offset=0)
     # resource assignment modulo n
     for j in range(problem_size):
         for i in range(problem_size):
