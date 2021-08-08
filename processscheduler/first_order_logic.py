@@ -19,22 +19,22 @@ from typing import Union, List
 
 from z3 import And, Xor, Or, Not, If, Implies, BoolRef
 
-from processscheduler.base import _NamedUIDObject
 import processscheduler.context as ps_context
+from processscheduler.constraint import Constraint
 
 #
 # Utility functions
 #
-def _get_assertions(constraint: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
-    """Take a BoolRef or any _NamedUID and returns the assertions for this object."""
+def _get_assertions(constraint: Union[BoolRef, Constraint]) -> BoolRef:
+    """Take a BoolRef or any Constraint and returns the assertions for this object."""
     if isinstance(constraint, BoolRef):
         assertion = constraint
-    elif isinstance(constraint, _NamedUIDObject):
+    elif isinstance(constraint, Constraint):
+        # tag this constraint as defined from an expression
+        constraint.set_created_from_assertion()
         assertion = constraint.get_z3_assertions()
     else:
-        raise TypeError(
-            "constraint must either be a _NamedUIDObject or BoolRef instance"
-        )
+        raise TypeError("constraint must either be a Constraint or BoolRef instance")
     return assertion
 
 
@@ -51,17 +51,17 @@ def _constraints_to_list_of_assertions(list_of_constraints) -> List[BoolRef]:
 
 
 #
-# Nested boolean operators for _NamedUIDObject objects
+# Nested boolean operators for Constraint objects
 # or BoolRef
 #
-def not_(constraint: Union[BoolRef, _NamedUIDObject]) -> BoolRef:
+def not_(constraint: Union[BoolRef, Constraint]) -> BoolRef:
     """Boolean negation of the constraint."""
     not_asst = Not(And(_get_assertions(constraint)))
     ps_context.main_context.append_z3_assertion(not_asst)
     return not_asst
 
 
-def or_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
+def or_(list_of_constraints: List[Union[BoolRef, Constraint]]) -> BoolRef:
     """Boolean 'or' between a list of assertions or constraints.
 
     At least one assertion in the list must be satisfied.
@@ -71,7 +71,7 @@ def or_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
     return or_asst
 
 
-def and_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
+def and_(list_of_constraints: List[Union[BoolRef, Constraint]]) -> BoolRef:
     """Boolean 'and' between a list of assertions or constraints.
 
     All assertions must be satisfied.
@@ -81,7 +81,7 @@ def and_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
     return and_asst
 
 
-def xor_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
+def xor_(list_of_constraints: List[Union[BoolRef, Constraint]]) -> BoolRef:
     """Boolean 'xor' between two assertions or constraints.
 
     One assertion must be satisfied, the other is not satisfied. The list of constraint
@@ -106,8 +106,8 @@ def xor_(list_of_constraints: List[Union[BoolRef, _NamedUIDObject]]) -> BoolRef:
 # Logical consequence
 #
 def implies(
-    condition: Union[BoolRef, _NamedUIDObject],
-    consequence_list_of_constraints: List[Union[BoolRef, _NamedUIDObject]],
+    condition: BoolRef,
+    consequence_list_of_constraints: List[Union[BoolRef, Constraint]],
 ) -> BoolRef:
     """Return an implie instance
 
@@ -116,7 +116,7 @@ def implies(
         consequence_list_of_constraints: a list of all implications if condition is True
     """
     implies_asst = Implies(
-        And(_get_assertions(condition)),
+        condition,
         And(_constraints_to_list_of_assertions(consequence_list_of_constraints)),
     )
     ps_context.main_context.append_z3_assertion(implies_asst)
@@ -127,9 +127,9 @@ def implies(
 # If/then/else
 #
 def if_then_else(
-    condition: Union[BoolRef, _NamedUIDObject],
-    then_list_of_constraints: List[Union[BoolRef, _NamedUIDObject]],
-    else_list_of_constraints: List[Union[BoolRef, _NamedUIDObject]],
+    condition: BoolRef,
+    then_list_of_constraints: List[Union[BoolRef, Constraint]],
+    else_list_of_constraints: List[Union[BoolRef, Constraint]],
 ) -> BoolRef:
     """If/Then/Else statement.
 
@@ -139,7 +139,7 @@ def if_then_else(
         else_list_of_constraints: a list of all implications if condition is False
     """
     ite_asst = If(
-        And(_get_assertions(condition)),
+        condition,
         And(_constraints_to_list_of_assertions(then_list_of_constraints)),
         And(_constraints_to_list_of_assertions(else_list_of_constraints)),
     )

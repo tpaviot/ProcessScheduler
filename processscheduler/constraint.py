@@ -31,6 +31,11 @@ class Constraint(_NamedUIDObject):
         super().__init__("")
 
         self.optional = optional
+
+        # by default, we dont know if the constraint is created from
+        # an assertion
+        self.created_from_assertion = False
+
         # by default, this constraint has to be applied
         if self.optional:
             self.applied = Bool("constraint_%s_applied" % self.uid)
@@ -39,6 +44,14 @@ class Constraint(_NamedUIDObject):
 
         # store this constraint into the current context
         ps_context.main_context.add_constraint(self)
+
+    def set_created_from_assertion(self) -> None:
+        """Set the flag created_from_assertion True. This flag must be set to True
+        if, for example, a constraint is defined from the expression:
+        ps.not_(ps.TaskStartAt(task_1, 0))
+        thus, the Task task_1 assertions must not be add to the z3 solver.
+        """
+        self.created_from_assertion = True
 
     def set_z3_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
         """Each constraint comes with a set of z3 assertions

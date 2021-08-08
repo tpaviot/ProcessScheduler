@@ -143,7 +143,11 @@ class SchedulingSolver:
                     )
 
         # add z3 assertions for constraints
-        for constraint in self.problem_context.constraints:
+        # that are *NOT* defined from an assertion
+        constraints_not_from_assertion = [
+            c for c in self.problem_context.constraints if not c.created_from_assertion
+        ]
+        for constraint in constraints_not_from_assertion:
             self.append_z3_assertion(constraint.get_z3_assertions())
 
         # process indicators
