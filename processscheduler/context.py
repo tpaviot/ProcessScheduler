@@ -100,7 +100,7 @@ class SchedulingContext:
         """Add a constraint to the problem. A constraint can be either
         a z3 assertion or a processscheduler Constraint instance."""
         if isinstance(constraint, Constraint):
-            if not constraint in self.constraints:
+            if constraint not in self.constraints:
                 self.constraints.append(constraint)
             else:
                 raise AssertionError("constraint already added to the problem.")
