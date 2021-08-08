@@ -27,10 +27,8 @@ class TestResourceTasksDistance(unittest.TestCase):
         task_1.add_required_resource(worker_1)
         task_2.add_required_resource(worker_1)
 
-        c1 = ps.ResourceTasksDistance(worker_1, distance=4, mode="exact")
-        pb.add_constraint(c1)
-
-        pb.add_constraint(ps.TaskStartAt(task_1, 1))
+        ps.ResourceTasksDistance(worker_1, distance=4, mode="exact")
+        ps.TaskStartAt(task_1, 1)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -53,10 +51,8 @@ class TestResourceTasksDistance(unittest.TestCase):
         task_1.add_required_resource(worker_1)
         task_2.add_required_resource(worker_1)
 
-        c1 = ps.ResourceTasksDistance(worker_1, distance=4, mode="max")
-        pb.add_constraint(c1)
-
-        pb.add_constraint(ps.TaskStartAt(task_1, 1))
+        ps.ResourceTasksDistance(worker_1, distance=4, mode="max")
+        ps.TaskStartAt(task_1, 1)
 
         pb.add_objective_makespan()
 
@@ -84,10 +80,8 @@ class TestResourceTasksDistance(unittest.TestCase):
         task_3.add_required_resource(worker_1)
 
         # a constraint to tell tasks are contiguous
-        c1 = ps.ResourceTasksDistance(worker_1, distance=0, mode="exact")
-        pb.add_constraint(c1)
-
-        pb.add_constraint(ps.TaskStartAt(task_1, 2))
+        ps.ResourceTasksDistance(worker_1, distance=0, mode="exact")
+        ps.TaskStartAt(task_1, 2)
 
         pb.add_objective_makespan()
 
@@ -182,15 +176,13 @@ class TestResourceTasksDistance(unittest.TestCase):
         task_1.add_required_resource(worker_1)
         task_2.add_required_resource(worker_1)
 
-        c1 = ps.ResourceTasksDistance(
+        ps.ResourceTasksDistance(
             worker_1, distance=4, mode="exact", time_periods=[[10, 18]]
         )
-        pb.add_constraint(c1)
-
         # force task 1 to start at 10 (in the time period intervak)
-        pb.add_constraint(ps.TaskStartAt(task_1, 10))
+        ps.TaskStartAt(task_1, 10)
         # task_2 must be scheduled after task_1
-        pb.add_constraint(ps.TaskPrecedence(task_1, task_2))
+        ps.TaskPrecedence(task_1, task_2)
 
         # add a makespan objective, to be sure, to schedule task_2 in the time interal
         pb.add_objective_makespan()
@@ -213,10 +205,9 @@ class TestResourceTasksDistance(unittest.TestCase):
         for t in tasks:
             t.add_required_resource(worker_1)
 
-        c1 = ps.ResourceTasksDistance(
+        ps.ResourceTasksDistance(
             worker_1, distance=4, mode="exact", time_periods=[[10, 20], [30, 40]]
         )
-        pb.add_constraint(c1)
 
         # add a makespan objective, all tasks should be scheduled from 0 to 4
         pb.add_objective_makespan()
@@ -238,18 +229,15 @@ class TestResourceTasksDistance(unittest.TestCase):
         for t in tasks:
             t.add_required_resource(worker_1)
 
-        c1 = ps.ResourceTasksDistance(
+        ps.ResourceTasksDistance(
             worker_1, distance=4, mode="exact", time_periods=[[10, 20], [30, 40]]
         )
-        pb.add_constraint(c1)
-
-        # add a makespan objective, all tasks should be scheduled from 0 to 4
-        pb.add_constraint(ps.TaskStartAt(tasks[0], 10))
-        pb.add_constraint(ps.TaskStartAfterLax(tasks[1], 10))
-        pb.add_constraint(ps.TaskEndBeforeLax(tasks[1], 20))
-        pb.add_constraint(ps.TaskStartAt(tasks[2], 30))
-        pb.add_constraint(ps.TaskStartAfterLax(tasks[3], 30))
-        pb.add_constraint(ps.TaskEndBeforeLax(tasks[3], 40))
+        ps.TaskStartAt(tasks[0], 10)
+        ps.TaskStartAfterLax(tasks[1], 10)
+        ps.TaskEndBeforeLax(tasks[1], 20)
+        ps.TaskStartAt(tasks[2], 30)
+        ps.TaskStartAfterLax(tasks[3], 30)
+        ps.TaskEndBeforeLax(tasks[3], 40)
         # as a consequence, task2 should be scheduled 4 periods after and start at 15
         solver = ps.SchedulingSolver(pb)
 

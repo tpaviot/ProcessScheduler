@@ -38,9 +38,8 @@ class TestBuffer(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=3)
         buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
 
-        pb.add_constraint(ps.TaskStartAt(task_1, 5))
-        c1 = ps.TaskUnloadBuffer(task_1, buffer, quantity=3)
-        pb.add_constraint(c1)
+        ps.TaskStartAt(task_1, 5)
+        ps.TaskUnloadBuffer(task_1, buffer, quantity=3)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -56,17 +55,12 @@ class TestBuffer(unittest.TestCase):
         task_3 = ps.FixedDurationTask("task3", duration=3)
         buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
 
-        pb.add_constraint(ps.TaskStartAt(task_1, 5))
-        pb.add_constraint(ps.TaskStartAt(task_2, 10))
-        pb.add_constraint(ps.TaskStartAt(task_3, 15))
-        c1 = ps.TaskUnloadBuffer(task_1, buffer, quantity=3)
-        pb.add_constraint(c1)
-
-        c2 = ps.TaskUnloadBuffer(task_2, buffer, quantity=2)
-        pb.add_constraint(c2)
-
-        c3 = ps.TaskUnloadBuffer(task_3, buffer, quantity=1)
-        pb.add_constraint(c3)
+        ps.TaskStartAt(task_1, 5)
+        ps.TaskStartAt(task_2, 10)
+        ps.TaskStartAt(task_3, 15)
+        ps.TaskUnloadBuffer(task_1, buffer, quantity=3)
+        ps.TaskUnloadBuffer(task_2, buffer, quantity=2)
+        ps.TaskUnloadBuffer(task_3, buffer, quantity=1)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -81,9 +75,8 @@ class TestBuffer(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=3)
         buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
 
-        pb.add_constraint(ps.TaskStartAt(task_1, 5))
-        c1 = ps.TaskLoadBuffer(task_1, buffer, quantity=3)
-        pb.add_constraint(c1)
+        ps.TaskStartAt(task_1, 5)
+        ps.TaskLoadBuffer(task_1, buffer, quantity=3)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -99,17 +92,12 @@ class TestBuffer(unittest.TestCase):
         task_3 = ps.FixedDurationTask("task3", duration=3)
         buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
 
-        pb.add_constraint(ps.TaskStartAt(task_1, 5))
-        pb.add_constraint(ps.TaskStartAt(task_2, 10))
-        pb.add_constraint(ps.TaskStartAt(task_3, 15))
-        c1 = ps.TaskLoadBuffer(task_1, buffer, quantity=3)
-        pb.add_constraint(c1)
-
-        c2 = ps.TaskLoadBuffer(task_2, buffer, quantity=2)
-        pb.add_constraint(c2)
-
-        c3 = ps.TaskLoadBuffer(task_3, buffer, quantity=1)
-        pb.add_constraint(c3)
+        ps.TaskStartAt(task_1, 5)
+        ps.TaskStartAt(task_2, 10)
+        ps.TaskStartAt(task_3, 15)
+        ps.TaskLoadBuffer(task_1, buffer, quantity=3)
+        ps.TaskLoadBuffer(task_2, buffer, quantity=2)
+        ps.TaskLoadBuffer(task_3, buffer, quantity=1)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -125,12 +113,9 @@ class TestBuffer(unittest.TestCase):
         buffer_1 = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
         buffer_2 = ps.NonConcurrentBuffer("Buffer2", initial_state=0)
 
-        pb.add_constraint(ps.TaskStartAt(task_1, 5))
-        c1 = ps.TaskUnloadBuffer(task_1, buffer_1, quantity=3)
-        pb.add_constraint(c1)
-
-        c2 = ps.TaskLoadBuffer(task_1, buffer_2, quantity=2)
-        pb.add_constraint(c2)
+        ps.TaskStartAt(task_1, 5)
+        ps.TaskUnloadBuffer(task_1, buffer_1, quantity=3)
+        ps.TaskLoadBuffer(task_1, buffer_2, quantity=2)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -158,10 +143,10 @@ class TestBuffer(unittest.TestCase):
         buffer = ps.NonConcurrentBuffer("Buffer1", lower_bound=0, upper_bound=1)
 
         for t in unloading_tasks:
-            pb.add_constraint(ps.TaskUnloadBuffer(t, buffer, quantity=1))
+            ps.TaskUnloadBuffer(t, buffer, quantity=1)
 
         for t in loading_tasks:
-            pb.add_constraint(ps.TaskLoadBuffer(t, buffer, quantity=1))
+            ps.TaskLoadBuffer(t, buffer, quantity=1)
 
         pb.add_objective_makespan()
 

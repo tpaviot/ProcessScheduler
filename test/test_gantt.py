@@ -68,8 +68,8 @@ class TestGantt(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=3)
         worker_1 = ps.Worker("Worker1")
         task_1.add_required_resource(worker_1)
-        c1 = ps.ResourceUnavailable(worker_1, [(1, 3)])
-        pb.add_constraint(c1)
+        ps.ResourceUnavailable(worker_1, [(1, 3)])
+
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertTrue(solution)
@@ -88,8 +88,8 @@ class TestGantt(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=3)
         worker_1 = ps.Worker("Worker1")
         task_1.add_required_resource(worker_1)
-        c1 = ps.ResourceUnavailable(worker_1, [(1, 3)])
-        pb.add_constraint(c1)
+        ps.ResourceUnavailable(worker_1, [(1, 3)])
+
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertTrue(solution)

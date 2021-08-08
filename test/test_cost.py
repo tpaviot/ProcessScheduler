@@ -93,7 +93,7 @@ class TestCost(unittest.TestCase):
         )
         t_1.add_required_resource(worker_1)
 
-        problem.add_constraint(ps.TaskStartAt(t_1, 13))
+        ps.TaskStartAt(t_1, 13)
         cost_ind = problem.add_indicator_resource_cost([worker_1])
 
         solution = ps.SchedulingSolver(problem).solve()
@@ -205,7 +205,7 @@ class TestCost(unittest.TestCase):
         )
         t_1.add_required_resource(worker_1)
 
-        problem.add_constraint(ps.TaskStartAt(t_1, 13))
+        ps.TaskStartAt(t_1, 13)
         cost_ind = problem.add_indicator_resource_cost([worker_1])
 
         solution = ps.SchedulingSolver(problem).solve()

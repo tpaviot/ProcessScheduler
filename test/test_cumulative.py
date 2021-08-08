@@ -48,7 +48,7 @@ class TestCumulative(unittest.TestCase):
         t3.add_required_resource(r1)
 
         # constraints
-        pb_bs.add_constraint(ps.TaskStartAt(t2, 1))
+        ps.TaskStartAt(t2, 1)
 
         # plot solution
         solver = ps.SchedulingSolver(pb_bs)
@@ -68,7 +68,7 @@ class TestCumulative(unittest.TestCase):
         t2.add_required_resource(r1)
 
         # constraints
-        pb_bs.add_constraint(ps.TaskStartAt(t2, 1))
+        ps.TaskStartAt(t2, 1)
 
         # plot solution
         solver = ps.SchedulingSolver(pb_bs)
@@ -91,7 +91,7 @@ class TestCumulative(unittest.TestCase):
         t2.add_required_resource(r1)
 
         # constraints
-        pb_bs.add_constraint(ps.TaskStartAt(t2, 1))
+        ps.TaskStartAt(t2, 1)
 
         # plot solution
         solver = ps.SchedulingSolver(pb_bs)
