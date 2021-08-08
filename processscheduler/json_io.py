@@ -70,19 +70,19 @@ def export_json_to_file(scheduling_problem, scheduling_solver, json_filename):
 def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
     d = {}
     # SchedulingProblem general properties
-    problem_properties = {}
-    problem_properties["name"] = scheduling_problem.name
-    problem_properties["horizon"] = scheduling_problem.horizon_defined_value
-    problem_properties["delta_time"] = scheduling_problem.delta_time
-    problem_properties["start_time"] = scheduling_problem.start_time
-    problem_properties["end_time"] = scheduling_problem.end_time
+    problem_properties = {
+        'name': scheduling_problem.name,
+        'horizon': scheduling_problem.horizon_defined_value,
+        'delta_time': scheduling_problem.delta_time,
+        'start_time': scheduling_problem.start_time,
+        'end_time': scheduling_problem.end_time,
+    }
+
     d["ProblemParameters"] = problem_properties
     # Tasks
     tasks = {}
     for task in scheduling_problem.context.tasks:
-        new_task_entry = {}
-        new_task_entry["type"] = type(task).__name__
-        new_task_entry["optional"] = task.optional
+        new_task_entry = {'type': type(task).__name__, 'optional': task.optional}
         if isinstance(task, ps.FixedDurationTask):
             new_task_entry["duration"] = task.duration_defined_value
         if isinstance(task, (ps.FixedDurationTask, ps.VariableDurationTask)):
@@ -101,30 +101,32 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
     all_workers_but_cumulative = [
         res
         for res in scheduling_problem.context.resources
-        if not "CumulativeWorker_" in res.name
+        if "CumulativeWorker_" not in res.name
     ]
+
     for resource in all_workers_but_cumulative:  # Worker
-        new_resource_entry = {}
-        new_resource_entry["productivity"] = resource.productivity
-        new_resource_entry["cost"] = resource.cost
+        new_resource_entry = {
+            'productivity': resource.productivity,
+            'cost': resource.cost,
+        }
+
         workers[resource.name] = new_resource_entry
     resources["Workers"] = workers
     # SelectWorkers
     select_workers = []
     for sw in scheduling_problem.context.select_workers:  # Worker
-        new_sw = {}
-        new_sw["list_of_workers"] = [w.name for w in sw.list_of_workers]
-        new_sw["nb_workers_to_select"] = sw.nb_workers_to_select
-        new_sw["kind"] = sw.kind
+        new_sw = {
+            'list_of_workers': [w.name for w in sw.list_of_workers],
+            'nb_workers_to_select': sw.nb_workers_to_select,
+            'kind': sw.kind,
+        }
+
         select_workers.append(new_sw)
     resources["SelectWorkers"] = select_workers
     # CumulativeWorker
     cumulative_workers = {}
     for cw in scheduling_problem.context.cumulative_workers:  # Worker
-        new_cw = {}
-        new_cw["size"] = cw.size
-        new_cw["productivity"] = cw.productivity
-        new_cw["cost"] = cw.cost
+        new_cw = {'size': cw.size, 'productivity': cw.productivity, 'cost': cw.cost}
         cumulative_workers[cw.name] = new_cw
     resources["CumulativeWorkers"] = cumulative_workers
     d["Resources"] = resources
@@ -133,8 +135,7 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
     #
     constraints = []
     for constraint in scheduling_problem.context.constraints:
-        new_cstr = {}
-        new_cstr["type"] = type(constraint).__name__
+        new_cstr = {'type': type(constraint).__name__}
         constraints.append(new_cstr)
     d["Constraints"] = constraints
 
