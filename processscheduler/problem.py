@@ -82,11 +82,6 @@ class SchedulingProblem(_NamedUIDObject):
     def add_constraint(self, constraint: BoolRef) -> None:
         self.context.add_constraint(constraint)
 
-    def add_constraints(self, list_of_constraints: List[BoolRef]) -> None:
-        """adds constraints to the problem"""
-        for cstr in list_of_constraints:
-            self.context.add_constraint(cstr)
-
     def add_indicator_number_tasks_assigned(self, resource: Resource):
         """compute the number of tasks as resource is assigned"""
         # this list contains

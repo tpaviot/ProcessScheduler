@@ -96,12 +96,14 @@ class SchedulingContext:
     def append_z3_assertion(self, z3_asst):
         self.z3_assertions.append(z3_asst)
 
-    def add_constraint(self, constraint: "Constraint") -> None:
+    def add_constraint(self, constraint: Constraint) -> None:
         """Add a constraint to the problem. A constraint can be either
         a z3 assertion or a processscheduler Constraint instance."""
         if isinstance(constraint, Constraint):
-            self.constraints.append(constraint)
-            # self.z3_assertions.append(constraint.get_z3_assertions())
+            if not constraint in self.constraints:
+                self.constraints.append(constraint)
+            else:
+                raise AssertionError("constraint already added to the problem.")
         elif isinstance(constraint, BoolRef):
             self.z3_assertions.append(constraint)
         else:
