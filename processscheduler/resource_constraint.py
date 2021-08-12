@@ -46,8 +46,11 @@ class WorkLoad(ResourceConstraint):
         """
         super().__init__(optional)
 
+        self.dict_time_intervals_and_bound = dict_time_intervals_and_bound
+
         if kind not in ["exact", "max", "min"]:
             raise ValueError("kind must either be 'exact', 'min' or 'max'")
+        self.kind = kind
 
         if isinstance(resource, Worker):
             workers = [resource]
@@ -145,6 +148,9 @@ class ResourceUnavailable(ResourceConstraint):
         for example [(0, 2), (5, 8)]
         """
         super().__init__(optional)
+
+        self.list_of_time_intervals = list_of_time_intervals
+        self.resource = resource
 
         # for each interval we create a task 'UnavailableResource%i'
         if isinstance(resource, Worker):

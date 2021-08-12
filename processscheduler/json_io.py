@@ -71,18 +71,18 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
     d = {}
     # SchedulingProblem general properties
     problem_properties = {
-        'name': scheduling_problem.name,
-        'horizon': scheduling_problem.horizon_defined_value,
-        'delta_time': scheduling_problem.delta_time,
-        'start_time': scheduling_problem.start_time,
-        'end_time': scheduling_problem.end_time,
+        "name": scheduling_problem.name,
+        "horizon": scheduling_problem.horizon_defined_value,
+        "delta_time": scheduling_problem.delta_time,
+        "start_time": scheduling_problem.start_time,
+        "end_time": scheduling_problem.end_time,
     }
 
     d["ProblemParameters"] = problem_properties
     # Tasks
     tasks = {}
     for task in scheduling_problem.context.tasks:
-        new_task_entry = {'type': type(task).__name__, 'optional': task.optional}
+        new_task_entry = {"type": type(task).__name__, "optional": task.optional}
         if isinstance(task, ps.FixedDurationTask):
             new_task_entry["duration"] = task.duration_defined_value
         if isinstance(task, (ps.FixedDurationTask, ps.VariableDurationTask)):
@@ -106,8 +106,8 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
 
     for resource in all_workers_but_cumulative:  # Worker
         new_resource_entry = {
-            'productivity': resource.productivity,
-            'cost': resource.cost,
+            "productivity": resource.productivity,
+            "cost": resource.cost,
         }
 
         workers[resource.name] = new_resource_entry
@@ -116,9 +116,9 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
     select_workers = []
     for sw in scheduling_problem.context.select_workers:  # Worker
         new_sw = {
-            'list_of_workers': [w.name for w in sw.list_of_workers],
-            'nb_workers_to_select': sw.nb_workers_to_select,
-            'kind': sw.kind,
+            "list_of_workers": [w.name for w in sw.list_of_workers],
+            "nb_workers_to_select": sw.nb_workers_to_select,
+            "kind": sw.kind,
         }
 
         select_workers.append(new_sw)
@@ -126,18 +126,71 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
     # CumulativeWorker
     cumulative_workers = {}
     for cw in scheduling_problem.context.cumulative_workers:  # Worker
-        new_cw = {'size': cw.size, 'productivity': cw.productivity, 'cost': cw.cost}
+        new_cw = {"size": cw.size, "productivity": cw.productivity, "cost": cw.cost}
         cumulative_workers[cw.name] = new_cw
     resources["CumulativeWorkers"] = cumulative_workers
     d["Resources"] = resources
     #
+    # Buffers
+    #
+    buffers = {}
+    for buffer in scheduling_problem.context.buffers:
+        new_bffr = {}
+        new_bffr["initial_state"] = buffer.initial_state
+        new_bffr["final_state"] = buffer.final_state
+        new_bffr["lower_bound"] = buffer.lower_bound
+        new_bffr["upper_bound"] = buffer.upper_bound
+        buffers[buffer.name] = new_bffr
+    d["Buffers"] = buffers
+
+    #
     # Constraints
     #
-    constraints = []
+    task_constraints = []
+    resource_constraints = {}
+
+    workloads = []
+    resource_unavailables = []
+    resource_task_distances = []
+
     for constraint in scheduling_problem.context.constraints:
-        new_cstr = {'type': type(constraint).__name__}
-        constraints.append(new_cstr)
-    d["Constraints"] = constraints
+        new_cstr = {"type": type(constraint).__name__}
+        new_cstr["optional"] = constraint.optional
+        # TaskConstraint
+        if isinstance(constraint, ps.TaskConstraint):
+            task_constraints.append(new_cstr)
+        # ResourceConstraint
+        elif isinstance(constraint, ps.ResourceConstraint):
+            # WorkLoad
+            if isinstance(constraint, ps.WorkLoad):
+                # expand the dictionary because json cannot
+                # use tuple as keys.
+                dd = []
+                new_dict_entry = {}
+                new_dict_entry["kind"] = constraint.kind
+                for k, v in constraint.dict_time_intervals_and_bound.items():
+
+                    new_dict_entry["time_interval_lower_bound"] = k[0]
+                    new_dict_entry["time_interval_upper_bound"] = k[1]
+                    new_dict_entry["number_of_time_slots"] = v
+                    dd.append(new_dict_entry)
+                workloads.append(dd)
+            # ResouceUnavailable
+            elif isinstance(constraint, ps.ResourceUnavailable):
+                dd = {}
+                dd["list_of_time_intervals"] = constraint.list_of_time_intervals
+                dd["resource"] = constraint.resource.name
+                new_cstr["ResourceUnavailable"] = dd
+                resource_unavailables.append(dd)
+            # ResourceTasksDistance
+            elif isinstance(constraint, ps.ResourceTasksDistance):
+                tt = {}
+                resource_task_distances.append(tt)
+    resource_constraints["WorkLoad"] = workloads
+    resource_constraints["ResourceUnavailable"] = resource_unavailables
+    resource_constraints["ResourceTasksDistance"] = resource_task_distances
+    d["TaskConstraints"] = task_constraints
+    d["ResourceConstraints"] = resource_constraints
 
     return json.dumps(d, indent=4, sort_keys=True)
 

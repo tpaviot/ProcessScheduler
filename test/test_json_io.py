@@ -31,16 +31,23 @@ class TestJsonImportExport(unittest.TestCase):
         # resources
         worker_1 = ps.Worker("Worker1")
         worker_2 = ps.Worker("Worker2")
-        worker_3 = ps.Worker("Worker3")
-        sw_1 = ps.SelectWorkers([worker_1, worker_2])
-        sw_2 = ps.SelectWorkers([worker_2, worker_3], 2, kind="max")
+        sw = ps.SelectWorkers([worker_1, worker_2])
         cumul1 = ps.CumulativeWorker("CumulMachine1", size=3)
         cumul2 = ps.CumulativeWorker("CumulMachine2", size=7)
 
-        solver = ps.SchedulingSolver(pb)
+        # constraints
+        ps.TaskPrecedence(task_1, task_2)
+        ps.TaskStartAt(task_1, 5)
+        ps.TaskUnloadBuffer(task_1, buffer_1, quantity=3)
+        ps.TaskLoadBuffer(task_1, buffer_2, quantity=2)
 
+        ps.WorkLoad(worker_1, {(0, 6): 3, (19, 24): 4}, kind="exact")
+        ps.ResourceUnavailable(worker_1, [(1, 3), (6, 8)])
+        ps.ResourceTasksDistance(
+            worker_1, distance=4, mode="exact", time_periods=[[10, 18]]
+        )
+        solver = ps.SchedulingSolver(pb)
         ps.export_json_to_file(pb, solver, "test_export_1.json")
-        #
 
 
 if __name__ == "__main__":
