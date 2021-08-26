@@ -144,7 +144,7 @@ class TestResourceTasksDistance(unittest.TestCase):
         task_2.add_required_resource(worker_1)
 
         ps.ResourceTasksDistance(
-            worker_1, distance=4, mode="exact", time_periods=[[10, 18]]
+            worker_1, distance=4, mode="exact", list_of_time_intervals=[[10, 18]]
         )
         ps.TaskPrecedence(task_1, task_2)
         # we add a makespan objective: the two tasks should be scheduled with an horizon of 2
@@ -177,7 +177,7 @@ class TestResourceTasksDistance(unittest.TestCase):
         task_2.add_required_resource(worker_1)
 
         ps.ResourceTasksDistance(
-            worker_1, distance=4, mode="exact", time_periods=[[10, 18]]
+            worker_1, distance=4, mode="exact", list_of_time_intervals=[[10, 18]]
         )
         # force task 1 to start at 10 (in the time period intervak)
         ps.TaskStartAt(task_1, 10)
@@ -206,7 +206,10 @@ class TestResourceTasksDistance(unittest.TestCase):
             t.add_required_resource(worker_1)
 
         ps.ResourceTasksDistance(
-            worker_1, distance=4, mode="exact", time_periods=[[10, 20], [30, 40]]
+            worker_1,
+            distance=4,
+            mode="exact",
+            list_of_time_intervals=[[10, 20], [30, 40]],
         )
 
         # add a makespan objective, all tasks should be scheduled from 0 to 4
@@ -230,7 +233,10 @@ class TestResourceTasksDistance(unittest.TestCase):
             t.add_required_resource(worker_1)
 
         ps.ResourceTasksDistance(
-            worker_1, distance=4, mode="exact", time_periods=[[10, 20], [30, 40]]
+            worker_1,
+            distance=4,
+            mode="exact",
+            list_of_time_intervals=[[10, 20], [30, 40]],
         )
         ps.TaskStartAt(tasks[0], 10)
         ps.TaskStartAfterLax(tasks[1], 10)

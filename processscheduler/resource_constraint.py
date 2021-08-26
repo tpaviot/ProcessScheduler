@@ -47,6 +47,7 @@ class WorkLoad(ResourceConstraint):
         super().__init__(optional)
 
         self.dict_time_intervals_and_bound = dict_time_intervals_and_bound
+        self.resource = resource
 
         if kind not in ["exact", "max", "min"]:
             raise ValueError("kind must either be 'exact', 'min' or 'max'")
@@ -176,9 +177,9 @@ class ResourceTasksDistance(ResourceConstraint):
 
     def __init__(
         self,
-        worker,
+        resource,
         distance: int,
-        time_periods: Optional[list] = None,
+        list_of_time_intervals: Optional[list] = None,
         optional: Optional[bool] = False,
         mode: Optional[str] = "exact",
     ):
@@ -187,9 +188,14 @@ class ResourceTasksDistance(ResourceConstraint):
 
         super().__init__(optional)
 
+        self.list_of_time_intervals = list_of_time_intervals
+        self.resource = resource
+        self.distance = distance
+        self.mode = mode
+
         starts = []
         ends = []
-        for start_var, end_var in worker.busy_intervals.values():
+        for start_var, end_var in resource.busy_intervals.values():
             starts.append(start_var)
             ends.append(end_var)
         # sort both lists
@@ -209,11 +215,11 @@ class ResourceTasksDistance(ResourceConstraint):
                 asst = sorted_starts[i] - sorted_ends[i - 1] == distance
             #  another set of conditions, related to the time periods
             conditions = []
-            if time_periods is not None:
+            if list_of_time_intervals is not None:
                 for (
                     lower_bound,
                     upper_bound,
-                ) in time_periods:  # time_period should be a list also or a tuple
+                ) in list_of_time_intervals:
                     conditions.append(
                         And(
                             sorted_starts[i] >= lower_bound,
@@ -243,16 +249,20 @@ class SameWorkers(ResourceConstraint):
     """
 
     def __init__(
-        self, alternate_workers_1, alternate_workers_2, optional: Optional[bool] = False
+        self, select_workers_1, select_workers_2, optional: Optional[bool] = False
     ):
         super().__init__(optional)
+
+        self.select_workers_1 = select_workers_1
+        self.select_workers_2 = select_workers_2
+
         # we check resources in alt work 1, if it is present in
         # Select worker 2 as well, then add a constraint
-        for res_work_1 in alternate_workers_1.selection_dict:
-            if res_work_1 in alternate_workers_2.selection_dict:
+        for res_work_1 in select_workers_1.selection_dict:
+            if res_work_1 in select_workers_2.selection_dict:
                 self.set_z3_assertions(
-                    alternate_workers_1.selection_dict[res_work_1]
-                    == alternate_workers_2.selection_dict[res_work_1]
+                    select_workers_1.selection_dict[res_work_1]
+                    == select_workers_2.selection_dict[res_work_1]
                 )
 
 
@@ -262,14 +272,18 @@ class DistinctWorkers(ResourceConstraint):
     """
 
     def __init__(
-        self, alternate_workers_1, alternate_workers_2, optional: Optional[bool] = False
+        self, select_workers_1, select_workers_2, optional: Optional[bool] = False
     ):
         super().__init__(optional)
+
+        self.select_workers_1 = select_workers_1
+        self.select_workers_2 = select_workers_2
+
         # we check resources in alt work 1, if it is present in
         # alterna worker 2 as well, then add a constraint
-        for res_work_1 in alternate_workers_1.selection_dict:
-            if res_work_1 in alternate_workers_2.selection_dict:
+        for res_work_1 in select_workers_1.selection_dict:
+            if res_work_1 in select_workers_2.selection_dict:
                 self.set_z3_assertions(
-                    alternate_workers_1.selection_dict[res_work_1]
-                    != alternate_workers_2.selection_dict[res_work_1]
+                    select_workers_1.selection_dict[res_work_1]
+                    != select_workers_2.selection_dict[res_work_1]
                 )

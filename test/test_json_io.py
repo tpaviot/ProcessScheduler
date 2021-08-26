@@ -31,7 +31,10 @@ class TestJsonImportExport(unittest.TestCase):
         # resources
         worker_1 = ps.Worker("Worker1")
         worker_2 = ps.Worker("Worker2")
-        sw = ps.SelectWorkers([worker_1, worker_2])
+        worker_3 = ps.Worker("Worker3")
+        sw1 = ps.SelectWorkers([worker_1, worker_2, worker_3])
+        sw2 = ps.SelectWorkers([worker_1, worker_2, worker_3])
+        sw3 = ps.SelectWorkers([worker_1, worker_2, worker_3])
         cumul1 = ps.CumulativeWorker("CumulMachine1", size=3)
         cumul2 = ps.CumulativeWorker("CumulMachine2", size=7)
 
@@ -44,7 +47,7 @@ class TestJsonImportExport(unittest.TestCase):
         ps.WorkLoad(worker_1, {(0, 6): 3, (19, 24): 4}, kind="exact")
         ps.ResourceUnavailable(worker_1, [(1, 3), (6, 8)])
         ps.ResourceTasksDistance(
-            worker_1, distance=4, mode="exact", time_periods=[[10, 18]]
+            worker_1, distance=4, mode="exact", list_of_time_intervals=[[10, 18]]
         )
         solver = ps.SchedulingSolver(pb)
         ps.export_json_to_file(pb, solver, "test_export_1.json")
