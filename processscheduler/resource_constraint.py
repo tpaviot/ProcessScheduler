@@ -46,11 +46,11 @@ class WorkLoad(ResourceConstraint):
         """
         super().__init__(optional)
 
-        self.dict_time_intervals_and_bound = dict_time_intervals_and_bound
-        self.resource = resource
-
         if kind not in ["exact", "max", "min"]:
             raise ValueError("kind must either be 'exact', 'min' or 'max'")
+
+        self.dict_time_intervals_and_bound = dict_time_intervals_and_bound
+        self.resource = resource
         self.kind = kind
 
         if isinstance(resource, Worker):
@@ -125,6 +125,11 @@ class WorkLoad(ResourceConstraint):
                     # finally, store this variable in the duratins list
                     durations.append(dur)
 
+            if not durations:
+                raise AssertionError(
+                    "The resource is not assigned to any task. WorkLoad constraint meaningless."
+                )
+
             # workload constraint depends on the kind
             if kind == "exact":
                 wl_constrt = Sum(durations) == number_of_time_slots
@@ -198,6 +203,12 @@ class ResourceTasksDistance(ResourceConstraint):
         for start_var, end_var in resource.busy_intervals.values():
             starts.append(start_var)
             ends.append(end_var)
+
+        if not starts or not ends:
+            raise AssertionError(
+                "The resource is not assigned to any task. ResourceTasksDistance constraint meaningless."
+            )
+
         # sort both lists
         sorted_starts, c1 = sort_no_duplicates(starts)
         sorted_ends, c2 = sort_no_duplicates(ends)
