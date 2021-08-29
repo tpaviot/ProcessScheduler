@@ -38,6 +38,7 @@ class _NamedUIDObject:
         # check name type
         if not isinstance(name, str):
             raise TypeError("name must be a str instance")
+
         # the object name
         self.name = name  # type: str
 
@@ -76,8 +77,10 @@ class _NamedUIDObject:
         # workaround to avoid heavy hash computations
         assertion_hash = hash(z3_assertion)
         if assertion_hash in self.z3_assertion_hashes:
-            warnings.warn("assertion %s already added." % z3_assertion)
-            return False
+            raise AssertionError(
+                "assertion %s already added. Please report this bug at https://github.com/tpaviot/ProcessScheduler/issues"
+                % z3_assertion
+            )
         self.z3_assertions.append(z3_assertion)
         self.z3_assertion_hashes.append(assertion_hash)
         return True
