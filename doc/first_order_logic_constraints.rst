@@ -19,7 +19,7 @@ In python, this gives:
 
 .. code-block:: python
 
-    problem.add_constraint(not_(TaskStartAt(t_1, 3))
+    not_(TaskStartAt(t_1, 3)
 
 You can combine/nest any of these operators to express a complex constraint. For example, if you don't want the task to start at 3, and also you don't want it to end at 9, then the rule to implement is:
 
@@ -30,8 +30,8 @@ In python:
 
 .. code-block:: python
 
-    problem.add_constraint(and_([not_(TaskStartAt(t_1, 3)),
-                                 not_(TaskEndAt(t_1, 9))]))
+    and_([not_(TaskStartAt(t_1, 3)),
+          not_(TaskEndAt(t_1, 9))])
 
 In a more general cas, those logical functions can take both task constraints or tasks attributes. For example, the following assertion is possible :
 
@@ -51,17 +51,17 @@ is written in Python:
 
 .. code-block:: python
 
-    problem.add_constraint(implies(t_2.start == 4,
-                                   [TasksEndSynced(t_3, t_4)])
+    implies(t_2.start == 4,
+            [TasksEndSynced(t_3, t_4)])
 
 
 Finally, an if/then/else statement is available through the function :func:`if_then_else` which takes 3 parameters: a condition and two lists of assertions that applies whether the condition is :const:`True` or :const:`False`.
 
 .. code-block:: python
 
-    problem.add_constraint(if_then_else(t_2.start == 4,  # condition
-                                        [TasksEndSynced(t_3, t_4)], # if the condition is True
-                                        [TasksStartSynced(t_3, t_4)]) # if the condition is False
+    if_then_else(t_2.start == 4,  # condition
+                 [TasksEndSynced(t_3, t_4)], # if the condition is True
+                 [TasksStartSynced(t_3, t_4)]) # if the condition is False
 
 .. note::
 
