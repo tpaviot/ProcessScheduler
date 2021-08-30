@@ -1,5 +1,3 @@
-"""The resources definition."""
-
 # Copyright (c) 2020-2021 Thomas Paviot (tpaviot@gmail.com)
 #
 # This file is part of ProcessScheduler.

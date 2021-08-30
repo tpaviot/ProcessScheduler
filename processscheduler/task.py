@@ -33,8 +33,12 @@ class Task(_NamedUIDObject):
         self.work_amount = 0
         self.priority = 1  # by default
 
-        # required resources to perform the task
+        # workers required to process the task
         self.required_resources = []  # type: List[Resource]
+        # the following list is used for json export only
+        # it stores the parameter passed to the add_required_resource
+        # method
+        self.required_resources_names = []  # type: List[str]
 
         # z3 Int variables
         self.start = Int("%s_start" % name)  # type: ArithRef
@@ -85,6 +89,9 @@ class Task(_NamedUIDObject):
                 "resource %s already defined as a required resource for task %s"
                 % (resource.name, self.name)
             )
+
+        # store the resource name
+        self.required_resources_names.append(resource.name)
 
         if isinstance(resource, CumulativeWorker):
             # in the case for a CumulativeWorker, select at least one worker

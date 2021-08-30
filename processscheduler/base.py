@@ -27,7 +27,7 @@ from z3 import BoolRef, Bool, Implies, PbGe, PbEq, PbLe
 class _NamedUIDObject:
     """The base object for most ProcessScheduler classes"""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: Optional[str] = "") -> None:
         """The base name for all ProcessScheduler objects.
 
         Provides an assertions list, a uniqueid.
@@ -39,11 +39,14 @@ class _NamedUIDObject:
         if not isinstance(name, str):
             raise TypeError("name must be a str instance")
 
-        # the object name
-        self.name = name  # type: str
-
         # unique identifier
         self.uid = uuid.uuid4().int  # type: int
+
+        # the object name
+        if name != "":
+            self.name = name  # type: str
+        else:  # auto generate name, eg. SelectWorkers_ae34cf52
+            self.name = self.__class__.__name__ + "_%s" % uuid.uuid4().hex[:8]
 
         # SMT assertions
         # start and end integer values must be positive
