@@ -57,7 +57,6 @@ def _constraints_to_list_of_assertions(list_of_constraints) -> List[BoolRef]:
 def not_(constraint: Union[BoolRef, Constraint]) -> BoolRef:
     """Boolean negation of the constraint."""
     not_asst = Not(And(_get_assertions(constraint)))
-    ps_context.main_context.append_z3_assertion(not_asst)
     return not_asst
 
 
@@ -67,7 +66,6 @@ def or_(list_of_constraints: List[Union[BoolRef, Constraint]]) -> BoolRef:
     At least one assertion in the list must be satisfied.
     """
     or_asst = Or(_constraints_to_list_of_assertions(list_of_constraints))
-    ps_context.main_context.append_z3_assertion(or_asst)
     return or_asst
 
 
@@ -77,7 +75,6 @@ def and_(list_of_constraints: List[Union[BoolRef, Constraint]]) -> BoolRef:
     All assertions must be satisfied.
     """
     and_asst = And(_constraints_to_list_of_assertions(list_of_constraints))
-    ps_context.main_context.append_z3_assertion(and_asst)
     return and_asst
 
 
@@ -98,7 +95,6 @@ def xor_(list_of_constraints: List[Union[BoolRef, Constraint]]) -> BoolRef:
     xor_asst = Xor(
         And(_get_assertions(constraint_1)), And(_get_assertions(constraint_2))
     )
-    ps_context.main_context.append_z3_assertion(xor_asst)
     return xor_asst
 
 
@@ -119,7 +115,6 @@ def implies(
         condition,
         And(_constraints_to_list_of_assertions(consequence_list_of_constraints)),
     )
-    ps_context.main_context.append_z3_assertion(implies_asst)
     return implies_asst
 
 
@@ -143,5 +138,4 @@ def if_then_else(
         And(_constraints_to_list_of_assertions(then_list_of_constraints)),
         And(_constraints_to_list_of_assertions(else_list_of_constraints)),
     )
-    ps_context.main_context.append_z3_assertion(ite_asst)
     return ite_asst

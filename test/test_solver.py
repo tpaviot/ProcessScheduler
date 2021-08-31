@@ -328,7 +328,8 @@ class TestSolver(unittest.TestCase):
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask("task1", duration=3)
 
-        ps.not_(ps.TaskStartAt(task_1, 0))
+        fol_1 = ps.not_(ps.TaskStartAt(task_1, 0))
+        problem.add_constraint(fol_1)
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         # check that the task is not scheduled to start à 0
@@ -340,9 +341,10 @@ class TestSolver(unittest.TestCase):
         # only one task, the solver should schedule a start time at 0
         task_1 = ps.FixedDurationTask("task1", duration=2)
         # problem.add_task(task_1)
-        ps.and_(
+        fol_1 = ps.and_(
             [ps.not_(ps.TaskStartAt(task_1, 0)), ps.not_(ps.TaskStartAt(task_1, 1))]
         )
+        problem.add_constraint(fol_1)
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         # the only solution is to start at 2
@@ -357,7 +359,8 @@ class TestSolver(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=2)
         task_2 = ps.FixedDurationTask("task2", duration=2)
         ps.TaskStartAt(task_1, 1)
-        ps.implies(task_1.start == 1, [ps.TaskStartAt(task_2, 4)])
+        fol_1 = ps.implies(task_1.start == 1, [ps.TaskStartAt(task_2, 4)])
+        problem.add_constraint(fol_1)
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         # the only solution is to start at 2
@@ -373,11 +376,12 @@ class TestSolver(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=2)
         task_2 = ps.FixedDurationTask("task2", duration=2)
         ps.TaskStartAt(task_1, 1)
-        ps.if_then_else(
+        fol_1 = ps.if_then_else(
             task_1.start == 0,  # this condition is False
             [ps.TaskStartAt(task_2, 4)],  # assertion not set
             [ps.TaskStartAt(task_2, 2)],
         )
+        problem.add_constraint(fol_1)
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         # the only solution is to start at 2
