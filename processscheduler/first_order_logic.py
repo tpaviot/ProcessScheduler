@@ -56,8 +56,7 @@ def _constraints_to_list_of_assertions(list_of_constraints) -> List[BoolRef]:
 #
 def not_(constraint: Union[BoolRef, Constraint]) -> BoolRef:
     """Boolean negation of the constraint."""
-    not_asst = Not(And(_get_assertions(constraint)))
-    return not_asst
+    return Not(And(_get_assertions(constraint)))
 
 
 def or_(list_of_constraints: List[Union[BoolRef, Constraint]]) -> BoolRef:
@@ -65,8 +64,7 @@ def or_(list_of_constraints: List[Union[BoolRef, Constraint]]) -> BoolRef:
 
     At least one assertion in the list must be satisfied.
     """
-    or_asst = Or(_constraints_to_list_of_assertions(list_of_constraints))
-    return or_asst
+    return Or(_constraints_to_list_of_assertions(list_of_constraints))
 
 
 def and_(list_of_constraints: List[Union[BoolRef, Constraint]]) -> BoolRef:
@@ -74,8 +72,7 @@ def and_(list_of_constraints: List[Union[BoolRef, Constraint]]) -> BoolRef:
 
     All assertions must be satisfied.
     """
-    and_asst = And(_constraints_to_list_of_assertions(list_of_constraints))
-    return and_asst
+    return And(_constraints_to_list_of_assertions(list_of_constraints))
 
 
 def xor_(list_of_constraints: List[Union[BoolRef, Constraint]]) -> BoolRef:
@@ -92,10 +89,9 @@ def xor_(list_of_constraints: List[Union[BoolRef, Constraint]]) -> BoolRef:
     constraint_1 = list_of_constraints[0]
     constraint_2 = list_of_constraints[1]
 
-    xor_asst = Xor(
+    return Xor(
         And(_get_assertions(constraint_1)), And(_get_assertions(constraint_2))
     )
-    return xor_asst
 
 
 #
@@ -111,11 +107,10 @@ def implies(
         condition: a constraint or a boolref
         consequence_list_of_constraints: a list of all implications if condition is True
     """
-    implies_asst = Implies(
+    return Implies(
         condition,
         And(_constraints_to_list_of_assertions(consequence_list_of_constraints)),
     )
-    return implies_asst
 
 
 #
@@ -133,9 +128,8 @@ def if_then_else(
         then_list_of_constraints: a list of all implications if condition is True
         else_list_of_constraints: a list of all implications if condition is False
     """
-    ite_asst = If(
+    return If(
         condition,
         And(_constraints_to_list_of_assertions(then_list_of_constraints)),
         And(_constraints_to_list_of_assertions(else_list_of_constraints)),
     )
-    return ite_asst
