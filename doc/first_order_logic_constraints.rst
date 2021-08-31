@@ -51,17 +51,18 @@ is written in Python:
 
 .. code-block:: python
 
-    implies(t_2.start == 4,
-            [TasksEndSynced(t_3, t_4)])
-
+    consequence = implies(t_2.start == 4,
+                          [TasksEndSynced(t_3, t_4)]
+    problem.add_constraint(consequence)
 
 Finally, an if/then/else statement is available through the function :func:`if_then_else` which takes 3 parameters: a condition and two lists of assertions that applies whether the condition is :const:`True` or :const:`False`.
 
 .. code-block:: python
 
-    if_then_else(t_2.start == 4,  # condition
-                 [TasksEndSynced(t_3, t_4)], # if the condition is True
-                 [TasksStartSynced(t_3, t_4)]) # if the condition is False
+    ite = if_then_else(t_2.start == 4,  # condition
+                       [TasksEndSynced(t_3, t_4)], # if the condition is True
+                       [TasksStartSynced(t_3, t_4)]) # if the condition is False
+    problem.add_constraint(ite)
 
 .. note::
 
