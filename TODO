@@ -8,6 +8,8 @@ TODO list
 End-user:
 =========
 
+[ ] Make SameWorkers and DistinctWorkers take a list of workers
+
 [X] Cumulative resources: resources that can process multiple tasks at the same time
 
 [X] Optional tasks: tasks that may or may not be scheduled
