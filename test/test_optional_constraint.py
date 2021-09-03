@@ -23,9 +23,9 @@ class TestOptionalConstraint(unittest.TestCase):
         pb = ps.SchedulingProblem("OptionalTaskStartAt1", horizon=6)
         task_1 = ps.FixedDurationTask("task1", duration=3)
         # the following tasks should conflict if they are mandatory
-        pb.add_constraint(ps.TaskStartAt(task_1, 1, optional=True))
-        pb.add_constraint(ps.TaskStartAt(task_1, 2, optional=True))
-        pb.add_constraint(ps.TaskEndAt(task_1, 3, optional=True))
+        ps.TaskStartAt(task_1, 1, optional=True)
+        ps.TaskStartAt(task_1, 2, optional=True)
+        ps.TaskEndAt(task_1, 3, optional=True)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -39,10 +39,7 @@ class TestOptionalConstraint(unittest.TestCase):
         cstr2 = ps.TaskStartAt(task_1, 2, optional=True)
         cstr3 = ps.TaskEndAt(task_1, 3, optional=True)
         # force to apply exactly one constraint
-        cstr4 = ps.ForceApplyNOptionalConstraints([cstr1, cstr2, cstr3], 1)
-        # if we force 2 constraints, there should not be any solution
-
-        pb.add_constraints([cstr1, cstr2, cstr3, cstr4])
+        ps.ForceApplyNOptionalConstraints([cstr1, cstr2, cstr3], 1)
 
         solver = ps.SchedulingSolver(pb)
 

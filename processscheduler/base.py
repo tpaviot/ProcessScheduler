@@ -27,7 +27,7 @@ from z3 import BoolRef, Bool, Implies, PbGe, PbEq, PbLe
 class _NamedUIDObject:
     """The base object for most ProcessScheduler classes"""
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: Optional[str] = "") -> None:
         """The base name for all ProcessScheduler objects.
 
         Provides an assertions list, a uniqueid.
@@ -38,16 +38,20 @@ class _NamedUIDObject:
         # check name type
         if not isinstance(name, str):
             raise TypeError("name must be a str instance")
-        # the object name
-        self.name = name  # type: str
 
         # unique identifier
         self.uid = uuid.uuid4().int  # type: int
 
+        # the object name
+        if name != "":
+            self.name = name  # type: str
+        else:  # auto generate name, eg. SelectWorkers_ae34cf52
+            self.name = self.__class__.__name__ + "_%s" % uuid.uuid4().hex[:8]
+
         # SMT assertions
         # start and end integer values must be positive
-        self.assertions = []  # type: List[BoolRef]
-        self.assertion_hashes = []
+        self.z3_assertions = []  # type: List[BoolRef]
+        self.z3_assertion_hashes = []
 
     def __hash__(self) -> int:
         return self.uid
@@ -60,12 +64,12 @@ class _NamedUIDObject:
         str_to_return = "%s(%s)\n%i assertion(s):\n" % (
             self.name,
             type(self),
-            len(self.assertions),
+            len(self.z3_assertions),
         )
-        assertions_str = "".join("%s" % ass for ass in self.assertions)
+        assertions_str = "".join("%s" % ass for ass in self.z3_assertions)
         return str_to_return + assertions_str
 
-    def add_assertion(self, z3_assertion: BoolRef) -> bool:
+    def append_z3_assertion(self, z3_assertion: BoolRef) -> bool:
         """
         Add a z3 assertion to the list of assertions to be satisfied.
 
@@ -75,13 +79,15 @@ class _NamedUIDObject:
         # check if the assertion is in the list
         # workaround to avoid heavy hash computations
         assertion_hash = hash(z3_assertion)
-        if assertion_hash in self.assertion_hashes:
-            warnings.warn("assertion %s already added." % z3_assertion)
-            return False
-        self.assertions.append(z3_assertion)
-        self.assertion_hashes.append(assertion_hash)
+        if assertion_hash in self.z3_assertion_hashes:
+            raise AssertionError(
+                "assertion %s already added. Please report this bug at https://github.com/tpaviot/ProcessScheduler/issues"
+                % z3_assertion
+            )
+        self.z3_assertions.append(z3_assertion)
+        self.z3_assertion_hashes.append(assertion_hash)
         return True
 
-    def get_assertions(self) -> List[BoolRef]:
+    def get_z3_assertions(self) -> List[BoolRef]:
         """Return the assertions list"""
-        return self.assertions
+        return self.z3_assertions

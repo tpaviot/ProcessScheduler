@@ -1,5 +1,3 @@
-"""The resources definition."""
-
 # Copyright (c) 2020-2021 Thomas Paviot (tpaviot@gmail.com)
 #
 # This file is part of ProcessScheduler.
@@ -110,14 +108,15 @@ class SelectWorkers(Resource):
 
         if kind not in problem_function:
             raise ValueError("kind must be either 'exact', 'min' or 'max'")
+        self.kind = kind
 
         if not is_strict_positive_integer(nb_workers_to_select):
             raise TypeError("nb_workers must be an integer > 0")
-
         if nb_workers_to_select > len(list_of_workers):
             raise ValueError(
                 "nb_workers must be <= the number of workers provided in list_of_workers."
             )
+        self.nb_workers_to_select = nb_workers_to_select
 
         # build the list of workers that will be the base of the selection
         # instances from this list mght either be Workers or CumulativeWorkers. If
@@ -146,6 +145,7 @@ class SelectWorkers(Resource):
         self.selection_assertion = problem_function[kind](
             [(selected, True) for selected in selection_list], nb_workers_to_select
         )
+        ps_context.main_context.add_resource_select_workers(self)
 
 
 class CumulativeWorker(Resource):
@@ -162,14 +162,19 @@ class CumulativeWorker(Resource):
 
         if not (isinstance(size, int) and size >= 2):
             raise ValueError("CumulativeWorker 'size' attribute must be >=2.")
+        self.size = size
+
+        if not is_positive_integer(productivity):
+            raise TypeError("productivity must be an integer >= 0")
+        self.productivity = productivity
 
         if cost is None:
             self.cost = None
 
         elif not isinstance(cost, _Cost):
             raise TypeError("cost must be a _Cost instance")
+        self.cost_defined_value = cost
 
-        self.size = size
         # productivity and cost_per_period are distributed over
         # individual workers
         # for example, a productivty of 7 for a size of 3 will be distributed
@@ -187,6 +192,8 @@ class CumulativeWorker(Resource):
             )
             for i in range(size)
         ]
+
+        ps_context.main_context.add_resource_cumulative_worker(self)
 
     def get_select_workers(self):
         """Each time the cumulative resource is assigned to a task, a SelectWorker

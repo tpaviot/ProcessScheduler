@@ -19,6 +19,7 @@ from typing import Optional, List
 
 from z3 import Bool, BoolRef, Implies, PbEq, PbGe, PbLe
 from processscheduler.base import _NamedUIDObject
+import processscheduler.context as ps_context
 
 #
 # Base Constraint class
@@ -30,20 +31,35 @@ class Constraint(_NamedUIDObject):
         super().__init__("")
 
         self.optional = optional
-        # by default, this constraint has to be applied
-        self.applied = True
 
-    def set_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
-        """Take a list of constraint to satisfy. If the constraint is optional then
-        the list of z3 assertions apply under the condition that the applied flag
-        is set to True.
-        """
+        # by default, we dont know if the constraint is created from
+        # an assertion
+        self.created_from_assertion = False
+
+        # by default, this constraint has to be applied
         if self.optional:
             self.applied = Bool("constraint_%s_applied" % self.uid)
-            self.add_assertion(Implies(self.applied, list_of_z3_assertions))
         else:
             self.applied = True
-            self.add_assertion(list_of_z3_assertions)
+
+        # store this constraint into the current context
+        ps_context.main_context.add_constraint(self)
+
+    def set_created_from_assertion(self) -> None:
+        """Set the flag created_from_assertion True. This flag must be set to True
+        if, for example, a constraint is defined from the expression:
+        ps.not_(ps.TaskStartAt(task_1, 0))
+        thus, the Task task_1 assertions must not be add to the z3 solver.
+        """
+        self.created_from_assertion = True
+
+    def set_z3_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
+        """Each constraint comes with a set of z3 assertions
+        to satisfy."""
+        if self.optional:
+            self.append_z3_assertion(Implies(self.applied, list_of_z3_assertions))
+        else:
+            self.append_z3_assertion(list_of_z3_assertions)
 
 
 class ResourceConstraint(Constraint):
@@ -90,4 +106,4 @@ class ForceApplyNOptionalConstraints(Constraint):
         asst = problem_function[kind](
             [(applied, True) for applied in applied_vars], nb_constraints_to_apply
         )
-        self.set_assertions(asst)
+        self.set_z3_assertions(asst)

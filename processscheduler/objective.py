@@ -51,7 +51,7 @@ class Indicator(_NamedUIDObject):
         # (lower_bound, upper_bound) if full bounded
         self.bounds = bounds
 
-        self.add_assertion(self.indicator_variable == expression)
+        self.append_z3_assertion(self.indicator_variable == expression)
 
         ps_context.main_context.add_indicator(self)
 

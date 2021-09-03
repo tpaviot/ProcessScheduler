@@ -191,15 +191,15 @@ class TestTask(unittest.TestCase):
         task_1 = ps.VariableDurationTask("Task1")
         task_2 = ps.VariableDurationTask("Task2")
 
-        pb.add_constraint(ps.TaskStartAt(task_1, 5))
-        task_1_cstr = task_1.duration == task_1.start * 3
-        pb.add_constraint(task_1_cstr)
+        ps.TaskStartAt(task_1, 5)
+        pb.add_constraint(task_1.duration == task_1.start * 3)
 
-        pb.add_constraint(ps.TaskStartAt(task_2, 11))
-        task_2_cstr = ps.if_then_else(
-            task_2.start < 10, [task_2.duration == 3], [task_2.duration == 1]
+        ps.TaskStartAt(task_2, 11)
+        pb.add_constraint(
+            ps.if_then_else(
+                task_2.start < 10, [task_2.duration == 3], [task_2.duration == 1]
+            )
         )
-        pb.add_constraint(task_2_cstr)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -228,7 +228,7 @@ class TestTask(unittest.TestCase):
         pb = ps.SchedulingProblem("TaskPrecedenceStrict")
         t_1 = ps.FixedDurationTask("t1", duration=2)
         t_2 = ps.FixedDurationTask("t2", duration=3)
-        pb.add_constraint(ps.TaskPrecedence(t_1, t_2, offset=1, kind="strict"))
+        ps.TaskPrecedence(t_1, t_2, offset=1, kind="strict")
         pb.add_objective_makespan()
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -255,7 +255,7 @@ class TestTask(unittest.TestCase):
         pb = ps.SchedulingProblem("TasksDontOverlap")
         t_1 = ps.FixedDurationTask("t1", duration=7)
         t_2 = ps.FixedDurationTask("t2", duration=11)
-        pb.add_constraint(ps.TasksDontOverlap(t_1, t_2))
+        ps.TasksDontOverlap(t_1, t_2)
         pb.add_objective_makespan()
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -266,8 +266,8 @@ class TestTask(unittest.TestCase):
         pb = ps.SchedulingProblem("TasksStartSync")
         t_1 = ps.FixedDurationTask("t1", duration=2)
         t_2 = ps.FixedDurationTask("t2", duration=3)
-        pb.add_constraint(ps.TaskStartAt(t_1, 7))
-        pb.add_constraint(ps.TasksStartSynced(t_1, t_2))
+        ps.TaskStartAt(t_1, 7)
+        ps.TasksStartSynced(t_1, t_2)
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertTrue(solution)
@@ -277,7 +277,7 @@ class TestTask(unittest.TestCase):
         pb = ps.SchedulingProblem("TasksEndSync")
         t_1 = ps.FixedDurationTask("t1", duration=2)
         t_2 = ps.FixedDurationTask("t2", duration=3)
-        pb.add_constraint(ps.TasksEndSynced(t_1, t_2))
+        ps.TasksEndSynced(t_1, t_2)
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertTrue(solution)
@@ -307,8 +307,7 @@ class TestTask(unittest.TestCase):
         for t in tasks_w2:
             t.add_required_resource(worker_2)
 
-        c1 = ps.TasksContiguous(tasks_w1 + tasks_w2)
-        pb.add_constraint(c1)
+        ps.TasksContiguous(tasks_w1 + tasks_w2)
 
         pb.add_objective_makespan()
 

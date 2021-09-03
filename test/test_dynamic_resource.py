@@ -25,8 +25,8 @@ class TestDynamicResource(unittest.TestCase):
         task_2 = ps.FixedDurationTask("task2", duration=5)
         task_3 = ps.FixedDurationTask("task3", duration=5)
 
-        pb.add_constraint(ps.TaskStartAt(task_3, 0))
-        pb.add_constraint(ps.TaskEndAt(task_2, 10))
+        ps.TaskStartAt(task_3, 0)
+        ps.TaskEndAt(task_2, 10)
 
         worker_1 = ps.Worker("Worker1", productivity=1)
         worker_2 = ps.Worker("Worker2", productivity=1)
@@ -50,8 +50,8 @@ class TestDynamicResource(unittest.TestCase):
         task_2 = ps.FixedDurationTask("task2", duration=5)
         task_3 = ps.FixedDurationTask("task3", duration=5)
 
-        pb.add_constraint(ps.TaskStartAt(task_3, 0))
-        pb.add_constraint(ps.TaskEndAt(task_2, 10))
+        ps.TaskStartAt(task_3, 0)
+        ps.TaskEndAt(task_2, 10)
 
         worker_1 = ps.Worker("Worker1", productivity=1)
         worker_2 = ps.Worker("Worker2", productivity=1)

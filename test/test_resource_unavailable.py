@@ -24,8 +24,8 @@ class TestResourceUnavailable(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=3)
         worker_1 = ps.Worker("Worker1")
         task_1.add_required_resource(worker_1)
-        c1 = ps.ResourceUnavailable(worker_1, [(1, 3), (6, 8)])
-        pb.add_constraint(c1)
+        ps.ResourceUnavailable(worker_1, [(1, 3), (6, 8)])
+
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertTrue(solution)
@@ -39,9 +39,9 @@ class TestResourceUnavailable(unittest.TestCase):
         task_1.add_required_resource(worker_1)
         # difference with the first one: build 2 constraints
         # merged using a and_
-        c1 = ps.ResourceUnavailable(worker_1, [(1, 3)])
-        c2 = ps.ResourceUnavailable(worker_1, [(6, 8)])
-        pb.add_constraint(ps.and_([c1, c2]))
+        ps.ResourceUnavailable(worker_1, [(1, 3)])
+        ps.ResourceUnavailable(worker_1, [(6, 8)])
+
         # that should not change the problem solution
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -57,9 +57,9 @@ class TestResourceUnavailable(unittest.TestCase):
         # difference with the previous ones: too much unavailability,
         # so possible solution
         # merged using a and_
-        c1 = ps.ResourceUnavailable(worker_1, [(1, 3)])
-        c2 = ps.ResourceUnavailable(worker_1, [(5, 8)])
-        pb.add_constraint(ps.and_([c1, c2]))
+        ps.ResourceUnavailable(worker_1, [(1, 3)])
+        ps.ResourceUnavailable(worker_1, [(5, 8)])
+
         # that should not change the problem solution
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -80,8 +80,7 @@ class TestResourceUnavailable(unittest.TestCase):
         t2.add_required_resource(r1)
         t3.add_required_resource(r1)
 
-        c1 = ps.ResourceUnavailable(r1, [(1, 10)])
-        pb_bs.add_constraint(c1)
+        ps.ResourceUnavailable(r1, [(1, 10)])
 
         # plot solution
         solver = ps.SchedulingSolver(pb_bs)  # , debug=True)

@@ -26,8 +26,7 @@ class TestWorkLoad(unittest.TestCase):
         worker_1 = ps.Worker("Worker1")
         task_1.add_required_resource(worker_1)
 
-        c1 = ps.WorkLoad(worker_1, {(0, 6): 2})
-        pb.add_constraint(c1)
+        ps.WorkLoad(worker_1, {(0, 6): 2})
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -43,8 +42,7 @@ class TestWorkLoad(unittest.TestCase):
         worker_1 = ps.Worker("Worker1")
         task_1.add_required_resource(worker_1)
 
-        c1 = ps.WorkLoad(worker_1, {(0, 6): 3}, kind="exact")
-        pb.add_constraint(c1)
+        ps.WorkLoad(worker_1, {(0, 6): 3}, kind="exact")
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertTrue(solution)
@@ -59,8 +57,7 @@ class TestWorkLoad(unittest.TestCase):
         worker_1 = ps.Worker("Worker1")
         task_1.add_required_resource(worker_1)
 
-        c1 = ps.WorkLoad(worker_1, {(6, 8): 2}, kind="min")
-        pb.add_constraint(c1)
+        ps.WorkLoad(worker_1, {(6, 8): 2}, kind="min")
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -80,8 +77,7 @@ class TestWorkLoad(unittest.TestCase):
         task_1.add_required_resource(worker_1)
         task_2.add_required_resource(worker_1)
 
-        c1 = ps.WorkLoad(worker_1, {(4, 8): 0})
-        pb.add_constraint(c1)
+        ps.WorkLoad(worker_1, {(4, 8): 0})
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -115,8 +111,7 @@ class TestWorkLoad(unittest.TestCase):
         task1.add_required_resource(ps.SelectWorkers([worker_1, worker_2], 1, "min"))
         # the workload on worker_1 forces 0 between 4 and 8
         # then the worker_1 can not be assigned
-        c1 = ps.WorkLoad(worker_1, {(4, 8): 0})
-        pb.add_constraint(c1)
+        ps.WorkLoad(worker_1, {(4, 8): 0})
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -135,10 +130,8 @@ class TestWorkLoad(unittest.TestCase):
         task1 = ps.FixedDurationTask("Task1", duration=10)
         task1.add_required_resources([worker_1, worker_2])
 
-        c1 = ps.WorkLoad(worker_1, {(0, 4): 2})
-        pb.add_constraint(c1)
-        c2 = ps.WorkLoad(worker_2, {(2, 6): 2}, kind="min")
-        pb.add_constraint(c2)
+        ps.WorkLoad(worker_1, {(0, 4): 2})
+        ps.WorkLoad(worker_2, {(2, 6): 2}, kind="min")
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -155,10 +148,8 @@ class TestWorkLoad(unittest.TestCase):
         task1 = ps.FixedDurationTask("Task1", duration=10)
         task1.add_required_resources([worker_1, worker_2])
 
-        c1 = ps.WorkLoad(worker_1, {(0, 4): 2})
-        pb.add_constraint(c1)
-        c2 = ps.WorkLoad(worker_2, {(2, 6): 2}, kind="exact")
-        pb.add_constraint(c2)
+        ps.WorkLoad(worker_1, {(0, 4): 2})
+        ps.WorkLoad(worker_2, {(2, 6): 2}, kind="exact")
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()

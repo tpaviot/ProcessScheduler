@@ -27,7 +27,7 @@ class TestOptionalTask(unittest.TestCase):
         """Task can be scheduled."""
         pb = ps.SchedulingProblem("OptionalTaskStartAt1", horizon=6)
         task_1 = ps.FixedDurationTask("task1", duration=3, optional=True)
-        pb.add_constraint(ps.TaskStartAt(task_1, 1))
+        ps.TaskStartAt(task_1, 1)
 
         # Force schedule, otherwise by default it is not scheduled
         pb.add_constraint(task_1.scheduled == True)
@@ -42,7 +42,7 @@ class TestOptionalTask(unittest.TestCase):
         """Task cannot be scheduled."""
         pb = ps.SchedulingProblem("OptionalTaskStartAt2", horizon=2)
         task_1 = ps.FixedDurationTask("task1", duration=3, optional=True)
-        pb.add_constraint(ps.TaskStartAt(task_1, 1))
+        ps.TaskStartAt(task_1, 1)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -53,7 +53,7 @@ class TestOptionalTask(unittest.TestCase):
         """Task can be scheduled."""
         pb = ps.SchedulingProblem("OptionalTaskEndAt1", horizon=6)
         task_1 = ps.FixedDurationTask("task1", duration=3, optional=True)
-        pb.add_constraint(ps.TaskEndAt(task_1, 4))
+        ps.TaskEndAt(task_1, 4)
 
         # Force schedule, otherwise by default it is not scheduled
         pb.add_constraint(task_1.scheduled == True)
@@ -68,7 +68,7 @@ class TestOptionalTask(unittest.TestCase):
         """Task cannot be scheduled."""
         pb = ps.SchedulingProblem("OptionalTaskEndAt2", horizon=2)
         task_1 = ps.FixedDurationTask("task1", duration=3, optional=True)
-        pb.add_constraint(ps.TaskEndAt(task_1, 4))
+        ps.TaskEndAt(task_1, 4)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -81,8 +81,8 @@ class TestOptionalTask(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=3)  # mandatory
         task_2 = ps.FixedDurationTask("task2", duration=4, optional=True)  # optional
 
-        pb.add_constraint(ps.TaskStartAt(task_1, 2))
-        pb.add_constraint(ps.TasksStartSynced(task_1, task_2))
+        ps.TaskStartAt(task_1, 2)
+        ps.TasksStartSynced(task_1, task_2)
 
         # Force schedule, otherwise by default it is not scheduled
         pb.add_constraint(task_2.scheduled == True)
@@ -103,8 +103,8 @@ class TestOptionalTask(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=3)  # mandatory
         task_2 = ps.FixedDurationTask("task2", duration=4, optional=True)  # optional
 
-        pb.add_constraint(ps.TaskStartAt(task_1, 2))
-        pb.add_constraint(ps.TasksStartSynced(task_1, task_2))
+        ps.TaskStartAt(task_1, 2)
+        ps.TasksStartSynced(task_1, task_2)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -120,8 +120,8 @@ class TestOptionalTask(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=3)  # mandatory
         task_2 = ps.FixedDurationTask("task2", duration=4, optional=True)  # optional
 
-        pb.add_constraint(ps.TaskEndAt(task_1, 6))
-        pb.add_constraint(ps.TasksEndSynced(task_1, task_2))
+        ps.TaskEndAt(task_1, 6)
+        ps.TasksEndSynced(task_1, task_2)
 
         # Force schedule, otherwise by default it is not scheduled
         pb.add_constraint(task_2.scheduled == True)
@@ -142,8 +142,8 @@ class TestOptionalTask(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=3)  # mandatory
         task_2 = ps.FixedDurationTask("task2", duration=4, optional=True)  # optional
 
-        pb.add_constraint(ps.TaskEndAt(task_1, 3))
-        pb.add_constraint(ps.TasksStartSynced(task_1, task_2))
+        ps.TaskEndAt(task_1, 3)
+        ps.TasksStartSynced(task_1, task_2)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -159,8 +159,8 @@ class TestOptionalTask(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=3)  # mandatory
         task_2 = ps.FixedDurationTask("task2", duration=4, optional=True)  # optional
 
-        pb.add_constraint(ps.TaskStartAt(task_1, 0))
-        pb.add_constraint(ps.TasksDontOverlap(task_1, task_2))
+        ps.TaskStartAt(task_1, 0)
+        ps.TasksDontOverlap(task_1, task_2)
 
         # Force schedule, otherwise by default it is not scheduled
         pb.add_constraint(task_2.scheduled == True)
@@ -181,8 +181,8 @@ class TestOptionalTask(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=3)  # mandatory
         task_2 = ps.FixedDurationTask("task2", duration=4, optional=True)  # optional
 
-        pb.add_constraint(ps.TaskStartAt(task_1, 0))
-        pb.add_constraint(ps.TasksDontOverlap(task_1, task_2))
+        ps.TaskStartAt(task_1, 0)
+        ps.TasksDontOverlap(task_1, task_2)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -198,8 +198,8 @@ class TestOptionalTask(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=3)  # mandatory
         task_2 = ps.FixedDurationTask("task2", duration=4, optional=True)  # optional
 
-        pb.add_constraint(ps.TaskStartAt(task_1, 0))
-        pb.add_constraint(ps.TaskPrecedence(task_1, task_2, offset=2))
+        ps.TaskStartAt(task_1, 0)
+        ps.TaskPrecedence(task_1, task_2, offset=2)
 
         # Force schedule, otherwise by default it is not scheduled
         pb.add_constraint(task_2.scheduled == True)
@@ -220,8 +220,8 @@ class TestOptionalTask(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=3)  # mandatory
         task_2 = ps.FixedDurationTask("task2", duration=4, optional=True)  # optional
 
-        pb.add_constraint(ps.TaskStartAt(task_1, 0))
-        pb.add_constraint(ps.TaskPrecedence(task_1, task_2, offset=2))
+        ps.TaskStartAt(task_1, 0)
+        ps.TaskPrecedence(task_1, task_2, offset=2)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -239,8 +239,8 @@ class TestOptionalTask(unittest.TestCase):
         # force task_2 to be scheduled
         pb.add_constraint(task_2.scheduled == True)
 
-        pb.add_constraint(ps.TaskStartAfterStrict(task_2, 1))
-        pb.add_constraint(ps.TaskStartAfterLax(task_2, 4))
+        ps.TaskStartAfterStrict(task_2, 1)
+        ps.TaskStartAfterLax(task_2, 4)
 
         solver = ps.SchedulingSolver(pb, debug=True)
         solution = solver.solve()
@@ -258,8 +258,8 @@ class TestOptionalTask(unittest.TestCase):
         # force task_2 to be scheduled
         pb.add_constraint(task_2.scheduled == True)
 
-        pb.add_constraint(ps.TaskEndBeforeStrict(task_2, 7))
-        pb.add_constraint(ps.TaskEndBeforeLax(task_2, 4))
+        ps.TaskEndBeforeStrict(task_2, 7)
+        ps.TaskEndBeforeLax(task_2, 4)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -275,8 +275,7 @@ class TestOptionalTask(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=13)  # mandatory
         task_2 = ps.FixedDurationTask("task2", duration=4, optional=True)  # optional
 
-        cond = ps.OptionalTaskConditionSchedule(task_2, pb.horizon > 10)
-        pb.add_constraint(cond)
+        ps.OptionalTaskConditionSchedule(task_2, pb.horizon > 10)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -290,8 +289,7 @@ class TestOptionalTask(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=9)  # mandatory
         task_2 = ps.FixedDurationTask("task2", duration=4, optional=True)  # optional
 
-        cond = ps.OptionalTaskConditionSchedule(task_2, pb.horizon > 10)
-        pb.add_constraint(cond)
+        ps.OptionalTaskConditionSchedule(task_2, pb.horizon > 10)
 
         solver = ps.SchedulingSolver(pb, random_values=True)
         solution = solver.solve()
@@ -305,8 +303,7 @@ class TestOptionalTask(unittest.TestCase):
         task_1 = ps.FixedDurationTask("task1", duration=9)  # mandatory
         task_2 = ps.FixedDurationTask("task2", duration=4, optional=True)  # optional
 
-        cond = ps.OptionalTasksDependency(task_1, task_2)
-        pb.add_constraint(cond)
+        ps.OptionalTasksDependency(task_1, task_2)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -321,11 +318,8 @@ class TestOptionalTask(unittest.TestCase):
         task_2 = ps.FixedDurationTask("task2", duration=4, optional=True)  # optional
         task_3 = ps.FixedDurationTask("task3", duration=1, optional=True)  # optional
 
-        cond = ps.OptionalTaskConditionSchedule(task_2, pb.horizon > 10)
-        pb.add_constraint(cond)
-
-        dep = ps.OptionalTasksDependency(task_2, task_3)
-        pb.add_constraint(dep)
+        ps.OptionalTaskConditionSchedule(task_2, pb.horizon > 10)
+        ps.OptionalTasksDependency(task_2, task_3)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -350,7 +344,7 @@ class TestOptionalTask(unittest.TestCase):
     def test_optional_task_single_worker_1(self) -> None:
         pb = ps.SchedulingProblem("OptionalTaskSingleWorker1", horizon=6)
         task_1 = ps.FixedDurationTask("task1", duration=3, optional=True)
-        pb.add_constraint(ps.TaskStartAt(task_1, 1))
+        ps.TaskStartAt(task_1, 1)
         worker_1 = ps.Worker("Worker1")
         task_1.add_required_resource(worker_1)
         # Force schedule, otherwise by default it is not scheduled
@@ -363,7 +357,7 @@ class TestOptionalTask(unittest.TestCase):
     def test_optional_task_singleworker_2(self) -> None:
         pb = ps.SchedulingProblem("OptionalTaskSingleWorker2", horizon=6)
         task_1 = ps.FixedDurationTask("task1", duration=3, optional=True)
-        pb.add_constraint(ps.TaskStartAt(task_1, 1))
+        ps.TaskStartAt(task_1, 1)
         worker_1 = ps.Worker("Worker1")
         task_1.add_required_resource(worker_1)
         # Force schedule to False
@@ -376,7 +370,7 @@ class TestOptionalTask(unittest.TestCase):
     def test_optional_task_two_workers_1(self) -> None:
         pb = ps.SchedulingProblem("OptionalTaskTwoWorkers1", horizon=6)
         task_1 = ps.FixedDurationTask("task1", duration=3, optional=True)
-        pb.add_constraint(ps.TaskStartAt(task_1, 1))
+        ps.TaskStartAt(task_1, 1)
         worker_1 = ps.Worker("Worker1")
         worker_2 = ps.Worker("Worker2")
         task_1.add_required_resources([worker_1, worker_2])
@@ -404,7 +398,7 @@ class TestOptionalTask(unittest.TestCase):
     def test_optional_task_select_workers_1(self) -> None:
         pb = ps.SchedulingProblem("OptionalTaskSelectWorkers1")
         task_1 = ps.FixedDurationTask("task1", duration=3, optional=True)
-        pb.add_constraint(ps.TaskStartAt(task_1, 1))
+        ps.TaskStartAt(task_1, 1)
         worker_1 = ps.Worker("Worker1")
         worker_2 = ps.Worker("Worker2")
         task_1.add_required_resource(ps.SelectWorkers([worker_1, worker_2], 1))
@@ -419,7 +413,7 @@ class TestOptionalTask(unittest.TestCase):
     def test_optional_task_select_workers_2(self) -> None:
         pb = ps.SchedulingProblem("OptionalTaskSelectWorkers2")
         task_1 = ps.FixedDurationTask("task1", duration=3, optional=True)
-        pb.add_constraint(ps.TaskStartAt(task_1, 1))
+        ps.TaskStartAt(task_1, 1)
         worker_1 = ps.Worker("Worker1")
         worker_2 = ps.Worker("Worker2")
         task_1.add_required_resource(ps.SelectWorkers([worker_1, worker_2], 1))
@@ -438,8 +432,7 @@ class TestOptionalTask(unittest.TestCase):
         task_2 = ps.FixedDurationTask("task2", duration=4, optional=True)
         task_3 = ps.FixedDurationTask("task3", duration=1, optional=True)
 
-        cond = ps.ForceScheduleNOptionalTasks([task_1, task_2, task_3], 1)
-        pb.add_constraint(cond)
+        ps.ForceScheduleNOptionalTasks([task_1, task_2, task_3], 1)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -460,8 +453,7 @@ class TestOptionalTask(unittest.TestCase):
         task_2 = ps.FixedDurationTask("task2", duration=7, optional=True)
         task_3 = ps.FixedDurationTask("task3", duration=2, optional=True)
 
-        cond = ps.ForceScheduleNOptionalTasks([task_1, task_2, task_3], 2)
-        pb.add_constraint(cond)
+        ps.ForceScheduleNOptionalTasks([task_1, task_2, task_3], 2)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
@@ -482,8 +474,7 @@ class TestOptionalTask(unittest.TestCase):
         task_2 = ps.FixedDurationTask("task2", duration=7, optional=True)
 
         with self.assertRaises(TypeError):
-            cond = ps.ForceScheduleNOptionalTasks([task_1, task_2], 2)
-            pb.add_constraint(cond)
+            ps.ForceScheduleNOptionalTasks([task_1, task_2], 2)
 
     def test_get_scheduled_tasks(self) -> None:
         # task_1 cannot be scheduled, only tasks 2 and 3 can be
@@ -492,8 +483,7 @@ class TestOptionalTask(unittest.TestCase):
         task_2 = ps.FixedDurationTask("task2", duration=7, optional=True)
         task_3 = ps.FixedDurationTask("task3", duration=2, optional=True)
 
-        cond = ps.ForceScheduleNOptionalTasks([task_1, task_2, task_3], 2)
-        pb.add_constraint(cond)
+        ps.ForceScheduleNOptionalTasks([task_1, task_2, task_3], 2)
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()

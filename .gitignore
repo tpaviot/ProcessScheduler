@@ -39,3 +39,6 @@ bench*.svg
 test_*.svg
 test_*.html
 *.smt2
+
+# json io
+*.json

@@ -33,8 +33,12 @@ class Task(_NamedUIDObject):
         self.work_amount = 0
         self.priority = 1  # by default
 
-        # required resources to perform the task
+        # workers required to process the task
         self.required_resources = []  # type: List[Resource]
+        # the following list is used for json export only
+        # it stores the parameter passed to the add_required_resource
+        # method
+        self.required_resources_names = []  # type: List[str]
 
         # z3 Int variables
         self.start = Int("%s_start" % name)  # type: ArithRef
@@ -86,6 +90,9 @@ class Task(_NamedUIDObject):
                 % (resource.name, self.name)
             )
 
+        # store the resource name
+        self.required_resources_names.append(resource.name)
+
         if isinstance(resource, CumulativeWorker):
             # in the case for a CumulativeWorker, select at least one worker
             resource = resource.get_select_workers()
@@ -123,11 +130,11 @@ class Task(_NamedUIDObject):
                 # define the assertion ...
                 assertion = If(selected_variable, schedule_as_usual, move_to_past)
                 # ... and store it into the task assertions list
-                self.add_assertion(assertion)
+                self.append_z3_assertion(assertion)
                 # finally, add each worker to the "required" resource list
                 self.required_resources.append(worker)
             # also, don't forget to add the AlternativeWorker assertion
-            self.add_assertion(resource.selection_assertion)
+            self.append_z3_assertion(resource.selection_assertion)
         elif isinstance(resource, Worker):
             resource_busy_start = Int("%s_busy_%s_start" % (resource.name, self.name))
             resource_busy_end = Int("%s_busy_%s_end" % (resource.name, self.name))
@@ -135,12 +142,12 @@ class Task(_NamedUIDObject):
             resource.add_busy_interval(self, (resource_busy_start, resource_busy_end))
             # set the busy resource to keep synced with the task
             if dynamic:
-                self.add_assertion(resource_busy_end <= self.end)
-                self.add_assertion(resource_busy_start >= self.start)
+                self.append_z3_assertion(resource_busy_end <= self.end)
+                self.append_z3_assertion(resource_busy_start >= self.start)
             else:
-                # self.add_assertion(resource_busy_start + self.duration == resource_busy_end)
-                self.add_assertion(resource_busy_end == self.end)
-                self.add_assertion(resource_busy_start == self.start)
+                # self.append_z3_assertion(resource_busy_start + self.duration == resource_busy_end)
+                self.append_z3_assertion(resource_busy_end == self.end)
+                self.append_z3_assertion(resource_busy_start == self.start)
             # finally, store this resource into the resource list
             self.required_resources.append(resource)
 
@@ -172,11 +179,11 @@ class Task(_NamedUIDObject):
                 self.end == point_in_past,  # to past
                 self.duration == 0,
             )
-            self.add_assertion(
+            self.append_z3_assertion(
                 If(self.scheduled, And(list_of_z3_assertions), not_scheduled_assertion)
             )
         else:
-            self.add_assertion(And(list_of_z3_assertions))
+            self.append_z3_assertion(And(list_of_z3_assertions))
 
 
 class ZeroDurationTask(Task):
@@ -218,10 +225,14 @@ class FixedDurationTask(Task):
         super().__init__(name, optional)
         if not is_strict_positive_integer(duration):
             raise TypeError("duration must be a strict positive integer")
+        self.duration_defined_value = duration
+
         if not is_positive_integer(work_amount):
             raise TypeError("work_amount me be a positive integer")
-
         self.work_amount = work_amount
+
+        if not is_positive_integer(work_amount):
+            raise TypeError("work_amount me be a positive integer")
         self.priority = priority
 
         assertions = [
@@ -258,7 +269,7 @@ class VariableDurationTask(Task):
         super().__init__(name, optional)
 
         if is_positive_integer(max_duration):
-            self.add_assertion(self.duration <= max_duration)
+            self.append_z3_assertion(self.duration <= max_duration)
         elif max_duration is not None:
             raise TypeError(
                 "length_as_most should either be a positive integer or None"

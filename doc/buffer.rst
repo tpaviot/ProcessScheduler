@@ -30,9 +30,7 @@ Buffers are loaded/unloaded by tasks. As a consequence, special tasks constraint
 .. code-block:: python
 
     c1 = ps.TaskUnloadBuffer(task_1, buffer, quantity=3)
-    pb.add_constraint(c1)  # dont forget to add the constraint
     c2 = ps.TaskUnloadBuffer(task_2, buffer, quantity=6)
-    pb.add_constraint(c2)
     # etc.
 
 .. note::
@@ -53,9 +51,7 @@ Let's take an example where a task :const:`T1` uses a machine :const:`M1` to man
     buffer_2 = ps.NonConcurrentBuffer("Buffer2", initial_state=0)
     # buffer constraints
     c1 = ps.TaskUnloadBuffer(task_1, buffer_1, quantity=1)
-    pb.add_constraint(c1)  # dont forget to add the constraint
     c2 = ps.TaskLoadBuffer(task_1, buffer_2, quantity=1)
-    pb.add_constraint(c2)
 
 The graphical output shows the Gantt chart and the evolution of the buffer states along the time line.
 

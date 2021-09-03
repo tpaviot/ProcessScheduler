@@ -49,6 +49,10 @@ class WorkLoad(ResourceConstraint):
         if kind not in ["exact", "max", "min"]:
             raise ValueError("kind must either be 'exact', 'min' or 'max'")
 
+        self.dict_time_intervals_and_bound = dict_time_intervals_and_bound
+        self.resource = resource
+        self.kind = kind
+
         if isinstance(resource, Worker):
             workers = [resource]
         elif isinstance(resource, CumulativeWorker):
@@ -76,14 +80,14 @@ class WorkLoad(ResourceConstraint):
                         )
                     )
                     # prevent solutions where duration would be negative
-                    self.set_assertions(dur >= 0)
+                    self.set_z3_assertions(dur >= 0)
                     # 4 different cases to take into account
                     cond1 = And(
                         start_task_i >= time_interval_lower_bound,
                         end_task_i <= time_interval_upper_bound,
                     )
                     asst1 = Implies(cond1, dur == end_task_i - start_task_i)
-                    self.set_assertions(asst1)
+                    self.set_z3_assertions(asst1)
                     # overlap at lower bound
                     cond2 = And(
                         start_task_i < time_interval_lower_bound,
@@ -92,7 +96,7 @@ class WorkLoad(ResourceConstraint):
                     asst2 = Implies(
                         cond2, dur == end_task_i - time_interval_lower_bound
                     )
-                    self.set_assertions(asst2)
+                    self.set_z3_assertions(asst2)
                     # overlap at upper bound
                     cond3 = And(
                         start_task_i < time_interval_upper_bound,
@@ -101,7 +105,7 @@ class WorkLoad(ResourceConstraint):
                     asst3 = Implies(
                         cond3, dur == time_interval_upper_bound - start_task_i
                     )
-                    self.set_assertions(asst3)
+                    self.set_z3_assertions(asst3)
                     # all overlap
                     cond4 = And(
                         start_task_i < time_interval_lower_bound,
@@ -111,15 +115,20 @@ class WorkLoad(ResourceConstraint):
                         cond4,
                         dur == time_interval_upper_bound - time_interval_lower_bound,
                     )
-                    self.set_assertions(asst4)
+                    self.set_z3_assertions(asst4)
 
                     # make these constraints mutual: no overlap
-                    self.set_assertions(
+                    self.set_z3_assertions(
                         Implies(Not(Or([cond1, cond2, cond3, cond4])), dur == 0)
                     )
 
                     # finally, store this variable in the duratins list
                     durations.append(dur)
+
+            if not durations:
+                raise AssertionError(
+                    "The resource is not assigned to any task. WorkLoad constraint meaningless."
+                )
 
             # workload constraint depends on the kind
             if kind == "exact":
@@ -129,7 +138,7 @@ class WorkLoad(ResourceConstraint):
             elif kind == "min":
                 wl_constrt = Sum(durations) >= number_of_time_slots
 
-            self.set_assertions(wl_constrt)
+            self.set_z3_assertions(wl_constrt)
 
 
 class ResourceUnavailable(ResourceConstraint):
@@ -146,6 +155,9 @@ class ResourceUnavailable(ResourceConstraint):
         """
         super().__init__(optional)
 
+        self.list_of_time_intervals = list_of_time_intervals
+        self.resource = resource
+
         # for each interval we create a task 'UnavailableResource%i'
         if isinstance(resource, Worker):
             workers = [resource]
@@ -156,7 +168,7 @@ class ResourceUnavailable(ResourceConstraint):
             # add constraints on each busy interval
             for worker in workers:
                 for start_task_i, end_task_i in worker.get_busy_intervals():
-                    self.set_assertions(
+                    self.set_z3_assertions(
                         Xor(
                             start_task_i >= interval_upper_bound,
                             end_task_i <= interval_lower_bound,
@@ -170,9 +182,9 @@ class ResourceTasksDistance(ResourceConstraint):
 
     def __init__(
         self,
-        worker,
+        resource,
         distance: int,
-        time_periods: Optional[list] = None,
+        list_of_time_intervals: Optional[list] = None,
         optional: Optional[bool] = False,
         mode: Optional[str] = "exact",
     ):
@@ -181,16 +193,27 @@ class ResourceTasksDistance(ResourceConstraint):
 
         super().__init__(optional)
 
+        self.list_of_time_intervals = list_of_time_intervals
+        self.resource = resource
+        self.distance = distance
+        self.mode = mode
+
         starts = []
         ends = []
-        for start_var, end_var in worker.busy_intervals.values():
+        for start_var, end_var in resource.busy_intervals.values():
             starts.append(start_var)
             ends.append(end_var)
+
+        if not starts or not ends:
+            raise AssertionError(
+                "The resource is not assigned to any task. ResourceTasksDistance constraint meaningless."
+            )
+
         # sort both lists
         sorted_starts, c1 = sort_no_duplicates(starts)
         sorted_ends, c2 = sort_no_duplicates(ends)
         for c in c1 + c2:
-            self.set_assertions(c)
+            self.set_z3_assertions(c)
         # from now, starts and ends are sorted in asc order
         # the space between two consecutive tasks is the sorted_start[i+1]-sorted_end[i]
         # we just have to constraint this variable
@@ -203,11 +226,11 @@ class ResourceTasksDistance(ResourceConstraint):
                 asst = sorted_starts[i] - sorted_ends[i - 1] == distance
             #  another set of conditions, related to the time periods
             conditions = []
-            if time_periods is not None:
+            if list_of_time_intervals is not None:
                 for (
                     lower_bound,
                     upper_bound,
-                ) in time_periods:  # time_period should be a list also or a tuple
+                ) in list_of_time_intervals:
                     conditions.append(
                         And(
                             sorted_starts[i] >= lower_bound,
@@ -225,7 +248,7 @@ class ResourceTasksDistance(ResourceConstraint):
                 conditions = [condition_only_scheduled_tasks]
             # finally create the constraint
             new_cstr = Implies(Or(conditions), asst)
-            self.set_assertions(new_cstr)
+            self.set_z3_assertions(new_cstr)
 
 
 #
@@ -237,16 +260,20 @@ class SameWorkers(ResourceConstraint):
     """
 
     def __init__(
-        self, alternate_workers_1, alternate_workers_2, optional: Optional[bool] = False
+        self, select_workers_1, select_workers_2, optional: Optional[bool] = False
     ):
         super().__init__(optional)
+
+        self.select_workers_1 = select_workers_1
+        self.select_workers_2 = select_workers_2
+
         # we check resources in alt work 1, if it is present in
         # Select worker 2 as well, then add a constraint
-        for res_work_1 in alternate_workers_1.selection_dict:
-            if res_work_1 in alternate_workers_2.selection_dict:
-                self.set_assertions(
-                    alternate_workers_1.selection_dict[res_work_1]
-                    == alternate_workers_2.selection_dict[res_work_1]
+        for res_work_1 in select_workers_1.selection_dict:
+            if res_work_1 in select_workers_2.selection_dict:
+                self.set_z3_assertions(
+                    select_workers_1.selection_dict[res_work_1]
+                    == select_workers_2.selection_dict[res_work_1]
                 )
 
 
@@ -256,14 +283,18 @@ class DistinctWorkers(ResourceConstraint):
     """
 
     def __init__(
-        self, alternate_workers_1, alternate_workers_2, optional: Optional[bool] = False
+        self, select_workers_1, select_workers_2, optional: Optional[bool] = False
     ):
         super().__init__(optional)
+
+        self.select_workers_1 = select_workers_1
+        self.select_workers_2 = select_workers_2
+
         # we check resources in alt work 1, if it is present in
         # alterna worker 2 as well, then add a constraint
-        for res_work_1 in alternate_workers_1.selection_dict:
-            if res_work_1 in alternate_workers_2.selection_dict:
-                self.set_assertions(
-                    alternate_workers_1.selection_dict[res_work_1]
-                    != alternate_workers_2.selection_dict[res_work_1]
+        for res_work_1 in select_workers_1.selection_dict:
+            if res_work_1 in select_workers_2.selection_dict:
+                self.set_z3_assertions(
+                    select_workers_1.selection_dict[res_work_1]
+                    != select_workers_2.selection_dict[res_work_1]
                 )
