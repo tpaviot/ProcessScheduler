@@ -469,7 +469,7 @@ class TestOptionalTask(unittest.TestCase):
 
     def test_force_schedule_optional_tasks_3(self) -> None:
         """Check an error is raised if ever one of the task is not optional."""
-        pb = ps.SchedulingProblem("ForceScheduleOptionalTasks3", horizon=14)
+        ps.SchedulingProblem("ForceScheduleOptionalTasks3", horizon=14)
         task_1 = ps.VariableDurationTask("task1")  # this one is not optional
         task_2 = ps.FixedDurationTask("task2", duration=7, optional=True)
 

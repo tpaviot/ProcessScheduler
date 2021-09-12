@@ -116,7 +116,7 @@ for horizon in range(20, n, step):
 
     workload = {period: MAX_TASKS_PER_PERIOD for period in PERIODS}
     workload[(0, horizon)] = MAX_TASKS_IN_PROBLEM
-    
+
     for worker in workers:
         ps.WorkLoad(worker["worker"], workload, kind="max")
 

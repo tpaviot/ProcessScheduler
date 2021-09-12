@@ -15,7 +15,6 @@
 
 import unittest
 
-import processscheduler as ps
 from processscheduler.util import (
     calc_parabola_from_two_points,
     is_positive_integer,

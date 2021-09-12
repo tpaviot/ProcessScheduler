@@ -39,8 +39,8 @@ class TestJsonImportExport(unittest.TestCase):
         sw_2 = ps.SelectWorkers([worker_1, worker_2, worker_3])
         sw_3 = ps.SelectWorkers([worker_1, worker_2, worker_3])
 
-        cumul1 = ps.CumulativeWorker("CumulMachine1", size=3)
-        cumul2 = ps.CumulativeWorker("CumulMachine2", size=7)
+        ps.CumulativeWorker("CumulMachine1", size=3)
+        ps.CumulativeWorker("CumulMachine2", size=7)
 
         # assign resources to tasks
         task_1.add_required_resources([worker_1, worker_2])
