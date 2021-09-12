@@ -17,9 +17,8 @@
 
 from typing import List, Optional
 import uuid
-import warnings
 
-from z3 import BoolRef, Bool, Implies, PbGe, PbEq, PbLe
+from z3 import BoolRef
 
 #
 # _NamedUIDObject, name and uid for hashing

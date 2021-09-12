@@ -35,7 +35,7 @@ def _distribute_p_over_n(p, n):
         for _ in range(n - 1):
             to_return.append(int_div)
         return to_return
-    elif isinstance(p, ConstantCostPerPeriod):
+    if isinstance(p, ConstantCostPerPeriod):
         int_div = p.value // n
         to_return = [ConstantCostPerPeriod(int_div + p.value % n)]
         for _ in range(n - 1):

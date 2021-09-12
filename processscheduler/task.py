@@ -279,7 +279,7 @@ class VariableDurationTask(Task):
             raise TypeError("min_duration must be a positive integer")
 
         if not is_positive_integer(work_amount):
-            raise TypeError("work_amount me be a positive integer")
+            raise TypeError("work_amount must be a positive integer")
 
         self.min_duration = min_duration
         self.max_duration = max_duration
