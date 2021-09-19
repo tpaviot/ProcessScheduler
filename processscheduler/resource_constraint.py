@@ -204,9 +204,10 @@ class ResourceTasksDistance(ResourceConstraint):
             starts.append(start_var)
             ends.append(end_var)
 
-        if not starts or not ends:
+        # check that the resource is assigned to at least two tasks
+        if len(starts) < 2:
             raise AssertionError(
-                "The resource is not assigned to any task. ResourceTasksDistance constraint meaningless."
+                "The resource has to be assigned to at least 2 tasks. ResourceTasksDistance constraint meaningless."
             )
 
         # sort both lists

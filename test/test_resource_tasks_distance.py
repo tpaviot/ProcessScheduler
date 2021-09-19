@@ -19,6 +19,22 @@ import processscheduler as ps
 
 
 class TestResourceTasksDistance(unittest.TestCase):
+    def test_resource_tasks_distance_raise_1(self) -> None:
+        # if no task is assigned to the worker, a issue is raised
+        ps.SchedulingProblem("ResourceTasksDistanceNoTaskRaiseAssertionError")
+        worker = ps.Worker("Worker")
+        with self.assertRaises(AssertionError):
+            ps.ResourceTasksDistance(worker, 0, [(0, 5)])
+
+    def test_resource_tasks_distance_raise_1(self) -> None:
+        # if only one task is assigned to the worker, a issue is raised
+        ps.SchedulingProblem("ResourceTasksDistanceOneTaskRaiseAssertionError")
+        worker = ps.Worker("worker")
+        task = ps.FixedDurationTask("Task", 1)
+        task.add_required_resource(worker)
+        with self.assertRaises(AssertionError):
+            ps.ResourceTasksDistance(worker, 0, [(0, 5)])
+
     def test_resource_tasks_distance_1(self) -> None:
         pb = ps.SchedulingProblem("ResourceTasksDistance1", horizon=20)
         task_1 = ps.FixedDurationTask("task1", duration=8)
