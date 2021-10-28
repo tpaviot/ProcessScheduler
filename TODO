@@ -8,6 +8,8 @@ TODO list
 End-user:
 =========
 
+[ ] Make the productivity Worker class property be a z3 IntSort
+
 [ ] Make SameWorkers and DistinctWorkers take a list of workers
 
 [X] Cumulative resources: resources that can process multiple tasks at the same time
