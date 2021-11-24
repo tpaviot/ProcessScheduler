@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+from typing import List
+
 from z3 import And, FreshInt, If, Or
 
 #
@@ -28,6 +30,12 @@ def is_strict_positive_integer(value: int) -> bool:
 def is_positive_integer(value: int) -> bool:
     """Return True if the parameter value is an integer >= 0"""
     return isinstance(value, int) and value >= 0
+
+
+def is_list_of_positive_integers(value: List[int]) -> bool:
+    if not value:  # empty list
+        return False
+    return all(is_positive_integer(n) for n in value)
 
 
 #

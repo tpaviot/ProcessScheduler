@@ -17,10 +17,14 @@
 
 from typing import List, Optional
 
-from z3 import ArithRef, Bool, BoolRef, Int, And, If
+from z3 import And, ArithRef, Bool, BoolRef, If, Int, Or
 
 from processscheduler.base import _NamedUIDObject
-from processscheduler.util import is_strict_positive_integer, is_positive_integer
+from processscheduler.util import (
+    is_strict_positive_integer,
+    is_positive_integer,
+    is_list_of_positive_integers,
+)
 from processscheduler.resource import Resource, Worker, CumulativeWorker, SelectWorkers
 import processscheduler.context as ps_context
 
@@ -255,34 +259,43 @@ class UnavailabilityTask(FixedDurationTask):
 
 
 class VariableDurationTask(Task):
-    """Task with a priori unknown duration. its duration is computed by the solver"""
+    """The duration can take any value, computed by the solver."""
 
     def __init__(
         self,
         name: str,
         min_duration: Optional[int] = 0,
         max_duration: Optional[int] = None,
+        allowed_durations: Optional[List[int]] = None,
         work_amount: Optional[int] = 0,
         priority: Optional[int] = 1,
         optional: Optional[bool] = False,
     ):
         super().__init__(name, optional)
 
-        if is_positive_integer(max_duration):
-            self.append_z3_assertion(self.duration <= max_duration)
-        elif max_duration is not None:
-            raise TypeError(
-                "length_as_most should either be a positive integer or None"
-            )
+        # allowed durations and min/max are exclusive
+        if is_list_of_positive_integers(allowed_durations):
+            all_cstr = []
+            for duration in allowed_durations:
+                all_cstr.append(self.duration == duration)
+            self.append_z3_assertion(Or(all_cstr))
+        else:
+            if is_positive_integer(max_duration):
+                self.append_z3_assertion(self.duration <= max_duration)
+            elif max_duration is not None:
+                raise TypeError(
+                    "length_as_most should either be a positive integer or None"
+                )
 
-        if not is_positive_integer(min_duration):
-            raise TypeError("min_duration must be a positive integer")
+            if not is_positive_integer(min_duration):
+                raise TypeError("min_duration must be a positive integer")
 
-        if not is_positive_integer(work_amount):
-            raise TypeError("work_amount must be a positive integer")
+            if not is_positive_integer(work_amount):
+                raise TypeError("work_amount must be a positive integer")
 
         self.min_duration = min_duration
         self.max_duration = max_duration
+        self.allowed_durations = allowed_durations
         self.work_amount = work_amount
         self.priority = priority
 

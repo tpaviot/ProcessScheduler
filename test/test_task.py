@@ -73,6 +73,21 @@ class TestTask(unittest.TestCase):
         self.assertTrue(solution.tasks[vdt_2.name].duration <= 4)
         self.assertTrue(solution.tasks[vdt_3.name].duration >= 5)
 
+    def test_create_task_variable_duration_from_list(self) -> None:
+        pb = ps.SchedulingProblem("CreateVariableDurationTaskFromList")
+
+        vdt_1 = ps.VariableDurationTask("vdt1", allowed_durations=[3, 4])
+        vdt_2 = ps.VariableDurationTask("vdt2", allowed_durations=[5, 6])
+        vdt_3 = ps.VariableDurationTask("vdt3", allowed_durations=[7, 8])
+
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+
+        self.assertTrue(solution)
+        self.assertTrue(solution.tasks[vdt_1.name].duration in [3, 4])
+        self.assertTrue(solution.tasks[vdt_2.name].duration in [5, 6])
+        self.assertTrue(solution.tasks[vdt_3.name].duration in [7, 8])
+
     def test_task_types(self) -> None:
         new_problem_or_clear()
         with self.assertRaises(TypeError):

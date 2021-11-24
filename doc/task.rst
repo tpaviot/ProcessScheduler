@@ -36,6 +36,13 @@ A :class:`VariableDurationTask` duration can be bounded by lower and upper value
 
     wash_room = VariableDurationTask('WashHospitalRoom', work_amount=10, max_duration=20)
 
+A :class:`VariableDurationTask` duration can be selected among a list of possible durations. The solver decides the duration.
+
+.. code-block:: python
+
+    # either 1 or 2 hour for an english lesson
+    english_lesson = VariableDurationTask('EnglishLesson', allowed_durations = [1, 2])
+
 Work amount
 """""""""""
 The :attr:`work_amount` is the total amount of work that the :class:`Task` must provide. It is set to :const:`0` by default. The :attr:`work_amount` is a dimensionless positive integer value, it can be mapped to any unit according to the physical meaning of the work amount. For example, if the task target is to move small pieces of wood from one point to another, then the work_amount maybe 166000 if 166000 pieces of woods are to be moved. In a maintenance task, if there are 8 screws to unscrew, the UnScrew work_amount will be set to 8.
