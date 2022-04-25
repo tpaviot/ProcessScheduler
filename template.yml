@@ -60,9 +60,16 @@ jobs:
         cd benchmark &&\
         mkdir output &&\
         python benchmark_dev_team.py --plot=False --logics=QF_IDL --max_time=30 > benchmark_dev_team_result.txt &&\
-        python benchmark_n_queens.py --plot=False --logics=QF_UFIDL --max_time=30 > benchmark_n_queens_result.txt &&\
+        python benchmark_n_queens.py --plot=False --logics=QF_UFIDL --max_time=30 > benchmark_n_queens_result.txt
+      displayName: 'Run performance benchmark'
+
+  - ${{ if startsWith(parameters.name, 'Ubuntu') }}:
+    - bash: |
+        source activate psenv && \
+        cd benchmark &&\
+        python benchmark_logics.py > benchmark_logics_result.txt &&\
         cd ..
-      displayName: 'Run benchmark'
+      displayName: 'Run logics benchmark'
 
   - ${{ if startsWith(parameters.name, 'Ubuntu') }}:
     - task: PublishPipelineArtifact@0
