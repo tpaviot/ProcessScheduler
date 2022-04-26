@@ -67,7 +67,7 @@ jobs:
     - bash: |
         source activate psenv && \
         cd benchmark &&\
-        python benchmark_logics.py > benchmark_logics_result.txt &&\
+        python benchmark_logics.py &&\
         cd ..
       displayName: 'Run logics benchmark'
 
