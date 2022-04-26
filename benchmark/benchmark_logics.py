@@ -95,7 +95,7 @@ all_logics = [
 # skipped: "QF_NIA",
 
 
-num_dev_teams = 40
+num_dev_teams = 20
 print("-> Num dev teams:", num_dev_teams)
 # Teams and Resources
 num_resource_a = 3
@@ -137,7 +137,7 @@ for logics in all_logics:
         logics=logics,
         random_values=False,
         parallel=False,
-        max_time=20,
+        max_time=10,
     )
     solution = solver.solve()
     if solution:
