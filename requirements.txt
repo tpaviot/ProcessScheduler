@@ -1,4 +1,4 @@
-z3-solver==4.8.15.0
+z3-solver==4.10.2.0
 matplotlib==3.4.1
 plotly== 4.14.3
 kaleido== 0.2.1
