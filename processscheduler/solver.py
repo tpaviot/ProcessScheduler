@@ -64,7 +64,7 @@ class SchedulingSolver:
         """Scheduling Solver
 
         debug: True or False, False by default
-        max_time: time in seconds, 60 by default
+        max_time: time in seconds, 10 by default, "inf" means infinity, no max_time
         parallel: True to enable mutlthreading, False by default
         """
         self.problem = problem
@@ -90,7 +90,8 @@ class SchedulingSolver:
 
         # set timeout
         self.max_time = max_time  # in seconds
-        set_option("timeout", int(self.max_time * 1000))  # in milliseconds
+        if self.max_time != "inf":
+            set_option("timeout", int(self.max_time * 1000))  # in milliseconds
 
         # create the solver
         print("Solver type:\n===========")
@@ -534,9 +535,10 @@ class SchedulingSolver:
                 current_variable_value,
                 "elapsed time:%.3fs" % total_time,
             )
-            if total_time > self.max_time:
-                warnings.warn("max time exceeded")
-                break
+            if self.max_time != "inf":
+                if total_time > self.max_time:
+                    warnings.warn("max time exceeded")
+                    break
 
             if bound is not None and current_variable_value == bound:
                 print(
