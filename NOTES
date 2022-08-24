@@ -4,6 +4,8 @@ Current dev
 ===========
 Misc:
   - refactor the Constraint class hierarchy
+  - new constraint UnorderedTaskGroup
+  - max_time can be set to inf(inity)
 
 Version 0.8.0
 =============
