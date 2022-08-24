@@ -18,7 +18,7 @@
 import uuid
 from typing import Optional
 
-from z3 import And, Bool, BoolRef, If, Implies, Not, Or, PbEq, PbGe, PbLe, Xor
+from z3 import And, Bool, BoolRef, If, Implies, Int, Not, Or, PbEq, PbGe, PbLe, Xor
 
 from processscheduler.constraint import TaskConstraint
 from processscheduler.util import sort_no_duplicates
@@ -372,6 +372,47 @@ class ScheduleNTasksInTimeIntervals(TaskConstraint):
             [(scheduled, True) for scheduled in all_bools], nb_tasks_to_schedule
         )
         self.set_z3_assertions(asst_pb)
+
+
+#
+# Task groups
+#
+class UnorderedTaskGroup(TaskConstraint):
+    """A set of tasks that can be scheduled in any order, with time bounds."""
+
+    def __init__(
+        self,
+        list_of_tasks,
+        time_interval=None,
+        time_interval_length: Optional[int] = 0,
+        optional: Optional[bool] = False,
+    ) -> None:
+        super().__init__(optional)
+
+        # first check that all tasks from the list_of_optional_tasks are
+        # actually optional
+        if not isinstance(list_of_tasks, list):
+            raise TypeError("list_of_task must be a list")
+
+        u_id = uuid.uuid4().int
+        self.start = Int("task_group_start_%i" % u_id)
+        self.end = Int("task_group_end_%i" % u_id)
+
+        if time_interval is not None:
+            scheduled_assertion = [
+                self.start >= time_interval[0],
+                self.end <= time_interval[1],
+            ]
+        elif time_interval_length is not None:
+            scheduled_assertion = [self.end <= self.start + time_interval_length]
+
+        for task in list_of_tasks:
+            scheduled_assertion += [task.start >= self.start, task.end <= self.end]
+
+        if task.optional:
+            self.set_z3_assertions(Implies(task.scheduled, And(scheduled_assertion)))
+        else:
+            self.set_z3_assertions(And(scheduled_assertion))
 
 
 #
