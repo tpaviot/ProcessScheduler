@@ -558,9 +558,10 @@ class SchedulingSolver:
                 # Compute the expected value
                 a, b, c = calc_parabola_from_two_points([0, 1, 2], three_last_times)
                 expected_next_time = a * 9 + 3 * b + c
-                if expected_next_time > self.max_time:
-                    warnings.warn("time may exceed max time. Stopping iteration.")
-                    break
+                if self.max_time != "inf":
+                    if expected_next_time > self.max_time:
+                        warnings.warn("time may exceed max time. Stopping iteration.")
+                        break
             self._solver.push()
             if kind == "min":
                 self.append_z3_assertion(variable < current_variable_value)
