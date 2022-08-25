@@ -57,7 +57,7 @@ class TestGroupOfTasks(unittest.TestCase):
 
     def test_unordered_group_task_precedence_1(self) -> None:
         """Task can be scheduled."""
-        pb = ps.SchedulingProblem("UnorderedGroupOfTasks2", horizon=20)
+        pb = ps.SchedulingProblem("UnorderedGroupOfTasks3", horizon=20)
         task_1 = ps.FixedDurationTask("task1", duration=3)
         task_2 = ps.FixedDurationTask("task2", duration=7)
         task_3 = ps.FixedDurationTask("task3", duration=2)
@@ -81,6 +81,31 @@ class TestGroupOfTasks(unittest.TestCase):
         self.assertTrue(e_2 <= s_3)
         self.assertTrue(e_2 <= s_4)
 
+    def test_ordered_group_task_1(self) -> None:
+        """Task can be scheduled."""
+        pb = ps.SchedulingProblem("OrderedGroupOfTasks1", horizon=40)
+        task_1 = ps.FixedDurationTask("task1", duration=3)
+        task_2 = ps.FixedDurationTask("task2", duration=7)
+        task_3 = ps.FixedDurationTask("task3", duration=2)
+        task_4 = ps.FixedDurationTask("task4", duration=2)
+        group1 = ps.OrderedTaskGroup([task_1, task_2, task_3, task_4], kind="tight", time_interval = [23, 39])
+        
+        solver = ps.SchedulingSolver(pb)
+        solution = solver.solve()
+        self.assertTrue(solution)
+        s_1 = solution.tasks[task_1.name].start
+        e_1 = solution.tasks[task_1.name].end
+        s_2 = solution.tasks[task_2.name].start
+        e_2 = solution.tasks[task_2.name].end
+        s_3 = solution.tasks[task_3.name].start
+        e_3 = solution.tasks[task_3.name].end
+        s_4 = solution.tasks[task_4.name].start
+        e_4 = solution.tasks[task_4.name].end
+        self.assertEqual(e_1, s_2)
+        self.assertEqual(e_2, s_3)
+        self.assertEqual(e_3, s_4)
+        self.assertTrue(s_1 >= 23)
+        self.assertTrue(s_4 <= 39)
 
 if __name__ == "__main__":
     unittest.main()
