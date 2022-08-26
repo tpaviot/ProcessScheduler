@@ -455,11 +455,18 @@ class TestSolver(unittest.TestCase):
         solver.export_to_smt2("complex_problem.smt2")
         self.assertTrue(os.path.isfile("complex_problem.smt2"))
 
-    def test_export_solution_to_json(self):
+    def test_export_solution_to_json_string(self):
         problem = build_complex_problem("SolutionExportToJson", 50)
         solution = _solve_problem(problem)
         self.assertTrue(solution)
         solution.to_json_string()
+
+    def test_export_solution_to_json_file(self):
+        problem = build_complex_problem("SolutionExportToJson", 20)
+        solution = _solve_problem(problem)
+        self.assertTrue(solution)
+        solution.export_to_json_file("solution.json")
+        self.assertTrue(os.path.isfile("solution.json"))
 
     #
     # Resource constraints

@@ -102,6 +102,10 @@ class SchedulingSolution:
         """Export the solution to a json string."""
         return solution_to_json_string(self)
 
+    def export_to_json_file(self, json_filename):
+        with open(json_filename, "w") as outfile:
+            outfile.write(self.to_json_string())
+
     def add_indicator_solution(self, indicator_name: str, indicator_value: int) -> None:
         """Add indicator solution."""
         self.indicators[indicator_name] = indicator_value
