@@ -26,6 +26,7 @@ from z3 import (
     Array,
     Int,
     IntSort,
+    Optimize,
     Or,
     Solver,
     SolverFor,
@@ -60,12 +61,15 @@ class SchedulingSolver:
         random_values: Optional[bool] = False,
         logics: Optional[str] = None,
         verbosity: Optional[int] = 0,
+        optimizer: Optional[str] = "incremental",
+        optimize_priority: Optional[str] = "pareto",
     ):
         """Scheduling Solver
 
         debug: True or False, False by default
         max_time: time in seconds, 10 by default, "inf" means infinity, no max_time
         parallel: True to enable mutlthreading, False by default
+        optimizer: incremental or optimize
         """
         self.problem = problem
         self.problem_context = problem.context
@@ -73,6 +77,13 @@ class SchedulingSolver:
         # objectives list
         self.objective = None  # the list of all objectives defined in this problem
         self.current_solution = None  # no solution until the problem is solved
+        self.optimizer = optimizer
+
+        if not optimizer in ["incremental", "optimize"]:
+            raise TypeError("optimizer must be either 'incremental' or 'optimize'")
+
+        if not optimize_priority in ["pareto", "lex", "box"]:
+            raise TypeEror("optimize priority must be either 'pareto', 'box' or 'lex'")
 
         if debug:
             set_option("verbose", 2)
@@ -102,20 +113,20 @@ class SchedulingSolver:
         self.is_multi_objective_optimization_problem = (
             len(self.problem_context.objectives) > 1
         )
-        # the Optimize() solver is used only in the case of a mutli-optimization
-        # problem. This enables to choose the priority method.
-        # in the case of a single objective optimization, the Optimize() solver
-        # apperas to be less robust than the basic Solver(). The
-        # incremental solver is then used.
-
+        # use the z3 Optimize solver if requested
+        if not self.is_not_optimization_problem and optimizer == "optimize":
+            self._solver = Optimize()
+            self._solver.set(priority=optimize_priority)
+            print("\t-> Builtin z3 Optimize solver")
         # see this url for a documentation about logics
         # http://smtlib.cs.uiowa.edu/logics.shtml
-        if logics is None:
-            self._solver = Solver()
-            print("\t-> Standard SAT/SMT solver")
         else:
-            self._solver = SolverFor(logics)
-            print("\t-> SMT solver using logics", logics)
+            if logics is None:
+                self._solver = Solver()
+                print("\t-> Standard SAT/SMT solver")
+            else:
+                self._solver = SolverFor(logics)
+                print("\t-> SMT solver using logics", logics)
         if debug:
             set_option(unsat_core=True)
 
@@ -241,7 +252,10 @@ class SchedulingSolver:
 
         # optimization
         if self.is_optimization_problem:
-            self.create_objective()
+            if self.optimizer == "incremental":
+                self.create_objective_incremental()
+            else:
+                self.create_objective_optimize()
 
     def append_z3_assertion(self, asst) -> bool:
         # set the method to use to add constraints
@@ -256,7 +270,15 @@ class SchedulingSolver:
         else:
             self._solver.add(asst)
 
-    def create_objective(self) -> bool:
+    def create_objective_optimize(self) -> bool:
+        for obj in self.problem_context.objectives:
+            variable_to_optimize = obj.target
+            if isinstance(obj, MaximizeObjective):
+                new_max = self._solver.maximize(variable_to_optimize)
+            else:
+                new_min = self._solver.minimize(variable_to_optimize)
+
+    def create_objective_incremental(self) -> bool:
         """create optimization objectives"""
         # in case of a single value to optimize
         if self.is_multi_objective_optimization_problem:
@@ -430,7 +452,7 @@ class SchedulingSolver:
         if self.debug:
             self.print_assertions()
 
-        if self.is_optimization_problem:
+        if self.is_optimization_problem and self.optimizer == "incremental":
             if self.is_multi_objective_optimization_problem:
                 print("\tObjectives:\n\t======")
                 for obj in self.problem.context.objectives:
