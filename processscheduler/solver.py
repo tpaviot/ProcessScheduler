@@ -78,12 +78,15 @@ class SchedulingSolver:
         self.objective = None  # the list of all objectives defined in this problem
         self.current_solution = None  # no solution until the problem is solved
         self.optimizer = optimizer
+        self.optimize_priority = optimize_priority
 
         if optimizer not in ["incremental", "optimize"]:
             raise TypeError("optimizer must be either 'incremental' or 'optimize'")
 
-        if optimize_priority not in ["pareto", "lex", "box"]:
-            raise TypeError("optimize priority must be either 'pareto', 'box' or 'lex'")
+        if optimize_priority not in ["pareto", "lex", "box", "weight"]:
+            raise TypeError(
+                "optimize priority must be either 'pareto', 'box', 'lex' or 'weight'"
+            )
 
         if debug:
             set_option("verbose", 2)
@@ -252,10 +255,7 @@ class SchedulingSolver:
 
         # optimization
         if self.is_optimization_problem:
-            if self.optimizer == "incremental":
-                self.create_objective_incremental()
-            else:
-                self.create_objective_optimize()
+            self.create_objective()
 
     def append_z3_assertion(self, asst) -> bool:
         # set the method to use to add constraints
@@ -270,42 +270,55 @@ class SchedulingSolver:
         else:
             self._solver.add(asst)
 
-    def create_objective_optimize(self) -> bool:
+    def build_equivalent_weighted_objective(self) -> bool:
+        # Replace objectives O_i, O_j, O_k with
+        # O = WiOi+WjOj+WkOk etc.
+        equivalent_single_objective = Int("EquivalentSingleObjective")
+        weighted_objectives = []
         for obj in self.problem_context.objectives:
             variable_to_optimize = obj.target
+            weight = obj.weight
             if isinstance(obj, MaximizeObjective):
-                self._solver.maximize(variable_to_optimize)
+                weighted_objectives.append(-weight * variable_to_optimize)
             else:
-                self._solver.minimize(variable_to_optimize)
+                weighted_objectives.append(weight * variable_to_optimize)
+        self.append_z3_assertion(
+            equivalent_single_objective == Sum(weighted_objectives)
+        )
+        # create an indicator
+        equivalent_indicator = Indicator(
+            "EquivalentIndicator", equivalent_single_objective
+        )
+        equivalent_objective = MinimizeObjective(
+            "EquivalentObjective", equivalent_indicator
+        )
+        self.objective = equivalent_objective
+        self.append_z3_assertion(equivalent_indicator.get_z3_assertions())
+        return equivalent_objective, equivalent_indicator
 
-    def create_objective_incremental(self) -> bool:
+    def create_objective(self) -> bool:
         """create optimization objectives"""
         # in case of a single value to optimize
         if self.is_multi_objective_optimization_problem:
-            # Replace objectives O_i, O_j, O_k with
-            # O = WiOi+WjOj+WkOk etc.
-            equivalent_single_objective = Int("EquivalentSingleObjective")
-            weighted_objectives = []
-            for obj in self.problem_context.objectives:
-                variable_to_optimize = obj.target
-                weight = obj.weight
-                if isinstance(obj, MaximizeObjective):
-                    weighted_objectives.append(-weight * variable_to_optimize)
-                else:
-                    weighted_objectives.append(weight * variable_to_optimize)
-            self.append_z3_assertion(
-                equivalent_single_objective == Sum(weighted_objectives)
-            )
-            # create an indicator
-            equivalent_indicator = Indicator(
-                "EquivalentIndicator", equivalent_single_objective
-            )
-            self.objective = MinimizeObjective(
-                "EquivalentObjective", equivalent_indicator
-            )
-            self.append_z3_assertion(equivalent_indicator.get_z3_assertions())
+            if self.optimizer == "incremental" or self.optimize_priority == "weight":
+                eq_obj, eq_ind = self.build_equivalent_weighted_objective()
+                if self.optimizer == "optimize":
+                    self._solver.minimize(eq_obj.target)
+            else:
+                for obj in self.problem_context.objectives:
+                    variable_to_optimize = obj.target
+                    if isinstance(obj, MaximizeObjective):
+                        self._solver.maximize(variable_to_optimize)
+                    else:
+                        self._solver.minimize(variable_to_optimize)
         else:
             self.objective = self.problem.context.objectives[0]
+            if self.optimizer == "optimize":
+                variable_to_optimize = self.objective.target
+                if isinstance(self.objective, MaximizeObjective):
+                    self._solver.maximize(variable_to_optimize)
+                else:
+                    self._solver.minimize(variable_to_optimize)
 
     def check_sat(self):
         """check satisfiability. Returns resulta as True (sat) or False (unsat, unknown).
