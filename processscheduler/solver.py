@@ -79,11 +79,11 @@ class SchedulingSolver:
         self.current_solution = None  # no solution until the problem is solved
         self.optimizer = optimizer
 
-        if not optimizer in ["incremental", "optimize"]:
+        if optimizer not in ["incremental", "optimize"]:
             raise TypeError("optimizer must be either 'incremental' or 'optimize'")
 
-        if not optimize_priority in ["pareto", "lex", "box"]:
-            raise TypeEror("optimize priority must be either 'pareto', 'box' or 'lex'")
+        if optimize_priority not in ["pareto", "lex", "box"]:
+            raise TypeError("optimize priority must be either 'pareto', 'box' or 'lex'")
 
         if debug:
             set_option("verbose", 2)
@@ -274,9 +274,9 @@ class SchedulingSolver:
         for obj in self.problem_context.objectives:
             variable_to_optimize = obj.target
             if isinstance(obj, MaximizeObjective):
-                new_max = self._solver.maximize(variable_to_optimize)
+                self._solver.maximize(variable_to_optimize)
             else:
-                new_min = self._solver.minimize(variable_to_optimize)
+                self._solver.minimize(variable_to_optimize)
 
     def create_objective_incremental(self) -> bool:
         """create optimization objectives"""
@@ -542,10 +542,10 @@ class SchedulingSolver:
                     "\tFound optimum %i. Stopping iteration." % current_variable_value
                 )
                 break
-            elif is_sat == unsat:
+            if is_sat == unsat:
                 print("\tNo solution found. Stopping iteration.")
                 break
-            elif is_sat == unknown:
+            if is_sat == unknown:
                 break
             # at this stage, is_sat should be sat
             solution = self._solver.model()
