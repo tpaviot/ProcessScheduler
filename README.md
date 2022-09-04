@@ -8,7 +8,7 @@
 [![slack](https://img.shields.io/badge/slack-ProcessScheduler-brightgreen)](https://join.slack.com/t/processscheduler/shared_invite/zt-pa152rki-126YyMsuLNxhOv_suqKtkQ)
 
 # ProcessScheduler
-A python library to compute resource-constrained task schedules. Express your scheduling problem in terms of tasks, resources and constraints, ProcessScheduler suggests one/the best schedule that satisfies the requirements.
+A python library to compute resource-constrained task schedules. Express your scheduling problem in terms of tasks, resources and constraints, ProcessScheduler computes one/the best schedule that satisfies the requirements.
 
 The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the SAT/SMT [Z3 Theorem Prover](https://github.com/Z3Prover/z3).
 
@@ -48,7 +48,7 @@ Optional dependencies (install either with pip or conda):
 
 ## Try online
 
-There are some [Jupypter notebooks](https://github.com/tpaviot/ProcessScheduler/tree/master/example-notebooks). They can be executed online at [myBinder.org](https://mybinder.org/v2/gh/tpaviot/ProcessScheduler/HEAD?filepath=example-notebooks)
+There are some [Jupypter notebooks](https://github.com/tpaviot/ProcessScheduler/tree/master/example-notebooks). They can be executed online at [myBinder.org](https://mybinder.org/v2/gh/tpaviot/ProcessScheduler/HEAD?filepath=examples-notebooks)
 
 ## Helloworld
 
@@ -84,7 +84,8 @@ ProcessScheduler uses the following tools to ensure code quality:
 *   code coverage (coverage.py, codecov.io),
 *   continuous-integration at MS azure,
 *   static code analysis (codacy),
-*   spelling mistakes tracking (codespell)
+*   spelling mistakes tracking (codespell),
+*   code formatting using the black python formatter
 
 ## License/Author
 
