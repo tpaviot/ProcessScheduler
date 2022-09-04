@@ -54,7 +54,25 @@ class MultiObjective(unittest.TestCase):
         ind = ps.Indicator("Task2End", task_2.end)
         pb.maximize_indicator(ind)
 
-        solution = ps.SchedulingSolver(pb).solve()
+        solution = ps.SchedulingSolver(pb, optimizer="incremental").solve()
+
+        self.assertTrue(solution)
+        self.assertEqual(solution.tasks[task_1.name].start, 0)
+        self.assertEqual(solution.tasks[task_2.name].end, 20)
+
+    def test_multi_two_tasks_optimize_default(self) -> None:
+        # the same model, optimize task2 end
+        pb = ps.SchedulingProblem("MultiObjectiveOptimizeDefault", horizon=20)
+        task_1 = ps.FixedDurationTask("task1", duration=3)
+        task_2 = ps.FixedDurationTask("task2", duration=3)
+
+        pb.add_constraint(task_1.end == 20 - task_2.start)
+
+        # Maximize only task_2 end
+        ind = ps.Indicator("Task2End", task_2.end)
+        pb.maximize_indicator(ind)
+
+        solution = ps.SchedulingSolver(pb, verbosity=2, optimizer="optimize").solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.tasks[task_1.name].start, 0)
