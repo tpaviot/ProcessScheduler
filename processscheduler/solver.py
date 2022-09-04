@@ -475,8 +475,6 @@ class SchedulingSolver:
                 dd = "min"
             elif isinstance(self.objective, MaximizeObjective):
                 dd = "max"
-            # print(dir(objective))
-            # print(objective.target)
             solution = self.solve_optimize_incremental(self.objective.target, kind=dd)
             if not solution:
                 return False
@@ -506,6 +504,11 @@ class SchedulingSolver:
 
             # then get the solution
             solution = self._solver.model()
+
+            # print objectives values if optimizer
+            if self.optimizer == "optimize":
+                for obj in self.problem.context.objectives:
+                    print(obj.name, "Value : ", solution[obj.target].as_long())
 
         self.current_solution = solution
         sol = self.build_solution(solution)
