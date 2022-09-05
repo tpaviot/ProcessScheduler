@@ -1,6 +1,11 @@
 Optimization
 ============
 
+ProcessScheduler is able to compute optimized schedules according to one (single optimization) or any number (multi-objectives) of objectives.
+
+Objective
+---------
+
 An objective is a target value for an :class:`Indicator` or any of the variables defined in the scheduling problem:
 
 - if the target value is known, then the objective can either be :class:`ExactObjective`, :class:`MinimumObjective` or :class:`MaximumObjective`,
@@ -9,12 +14,21 @@ An objective is a target value for an :class:`Indicator` or any of the variables
 
 .. warning::
 
-    Using :class:`MaximizeObjective` or :class:`MinimizeObjective` classes turn the problem into an optimization problem. This will result in heavier computations and, thus, a longer time for the solution to get known.
+    Using :class:`MaximizeObjective` or :class:`MinimizeObjective` classes turn the problem into an optimization problem. This will result in heavier computations and, thus, a longer time for the problem to be solved.
+
+For example, if you need to optimize the utilization of a resource (bounded up to 100% within the problem horizon),
+
+.. code-block:: python
+
+    # first create the indicator
+    utilization_res_1 = problem.add_indicator_resource_utilization(worker_1)
+    # the tell the solver to optimize this value
+    ps.MaximizeObjective("MaximizeResource1Utilization", utilization_res_1)
 
 Builtin optimization objectives
 -------------------------------
 
-The following builtin objectives are available:
+For any problem, the following builtin objectives are available:
 
 - :func:`add_objective_makespan`: minimize the schedule horizon,
 
@@ -32,8 +46,26 @@ The following builtin objectives are available:
 
 - :func:`add_objective_flowtime_single_resource`: minimize flowtime of a single resource on a specific time interval
 
+Available solvers : incremental and optimize
+--------------------------------------------
+
+The default optimization solver is :func:`incremental`. After a solution is found, the solver will run again and again to find a better solution untill the maximum allowed time is reached. If you provide a small max_time value, the solver will exit to the last found value, but there may be a better value. In that case, just increase the max_time and run again the solver.
+
+.. code-block:: python
+
+    solver = ps.SchedulingSolver(pb, max_time=300)  # 300s is 5 minutes
+    solution = solver.solve()
+
+The other available solver is called :func:`optimize`, which use the builtin optsmt z3-solver. The computation cannot be interrupted, so be careful if the problem to solve involves many tasks/resources. However, the :func`optimize` is guaranteed to return the optimal value.
+
+.. code-block:: python
+
+    solver = ps.SchedulingSolver(pb, optimizer="optimize")  # 300s is 5 minutes
+    solution = solver.solve()
+
 Single objective optimization
 -----------------------------
+
 Imagine you need to schedule one specific task :attr:`task_1` the later. After you defined the task as usual, then create the objective and set the optimization target:
 
 .. code-block:: python
@@ -72,8 +104,9 @@ The expected value for the indicator_1 maximization is 20. After running the scr
 
 The solver returns the expected result.
 
-Multiple objective optimization
--------------------------------
+Multiple objective optimization using the incremental solver (default)
+----------------------------------------------------------------------
+
 ProcessScheduler can deal with multiple objectives optimization. There is no limitation regarding the number of objectives.
 
 Imagine you need to schedule two tasks :attr:`task_1` and :attr:`task_2` the later. After you defined the task as usual, then create the objective and set the optimization target:
@@ -165,94 +198,96 @@ This lead the solver to another solution:
         "Task2End": 20
     },
 
-..
-    Lexicon priority (:attr:`'lex'`, default)
-    -----------------------------------------
-    The solver optimizes the first objective, then the second one while keeping the first value, then the third one keeping both previous values etc.
+Multiple objective optimization using the optimize solver (default)
+-------------------------------------------------------------------
 
-    In the previous example, the first objective to be optimized will be the end of task_1, obviously 20. Then, this value being fixed, there's no other solution than start of the second task is 0, then task_2 end will be 3.
+Lexicon priority (:attr:`'lex'`, default)
+-----------------------------------------
+The solver optimizes the first objective, then the second one while keeping the first value, then the third one keeping both previous values etc.
 
-    .. code-block:: python
+In the previous example, the first objective to be optimized will be the end of task_1, obviously 20. Then, this value being fixed, there's no other solution than start of the second task is 0, then task_2 end will be 3.
 
-        ps.SchedulingSolver(pb, optimize_priority='lex').solve()
+.. code-block:: python
 
-    And the output
+    ps.SchedulingSolver(pb, optimizer=optimize, optimize_priority='lex').solve()
 
-    .. code-block:: bash
+And the output
 
-        Optimization results:
-        =====================
-            ->Objective priority specification: lex
-            ->Objective values:
-                ->Indicator_Task1End(max objective): 20
-                ->Indicator_Task2End(max objective): 3
+.. code-block:: bash
 
-    Lexicon priority (:attr:`'box'`)
-    --------------------------------
-    The optimization solver breaks the dependency between objectives and look for the maximum (resp. minimum) value that can be achieved for each objective.
+    Optimization results:
+    =====================
+        ->Objective priority specification: lex
+        ->Objective values:
+            ->Indicator_Task1End(max objective): 20
+            ->Indicator_Task2End(max objective): 3
 
-    In the previous example, the maximum of task_1end can be 20, and the maximum of task_2.end can also be 20, but not at the same time. The :attr:`box` priority then gives an information about the values that can be reached.
+Lexicon priority (:attr:`'box'`)
+--------------------------------
+The optimization solver breaks the dependency between objectives and look for the maximum (resp. minimum) value that can be achieved for each objective.
 
-    .. code-block:: python
+In the previous example, the maximum of task_1end can be 20, and the maximum of task_2.end can also be 20, but not at the same time. The :attr:`box` priority then gives an information about the values that can be reached.
 
-        ps.SchedulingSolver(pb, optimize_priority='lex').solve()
+.. code-block:: python
+
+    ps.SchedulingSolver(pb, optimizer=optimize, optimize_priority='box').solve()
 
 
-    And the output
+And the output
 
-    .. code-block:: bash
+.. code-block:: bash
 
-        Optimization results:
-        =====================
-            ->Objective priority specification: lex
-            ->Objective values:
-                ->Indicator_Task1End(max objective): 20
-                ->Indicator_Task2End(max objective): 20
+    Optimization results:
+    =====================
+        ->Objective priority specification: lex
+        ->Objective values:
+            ->Indicator_Task1End(max objective): 20
+            ->Indicator_Task2End(max objective): 20
 
-    .. note::
+.. note::
 
-        In the :attr:`box` mode, both objectives may not be reached simultaneously, the solver will give anyway a solution that satisfies **all** constraints (by default the solution obtained from the lexicon mode).
+    In the :attr:`box` mode, both objectives may not be reached simultaneously, the solver will give anyway a solution that satisfies **all** constraints (by default the solution obtained from the lexicon mode).
 
-    Pareto priority (:attr:`'pareto'`)
-    ----------------------------------
-    The optimization solver suggests a new solution each time the :func:`solve()` method is called. This allows traversing all solutions. Indeed we can have the task_1 end to 20 and task_2 end 3, but also the task_1 end to 19 and task_2 end to 4 etc. These all are solutions for the optimization problem.
+Pareto priority (:attr:`'pareto'`)
+----------------------------------
+The optimization solver suggests a new solution each time the :func:`solve()` method is called. This allows traversing all solutions. Indeed we can have the task_1 end to 20 and task_2 end 3, but also the task_1 end to 19 and task_2 end to 4 etc. These all are solutions for the optimization problem.
 
-    The python code has to be slightly modified:
+The python code has to be slightly modified:
 
-    .. code-block:: python
+.. code-block:: python
 
-        solver = ps.SchedulingSolver(pb, optimize_priority='pareto')
-        while solver.solve():
-            pass
+    solver = ps.SchedulingSolver(pb, optimizer=optimize, optimize_priority='pareto')
+    while solver.solve():
+        pass
 
-    And the output will be:
+And the output will be:
 
-    .. code-block:: bash
+.. code-block:: bash
 
-        Optimization results:
-        =====================
-            ->Objective priority specification: pareto
-            ->Objective values:
-                ->Indicator_Task1End(max objective): 20
-                ->Indicator_Task2End(max objective): 3
-        SAT computation time:
-        =====================
-            MultiObjective2 satisfiability checked in 0.00s
-        Optimization results:
-        =====================
-            ->Objective priority specification: pareto
-            ->Objective values:
-                ->Indicator_Task1End(max objective): 19
-                ->Indicator_Task2End(max objective): 4
-        SAT computation time:
-        =====================
-            MultiObjective2 satisfiability checked in 0.00s
-        Optimization results:
-        =====================
-            ->Objective priority specification: pareto
-            ->Objective values:
-                ->Indicator_Task1End(max objective): 18
-                ->Indicator_Task2End(max objective): 5
-        [...]
+    Optimization results:
+    =====================
+        ->Objective priority specification: pareto
+        ->Objective values:
+            ->Indicator_Task1End(max objective): 20
+            ->Indicator_Task2End(max objective): 3
+    SAT computation time:
+    =====================
+        MultiObjective2 satisfiability checked in 0.00s
+    Optimization results:
+    =====================
+        ->Objective priority specification: pareto
+        ->Objective values:
+            ->Indicator_Task1End(max objective): 19
+            ->Indicator_Task2End(max objective): 4
+    SAT computation time:
+    =====================
+        MultiObjective2 satisfiability checked in 0.00s
+    Optimization results:
+    =====================
+        ->Objective priority specification: pareto
+        ->Objective values:
+            ->Indicator_Task1End(max objective): 18
+            ->Indicator_Task2End(max objective): 5
+    [...]
 
-    Here you have 18 different solutions. You can add a test to the loop to stop the iteration as soon as you're ok with the solution.
+Here you have 18 different solutions. You can add a test to the loop to stop the iteration as soon as you're ok with the solution.

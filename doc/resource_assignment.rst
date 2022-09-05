@@ -12,7 +12,7 @@ Tell the task that it requires a set of resources to be processed
     assemble_engine = FixedDurationTask('AssembleCarEngine', duration=10)
     john = Worker('JohnBenis')
 
-    # the AssembleCarEngine is processed by JohnBenis ONLY
+    # the AssembleCarEngine can be processed by JohnBenis ONLY
     assemble_engine.add_required_resource(john)
 
 
@@ -28,7 +28,7 @@ To constraint different resources to process one single task.
     john = Worker('JohnBenis')
     alice = Worker('AliceParker')
 
-    # the PaintCar task requires JohnBenis AND AlicParker
+    # the PaintCar task requires JohnBenis AND AliceParker
     paint_engine.add_required_resources([john, alice])
 
 Alternative resource assignment

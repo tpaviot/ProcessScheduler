@@ -1,7 +1,7 @@
 Introduction
 ============
 
-ProcessScheduler is intended to be used in an industrial context (manufacturing, building industry, healthcare), and can be used for any related scheduling problem. It targets complex problems for which an obvious solution can not be found.
+ProcessScheduler is intended to be used in an industrial context (manufacturing, building industry, healthcare, etc.), and can be used for any related scheduling problem. It targets complex problems for which an obvious solution can not be found.
 
 The following features are provided:
 
