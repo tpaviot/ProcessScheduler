@@ -24,7 +24,7 @@ class _Cost(_NamedUIDObject):
         super().__init__("")
         self.f = lambda x: 0  # by default
 
-    def plot(self, interval, show_plot=True) -> None:
+    def plot(self, interval, show_plot=False) -> None:
         """Plot the cost curve using matplotlib."""
         try:
             import matplotlib.pyplot as plt
