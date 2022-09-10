@@ -1,11 +1,15 @@
 RELEASE NOTES
 
-Current dev
-===========
-Misc:
-  - refactor the Constraint class hierarchy
+Version 0.9.0
+=============
+New features:
   - new constraints: OrderedTaskGroup, UnorderedTaskGroup
+  - add the builtin z3 optimizer as a solver option
+
+Misc:
   - max_time can be set to inf(inity)
+  - fix cost computation
+  - refactor the Constraint class hierarchy
 
 Version 0.8.0
 =============

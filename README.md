@@ -44,11 +44,12 @@ The Z3 theorem prover is the only required dependency.
 Optional dependencies (install either with pip or conda):
 
 *   matplotlib (Gantt chart rendering),
-*   plotly (Gantt chart rendering).
+*   plotly (Gantt chart rendering),
+*   numpy
 
 ## Try online
 
-There are some [Jupypter notebooks](https://github.com/tpaviot/ProcessScheduler/tree/master/example-notebooks). They can be executed online at [myBinder.org](https://mybinder.org/v2/gh/tpaviot/ProcessScheduler/HEAD?filepath=examples-notebooks)
+There are some Jupypter notebooks that can be executed online at [myBinder.org](https://mybinder.org/v2/gh/tpaviot/ProcessScheduler/HEAD?filepath=examples-notebooks)
 
 ## Helloworld
 
