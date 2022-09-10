@@ -18,7 +18,7 @@ from processscheduler.util import is_positive_integer
 
 
 class _Cost(_NamedUIDObject):
-    """The base class for cost definition, to be assigned to a resource instance"""
+    """The base class for cost definition, to be assigned to a resource"""
 
     def __init__(self):
         super().__init__("")

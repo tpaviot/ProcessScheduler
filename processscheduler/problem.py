@@ -99,36 +99,43 @@ class SchedulingProblem(_NamedUIDObject):
         self, list_of_resources: List[Resource]
     ) -> Indicator:
         """compute the total cost of a set of resources"""
-        partial_costs = []
+        constant_costs = []
+        variable_costs = []
 
         def get_resource_cost(res):
-            p = []
+            """for the given resource, compute cost from busy intervals
+            For a constant cost"""
+            local_constant_costs = []
+            local_variable_costs = []
+
             for interv_low, interv_up in res.busy_intervals.values():
                 # Constant cost per period
                 if isinstance(res.cost, ConstantCostPerPeriod):
                     # res.cost(interv_up), res.cost(interv_low)
                     # or res.cost.value give the same result because the function is constant
                     period_cost = res.cost(interv_up) * (interv_up - interv_low)
-                    p.append(period_cost)
+                    local_constant_costs.append(period_cost)
                 # Polynomial cost. Compute the area of the trapeze
                 if isinstance(res.cost, PolynomialCostFunction):
-                    period_cost = (
-                        (res.cost(interv_low) + res.cost(interv_up))
-                        * (interv_up - interv_low)
-                        / 2
+                    period_cost = (res.cost(interv_low) + res.cost(interv_up)) * (
+                        interv_up - interv_low
                     )
-                    p.append(period_cost)
-            return p
+                    local_variable_costs.append(period_cost)
+            return local_constant_costs, local_variable_costs
 
         for resource in list_of_resources:
             if isinstance(resource, CumulativeWorker):
                 for res in resource.cumulative_workers:
-                    partial_costs.extend(get_resource_cost(res))
+                    loc_cst_cst, loc_var_cst = get_resource_cost(res)
+                    constant_costs.extend(loc_cst_cst)
+                    variable_costs.extend(loc_var_cst)
             else:  # for a single worker
-                partial_costs.extend(get_resource_cost(resource))
+                loc_cst_cst, loc_var_cst = get_resource_cost(resource)
+                constant_costs.extend(loc_cst_cst)
+                variable_costs.extend(loc_var_cst)
 
         resource_names = ",".join([resource.name for resource in list_of_resources])
-        cost_indicator_variable = Sum(partial_costs)
+        cost_indicator_variable = Sum(constant_costs) + Sum(variable_costs) / 2
         cost_indicator = Indicator(
             "Total Cost (%s)" % resource_names, cost_indicator_variable
         )
