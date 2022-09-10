@@ -32,7 +32,7 @@ class TestCost(unittest.TestCase):
         ps.SchedulingProblem("PolynomialCost1", horizon=12)
 
         def c(t):
-            return 0.5 * t ** 2 + 50
+            return 0.5 * t * t + 50
 
         ress_cost = ps.PolynomialCostFunction(c)
         ps.Worker("Worker1", cost=ress_cost)
@@ -198,7 +198,7 @@ class TestCost(unittest.TestCase):
         t_1 = ps.FixedDurationTask("t1", duration=17)
 
         def int_cost_function(t):
-            return 23 * t ** 2 - 13 * t + 513
+            return 23 * t * t - 13 * t + 513
 
         worker_1 = ps.Worker(
             "Worker1", cost=ps.PolynomialCostFunction(int_cost_function)
@@ -226,9 +226,9 @@ class TestCost(unittest.TestCase):
         t_1 = ps.FixedDurationTask("t1", duration=4)
 
         # we chosse a function where we know the minimum is
-        # let's imagine the minimum is at t=37
+        # let's imagine the minimum is at t=8
         def int_cost_function(t):
-            return (t - 8) ** 2 + 100
+            return (t - 8) * (t - 8) + 100
 
         worker_1 = ps.Worker(
             "Worker1", cost=ps.PolynomialCostFunction(int_cost_function)
@@ -241,25 +241,12 @@ class TestCost(unittest.TestCase):
         solution = ps.SchedulingSolver(problem).solve()
 
         self.assertTrue(solution)
-        # TODO: to be fixed; Non linear solver gives weirf results.
-        # This was repored to z3 team see
-        # https://github.com/Z3Prover/z3/issues/5254
-        # Fix to be released in the next z3 version 4.8.11.0
-        # sometimes it's 6, sometime it's 7 TODO weird
-        # self.assertTrue(solution.tasks[t_1.name].start in [6, 7])
-
-        # sometimes it's 416, sometimes 420 TODO
-        # self.assertTrue(solution.indicators[cost_ind.name] in [416, 420])
+        self.assertEqual(solution.tasks[t_1.name].start, 6)
+        self.assertEqual(solution.indicators[cost_ind.name], 416)
 
     def test_plot_cost_function(self) -> None:
-        # TODO: add an horizon, it should return the expected result
-        # but there's an issue, see
-        # https://github.com/Z3Prover/z3/issues/5254
-
-        # we chosse a function where we know the minimum is
-        # let's imagine the minimum is at t=37
         def int_cost_function(t):
-            return (t - 37) ** 2 + 513
+            return (t - 8) * (t - 8) + 513
 
         cost = ps.PolynomialCostFunction(int_cost_function)
 

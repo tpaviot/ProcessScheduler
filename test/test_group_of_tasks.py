@@ -88,8 +88,10 @@ class TestGroupOfTasks(unittest.TestCase):
         task_2 = ps.FixedDurationTask("task2", duration=7)
         task_3 = ps.FixedDurationTask("task3", duration=2)
         task_4 = ps.FixedDurationTask("task4", duration=2)
-        group1 = ps.OrderedTaskGroup([task_1, task_2, task_3, task_4], kind="tight", time_interval = [23, 39])
-        
+        group1 = ps.OrderedTaskGroup(
+            [task_1, task_2, task_3, task_4], kind="tight", time_interval=[23, 39]
+        )
+
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()
         self.assertTrue(solution)
@@ -106,6 +108,7 @@ class TestGroupOfTasks(unittest.TestCase):
         self.assertEqual(e_3, s_4)
         self.assertTrue(s_1 >= 23)
         self.assertTrue(s_4 <= 39)
+
 
 if __name__ == "__main__":
     unittest.main()
