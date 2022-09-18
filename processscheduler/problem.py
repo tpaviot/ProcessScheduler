@@ -60,10 +60,8 @@ class SchedulingProblem(_NamedUIDObject):
         self.horizon_defined_value = horizon
         # define the horizon variable
         self.horizon = Int("horizon")
-        self.fixed_horizon = False  # set to True is horizon is fixed
-        if is_strict_positive_integer(horizon):  # fixed_horizon
-            self.context.add_constraint(self.horizon == horizon)
-            self.fixed_horizon = True
+        if is_strict_positive_integer(horizon):
+            self.context.add_constraint(self.horizon <= horizon)
         elif horizon is not None:
             raise TypeError("horizon must either be a strict positive integer or None")
 
@@ -150,7 +148,10 @@ class SchedulingProblem(_NamedUIDObject):
             interv_up - interv_low
             for interv_low, interv_up in resource.busy_intervals.values()
         ]
-        utilization = (Sum(durations) * 100) / self.horizon  # in percentage
+        if self.horizon_defined_value is not None:
+            utilization = Sum(durations) * int(100 / self.horizon_defined_value)
+        else:
+            utilization = (Sum(durations) * 100) / self.horizon  # in percentage
         return Indicator(
             "Utilization (%s)" % resource.name, utilization, bounds=(0, 100)
         )
@@ -168,10 +169,6 @@ class SchedulingProblem(_NamedUIDObject):
     #
     def add_objective_makespan(self, weight=1) -> Union[ArithRef, Indicator]:
         """makespan objective"""
-        if self.fixed_horizon:
-            raise ValueError(
-                "Horizon constrained to be fixed, no horizon optimization possible."
-            )
         MinimizeObjective("MakeSpan", self.horizon, weight)
         return self.horizon
 
