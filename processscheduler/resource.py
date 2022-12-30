@@ -134,7 +134,7 @@ class SelectWorkers(Resource):
 
         # create as many booleans as resources in the list
         for worker in self.list_of_workers:
-            worker_is_selected = Bool("Selected_%s_%i" % (worker.name, self.uid))
+            worker_is_selected = Bool(f"Selected_{worker.name}_{self.uid}")
             self.selection_dict[worker] = worker_is_selected
 
         # create the assertion : exactly n boolean flags are allowed to be True,
@@ -186,7 +186,7 @@ class CumulativeWorker(Resource):
         # we create as much elementary workers as the cumulative size
         self.cumulative_workers = [
             Worker(
-                "%s_CumulativeWorker_%i" % (name, i + 1),
+                f"{name}_CumulativeWorker_{i+1}",
                 productivity=productivities[i],
                 cost=costs_per_period[i],
             )

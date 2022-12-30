@@ -140,10 +140,10 @@ class TasksContiguous(TaskConstraint):
         starts = [t.start for t in list_of_tasks]
         ends = [t.end for t in list_of_tasks]
         # sort both lists
-        sorted_starts, c1 = sort_no_duplicates(starts)
-        sorted_ends, c2 = sort_no_duplicates(ends)
-        for c in c1 + c2:
-            self.set_z3_assertions(c)
+        sorted_starts, constraints_start = sort_no_duplicates(starts)
+        sorted_ends, constraints_end = sort_no_duplicates(ends)
+        for all_constraints in constraints_start + constraints_end:
+            self.set_z3_assertions(all_constraints)
         # from now, starts and ends are sorted in asc order
         # the space between two consecutive tasks is the sorted_start[i+1]-sorted_end[i]
         # we just have to constraint this variable
@@ -263,7 +263,7 @@ class OptionalTaskConditionSchedule(TaskConstraint):
         super().__init__(optional)
 
         if not task.optional:
-            raise TypeError("Task %s must be optional." % task.name)
+            raise TypeError(f"Task {task.name} must be optional.")
 
         self.set_z3_assertions(
             If(condition, task.scheduled == True, task.scheduled == False)
@@ -277,7 +277,7 @@ class OptionalTasksDependency(TaskConstraint):
         super().__init__(optional)
 
         if not task_2.optional:
-            raise TypeError("Task %s must be optional." % task_2.name)
+            raise TypeError(f"Task {task_2.name} must be optional.")
 
         self.set_z3_assertions(task_1.scheduled == task_2.scheduled)
 
@@ -302,7 +302,7 @@ class ForceScheduleNOptionalTasks(TaskConstraint):
         for task in list_of_optional_tasks:
             if not task.optional:
                 raise TypeError(
-                    "This class %s must excplicitely be set as optional." % task.name
+                    "The task {task.name} must excplicitely be set as optional."
                 )
         # all scheduled variables to take into account
         sched_vars = [task.scheduled for task in list_of_optional_tasks]
@@ -395,8 +395,8 @@ class UnorderedTaskGroup(TaskConstraint):
             raise TypeError("list_of_task must be a list")
 
         u_id = uuid.uuid4().int
-        self.start = Int("task_group_start_%i" % u_id)
-        self.end = Int("task_group_end_%i" % u_id)
+        self.start = Int(f"task_group_start_{u_id}")
+        self.end = Int(f"task_group_end_{u_id}")
 
         if time_interval is not None:
             scheduled_assertion = [
@@ -437,8 +437,8 @@ class OrderedTaskGroup(TaskConstraint):
             raise ValueError("kind must either be 'lax', 'strict' or 'tight'")
 
         u_id = uuid.uuid4().int
-        self.start = Int("task_group_start_%i" % u_id)
-        self.end = Int("task_group_end_%i" % u_id)
+        self.start = Int(f"task_group_start_{u_id}")
+        self.end = Int(f"task_group_end_{u_id}")
 
         if time_interval is not None:
             scheduled_assertion = [

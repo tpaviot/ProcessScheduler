@@ -19,7 +19,6 @@ from typing import Union, List
 
 from z3 import And, Xor, Or, Not, If, Implies, BoolRef
 
-import processscheduler.context as ps_context
 from processscheduler.constraint import Constraint
 
 #

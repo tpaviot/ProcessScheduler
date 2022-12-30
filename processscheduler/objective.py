@@ -40,7 +40,7 @@ class Indicator(_NamedUIDObject):
                 "the indicator expression must be either a BoolRef or ArithRef."
             )
         self.name = name
-        self.indicator_variable = Int("Indicator_%s" % name)
+        self.indicator_variable = Int(f"Indicator_{name}")
         # by default the scheduled value is set to None
         # set by the solver
         self.scheduled_value = None

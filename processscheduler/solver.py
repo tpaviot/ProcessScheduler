@@ -301,7 +301,7 @@ class SchedulingSolver:
         # in case of a single value to optimize
         if self.is_multi_objective_optimization_problem:
             if self.optimizer == "incremental" or self.optimize_priority == "weight":
-                eq_obj, eq_ind = self.build_equivalent_weighted_objective()
+                eq_obj, _ = self.build_equivalent_weighted_objective()
                 if self.optimizer == "optimize":
                     self._solver.minimize(eq_obj.target)
             else:
@@ -496,7 +496,7 @@ class SchedulingSolver:
                         % len(unsat_core)
                     )
                     for c in unsat_core:
-                        print("\t->%s" % c)
+                        print("\t->{c}")
                 return False
 
             if sat_result == unknown:
@@ -554,9 +554,7 @@ class SchedulingSolver:
             is_sat, sat_computation_time = self.check_sat()
 
             if is_sat == unsat and current_variable_value is not None:
-                print(
-                    "\tFound optimum %i. Stopping iteration." % current_variable_value
-                )
+                print(f"\tFound optimum {current_variable_value}. Stopping iteration.")
                 break
             if is_sat == unsat:
                 print("\tNo solution found. Stopping iteration.")
@@ -579,9 +577,7 @@ class SchedulingSolver:
                     break
 
             if bound is not None and current_variable_value == bound:
-                print(
-                    "\tFound optimum %i. Stopping iteration." % current_variable_value
-                )
+                print("\tFound optimum {current_variable_value}. Stopping iteration.")
                 break
 
             # prevent the solver to start a new round if we expect it to be
