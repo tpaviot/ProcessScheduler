@@ -1,5 +1,4 @@
 # ProcessScheduler benchmark
-import sys
 import time
 from datetime import datetime
 import subprocess
@@ -8,7 +7,6 @@ import platform
 import psutil
 import uuid
 
-import matplotlib.pyplot as plt
 import processscheduler as ps
 import z3
 
