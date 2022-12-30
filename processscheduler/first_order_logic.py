@@ -89,9 +89,7 @@ def xor_(list_of_constraints: List[Union[BoolRef, Constraint]]) -> BoolRef:
     constraint_1 = list_of_constraints[0]
     constraint_2 = list_of_constraints[1]
 
-    return Xor(
-        And(_get_assertions(constraint_1)), And(_get_assertions(constraint_2))
-    )
+    return Xor(And(_get_assertions(constraint_1)), And(_get_assertions(constraint_2)))
 
 
 #

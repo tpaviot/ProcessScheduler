@@ -35,7 +35,7 @@ class WorkLoad(ResourceConstraint):
         kind: Optional[str] = "max",
         optional: Optional[bool] = False,
     ) -> None:
-        """WorkLoad constraints can be used to restrict the number tasks which are executed during a certain time period.
+        """WorkLoad constraints can be used to restrict the number of tasks which are executed during a certain time period.
         The resource can be a single Worker or a CumulativeWorker.
 
         The list of time_intervals is a dict such as:
@@ -132,13 +132,13 @@ class WorkLoad(ResourceConstraint):
 
             # workload constraint depends on the kind
             if kind == "exact":
-                wl_constrt = Sum(durations) == number_of_time_slots
+                workload_constraint = Sum(durations) == number_of_time_slots
             elif kind == "max":
-                wl_constrt = Sum(durations) <= number_of_time_slots
+                workload_constraint = Sum(durations) <= number_of_time_slots
             elif kind == "min":
-                wl_constrt = Sum(durations) >= number_of_time_slots
+                workload_constraint = Sum(durations) >= number_of_time_slots
 
-            self.set_z3_assertions(wl_constrt)
+            self.set_z3_assertions(workload_constraint)
 
 
 class ResourceUnavailable(ResourceConstraint):
@@ -148,7 +148,6 @@ class ResourceUnavailable(ResourceConstraint):
         self, resource, list_of_time_intervals, optional: Optional[bool] = False
     ) -> None:
         """
-
         :param resource: the resource
         :param list_of_intervals: periods for which the resource is unavailable for any task.
         for example [(0, 2), (5, 8)]
