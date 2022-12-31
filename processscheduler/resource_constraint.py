@@ -213,27 +213,24 @@ class ResourceTasksDistance(ResourceConstraint):
         # the space between two consecutive tasks is the sorted_start[i+1]-sorted_end[i]
         # we just have to constraint this variable
         for i in range(1, len(sorted_starts)):
-            if mode == "min":
-                asst = sorted_starts[i] - sorted_ends[i - 1] >= distance
+            if mode == "exact":
+                asst = sorted_starts[i] - sorted_ends[i - 1] == distance
             elif mode == "max":
                 asst = sorted_starts[i] - sorted_ends[i - 1] <= distance
-            elif mode == "exact":
-                asst = sorted_starts[i] - sorted_ends[i - 1] == distance
+            elif mode == "min":
+                asst = sorted_starts[i] - sorted_ends[i - 1] >= distance
             #  another set of conditions, related to the time periods
             conditions = []
             if list_of_time_intervals is not None:
-                for (
-                    lower_bound,
-                    upper_bound,
-                ) in list_of_time_intervals:
-                    conditions.append(
-                        And(
-                            sorted_starts[i] >= lower_bound,
-                            sorted_ends[i - 1] >= lower_bound,
-                            sorted_starts[i] <= upper_bound,
-                            sorted_ends[i - 1] <= upper_bound,
-                        )
+                conditions.extend(
+                    And(
+                        sorted_starts[i] >= lower_bound,
+                        sorted_ends[i - 1] >= lower_bound,
+                        sorted_starts[i] <= upper_bound,
+                        sorted_ends[i - 1] <= upper_bound,
                     )
+                    for lower_bound, upper_bound in list_of_time_intervals
+                )
             else:
                 # add the constraint only if start and ends are positive integers,
                 # that is to say they correspond to a scheduled optional task

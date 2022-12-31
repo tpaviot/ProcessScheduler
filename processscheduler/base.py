@@ -45,7 +45,7 @@ class _NamedUIDObject:
         if name != "":
             self.name = name  # type: str
         else:  # auto generate name, eg. SelectWorkers_ae34cf52
-            self.name = self.__class__.__name__ + "_%s" % uuid.uuid4().hex[:8]
+            self.name = f"{self.__class__.__name__}_{uuid.uuid4().hex[:8]}"
 
         # SMT assertions
         # start and end integer values must be positive
