@@ -61,3 +61,24 @@ jobs:
     vmImage: 'windows-2022'
     py_maj: 3
     py_min: 10
+
+- template: template.yml
+  parameters:
+    name: Ubuntu_22_04_python311
+    vmImage: 'ubuntu-22.04'
+    py_maj: 3
+    py_min: 11
+
+- template: template.yml
+  parameters:
+    name: macOS_11_python311
+    vmImage: 'macOS-11'
+    py_maj: 3
+    py_min: 11
+
+- template: template.yml
+  parameters:
+    name: Windows_VS2022_python311
+    vmImage: 'windows-2022'
+    py_maj: 3
+    py_min: 11
