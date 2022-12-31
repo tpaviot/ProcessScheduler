@@ -188,7 +188,9 @@ class SchedulingSolver:
             # quantities. For example, if a task T1 starts at 2 and unloads
             # 8, and T3 ends at 6 and loads 5 then the mapping array
             # will look like : A[2]=-8 and A[6]=5
-            buffer_mapping = Array(f"Buffer_{buffer.name}_mapping", IntSort(), IntSort())
+            buffer_mapping = Array(
+                f"Buffer_{buffer.name}_mapping", IntSort(), IntSort()
+            )
             for t in buffer.unloading_tasks:
                 self.append_z3_assertion(
                     buffer_mapping
@@ -490,8 +492,8 @@ class SchedulingSolver:
                         "\t%i unsatisfied assertion(s) (probable conflict):"
                         % len(unsat_core)
                     )
-                    for _ in unsat_core:
-                        print("\t->{c}")
+                    for cstr in unsat_core:
+                        print(f"\t->{cstr}")
                 return False
 
             if sat_result == unknown:
