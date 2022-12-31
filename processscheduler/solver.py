@@ -121,15 +121,12 @@ class SchedulingSolver:
             self._solver = Optimize()
             self._solver.set(priority=optimize_priority)
             print("\t-> Builtin z3 Optimize solver")
-        # see this url for a documentation about logics
-        # http://smtlib.cs.uiowa.edu/logics.shtml
+        elif logics is None:
+            self._solver = Solver()
+            print("\t-> Standard SAT/SMT solver")
         else:
-            if logics is None:
-                self._solver = Solver()
-                print("\t-> Standard SAT/SMT solver")
-            else:
-                self._solver = SolverFor(logics)
-                print("\t-> SMT solver using logics", logics)
+            self._solver = SolverFor(logics)
+            print("\t-> SMT solver using logics", logics)
         if debug:
             set_option(unsat_core=True)
 
@@ -191,9 +188,7 @@ class SchedulingSolver:
             # quantities. For example, if a task T1 starts at 2 and unloads
             # 8, and T3 ends at 6 and loads 5 then the mapping array
             # will look like : A[2]=-8 and A[6]=5
-            buffer_mapping = Array(
-                "Buffer_%s_mapping" % buffer.name, IntSort(), IntSort()
-            )
+            buffer_mapping = Array(f"Buffer_{buffer.name}_mapping", IntSort(), IntSort())
             for t in buffer.unloading_tasks:
                 self.append_z3_assertion(
                     buffer_mapping
@@ -264,9 +259,9 @@ class SchedulingSolver:
         if self.debug:
             if isinstance(asst, list):
                 for c in asst:
-                    self._solver.assert_and_track(c, "asst_%s" % uuid.uuid4().hex[:8])
+                    self._solver.assert_and_track(c, f"asst_{uuid.uuid4().hex[:8]}")
             else:
-                self._solver.assert_and_track(asst, "asst_%s" % uuid.uuid4().hex[:8])
+                self._solver.assert_and_track(asst, f"asst_{uuid.uuid4().hex[:8]}")
         else:
             self._solver.add(asst)
 
@@ -380,7 +375,7 @@ class SchedulingSolver:
             if task.optional:
                 # ugly hack, necessary because there's no as_bool()
                 # method for Bool objects
-                new_task_solution.scheduled = "%s" % z3_sol[task.scheduled] == "True"
+                new_task_solution.scheduled = f"{z3_sol[task.scheduled]}" == "True"
             else:
                 new_task_solution.scheduled = True
 
@@ -495,7 +490,7 @@ class SchedulingSolver:
                         "\t%i unsatisfied assertion(s) (probable conflict):"
                         % len(unsat_core)
                     )
-                    for c in unsat_core:
+                    for _ in unsat_core:
                         print("\t->{c}")
                 return False
 
@@ -571,10 +566,9 @@ class SchedulingSolver:
                 current_variable_value,
                 "elapsed time:%.3fs" % total_time,
             )
-            if self.max_time != "inf":
-                if total_time > self.max_time:
-                    warnings.warn("max time exceeded")
-                    break
+            if self.max_time != "inf" and total_time > self.max_time:
+                warnings.warn("max time exceeded")
+                break
 
             if bound is not None and current_variable_value == bound:
                 print(f"\tFound optimum {current_variable_value}. Stopping iteration.")
@@ -592,10 +586,9 @@ class SchedulingSolver:
                 # Compute the expected value
                 a, b, c = calc_parabola_from_two_points([0, 1, 2], three_last_times)
                 expected_next_time = a * 9 + 3 * b + c
-                if self.max_time != "inf":
-                    if expected_next_time > self.max_time:
-                        warnings.warn("time may exceed max time. Stopping iteration.")
-                        break
+                if self.max_time != "inf" and expected_next_time > self.max_time:
+                    warnings.warn("time may exceed max time. Stopping iteration.")
+                    break
             self._solver.push()
             if kind == "min":
                 self.append_z3_assertion(variable < current_variable_value)

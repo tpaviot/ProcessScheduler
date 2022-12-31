@@ -28,18 +28,16 @@ import processscheduler.context as ps_context
 def _distribute_p_over_n(p, n):
     """Returns a list of integer p distributed over n values."""
     if p is None:
-        return [p for i in range(n)]
+        return [p for _ in range(n)]
     if isinstance(p, int):
         int_div = p // n
         to_return = [int_div + p % n]
-        for _ in range(n - 1):
-            to_return.append(int_div)
+        to_return.extend(int_div for _ in range(n - 1))
         return to_return
     if isinstance(p, ConstantCostPerPeriod):
         int_div = p.value // n
         to_return = [ConstantCostPerPeriod(int_div + p.value % n)]
-        for _ in range(n - 1):
-            to_return.append(ConstantCostPerPeriod(int_div))
+        to_return.extend(ConstantCostPerPeriod(int_div) for _ in range(n - 1))
         return to_return
     raise AssertionError("wrong type for parameter p")
 

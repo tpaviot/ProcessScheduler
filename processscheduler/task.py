@@ -274,9 +274,7 @@ class VariableDurationTask(Task):
 
         # allowed durations and min/max are exclusive
         if is_list_of_positive_integers(allowed_durations):
-            all_cstr = []
-            for duration in allowed_durations:
-                all_cstr.append(self.duration == duration)
+            all_cstr = [self.duration == duration for duration in allowed_durations]
             self.append_z3_assertion(Or(all_cstr))
         else:
             if is_positive_integer(max_duration):

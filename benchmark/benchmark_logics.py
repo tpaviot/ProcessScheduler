@@ -137,8 +137,7 @@ for logics in all_logics:
         parallel=False,
         max_time=10,
     )
-    solution = solver.solve()
-    if solution:
+    if solution := solver.solve():
         flowtime_result = solution.indicators["FlowTime"]
         priority_result = solution.indicators["PriorityTotal"]
     else:
