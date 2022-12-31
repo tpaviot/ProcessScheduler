@@ -72,12 +72,7 @@ class WorkLoad(ResourceConstraint):
                     # this variable allows to compute the occupation
                     # of the resource during the time interval
                     dur = Int(
-                        "Overlap_%i_%i_%s"
-                        % (
-                            time_interval_lower_bound,
-                            time_interval_upper_bound,
-                            uuid.uuid4().hex[:8],
-                        )
+                        f"Overlap_{time_interval_lower_bound}_{time_interval_upper_bound}_{uuid.uuid4().hex[:8]}"
                     )
                     # prevent solutions where duration would be negative
                     self.set_z3_assertions(dur >= 0)

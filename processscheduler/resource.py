@@ -41,6 +41,7 @@ def _distribute_p_over_n(p, n):
         for _ in range(n - 1):
             to_return.append(ConstantCostPerPeriod(int_div))
         return to_return
+    raise AssertionError("wrong type for parameter p")
 
 
 #

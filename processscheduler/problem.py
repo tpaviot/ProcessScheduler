@@ -89,7 +89,7 @@ class SchedulingProblem(_NamedUIDObject):
 
         nb_tasks_assigned_indicator_variable = Sum(scheduled_tasks)
         return Indicator(
-            "Nb Tasks Assigned (%s)" % resource.name,
+            f"Nb Tasks Assigned ({resource.name})",
             nb_tasks_assigned_indicator_variable,
         )
 
@@ -135,7 +135,7 @@ class SchedulingProblem(_NamedUIDObject):
         resource_names = ",".join([resource.name for resource in list_of_resources])
         cost_indicator_variable = Sum(constant_costs) + Sum(variable_costs) / 2
         cost_indicator = Indicator(
-            "Total Cost (%s)" % resource_names, cost_indicator_variable
+            f"Total Cost ({resource_names})", cost_indicator_variable
         )
         return cost_indicator
 
@@ -152,9 +152,7 @@ class SchedulingProblem(_NamedUIDObject):
             utilization = Sum(durations) * int(100 / self.horizon_defined_value)
         else:
             utilization = (Sum(durations) * 100) / self.horizon  # in percentage
-        return Indicator(
-            "Utilization (%s)" % resource.name, utilization, bounds=(0, 100)
-        )
+        return Indicator(f"Utilization ({resource.name})", utilization, bounds=(0, 100))
 
     def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:
         """Maximize indicator"""
@@ -258,15 +256,13 @@ class SchedulingProblem(_NamedUIDObject):
         uid = uuid.uuid4().hex
         # for this resource, we look for the minimal starting time of scheduled tasks
         # as well as the maximum
-        flowtime = Int("FlowtimeSingleResource%s_%s" % (resource.name, uid))
+        flowtime = Int(f"FlowtimeSingleResource{resource.name}_{uid}")
 
         flowtime_single_resource_indicator = Indicator(
-            "FlowTime(%s:%i:%s)" % (resource.name, lower_bound, upper_bound), flowtime
+            f"FlowTime({resource.name}:{lower_bound}:{upper_bound})", flowtime
         )
         # find the max end time in the time_interval
-        maxi = Int(
-            "GreatestTaskEndTimeInTimePeriodForResource%s_%s" % (resource.name, uid)
-        )
+        maxi = Int(f"GreatestTaskEndTimeInTimePeriodForResource{resource.name}_{uid}")
 
         asst_max = [
             Implies(
@@ -285,9 +281,7 @@ class SchedulingProblem(_NamedUIDObject):
             )
 
         # and the mini
-        mini = Int(
-            "SmallestTaskEndTimeInTimePeriodForResource%s_%s" % (resource.name, uid)
-        )
+        mini = Int(f"SmallestTaskEndTimeInTimePeriodForResource{resource.name}_{uid}")
 
         asst_min = [
             Implies(

@@ -577,7 +577,7 @@ class SchedulingSolver:
                     break
 
             if bound is not None and current_variable_value == bound:
-                print("\tFound optimum {current_variable_value}. Stopping iteration.")
+                print(f"\tFound optimum {current_variable_value}. Stopping iteration.")
                 break
 
             # prevent the solver to start a new round if we expect it to be
@@ -599,12 +599,12 @@ class SchedulingSolver:
             self._solver.push()
             if kind == "min":
                 self.append_z3_assertion(variable < current_variable_value)
-                print("\tChecking better value <%s" % current_variable_value)
+                print(f"\tChecking better value < {current_variable_value}")
             else:
                 self.append_z3_assertion(variable > current_variable_value)
-                print("\tChecking better value >%s" % current_variable_value)
+                print(f"\tChecking better value > {current_variable_value}")
 
-        print("\ttotal number of iterations: %i" % depth)
+        print(f"\ttotal number of iterations: {depth}")
         if current_variable_value is not None:
             print("\tvalue: %i" % current_variable_value)
         print("\t%s satisfiability checked in %.2fs" % (self.problem.name, total_time))
@@ -621,7 +621,7 @@ class SchedulingSolver:
         """A utility method that displays solver statistics"""
         print("Solver satistics:")
         for key, value in self._solver.statistics():
-            print("\t%s: %s" % (key, value))
+            print(f"\t{key}: {value}")
 
     def print_solution(self):
         """A utility method that displays all internal variables for the current solution"""
@@ -629,7 +629,7 @@ class SchedulingSolver:
         for decl in self.current_solution.decls():
             var_name = decl.name()
             var_value = self.current_solution[decl]
-            print("\t-> %s=%s" % (var_name, var_value))
+            print(f"\t-> {var_name}={var_value}")
 
     def find_another_solution(self, variable: ArithRef) -> bool:
         """let the solver find another solution for the variable"""
@@ -642,5 +642,5 @@ class SchedulingSolver:
 
     def export_to_smt2(self, smt_filename: str):
         """export the model to a smt file to be processed by another SMT solver"""
-        with open(smt_filename, "w") as outfile:
+        with open(smt_filename, "w", encoding="utf-8") as outfile:
             outfile.write(self._solver.to_smt2())

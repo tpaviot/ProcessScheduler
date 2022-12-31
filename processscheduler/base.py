@@ -60,12 +60,10 @@ class _NamedUIDObject:
 
     def __repr__(self) -> str:
         """Print the object name, its uid and the assertions."""
-        str_to_return = "%s(%s)\n%i assertion(s):\n" % (
-            self.name,
-            type(self),
-            len(self.z3_assertions),
+        str_to_return = (
+            f"{self.name}({type(self)})\n{len(self.z3_assertions)} assertion(s):\n"
         )
-        assertions_str = "".join("%s" % ass for ass in self.z3_assertions)
+        assertions_str = "".join(f"{assertion}" for assertion in self.z3_assertions)
         return str_to_return + assertions_str
 
     def append_z3_assertion(self, z3_assertion: BoolRef) -> bool:
@@ -80,8 +78,7 @@ class _NamedUIDObject:
         assertion_hash = hash(z3_assertion)
         if assertion_hash in self.z3_assertion_hashes:
             raise AssertionError(
-                "assertion %s already added. Please report this bug at https://github.com/tpaviot/ProcessScheduler/issues"
-                % z3_assertion
+                f"assertion {z3_assertion} already added. Please report this bug at https://github.com/tpaviot/ProcessScheduler/issues"
             )
         self.z3_assertions.append(z3_assertion)
         self.z3_assertion_hashes.append(assertion_hash)

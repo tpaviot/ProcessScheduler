@@ -45,9 +45,9 @@ class Task(_NamedUIDObject):
         self.required_resources_names = []  # type: List[str]
 
         # z3 Int variables
-        self.start = Int("%s_start" % name)  # type: ArithRef
-        self.end = Int("%s_end" % name)  # type: ArithRef
-        self.duration = Int("%s_duration" % name)  # type: ArithRef
+        self.start = Int(f"{name}_start")  # type: ArithRef
+        self.end = Int(f"{name}_end")  # type: ArithRef
+        self.duration = Int(f"{name}_duration")  # type: ArithRef
 
         # by default, the task is mandatory
         self.scheduled = True  # type: Union[bool, BoolRef]
@@ -90,8 +90,7 @@ class Task(_NamedUIDObject):
 
         if resource in self.required_resources:
             raise ValueError(
-                "resource %s already defined as a required resource for task %s"
-                % (resource.name, self.name)
+                f"resource {resource.name} already defined as a required resource for task {self.name}"
             )
 
         # store the resource name
@@ -105,10 +104,10 @@ class Task(_NamedUIDObject):
             # loop over each resource
             for worker in resource.list_of_workers:
                 resource_maybe_busy_start = Int(
-                    "%s_maybe_busy_%s_start" % (worker.name, self.name)
+                    f"{worker.name}_maybe_busy_{self.name}_start"
                 )
                 resource_maybe_busy_end = Int(
-                    "%s_maybe_busy_%s_end" % (worker.name, self.name)
+                    f"{worker.name}_maybe_busy_{self.name}_end"
                 )
                 # create the busy interval for the resource
                 worker.add_busy_interval(
@@ -140,8 +139,8 @@ class Task(_NamedUIDObject):
             # also, don't forget to add the AlternativeWorker assertion
             self.append_z3_assertion(resource.selection_assertion)
         elif isinstance(resource, Worker):
-            resource_busy_start = Int("%s_busy_%s_start" % (resource.name, self.name))
-            resource_busy_end = Int("%s_busy_%s_end" % (resource.name, self.name))
+            resource_busy_start = Int(f"{resource.name}_busy_{self.name}_start")
+            resource_busy_end = Int(f"{resource.name}_busy_{self.name}_end")
             # create the busy interval for the resource
             resource.add_busy_interval(self, (resource_busy_start, resource_busy_end))
             # set the busy resource to keep synced with the task
@@ -174,7 +173,7 @@ class Task(_NamedUIDObject):
         """Take a list of constraint to satisfy. Create two cases: if the task is scheduled,
         nothing is done; if the task is optional, move task to the past"""
         if self.optional:  # in this case the previous assertions maybe skipped
-            self.scheduled = Bool("%s_scheduled" % self.name)
+            self.scheduled = Bool(f"{self.name}_scheduled")
             # the first task is moved to -1, the second to -2
             # etc.
             point_in_past = -self.task_number
