@@ -26,7 +26,7 @@ class TestResourceTasksDistance(unittest.TestCase):
         with self.assertRaises(AssertionError):
             ps.ResourceTasksDistance(worker, 0, [(0, 5)])
 
-    def test_resource_tasks_distance_raise_1(self) -> None:
+    def test_resource_tasks_distance_raise_2(self) -> None:
         # if only one task is assigned to the worker, a issue is raised
         ps.SchedulingProblem("ResourceTasksDistanceOneTaskRaiseAssertionError")
         worker = ps.Worker("worker")

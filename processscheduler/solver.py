@@ -121,15 +121,12 @@ class SchedulingSolver:
             self._solver = Optimize()
             self._solver.set(priority=optimize_priority)
             print("\t-> Builtin z3 Optimize solver")
-        # see this url for a documentation about logics
-        # http://smtlib.cs.uiowa.edu/logics.shtml
+        elif logics is None:
+            self._solver = Solver()
+            print("\t-> Standard SAT/SMT solver")
         else:
-            if logics is None:
-                self._solver = Solver()
-                print("\t-> Standard SAT/SMT solver")
-            else:
-                self._solver = SolverFor(logics)
-                print("\t-> SMT solver using logics", logics)
+            self._solver = SolverFor(logics)
+            print("\t-> SMT solver using logics", logics)
         if debug:
             set_option(unsat_core=True)
 
@@ -192,7 +189,7 @@ class SchedulingSolver:
             # 8, and T3 ends at 6 and loads 5 then the mapping array
             # will look like : A[2]=-8 and A[6]=5
             buffer_mapping = Array(
-                "Buffer_%s_mapping" % buffer.name, IntSort(), IntSort()
+                f"Buffer_{buffer.name}_mapping", IntSort(), IntSort()
             )
             for t in buffer.unloading_tasks:
                 self.append_z3_assertion(
@@ -264,9 +261,9 @@ class SchedulingSolver:
         if self.debug:
             if isinstance(asst, list):
                 for c in asst:
-                    self._solver.assert_and_track(c, "asst_%s" % uuid.uuid4().hex[:8])
+                    self._solver.assert_and_track(c, f"asst_{uuid.uuid4().hex[:8]}")
             else:
-                self._solver.assert_and_track(asst, "asst_%s" % uuid.uuid4().hex[:8])
+                self._solver.assert_and_track(asst, f"asst_{uuid.uuid4().hex[:8]}")
         else:
             self._solver.add(asst)
 
@@ -301,7 +298,7 @@ class SchedulingSolver:
         # in case of a single value to optimize
         if self.is_multi_objective_optimization_problem:
             if self.optimizer == "incremental" or self.optimize_priority == "weight":
-                eq_obj, eq_ind = self.build_equivalent_weighted_objective()
+                eq_obj, _ = self.build_equivalent_weighted_objective()
                 if self.optimizer == "optimize":
                     self._solver.minimize(eq_obj.target)
             else:
@@ -380,7 +377,7 @@ class SchedulingSolver:
             if task.optional:
                 # ugly hack, necessary because there's no as_bool()
                 # method for Bool objects
-                new_task_solution.scheduled = "%s" % z3_sol[task.scheduled] == "True"
+                new_task_solution.scheduled = f"{z3_sol[task.scheduled]}" == "True"
             else:
                 new_task_solution.scheduled = True
 
@@ -495,8 +492,8 @@ class SchedulingSolver:
                         "\t%i unsatisfied assertion(s) (probable conflict):"
                         % len(unsat_core)
                     )
-                    for c in unsat_core:
-                        print("\t->%s" % c)
+                    for cstr in unsat_core:
+                        print(f"\t->{cstr}")
                 return False
 
             if sat_result == unknown:
@@ -554,9 +551,7 @@ class SchedulingSolver:
             is_sat, sat_computation_time = self.check_sat()
 
             if is_sat == unsat and current_variable_value is not None:
-                print(
-                    "\tFound optimum %i. Stopping iteration." % current_variable_value
-                )
+                print(f"\tFound optimum {current_variable_value}. Stopping iteration.")
                 break
             if is_sat == unsat:
                 print("\tNo solution found. Stopping iteration.")
@@ -573,15 +568,12 @@ class SchedulingSolver:
                 current_variable_value,
                 "elapsed time:%.3fs" % total_time,
             )
-            if self.max_time != "inf":
-                if total_time > self.max_time:
-                    warnings.warn("max time exceeded")
-                    break
+            if self.max_time != "inf" and total_time > self.max_time:
+                warnings.warn("max time exceeded")
+                break
 
             if bound is not None and current_variable_value == bound:
-                print(
-                    "\tFound optimum %i. Stopping iteration." % current_variable_value
-                )
+                print(f"\tFound optimum {current_variable_value}. Stopping iteration.")
                 break
 
             # prevent the solver to start a new round if we expect it to be
@@ -596,19 +588,18 @@ class SchedulingSolver:
                 # Compute the expected value
                 a, b, c = calc_parabola_from_two_points([0, 1, 2], three_last_times)
                 expected_next_time = a * 9 + 3 * b + c
-                if self.max_time != "inf":
-                    if expected_next_time > self.max_time:
-                        warnings.warn("time may exceed max time. Stopping iteration.")
-                        break
+                if self.max_time != "inf" and expected_next_time > self.max_time:
+                    warnings.warn("time may exceed max time. Stopping iteration.")
+                    break
             self._solver.push()
             if kind == "min":
                 self.append_z3_assertion(variable < current_variable_value)
-                print("\tChecking better value <%s" % current_variable_value)
+                print(f"\tChecking better value < {current_variable_value}")
             else:
                 self.append_z3_assertion(variable > current_variable_value)
-                print("\tChecking better value >%s" % current_variable_value)
+                print(f"\tChecking better value > {current_variable_value}")
 
-        print("\ttotal number of iterations: %i" % depth)
+        print(f"\ttotal number of iterations: {depth}")
         if current_variable_value is not None:
             print("\tvalue: %i" % current_variable_value)
         print("\t%s satisfiability checked in %.2fs" % (self.problem.name, total_time))
@@ -625,7 +616,7 @@ class SchedulingSolver:
         """A utility method that displays solver statistics"""
         print("Solver satistics:")
         for key, value in self._solver.statistics():
-            print("\t%s: %s" % (key, value))
+            print(f"\t{key}: {value}")
 
     def print_solution(self):
         """A utility method that displays all internal variables for the current solution"""
@@ -633,7 +624,7 @@ class SchedulingSolver:
         for decl in self.current_solution.decls():
             var_name = decl.name()
             var_value = self.current_solution[decl]
-            print("\t-> %s=%s" % (var_name, var_value))
+            print(f"\t-> {var_name}={var_value}")
 
     def find_another_solution(self, variable: ArithRef) -> bool:
         """let the solver find another solution for the variable"""
@@ -646,5 +637,5 @@ class SchedulingSolver:
 
     def export_to_smt2(self, smt_filename: str):
         """export the model to a smt file to be processed by another SMT solver"""
-        with open(smt_filename, "w") as outfile:
+        with open(smt_filename, "w", encoding="utf-8") as outfile:
             outfile.write(self._solver.to_smt2())

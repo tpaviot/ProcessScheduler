@@ -28,13 +28,13 @@ class _Cost(_NamedUIDObject):
         """Plot the cost curve using matplotlib."""
         try:
             import matplotlib.pyplot as plt
-        except ImportError:
-            raise ModuleNotFoundError("matplotlib is not installed.")
+        except ImportError as exc:
+            raise ModuleNotFoundError("matplotlib is not installed.") from exc
 
         try:
             import numpy as np
-        except ImportError:
-            raise ModuleNotFoundError("numpy is not installed.")
+        except ImportError as exc:
+            raise ModuleNotFoundError("numpy is not installed.") from exc
 
         lower_bound, upper_bound = interval
         x = np.linspace(lower_bound, upper_bound, 1000)

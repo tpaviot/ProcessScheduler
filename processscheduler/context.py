@@ -62,14 +62,14 @@ class SchedulingContext:
         if indicator not in self.indicators:
             self.indicators.append(indicator)
         else:
-            warnings.warn("indicator %s already part of the problem" % indicator)
+            warnings.warn(f"indicator {indicator} already part of the problem")
             return False
         return True
 
     def add_task(self, task: "Task") -> int:
         """Add a single task to the problem. There must not be two tasks with the same name"""
         if task.name in [t.name for t in self.tasks]:
-            raise ValueError("a task with the name %s already exists." % task.name)
+            raise ValueError(f"a task with the name {task.name} already exists.")
         self.tasks.append(task)
         return len(self.tasks)
 
@@ -77,7 +77,7 @@ class SchedulingContext:
         """Add a single resource to the problem"""
         if resource.name in [t.name for t in self.resources]:
             raise ValueError(
-                "a resource with the name %s already exists." % resource.name
+                f"a resource with the name {resource.name} already exists."
             )
         self.resources.append(resource)
 
@@ -89,7 +89,7 @@ class SchedulingContext:
         """Add a single resource to the problem"""
         if resource.name in [t.name for t in self.select_workers]:
             raise ValueError(
-                "a resource with the name %s already exists." % resource.name
+                f"a resource with the name {resource.name} already exists."
             )
         self.cumulative_workers.append(resource)
 
@@ -118,7 +118,7 @@ class SchedulingContext:
     def add_buffer(self, buffer: "Buffer") -> None:
         """Add a single task to the problem. There must not be two tasks with the same name"""
         if buffer.name in [b.name for b in self.buffers]:
-            raise ValueError("a buffer with the name %s already exists." % buffer.name)
+            raise ValueError(f"a buffer with the name {buffer.name} already exists.")
         self.buffers.append(buffer)
 
 

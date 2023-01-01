@@ -1,5 +1,4 @@
 # ProcessScheduler benchmark
-import sys
 import time
 from datetime import datetime
 import subprocess
@@ -8,7 +7,6 @@ import platform
 import psutil
 import uuid
 
-import matplotlib.pyplot as plt
 import processscheduler as ps
 import z3
 
@@ -139,8 +137,7 @@ for logics in all_logics:
         parallel=False,
         max_time=10,
     )
-    solution = solver.solve()
-    if solution:
+    if solution := solver.solve():
         flowtime_result = solution.indicators["FlowTime"]
         priority_result = solution.indicators["PriorityTotal"]
     else:

@@ -103,7 +103,7 @@ class SchedulingSolution:
         return solution_to_json_string(self)
 
     def export_to_json_file(self, json_filename):
-        with open(json_filename, "w") as outfile:
+        with open(json_filename, "w", encoding="utf-8") as outfile:
             outfile.write(self.to_json_string())
 
     def add_indicator_solution(self, indicator_name: str, indicator_value: int) -> None:
@@ -136,8 +136,8 @@ class SchedulingSolution:
         """
         try:
             from plotly.figure_factory import create_gantt
-        except ImportError:
-            raise ModuleNotFoundError("plotly is not installed.")
+        except ImportError as exc:
+            raise ModuleNotFoundError("plotly is not installed.") from exc
 
         if render_mode not in ["Task", "Resource"]:
             raise ValueError("data_type must be either Task or Resource")
@@ -164,16 +164,15 @@ class SchedulingSolution:
                 )
             )
 
-        gantt_title = "%s Gantt chart" % self.problem.name
+        gantt_title = f"{self.problem.name} Gantt chart"
         # add indicators value to title
         if self.indicators and show_indicators:
             for indicator_name in self.indicators:
-                gantt_title += " - %s: %i" % (
-                    indicator_name,
-                    self.indicators[indicator_name],
-                )
+                gantt_title += f" - {indicator_name}: {self.indicators[indicator_name]}"
 
-        r = lambda: random.randint(0, 255)
+        def r():
+            return random.randint(0, 255)
+
         colors = ["#%02X%02X%02X" % (r(), r(), r()) for _ in df]
         if sort is not None:
             if sort in ["Task", "Resource"]:
@@ -221,7 +220,7 @@ class SchedulingSolution:
 
         if html_filename is not None:
             file = Path(html_filename)
-            file.write_text(fig.to_html(include_plotlyjs="cdn"))
+            file.write_text(fig.to_html(include_plotlyjs="cdn"), encoding="utf-8")
 
         if show_plot:
             fig.show()
@@ -242,8 +241,8 @@ class SchedulingSolution:
             import matplotlib.pyplot as plt
             import numpy as np
             from matplotlib.colors import LinearSegmentedColormap
-        except ImportError:
-            raise ModuleNotFoundError("matplotlib is not installed.")
+        except ImportError as exc:
+            raise ModuleNotFoundError("matplotlib is not installed.") from exc
 
         if not self.resources:
             render_mode = "Task"
@@ -259,12 +258,12 @@ class SchedulingSolution:
 
         # render mode is Resource by default, can be set to 'Task'
         if render_mode == "Resource":
-            plot_title = "Resources schedule - %s" % self.problem_name
+            plot_title = f"Resources schedule - {self.problem_name}"
             plot_ylabel = "Resources"
             plot_ticklabels = list(self.resources.keys())
             nbr_y_values = len(self.resources)
         elif render_mode == "Task":
-            plot_title = "Task schedule - %s" % self.problem_name
+            plot_title = f"Task schedule - {self.problem_name}"
             plot_ylabel = "Tasks"
             plot_ticklabels = list(tasks_to_render.keys())
             nbr_y_values = len(tasks_to_render)
@@ -288,8 +287,7 @@ class SchedulingSolution:
                     times_str.append(t.strftime("%H:%M"))
             else:
                 times_str = [
-                    "%s" % (i * self.problem.delta_time)
-                    for i in range(self.horizon + 1)
+                    f"{i * self.problem.delta_time}" for i in range(self.horizon + 1)
                 ]
             gantt_chart.set_xlim(0, self.horizon)
             plt.xticks(range(self.horizon + 1), times_str, rotation=60)
@@ -300,7 +298,7 @@ class SchedulingSolution:
             gantt_chart.set_xlim(0, self.horizon)
             gantt_chart.set_xticks(range(self.horizon + 1))
             # Setting label
-            gantt_chart.set_xlabel("Time (%i periods)" % self.horizon, fontsize=12)
+            gantt_chart.set_xlabel(f"Time ({self.horizon} periods)", fontsize=12)
 
         gantt_chart.set_ylabel(plot_ylabel, fontsize=12)
 
@@ -381,7 +379,7 @@ class SchedulingSolution:
                     [],
                     [],
                     " ",
-                    label="%s: %i" % (indicator_name, self.indicators[indicator_name]),
+                    label=f"{indicator_name}: {self.indicators[indicator_name]}",
                 )
             gantt_chart.legend(
                 title="Indicators", title_fontsize="large", framealpha=0.5
@@ -407,7 +405,7 @@ class SchedulingSolution:
                     Y += [y, y, np.nan]
                     i += 1
 
-                plt.plot(X, Y, linewidth=2, label="%s" % buffer.name)
+                plt.plot(X, Y, linewidth=2, label=f"{buffer.name}")
             buffer_chart.legend()
         if fig_filename is not None:
             plt.savefig(fig_filename)
