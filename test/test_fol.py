@@ -34,6 +34,39 @@ class TestFirstOrderLogic(unittest.TestCase):
         self.assertTrue(solution)
         self.assertEqual(solution.tasks["t1"].start, 1)
 
+    def test_operator_not_2(self):
+        problem = ps.SchedulingProblem("OperatorNot2", horizon=4)
+        # only one task, the solver should schedule a start time at 0
+        task_1 = ps.FixedDurationTask("task1", duration=2)
+
+        not_constraint_1 = ps.not_(ps.TaskStartAt(task_1, 0))
+        not_constraint_2 = ps.not_(ps.TaskStartAt(task_1, 1))
+        problem.add_constraint(not_constraint_1)
+        problem.add_constraint(not_constraint_2)
+        solution = ps.SchedulingSolver(problem).solve()
+        self.assertTrue(solution)
+        # check that the task is not scheduled to start at 0 or 1
+        # the only solution is 2
+        self.assertTrue(solution.tasks[task_1.name].start == 2)
+
+    def test_operator_not_and_1(self):
+        problem = ps.SchedulingProblem("OperatorNotAnd1", horizon=6)
+        # only one task, the solver should schedule a start time at 0
+        task_1 = ps.FixedDurationTask("task1", duration=2)
+        fol_1 = ps.and_(
+            [
+                ps.not_(ps.TaskStartAt(task_1, 0)),
+                ps.not_(ps.TaskStartAt(task_1, 1)),
+                ps.not_(ps.TaskStartAt(task_1, 2)),
+                ps.not_(ps.TaskStartAt(task_1, 3)),
+            ]
+        )
+        problem.add_constraint(fol_1)
+        solution = ps.SchedulingSolver(problem).solve()
+        self.assertTrue(solution)
+        # the only solution is to start at 4
+        self.assertTrue(solution.tasks[task_1.name].start == 4)
+
     def test_operator_or_1(self) -> None:
         pb = ps.SchedulingProblem("OperatorOr1", horizon=8)
         t_1 = ps.FixedDurationTask("t1", duration=2)
@@ -127,8 +160,22 @@ class TestFirstOrderLogic(unittest.TestCase):
     #
     # Implies
     #
-    def test_implies(self) -> None:
-        pb = ps.SchedulingProblem("Implies1", horizon=37)
+    def test_implies_1(self):
+        problem = ps.SchedulingProblem("Implies1", horizon=6)
+        # only one task, the solver should schedule a start time at 0
+        task_1 = ps.FixedDurationTask("task1", duration=2)
+        task_2 = ps.FixedDurationTask("task2", duration=2)
+        ps.TaskStartAt(task_1, 1)
+        fol_1 = ps.implies(task_1.start == 1, [ps.TaskStartAt(task_2, 4)])
+        problem.add_constraint(fol_1)
+        solution = ps.SchedulingSolver(problem).solve()
+        self.assertTrue(solution)
+        # the only solution is to start at 2
+        self.assertTrue(solution.tasks[task_1.name].start == 1)
+        self.assertTrue(solution.tasks[task_2.name].start == 4)
+
+    def test_implies_2(self) -> None:
+        pb = ps.SchedulingProblem("Implies2", horizon=37)
         t_1 = ps.FixedDurationTask("t1", 2)
         t_2 = ps.FixedDurationTask("t2", 4)
         t_3 = ps.FixedDurationTask("t3", 7)
@@ -151,7 +198,7 @@ class TestFirstOrderLogic(unittest.TestCase):
     #
     # If/Then/Else
     #
-    def test_if_then_else(self) -> None:
+    def test_if_then_else_1(self) -> None:
         pb = ps.SchedulingProblem("IfThenElse1", horizon=29)
         t_1 = ps.FixedDurationTask("t1", 3)
         t_2 = ps.FixedDurationTask("t2", 3)
@@ -171,6 +218,27 @@ class TestFirstOrderLogic(unittest.TestCase):
         self.assertTrue(solution)
         self.assertEqual(solution.tasks["t1"].start, 2)
         self.assertEqual(solution.tasks["t2"].start, 6)
+
+    #
+    # If then else
+    #
+    def test_if_then_else_2(self):
+        pb = ps.SchedulingProblem("IfThenElse2", horizon=6)
+        # only one task, the solver should schedule a start time at 0
+        task_1 = ps.FixedDurationTask("task1", duration=2)
+        task_2 = ps.FixedDurationTask("task2", duration=2)
+        ps.TaskStartAt(task_1, 1)
+        fol_1 = ps.if_then_else(
+            task_1.start == 0,  # this condition is False
+            [ps.TaskStartAt(task_2, 4)],  # assertion not set
+            [ps.TaskStartAt(task_2, 2)],
+        )
+        pb.add_constraint(fol_1)
+        solution = ps.SchedulingSolver(pb).solve()
+        self.assertTrue(solution)
+        # the only solution is to start at 2
+        self.assertTrue(solution.tasks[task_1.name].start == 1)
+        self.assertTrue(solution.tasks[task_2.name].start == 2)
 
 
 if __name__ == "__main__":
