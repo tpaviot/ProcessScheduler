@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-import os
 import unittest
 
 import processscheduler as ps
@@ -28,19 +27,19 @@ def build_complex_problem(name: str, n: int) -> ps.SchedulingProblem:
     nb_workers = 4 * n
 
     mandatory_tasks = [
-        ps.FixedDurationTask("mand_task%i" % i, duration=i % 8 + 1)
+        ps.FixedDurationTask(f"mand_task{i}", duration=i % 8 + 1)
         for i in range(nb_mandatory_tasks)
     ]
 
     # n/10 optional tasks
     optional_tasks = [
-        ps.FixedDurationTask("opt_task%i" % i, duration=i % 8 + 1, optional=True)
+        ps.FixedDurationTask(f"opt_task{i}", duration=i % 8 + 1, optional=True)
         for i in range(nb_optional_tasks)
     ]
 
     all_tasks = mandatory_tasks + optional_tasks
 
-    workers = [ps.Worker("task%i" % i) for i in range(nb_workers)]
+    workers = [ps.Worker(f"task{i}") for i in range(nb_workers)]
 
     # for each task, add three single required workers
     for i, task in enumerate(all_tasks):
@@ -375,30 +374,6 @@ class TestSolver(unittest.TestCase):
         task_1.add_required_resources([worker_1, worker_2])
         # solve
         self.assertTrue(_solve_problem(problem))
-
-    #
-    # Import/export
-    #
-    def test_export_to_smt2(self):
-        problem = build_complex_problem("SolveExportToSMT2", 50)
-        solver = ps.SchedulingSolver(problem)
-        solution = _solve_problem(problem)
-        self.assertTrue(solution)
-        solver.export_to_smt2("complex_problem.smt2")
-        self.assertTrue(os.path.isfile("complex_problem.smt2"))
-
-    def test_export_solution_to_json_string(self):
-        problem = build_complex_problem("SolutionExportToJson", 50)
-        solution = _solve_problem(problem)
-        self.assertTrue(solution)
-        solution.to_json_string()
-
-    def test_export_solution_to_json_file(self):
-        problem = build_complex_problem("SolutionExportToJson", 20)
-        solution = _solve_problem(problem)
-        self.assertTrue(solution)
-        solution.export_to_json_file("solution.json")
-        self.assertTrue(os.path.isfile("solution.json"))
 
     #
     # Resource constraints

@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+from binascii import crc32
 from pathlib import Path
 import random
 from typing import List, Optional, Tuple
@@ -98,14 +99,6 @@ class SchedulingSolution:
             if tasks_not_unavailable[task].scheduled
         }
 
-    def to_json_string(self) -> str:
-        """Export the solution to a json string."""
-        return solution_to_json_string(self)
-
-    def export_to_json_file(self, json_filename):
-        with open(json_filename, "w", encoding="utf-8") as outfile:
-            outfile.write(self.to_json_string())
-
     def add_indicator_solution(self, indicator_name: str, indicator_value: int) -> None:
         """Add indicator solution."""
         self.indicators[indicator_name] = indicator_value
@@ -121,6 +114,9 @@ class SchedulingSolution:
     def add_buffer_solution(self, buffer_solution: BufferSolution) -> None:
         self.buffers[buffer_solution.name] = buffer_solution
 
+    #
+    # Gantt graphical rendering using plotly and matplotlib
+    #
     def render_gantt_plotly(
         self,
         fig_size: Optional[Tuple[int, int]] = None,
@@ -412,3 +408,82 @@ class SchedulingSolution:
 
         if show_plot:
             plt.show()
+
+    #
+    # File export
+    #
+    def to_json_string(self) -> str:
+        """Export the solution to a json string."""
+        return solution_to_json_string(self)
+
+    def export_to_json_file(self, json_filename):
+        with open(json_filename, "w", encoding="utf-8") as outfile:
+            outfile.write(self.to_json_string())
+
+    def export_to_excel(self, excel_filename):
+        try:
+            import xlsxwriter
+        except ImportError as exc:
+            raise ModuleNotFoundError("XlsxWriter is not installed.") from exc
+
+        # create a workbook and add worksheet
+        workbook = xlsxwriter.Workbook(excel_filename)
+        worksheet = workbook.add_worksheet("GANTT Resource view")
+
+        # widen the first column to make the text clearer.
+        worksheet.set_column("A:A", 20)
+        # shorten following columns
+        worksheet.set_column("B:EC", 4)
+        # Add a bold format to use to highlight cells.
+        bold = workbook.add_format({"bold": True})
+        worksheet.write("A1", "Resources", bold)  # {'bold': True})
+        # on fixe la première colonne et la première ligne
+        worksheet.freeze_panes(1, 1)
+
+        cell_resource_name_format = workbook.add_format({"align": "left"})
+        cell_resource_name_format.set_font_size(12)
+
+        # then loop over resources
+        for i, resource_name in enumerate(self.resources):
+            # write the resource name on the first column
+            worksheet.write(i + 1, 0, resource_name, cell_resource_name_format)
+
+            # get the related resource object
+            ress = self.resources[resource_name]
+
+            for task_name, task_start, task_end in ress.assignments:
+                # unavailabilities are rendered with a grey dashed bar
+                if "NotAvailable" in task_name:
+                    hatch = "//"
+                    bar_color = "white"
+                    text_to_display = ""
+                else:
+                    hatch = None
+                    # bar_color = task_colors[task_name]
+                    text_to_display = task_name
+
+                # the color is computed from the task name
+                hash_str = "%s" % crc32(task_name.encode("utf-8"))
+                hash_color = "#%s" % hash_str[2:8]
+
+                cell_task_format = workbook.add_format({"align": "center"})
+                cell_task_format.set_font_size(12)
+                cell_task_format.set_border()
+                cell_task_format.set_bg_color(hash_color)
+
+                # if task duration is greate than 1, need to merge cells
+                if task_end - task_start > 1:
+                    worksheet.merge_range(
+                        i + 1,  # row
+                        task_start + 1,  # start column
+                        i + 1,  # row
+                        task_end,  # end column
+                        text_to_display,
+                        cell_task_format,
+                    )
+                else:
+                    worksheet.write(i + 1, task_start + 1, task_name, cell_task_format)
+
+        # finaly close the workbook
+        worksheet.autofit()
+        workbook.close()

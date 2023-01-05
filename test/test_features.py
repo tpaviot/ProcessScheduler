@@ -103,7 +103,7 @@ class TestFeatures(unittest.TestCase):
     #
     def test_create_indicator(self) -> None:
         pb = ps.SchedulingProblem("CreateIndicator", horizon=3)
-        i_1 = ps.Indicator("SquareHorizon", pb.horizon ** 2)  # ArithRef
+        i_1 = ps.Indicator("SquareHorizon", pb.horizon**2)  # ArithRef
         self.assertIsInstance(i_1, ps.Indicator)
         i_2 = ps.Indicator("IsLooooong ?", pb.horizon > 1000)  # BoolRef
         self.assertIsInstance(i_2, ps.Indicator)
