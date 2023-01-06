@@ -111,9 +111,17 @@ class SchedulingProblem(_NamedUIDObject):
                 if isinstance(res.cost, ConstantCostPerPeriod):
                     # res.cost(interv_up), res.cost(interv_low)
                     # or res.cost.value give the same result because the function is constant
-                    period_cost = res.cost(interv_up) * (interv_up - interv_low)
+                    cost_for_this_period = res.cost(interv_up)
+                    if cost_for_this_period == 0:
+                        continue
+                    elif cost_for_this_period == 1:
+                        period_cost = interv_up - interv_low
+                    else:
+                        period_cost = res.cost(interv_up) * (interv_up - interv_low)
                     local_constant_costs.append(period_cost)
                 # Polynomial cost. Compute the area of the trapeze
+                # The division by 2 is performed only once, a few lines below,
+                # after the sum is computed.
                 if isinstance(res.cost, PolynomialCostFunction):
                     period_cost = (res.cost(interv_low) + res.cost(interv_up)) * (
                         interv_up - interv_low
@@ -133,6 +141,8 @@ class SchedulingProblem(_NamedUIDObject):
                 variable_costs.extend(loc_var_cst)
 
         resource_names = ",".join([resource.name for resource in list_of_resources])
+        # TODO: what if we multiply the line below by 2? This would remove a division
+        # by 2, and make the cost computation linear if costs are linear
         cost_indicator_variable = Sum(constant_costs) + Sum(variable_costs) / 2
         cost_indicator = Indicator(
             f"Total Cost ({resource_names})", cost_indicator_variable
