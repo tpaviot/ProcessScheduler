@@ -103,7 +103,7 @@ class TestFeatures(unittest.TestCase):
     #
     def test_create_indicator(self) -> None:
         pb = ps.SchedulingProblem("CreateIndicator", horizon=3)
-        i_1 = ps.Indicator("SquareHorizon", pb.horizon ** 2)  # ArithRef
+        i_1 = ps.Indicator("SquareHorizon", pb.horizon**2)  # ArithRef
         self.assertIsInstance(i_1, ps.Indicator)
         i_2 = ps.Indicator("IsLooooong ?", pb.horizon > 1000)  # BoolRef
         self.assertIsInstance(i_2, ps.Indicator)
@@ -118,9 +118,9 @@ class TestFeatures(unittest.TestCase):
         t1 = ps.FixedDurationTask("task_1", duration=1)
         t2 = ps.VariableDurationTask("task_2")
         worker_1 = ps.Worker("W1")
-        self.assertTrue("task_1" in "%s" % t1)
-        self.assertTrue("task_2" in "%s" % t2)
-        self.assertTrue("W1" in "%s" % worker_1)
+        self.assertTrue("task_1" in f"{t1}")
+        self.assertTrue("task_2" in f"{t2}")
+        self.assertTrue("W1" in f"{worker_1}")
 
 
 if __name__ == "__main__":

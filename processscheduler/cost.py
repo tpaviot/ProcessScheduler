@@ -64,7 +64,7 @@ class ConstantCostPerPeriod(_Cost):
 
 
 class PolynomialCostFunction(_Cost):
-    """A function of time under a polynomail form."""
+    """A function of time under a polynomial form."""
 
     def __init__(self, function: callable) -> None:
         super().__init__()
@@ -74,4 +74,10 @@ class PolynomialCostFunction(_Cost):
 
     def __call__(self, value):
         """compute the value of the cost function for a given value"""
+        to_return = self.f(value)
+        # check if there is a ToReal conversion in the function
+        # this may occur if the cost function is not linear
+        # and this would result in an unexpected computation
+        if "ToReal" in f"{to_return}":
+            raise AssertionError("Warning: ToReal conversion, the cost function must be linear.")
         return self.f(value)

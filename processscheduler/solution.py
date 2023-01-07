@@ -20,7 +20,7 @@ import random
 from typing import List, Optional, Tuple
 
 from processscheduler.json_io import solution_to_json_string
-
+from processscheduler.excel_io import export_solution_to_excel_file
 
 class TaskSolution:
     """Class to represent the solution for a scheduled Task."""
@@ -98,14 +98,6 @@ class SchedulingSolution:
             if tasks_not_unavailable[task].scheduled
         }
 
-    def to_json_string(self) -> str:
-        """Export the solution to a json string."""
-        return solution_to_json_string(self)
-
-    def export_to_json_file(self, json_filename):
-        with open(json_filename, "w", encoding="utf-8") as outfile:
-            outfile.write(self.to_json_string())
-
     def add_indicator_solution(self, indicator_name: str, indicator_value: int) -> None:
         """Add indicator solution."""
         self.indicators[indicator_name] = indicator_value
@@ -121,6 +113,9 @@ class SchedulingSolution:
     def add_buffer_solution(self, buffer_solution: BufferSolution) -> None:
         self.buffers[buffer_solution.name] = buffer_solution
 
+    #
+    # Gantt graphical rendering using plotly and matplotlib
+    #
     def render_gantt_plotly(
         self,
         fig_size: Optional[Tuple[int, int]] = None,
@@ -412,3 +407,17 @@ class SchedulingSolution:
 
         if show_plot:
             plt.show()
+
+    #
+    # File export
+    #
+    def to_json_string(self) -> str:
+        """Export the solution to a json string."""
+        return solution_to_json_string(self)
+
+    def export_to_json_file(self, json_filename):
+        with open(json_filename, "w", encoding="utf-8") as outfile:
+            outfile.write(self.to_json_string())
+
+    def export_to_excel_file(self, excel_filename, colors=False):
+        return export_solution_to_excel_file(self, excel_filename, colors)
