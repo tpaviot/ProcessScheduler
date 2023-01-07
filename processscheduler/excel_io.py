@@ -155,5 +155,20 @@ def export_solution_to_excel_file(solution, excel_filename, colors: bool):
     #
     # Indicators
     #
-    worksheet_task = workbook.add_worksheet("Indicators")
+    worksheet_indicator = workbook.add_worksheet("Indicators")
+    worksheet_indicator.write("A1", "Indicator", bold)
+    worksheet_indicator.write("B1", "Value", bold)
+
+    cell_indicator_name_format = workbook.add_format({"align": "left"})
+    cell_indicator_name_format.set_font_size(12)
+
+    for i, indicator_name in enumerate(solution.indicators):
+        worksheet_indicator.write(i + 1, 0, indicator_name, cell_indicator_name_format)
+
+        indicator_value = solution.indicators[indicator_name]
+        worksheet_indicator.write(i + 1, 1, indicator_value, cell_indicator_name_format)
+
+    worksheet_indicator.autofit()
+
+    # finally save the workbook
     workbook.close()
