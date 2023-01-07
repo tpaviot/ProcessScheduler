@@ -26,10 +26,9 @@ except ImportError:
 def _get_color_from_string(a_string: str, colors: bool):
     if colors:
         hash_str = f"{crc32(a_string.encode('utf-8'))}"
-        bg_color = f"#{hash_str[2:8]}"
+        return f"#{hash_str[2:8]}"
     else:
-        bg_color = "#F0F0F0"
-    return bg_color
+        return "#F0F0F0"
 
 
 def export_solution_to_excel_file(solution, excel_filename, colors: bool):
@@ -67,15 +66,7 @@ def export_solution_to_excel_file(solution, excel_filename, colors: bool):
 
         for task_name, task_start, task_end in ress.assignments:
             # unavailabilities are rendered with a grey dashed bar
-            if "NotAvailable" in task_name:
-                # hatch = "//"
-                # bar_color = "white"
-                text_to_display = ""
-            else:
-                # hatch = None
-                # bar_color = task_colors[task_name]
-                text_to_display = task_name
-
+            text_to_display = "" if "NotAvailable" in task_name else task_name
             bg_color = _get_color_from_string(task_name, colors)
 
             cell_task_format = workbook.add_format({"align": "center"})
