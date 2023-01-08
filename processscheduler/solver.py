@@ -317,19 +317,27 @@ class SchedulingSolver:
                 else:
                     self._solver.minimize(variable_to_optimize)
 
-    def check_sat(self):
-        """check satisfiability. Returns resulta as True (sat) or False (unsat, unknown).
-        The computation time.
+    def check_sat(self, find_better_value: Optional[bool] = False):
+        """check satisfiability.
+        find_beter_value: the check_sat method is called from the incremental solver. Then we
+        should not prompt that no solution can be found, but that no better solution can be found.
+        Return
+        * result as True (sat) or False (unsat, unknown).
+        * the computation time.
         """
         init_time = time.perf_counter()
         sat_result = self._solver.check()
         check_sat_time = time.perf_counter() - init_time
 
         if sat_result == unsat:
-            print(
-                "\tNo solution can be found for problem %s.\n\tReason: Unsatisfiable problem: no solution exists"
-                % self.problem.name
-            )
+            if not find_better_value:
+                print(
+                    f"\tNo solution can be found for problem {self.problem.name}.\n\tReason: Unsatisfiable problem: no solution exists"
+                )
+            else:
+                print(
+                    f"\tCan't find a better solution for problem {self.problem.name}.\n"
+                )
 
         if sat_result == unknown:
             reason = self._solver.reason_unknown()
@@ -540,15 +548,20 @@ class SchedulingSolver:
                 self.objective.bounds[0] if kind == "min" else self.objective.bounds[1]
             )
 
-        while True:  # infinite loop, break if unsat of max_depth
+        while True:  # infinite loop, break if unsat or max_depth
             depth += 1
             if max_recursion_depth is not None and depth > max_recursion_depth:
                 warnings.warn(
-                    "maximum recursion depth exceeded. There might be a better solution."
+                    "maximum recursion depth exceeded, stop computation but there might be a better solution."
                 )
                 break
 
-            is_sat, sat_computation_time = self.check_sat()
+            incremantal_solver_is_computing_a_better_value = (
+                current_variable_value is not None
+            )
+            is_sat, sat_computation_time = self.check_sat(
+                incremantal_solver_is_computing_a_better_value
+            )
 
             if is_sat == unsat and current_variable_value is not None:
                 print(f"\tFound optimum {current_variable_value}. Stopping iteration.")
