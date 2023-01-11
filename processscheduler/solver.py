@@ -44,7 +44,7 @@ from processscheduler.solution import (
     ResourceSolution,
     BufferSolution,
 )
-from processscheduler.util import calc_parabola_from_two_points, sort_no_duplicates
+from processscheduler.util import calc_parabola_from_three_points, sort_no_duplicates
 
 #
 # Solver class definition
@@ -591,7 +591,7 @@ class SchedulingSolver:
                 three_last_times.pop(0)
                 three_last_times.append(total_time)
                 # Compute the expected value
-                a, b, c = calc_parabola_from_two_points([0, 1, 2], three_last_times)
+                a, b, c = calc_parabola_from_three_points([0, 1, 2], three_last_times)
                 expected_next_time = a * 9 + 3 * b + c
                 if self.max_time != "inf" and expected_next_time > self.max_time:
                     warnings.warn("time may exceed max time. Stopping iteration.")

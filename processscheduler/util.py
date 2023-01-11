@@ -45,7 +45,7 @@ def is_list_of_positive_integers(value: List[int]) -> bool:
 #
 # Functions over z3 types only (ArithRef, BoolRef, etc.)
 #
-def calc_parabola_from_two_points(vector_x, vector_y):
+def calc_parabola_from_three_points(vector_x, vector_y):
     """Compute the parabola that fits 3 points A, B and C. (x,y) coordinates
     for these points are stored in two vectors.
     Return a, b, c such as points 1, 2, 3 satisfies
