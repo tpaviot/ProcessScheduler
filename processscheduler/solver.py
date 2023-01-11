@@ -211,8 +211,7 @@ class SchedulingSolver:
             self.append_z3_assertion(sort_assertions)
             # create as many buffer state changes as sorted_times
             buffer.state_changes_time = [
-                Int("%s_sc_time_%i" % (buffer.name, k))
-                for k in range(len(sorted_times))
+                Int(f"{buffer.name}_sc_time_{k}") for k in range(len(sorted_times))
             ]
 
             # add the constraints that give the buffer state change times
@@ -221,7 +220,7 @@ class SchedulingSolver:
 
             # compute the different buffer states according to state changes
             buffer.buffer_states = [
-                Int("%s_state_%i" % (buffer.name, k))
+                Int(f"{buffer.name}_state_{k}")
                 for k in range(len(buffer.state_changes_time) + 1)
             ]
             # add constraints for buffer states
@@ -260,8 +259,8 @@ class SchedulingSolver:
         # unsat core, in regular mode this is the add function
         if self.debug:
             if isinstance(asst, list):
-                for c in asst:
-                    self._solver.assert_and_track(c, f"asst_{uuid.uuid4().hex[:8]}")
+                for cstr in asst:
+                    self._solver.assert_and_track(cstr, f"asst_{uuid.uuid4().hex[:8]}")
             else:
                 self._solver.assert_and_track(asst, f"asst_{uuid.uuid4().hex[:8]}")
         else:
@@ -342,8 +341,7 @@ class SchedulingSolver:
         if sat_result == unknown:
             reason = self._solver.reason_unknown()
             print(
-                "\tNo solution can be found for problem %s.\n\tReason: %s"
-                % (self.problem.name, reason)
+                f"\tNo solution can be found for problem {self.problem.name}.\n\tReason: {reason}"
             )
 
         return sat_result, check_sat_time
@@ -474,13 +472,11 @@ class SchedulingSolver:
             if self.is_multi_objective_optimization_problem:
                 print("\tObjectives:\n\t======")
                 for obj in self.problem.context.objectives:
-                    print("\t%s" % obj)
-            # in this case, use the incremental solver
-            if isinstance(self.objective, MinimizeObjective):
-                dd = "min"
-            elif isinstance(self.objective, MaximizeObjective):
-                dd = "max"
-            solution = self.solve_optimize_incremental(self.objective.target, kind=dd)
+                    print(f"\t{obj}")
+            solution = self.solve_optimize_incremental(
+                self.objective.target,
+                kind="min" if isinstance(self.objective, MinimizeObjective) else "max",
+            )
             if not solution:
                 return False
         else:
@@ -489,16 +485,14 @@ class SchedulingSolver:
 
             print("Total computation time:\n=====================")
             print(
-                "\t%s satisfiability checked in %.2fs"
-                % (self.problem.name, sat_computation_time)
+                f"\t{self.problem.name} satisfiability checked in {sat_computation_time:.2f}s"
             )
 
             if sat_result == unsat:
                 if self.debug:
                     unsat_core = self._solver.unsat_core()
                     print(
-                        "\t%i unsatisfied assertion(s) (probable conflict):"
-                        % len(unsat_core)
+                        f"\t{unsat_core} unsatisfied assertion(s) (probable conflict):"
                     )
                     for cstr in unsat_core:
                         print(f"\t->{cstr}")
@@ -577,9 +571,7 @@ class SchedulingSolver:
             current_variable_value = solution[variable].as_long()
             total_time += sat_computation_time
             print(
-                "\tFound value:",
-                current_variable_value,
-                "elapsed time:%.3fs" % total_time,
+                f"\tFound value: {current_variable_value} elapsed time:{total_time:.3f}s"
             )
             if self.max_time != "inf" and total_time > self.max_time:
                 warnings.warn("max time exceeded")
@@ -614,8 +606,8 @@ class SchedulingSolver:
 
         print(f"\ttotal number of iterations: {depth}")
         if current_variable_value is not None:
-            print("\tvalue: %i" % current_variable_value)
-        print("\t%s satisfiability checked in %.2fs" % (self.problem.name, total_time))
+            print(f"\tvalue: {current_variable_value}")
+        print(f"\t{self.problem.name} satisfiability checked in {total_time:.2f}s")
 
         return solution
 
