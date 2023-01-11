@@ -1,4 +1,4 @@
-"""The resources definition."""
+"""The buffers definition."""
 
 # Copyright (c) 2020-2021 Thomas Paviot (tpaviot@gmail.com)
 #
