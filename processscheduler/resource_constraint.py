@@ -25,8 +25,24 @@ from processscheduler.constraint import ResourceConstraint
 from processscheduler.util import sort_no_duplicates
 
 
+def assert_resource_is_worker_or_cumulative_worker(resource):
+    if not isinstance(resource, (Worker, CumulativeWorker)):
+        raise TypeError(
+            f"you passed a {type(resource)} object. resource must be either a Worker or CumulativeWorker."
+        )
+
+
 class WorkLoad(ResourceConstraint):
-    """set a mini/maxi/exact number of slots a resource can be scheduled."""
+    """
+    A WorkLoad constraint restricts the number of tasks that can be executed on a resource
+    during a certain time period. The resource can be a single Worker or a CumulativeWorker.
+
+    The list of time intervals is specified as a dict mapping interval tuples to integer bounds.
+    For example, {(1,20):6, (50,60):2} specifies that the resource can use no more than 6 slots
+    in the interval (1,20), and no more than 2 slots in the interval (50,60).
+
+    The kind parameter specifies whether the constraint is exact, a minimum, or a maximum.
+    """
 
     def __init__(
         self,
@@ -35,19 +51,13 @@ class WorkLoad(ResourceConstraint):
         kind: Optional[str] = "max",
         optional: Optional[bool] = False,
     ) -> None:
-        """WorkLoad constraints can be used to restrict the number of tasks which are executed during a certain time period.
-        The resource can be a single Worker or a CumulativeWorker.
 
-        The list of time_intervals is a dict such as:
-        [(1,20):6, (50,60):2] which means: in the interval (1,20), the resource might not use
-        more than 6 slots. And no more than 2 time slots in the interval (50, 60)
-
-        kind: optional string, default to 'max', can be 'min' or 'exact'
-        """
         super().__init__(optional)
 
         if kind not in ["exact", "max", "min"]:
             raise ValueError("kind must either be 'exact', 'min' or 'max'")
+
+        assert_resource_is_worker_or_cumulative_worker(resource)
 
         self.dict_time_intervals_and_bound = dict_time_intervals_and_bound
         self.resource = resource
@@ -149,6 +159,8 @@ class ResourceUnavailable(ResourceConstraint):
         """
         super().__init__(optional)
 
+        assert_resource_is_worker_or_cumulative_worker(resource)
+
         self.list_of_time_intervals = list_of_time_intervals
         self.resource = resource
 
@@ -184,6 +196,8 @@ class ResourceTasksDistance(ResourceConstraint):
     ):
         if mode not in {"min", "max", "exact"}:
             raise Exception("Mode should be min, max or exact")
+
+        assert_resource_is_worker_or_cumulative_worker(resource)
 
         super().__init__(optional)
 
