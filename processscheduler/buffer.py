@@ -35,9 +35,7 @@ class NonConcurrentBuffer(_NamedUIDObject):
         upper_bound: Optional[int] = None,
     ) -> None:
         super().__init__(name)
-        # for each resource, we define a dict that stores
-        # all tasks and busy intervals of the resource.
-        # busy intervals can be for example [(1,3), (5, 7)]
+        
         self.initial_state = initial_state
         self.final_state = final_state
         self.lower_bound = lower_bound
@@ -50,8 +48,8 @@ class NonConcurrentBuffer(_NamedUIDObject):
         self.loading_tasks = {}
         # a list that contains the instants where the buffer state changes
         self.state_changes_time = []
-        # a list that contains the buffer state between each state change
-        # the first item of this is always the initial state
+        # a list that stores the buffer state between each state change
+        # the first item of this list is always the initial state
         self.buffer_states = []
 
         # add this task to the current context
