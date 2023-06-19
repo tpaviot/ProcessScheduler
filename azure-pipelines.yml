@@ -1,84 +1,15 @@
 jobs:
 - template: template.yml
   parameters:
-    name: Ubuntu_22_04_python38
-    vmImage: 'ubuntu-22.04'
-    py_maj: 3
-    py_min: 8
-
-- template: template.yml
-  parameters:
-    name: macOS_11_python38
-    vmImage: 'macOS-11'
-    py_maj: 3
-    py_min: 8
-
-- template: template.yml
-  parameters:
-    name: Windows_VS2022_python38
-    vmImage: 'windows-2022'
-    py_maj: 3
-    py_min: 8
-
-- template: template.yml
-  parameters:
-    name: Ubuntu_22_04_python39
-    vmImage: 'ubuntu-22.04'
-    py_maj: 3
-    py_min: 9
-
-- template: template.yml
-  parameters:
-    name: macOS_11_python39
-    vmImage: 'macOS-11'
-    py_maj: 3
-    py_min: 9
-
-- template: template.yml
-  parameters:
-    name: Windows_VS2022_python39
-    vmImage: 'windows-2022'
-    py_maj: 3
-    py_min: 9
-
-- template: template.yml
-  parameters:
     name: Ubuntu_22_04_python310
     vmImage: 'ubuntu-22.04'
-    py_maj: 3
-    py_min: 10
 
 - template: template.yml
   parameters:
     name: macOS_11_python310
     vmImage: 'macOS-11'
-    py_maj: 3
-    py_min: 10
 
 - template: template.yml
   parameters:
     name: Windows_VS2022_python310
     vmImage: 'windows-2022'
-    py_maj: 3
-    py_min: 10
-
-- template: template.yml
-  parameters:
-    name: Ubuntu_22_04_python311
-    vmImage: 'ubuntu-22.04'
-    py_maj: 3
-    py_min: 11
-
-- template: template.yml
-  parameters:
-    name: macOS_11_python311
-    vmImage: 'macOS-11'
-    py_maj: 3
-    py_min: 11
-
-- template: template.yml
-  parameters:
-    name: Windows_VS2022_python311
-    vmImage: 'windows-2022'
-    py_maj: 3
-    py_min: 11
