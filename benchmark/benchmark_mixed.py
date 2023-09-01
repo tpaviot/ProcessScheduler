@@ -132,12 +132,12 @@ for horizon in range(20, n, step):
 
     solver.print_statistics()
 
-plt.title("Benchmark_mixed_constraints %s:%s" % (bench_date, bench_id))
+plt.title(f"Benchmark_mixed_constraints {bench_date}:{bench_id}")
 plt.plot(plot_abs, computation_times, "D-", label="Computing time")
 plt.legend()
 plt.xlabel("n")
 plt.ylabel("time(s)")
 plt.grid(True)
-plt.savefig("bench_%s.svg" % bench_id)
+plt.savefig(f"bench_{bench_id}.svg")
 if args.plot:
     plt.show()

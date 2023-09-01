@@ -38,7 +38,7 @@ class Constraint(_NamedUIDObject):
 
         # by default, this constraint has to be applied
         if self.optional:
-            self.applied = Bool("constraint_%s_applied" % self.uid)
+            self.applied = Bool(f"constraint_{self.uid}_applied")
         else:
             self.applied = True
 
@@ -94,8 +94,7 @@ class ForceApplyNOptionalConstraints(Constraint):
         for constraint in list_of_optional_constraints:
             if not constraint.optional:
                 raise TypeError(
-                    "The constraint %s must explicitly be set as optional."
-                    % constraint.name
+                    f"The constraint {constraint.name} must explicitly be set as optional."
                 )
 
         # all scheduled variables to take into account

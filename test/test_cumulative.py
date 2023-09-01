@@ -122,7 +122,7 @@ class TestCumulative(unittest.TestCase):
     def test_cumulative_hosp(self):
         n = 16
         capa = 4
-        pb_bs = ps.SchedulingProblem("Hospital", horizon=int(n / capa))
+        pb_bs = ps.SchedulingProblem("Hospital", horizon=n // capa)
         # workers
         r1 = ps.CumulativeWorker("Room", size=capa)
 
