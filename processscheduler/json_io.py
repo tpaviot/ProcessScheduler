@@ -24,18 +24,14 @@ import processscheduler as ps
 class SolutionJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (datetime, time, timedelta)):
-            return "%s" % obj
+            return f"{obj}"
         return obj.__dict__
 
 
 def solution_to_json_string(solution):
     """Export the solution to a json string."""
-    d = {}
-    # problem properties
-    problem_properties = {}
-    d["horizon"] = solution.horizon
-    # time data
-    problem_properties["problem_timedelta"] = solution.problem.delta_time
+    d = {"horizon": solution.horizon}
+    problem_properties = {"problem_timedelta": solution.problem.delta_time}
     if solution.problem.delta_time is None:
         problem_properties["problem_start_time"] = None
         problem_properties["problem_end_time"] = None
@@ -68,7 +64,6 @@ def export_json_to_file(scheduling_problem, scheduling_solver, json_filename):
 
 
 def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
-    d = {}
     # SchedulingProblem general properties
     problem_properties = {
         "name": scheduling_problem.name,
@@ -78,7 +73,6 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
         "end_time": scheduling_problem.end_time,
     }
 
-    d["ProblemParameters"] = problem_properties
     # Tasks
     tasks = {}
     for task in scheduling_problem.context.tasks:
@@ -96,9 +90,6 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
             new_task_entry["min_duration"] = task.min_duration
             new_task_entry["max_duration"] = task.max_duration
         tasks[task.name] = new_task_entry
-    d["Tasks"] = tasks
-    # Resources
-    resources = {}
     # Workers
     workers = {}
     # we dont export workers created by cumulative resource
@@ -115,7 +106,6 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
         }
 
         workers[resource.name] = new_resource_entry
-    resources["Workers"] = workers
     # SelectWorkers
     select_workers = {}
     for sw in scheduling_problem.context.select_workers:  # Worker
@@ -126,14 +116,21 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
         }
 
         select_workers[sw.name] = new_sw
-    resources["SelectWorkers"] = select_workers
     # CumulativeWorker
     cumulative_workers = {}
     for cw in scheduling_problem.context.cumulative_workers:  # Worker
         new_cw = {"size": cw.size, "productivity": cw.productivity, "cost": cw.cost}
         cumulative_workers[cw.name] = new_cw
-    resources["CumulativeWorkers"] = cumulative_workers
-    d["Resources"] = resources
+    resources = {
+        "Workers": workers,
+        "SelectWorkers": select_workers,
+        "CumulativeWorkers": cumulative_workers,
+    }
+    d = {
+        "ProblemParameters": problem_properties,
+        "Tasks": tasks,
+        "Resources": resources,
+    }
     #
     # Buffers
     #

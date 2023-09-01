@@ -119,12 +119,12 @@ for problem_size in N:
 
     solver.print_statistics()
 
-plt.title("Benchmark SelectWorkers %s:%s" % (bench_date, bench_id))
+plt.title(f"Benchmark SelectWorkers {bench_date}:{bench_id}")
 plt.plot(plot_abs, computation_times, "D-", label="Computing time")
 plt.legend()
 plt.xlabel("n")
 plt.ylabel("time(s)")
 plt.grid(True)
-plt.savefig("bench_n_queens_%s.svg" % bench_id)
+plt.savefig(f"bench_n_queens_{bench_id}.svg")
 if args.plot:
     plt.show()

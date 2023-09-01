@@ -195,7 +195,7 @@ resource_size_widget = widgets.IntText(
 def on_change_resource_type(change):
     # print("popo", change)
     if change["type"] == "change" and change["name"] == "value":
-        new_value = "%s" % change["new"]
+        new_value = f'{change["new"]}'
         if new_value == "CumulativeWorker":
             resource_size_widget.disabled = False
         elif new_value == "Worker":
@@ -279,7 +279,7 @@ task_type_widget = widgets.Dropdown(
 def on_change_task_type(change):
     # print("popo", change)
     if change["type"] == "change" and change["name"] == "value":
-        new_value = "%s" % change["new"]
+        new_value = f'{change["new"]}'
         if new_value == "FixedDurationTask":
             task_duration_widget.disabled = False
         elif new_value in ["ZeroDurationTask", "VariableDurationTask"]:

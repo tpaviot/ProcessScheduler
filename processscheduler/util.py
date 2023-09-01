@@ -33,9 +33,7 @@ def is_positive_integer(value: int) -> bool:
 
 
 def is_list_of_positive_integers(value: List[int]) -> bool:
-    if not value:  # empty list
-        return False
-    return all(is_positive_integer(n) for n in value)
+    return False if not value else all(is_positive_integer(n) for n in value)
 
 
 #
@@ -93,7 +91,7 @@ def sort_bubble(z3_int_list):
 def sort_no_duplicates(z3_int_list):
     """Sort a list of integers that have distinct values"""
     n = len(z3_int_list)
-    a = [FreshInt() for i in range(n)]
+    a = [FreshInt() for _ in range(n)]
     constraints = [Or([a[i] == z3_int_list[j] for j in range(n)]) for i in range(n)]
     constraints.append(And([a[i] < a[i + 1] for i in range(n - 1)]))
 

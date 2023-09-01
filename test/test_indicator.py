@@ -288,7 +288,7 @@ class TestIndicator(unittest.TestCase):
         tasks: list[ps.FixedDurationTask] = []
         for interval, nb_tasks_i in zip(time_intervals, nb_tasks):
             for _ in range(nb_tasks_i):
-                tasks.append(ps.FixedDurationTask("T%s" % len(tasks), duration=1))
+                tasks.append(ps.FixedDurationTask(f"T{len(tasks)}", duration=1))
                 tasks[-1].add_required_resource(worker_1)
                 ps.TaskStartAfterLax(tasks[-1], interval[0])
                 ps.TaskEndBeforeLax(tasks[-1], interval[1])
