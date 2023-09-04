@@ -150,7 +150,6 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
     # Constraints
     #
     task_constraints = []
-    resource_constraints = {}
     workloads = {}
     resource_unavailables = {}
     resource_task_distances = {}
@@ -215,11 +214,13 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
                     "select_workers_2": constraint.select_workers_2.name,
                 }
                 distinct_workers[constraint.name] = dd
-    resource_constraints["DistinctWorkers"] = same_workers
-    resource_constraints["SameWorkers"] = same_workers
-    resource_constraints["WorkLoad"] = workloads
-    resource_constraints["ResourceUnavailable"] = resource_unavailables
-    resource_constraints["ResourceTasksDistance"] = resource_task_distances
+    resource_constraints = {
+        "DistinctWorkers": same_workers,
+        "SameWorkers": same_workers,
+        "WorkLoad": workloads,
+        "ResourceUnavailable": resource_unavailables,
+        "ResourceTasksDistance": resource_task_distances,
+    }
     d["TaskConstraints"] = task_constraints
     d["ResourceConstraints"] = resource_constraints
 
