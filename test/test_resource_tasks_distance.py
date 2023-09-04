@@ -131,7 +131,9 @@ class TestResourceTasksDistance(unittest.TestCase):
         ps.TaskStartAt(task_1, 1)
 
         solver = ps.SchedulingSolver(pb)
+
         # for optional tasks to not be scheduled
+        solver.initialize()  # required before appending any z3 assertion
         solver.append_z3_assertion(task_3.scheduled == False)
         solver.append_z3_assertion(task_4.scheduled == False)
         solver.append_z3_assertion(task_5.scheduled == False)
