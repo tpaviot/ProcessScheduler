@@ -46,6 +46,7 @@ from processscheduler.solution import (
 )
 from processscheduler.util import calc_parabola_from_three_points, sort_no_duplicates
 
+
 #
 # Solver class definition
 #
@@ -79,6 +80,9 @@ class SchedulingSolver:
         self.current_solution = None  # no solution until the problem is solved
         self.optimizer = optimizer
         self.optimize_priority = optimize_priority
+        self.logics = logics
+        self.map_boolrefs_to_geometric_constraints = {}
+        self.initialized = False
 
         if optimizer not in ["incremental", "optimize"]:
             raise TypeError("optimizer must be either 'incremental' or 'optimize'")
@@ -90,8 +94,12 @@ class SchedulingSolver:
 
         if debug:
             set_option("verbose", 2)
+            set_option(unsat_core=True)
         else:
             set_option("verbose", verbosity)
+
+        if parallel:
+            set_option("parallel.enable", True)  # enable parallel computation
 
         if random_values:
             set_option("sat.random_seed", random.randint(1, 1e3))
@@ -107,6 +115,7 @@ class SchedulingSolver:
         if self.max_time != "inf":
             set_option("timeout", int(self.max_time * 1000))  # in milliseconds
 
+    def initialize(self):
         # create the solver
         print("Solver type:\n===========")
 
@@ -117,21 +126,16 @@ class SchedulingSolver:
             len(self.problem_context.objectives) > 1
         )
         # use the z3 Optimize solver if requested
-        if not self.is_not_optimization_problem and optimizer == "optimize":
+        if not self.is_not_optimization_problem and self.optimizer == "optimize":
             self._solver = Optimize()
-            self._solver.set(priority=optimize_priority)
+            self._solver.set(priority=self.optimize_priority)
             print("\t-> Builtin z3 Optimize solver")
-        elif logics is None:
+        elif self.logics is None:
             self._solver = Solver()
             print("\t-> Standard SAT/SMT solver")
         else:
             self._solver = SolverFor(logics)
             print("\t-> SMT solver using logics", logics)
-        if debug:
-            set_option(unsat_core=True)
-
-        if parallel:
-            set_option("parallel.enable", True)  # enable parallel computation
 
         # add all tasks z3 assertions to the solver
         for task in self.problem_context.tasks:
@@ -160,7 +164,7 @@ class SchedulingSolver:
             c for c in self.problem_context.constraints if not c.created_from_assertion
         ]
         for constraint in constraints_not_from_assertion:
-            self.append_z3_assertion(constraint.get_z3_assertions())
+            self.append_z3_assertion(constraint.get_z3_assertions(), constraint.name)
 
         # process indicators
         for indic in self.problem_context.indicators:
@@ -253,18 +257,26 @@ class SchedulingSolver:
         if self.is_optimization_problem:
             self.create_objective()
 
-    def append_z3_assertion(self, asst) -> bool:
+        self.initialized = True
+
+    def append_z3_assertion(self, assts, higher_constraint_name=None) -> bool:
         # set the method to use to add constraints
         # in debug mode this is assert_and_track, to be able to trace
         # unsat core, in regular mode this is the add function
         if self.debug:
-            if isinstance(asst, list):
-                for cstr in asst:
-                    self._solver.assert_and_track(cstr, f"asst_{uuid.uuid4().hex[:8]}")
-            else:
-                self._solver.assert_and_track(asst, f"asst_{uuid.uuid4().hex[:8]}")
+            if not isinstance(assts, list):
+                assts = [assts]
+            for asst in assts:
+                asst_identifier = f"asst_{uuid.uuid4().hex[:8]}"
+                self._solver.assert_and_track(asst, asst_identifier)
+                # if the higher_contraint_name is defined, fill in the map_boolrefs_to_geometric_constraints dict
+                # to track the constraint that causes the conflict
+                if higher_constraint_name is not None:
+                    self.map_boolrefs_to_geometric_constraints[
+                        asst_identifier
+                    ] = higher_constraint_name
         else:
-            self._solver.add(asst)
+            self._solver.add(assts)
 
     def build_equivalent_weighted_objective(self) -> bool:
         # Replace objectives O_i, O_j, O_k with
@@ -464,6 +476,9 @@ class SchedulingSolver:
 
     def solve(self) -> Union[bool, SchedulingSolution]:
         """call the solver and returns the solution, if ever"""
+        if not self.initialized:
+            self.initialize()
+
         # for all cases
         if self.debug:
             self.print_assertions()
@@ -490,12 +505,31 @@ class SchedulingSolver:
 
             if sat_result == unsat:
                 if self.debug:
+                    # extract unsat core
                     unsat_core = self._solver.unsat_core()
+
+                    conflicting_contraits = []
+                    unknown_asst_origins = []
+                    for asst in unsat_core:
+                        # look for an entry in the map dict
+                        if f"{asst}" in self.map_boolrefs_to_geometric_constraints:
+                            constraint = self.map_boolrefs_to_geometric_constraints[
+                                f"{asst}"
+                            ]
+                            conflicting_contraits.append(constraint)
+                        else:
+                            unknown_asst_origins.append(f"{asst}")
                     print(
-                        f"\t{unsat_core} unsatisfied assertion(s) (probable conflict):"
+                        f"\tUnsatisfied assertions - conflict between {len(conflicting_contraits)} constraints:"
                     )
-                    for cstr in unsat_core:
-                        print(f"\t->{cstr}")
+                    for c in conflicting_contraits:
+                        print(f"\t\t-> {c}")
+                    print(
+                        f"\tUnknown assertion origins ({len(unknown_asst_origins)} conflicts):"
+                    )
+                    for a in unknown_asst_origins:
+                        print(f"\t\t-> {a}")
+                    # look the entry
                 return False
 
             if sat_result == unknown:
@@ -526,6 +560,9 @@ class SchedulingSolver:
     ) -> int:
         """target a min or max for a variable, without the Optimize solver.
         The loop continues ever and ever until the next value is more than 90%"""
+        if not self.initialized:
+            self.initialize()
+
         if kind not in ["min", "max"]:
             raise ValueError("choose either 'min' or 'max'")
         depth = 0
