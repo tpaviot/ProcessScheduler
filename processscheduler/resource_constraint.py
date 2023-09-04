@@ -51,7 +51,6 @@ class WorkLoad(ResourceConstraint):
         kind: Optional[str] = "max",
         optional: Optional[bool] = False,
     ) -> None:
-
         super().__init__(optional)
 
         if kind not in ["exact", "max", "min"]:
@@ -68,6 +67,8 @@ class WorkLoad(ResourceConstraint):
         elif isinstance(resource, CumulativeWorker):
             workers = resource.cumulative_workers
 
+        resource_assigned = False
+
         for time_interval in dict_time_intervals_and_bound:
             number_of_time_slots = dict_time_intervals_and_bound[time_interval]
 
@@ -79,6 +80,7 @@ class WorkLoad(ResourceConstraint):
                 # for this task, the logic expression is that any of its start or end must be
                 # between two consecutive intervals
                 for start_task_i, end_task_i in worker.get_busy_intervals():
+                    resource_assigned = True
                     # this variable allows to compute the occupation
                     # of the resource during the time interval
                     dur = Int(
@@ -130,9 +132,9 @@ class WorkLoad(ResourceConstraint):
                     # finally, store this variable in the duratins list
                     durations.append(dur)
 
-            if not durations:
+            if not resource_assigned:
                 raise AssertionError(
-                    "The resource is not assigned to any task. WorkLoad constraint meaningless."
+                    "The resource is not assigned to any task. Please first assign the resource to one or more tasks, and then add the WorkLoad constraint."
                 )
 
             # workload constraint depends on the kind
@@ -170,16 +172,24 @@ class ResourceUnavailable(ResourceConstraint):
         elif isinstance(resource, CumulativeWorker):
             workers = resource.cumulative_workers
 
+        resource_assigned = False
+
         for interval_lower_bound, interval_upper_bound in list_of_time_intervals:
             # add constraints on each busy interval
             for worker in workers:
                 for start_task_i, end_task_i in worker.get_busy_intervals():
+                    resource_assigned = True
                     self.set_z3_assertions(
                         Xor(
                             start_task_i >= interval_upper_bound,
                             end_task_i <= interval_lower_bound,
                         )
                     )
+
+        if not resource_assigned:
+            raise AssertionError(
+                "The resource is not assigned to any task. Please first assign the resource to one or more tasks, and then add the ResourceUnavailable constraint."
+            )
 
 
 class ResourceTasksDistance(ResourceConstraint):

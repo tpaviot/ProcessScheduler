@@ -65,7 +65,14 @@ class TestResourceUnavailable(unittest.TestCase):
         solution = solver.solve()
         self.assertFalse(solution)
 
-    def test_cumulative_4(self):
+    def test_resource_unavailable_4(self) -> None:
+        pb = ps.SchedulingProblem("ResourceUnavailable3", horizon=10)
+        task_1 = ps.FixedDurationTask("task1", duration=3)
+        worker_1 = ps.Worker("Worker1")
+        with self.assertRaises(AssertionError):
+            ps.ResourceUnavailable(worker_1, [(1, 3)])
+
+    def test_resource_unavailable_cumulative_5(self):
         pb_bs = ps.SchedulingProblem("ResourceUnavailableCumulative1", 10)
         # tasks
         t1 = ps.FixedDurationTask("T1", duration=2)
