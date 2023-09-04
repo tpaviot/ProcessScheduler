@@ -134,8 +134,8 @@ class SchedulingSolver:
             self._solver = Solver()
             print("\t-> Standard SAT/SMT solver")
         else:
-            self._solver = SolverFor(logics)
-            print("\t-> SMT solver using logics", logics)
+            self._solver = SolverFor(self.logics)
+            print("\t-> SMT solver using logics", self.logics)
 
         # add all tasks z3 assertions to the solver
         for task in self.problem_context.tasks:
