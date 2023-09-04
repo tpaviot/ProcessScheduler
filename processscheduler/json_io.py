@@ -18,6 +18,7 @@ import json
 
 import processscheduler as ps
 
+
 #
 # Solution Export to JSON
 #
@@ -176,7 +177,6 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
                     "resource": constraint.resource.name,
                 }
                 for k, v in constraint.dict_time_intervals_and_bound.items():
-
                     new_dict_entry["time_interval_lower_bound"] = k[0]
                     new_dict_entry["time_interval_upper_bound"] = k[1]
                     new_dict_entry["number_of_time_slots"] = v

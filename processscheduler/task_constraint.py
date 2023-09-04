@@ -23,6 +23,7 @@ from z3 import And, Bool, BoolRef, If, Implies, Int, Not, Or, PbEq, PbGe, PbLe, 
 from processscheduler.constraint import TaskConstraint
 from processscheduler.util import sort_no_duplicates
 
+
 #
 # Tasks constraints for two or more classes
 #

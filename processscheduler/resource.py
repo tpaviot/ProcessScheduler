@@ -22,6 +22,7 @@ from processscheduler.util import is_strict_positive_integer, is_positive_intege
 from processscheduler.cost import _Cost, ConstantCostPerPeriod
 import processscheduler.context as ps_context
 
+
 #
 # Utility functions
 #

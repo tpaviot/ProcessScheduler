@@ -21,6 +21,7 @@ from z3 import Bool, BoolRef, Implies, PbEq, PbGe, PbLe
 from processscheduler.base import _NamedUIDObject
 import processscheduler.context as ps_context
 
+
 #
 # Base Constraint class
 #

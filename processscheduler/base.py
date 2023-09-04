@@ -20,6 +20,7 @@ import uuid
 
 from z3 import BoolRef
 
+
 #
 # _NamedUIDObject, name and uid for hashing
 #

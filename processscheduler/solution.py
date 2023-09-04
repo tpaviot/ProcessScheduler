@@ -22,6 +22,7 @@ from typing import List, Optional, Tuple
 from processscheduler.json_io import solution_to_json_string
 from processscheduler.excel_io import export_solution_to_excel_file
 
+
 class TaskSolution:
     """Class to represent the solution for a scheduled Task."""
 

@@ -20,6 +20,7 @@ from typing import Optional
 from processscheduler.base import _NamedUIDObject
 import processscheduler.context as ps_context
 
+
 #
 # Buffer class definition
 #
@@ -35,7 +36,7 @@ class NonConcurrentBuffer(_NamedUIDObject):
         upper_bound: Optional[int] = None,
     ) -> None:
         super().__init__(name)
-        
+
         self.initial_state = initial_state
         self.final_state = final_state
         self.lower_bound = lower_bound

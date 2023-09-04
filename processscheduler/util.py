@@ -19,6 +19,7 @@ from typing import List
 
 from z3 import And, FreshInt, If, Or
 
+
 #
 # Functions over python types (ints, strings, etc.)
 #
@@ -39,6 +40,7 @@ def is_list_of_positive_integers(value: List[int]) -> bool:
 #
 # Functions over python and z3 types
 #
+
 
 #
 # Functions over z3 types only (ArithRef, BoolRef, etc.)

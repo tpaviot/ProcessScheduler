@@ -79,5 +79,7 @@ class PolynomialCostFunction(_Cost):
         # this may occur if the cost function is not linear
         # and this would result in an unexpected computation
         if "ToReal" in f"{to_return}":
-            raise AssertionError("Warning: ToReal conversion, the cost function must be linear.")
+            raise AssertionError(
+                "Warning: ToReal conversion, the cost function must be linear."
+            )
         return self.f(value)
