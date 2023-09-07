@@ -408,6 +408,15 @@ class TestSolver(unittest.TestCase):
         self.assertTrue(solution)
         self.assertEqual(solution.horizon, 4)
 
+    #
+    # Export parameters
+    #
+    def test_export_parameters(self):
+        pb = ps.SchedulingProblem("ExportParameters")
+        solver = ps.SchedulingSolver(pb)
+        solver.initialize()
+        solver.get_parameters_description()
+
 
 if __name__ == "__main__":
     unittest.main()

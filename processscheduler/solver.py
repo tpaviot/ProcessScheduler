@@ -32,6 +32,7 @@ from z3 import (
     SolverFor,
     Store,
     Sum,
+    get_param,
     unsat,
     unknown,
     set_option,
@@ -114,6 +115,42 @@ class SchedulingSolver:
         self.max_time = max_time  # in seconds
         if self.max_time != "inf":
             set_option("timeout", int(self.max_time * 1000))  # in milliseconds
+
+    def get_parameters_description(self):
+        """return the solver parameter names and values as a dict"""
+        if not self.initialized:
+            raise AssertionError(
+                "please initialize solver before requesting for param name/values."
+            )
+
+        parameters_description = {}
+
+        types = {
+            0: "uint",
+            1: "bool",
+            2: "double",
+            3: "str",
+            4: "symbol",
+            5: "invalid",
+            6: "other",
+        }
+
+        descr = self._solver.param_descrs()
+        for i in range(1, descr.size()):
+            param_name = descr.get_name(i)
+            param_type = types[descr.get_kind(param_name)]
+            param_documentation = descr.get_documentation(param_name)
+            try:
+                param_value = get_param(param_name)
+            except:
+                param_value = "unknown"
+            parameters_description[param_name] = {
+                "type": param_type,
+                "value": param_value,
+                "documentation": param_documentation,
+            }
+
+        return parameters_description
 
     def initialize(self):
         # create the solver
