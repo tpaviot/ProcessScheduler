@@ -32,7 +32,7 @@ import processscheduler.context as ps_context
 class Task(_NamedUIDObject):
     """a Task object"""
 
-    def __init__(self, name: str, optional: bool) -> None:
+    def __init__(self, name: str, optional: bool = False) -> None:
         super().__init__(name)
         self.work_amount = 0
         self.priority = 1  # by default
