@@ -1,28 +1,41 @@
+********
 Resource
-========
+********
 
 According to the APICS dictionary, a resource is anything that adds value to a product or service in its creation, production, or delivery.
 
 In the context of ProcessScheduler, a resource is anything that is needed by a task to be successfully processed. In a scheduling problem, resources can be human beings, machines, inventories, rooms or beds in an hotel or an hospital, elevator etc.
 
-ProcessScheduler provides the following classes to deal with resources.
+ProcessScheduler provides the following classes to deal with resources: `Worker`, `CumulativeWorker` 
 
 Worker
-------
+======
+A Worker is an atomic, countable resource. Being atomic implies that it cannot be further divided into smaller parts, and being countable means it exists in a finite number, available during specific time intervals. The :class:`Worker` class is ideal for representing entities like machines or humans. A :class:`Worker` possesses the capacity to process tasks either individually or in collaboration with other workers or resources.
 
-A worker is an atomic countable resource. *Atomic* means it cannot be divided into smaller parts. *Countable* means it is discrete and available in a finite number, in a finite time. The :class:`Worker` class can be used to represent machines or humans. A Worker has the ability to process a task, alone or together with other workers/resources.
-
-A Worker is created as follows:
+To create a Worker, you can use the following syntax:
 
 .. code-block:: python
 
     john = Worker('JohnBenis')
 
+CumulativeWorker
+================
+On the other hand, a :class:`CumulativeWorker` can simultaneously handle multiple tasks in parallel. The maximum number of tasks that a :class:`CumulativeWorker` can process concurrently is determined by the :attr:`size` parameter.
+
+For example, you can define a CumulativeWorker like this:
+
+.. code-block:: python
+
+    # the machine A can process up to 4 tasks at the same time
+    machine_A = CumulativeWorker('MachineA', size=4)
+
+Advanced parameters
+===================
 Productivity
 ------------
-The worker :attr:`productivity` is the quantity of work the worker can produce per period. The default productivity for a worker is :const:`0`.
+The :attr:`productivity` attribute of a worker represents the amount of work the worker can complete per period. By default, a worker's :attr:`productivity` is set to 0.
 
-For example, if two drillers are available, the first one with a producvity of 3 holes per period, the second one with a productivity of 9 holes per period, then will be defined as:
+For instance, if you have two drillers, with the first one capable of drilling 3 holes per period and the second one drilling 9 holes per period, you can define them as follows:
 
 .. code-block:: python
 
@@ -35,16 +48,15 @@ For example, if two drillers are available, the first one with a producvity of 3
 
 Cost
 ----
+You can associate cost information with any resource, enabling ProcessScheduler to compute the total cost of a schedule, the cost per resource, or optimize the schedule to minimize costs (see the Objective section for details). There are two ways to define resource costs:
 
-A cost information can be added to any resource. ProcessScheduler can use this information to compute the total cost of a schedule, the cost for a resource, or optimize the schedule so that the cost is the lowest (minimiation, see the Objective section). There are currently two different ways to define a resource cost:
-
-* the class :class:`ConstantCostPerPeriod`: the cost of the resource is constant over time.
+1. Constant Cost Per Period: In this approach, the resource's cost remains constant over time.
 
 .. code-block:: python
 
     dev_1 = Worker('SeniorDeveloper', cost=ConstantCostPerPeriod(750))
 
-* the class :class:`PolynomialCostFunction`: the cost of the resource evolves as a polynomial function of time. It is useful to represent, for example, energy cost that is known to be unstable (oil) or time dependent (electricity). The :attr:`cost` parameter takes any python function (i.e. a :attr:`callable` object).
+2. Polynomial Cost Function: This method allows you to represent resource costs as a polynomial function of time. It's particularly useful for modeling costs that are volatile (e.g., oil prices) or time-dependent (e.g., electricity costs). The cost parameter accepts any Python callable object.
 
 .. code-block:: python
 
@@ -56,7 +68,7 @@ A cost information can be added to any resource. ProcessScheduler can use this i
 
 The worker :attr:`cost` is set to :const:`None` by default.
 
-The cost function can be plotted using matplotlib, just for information. Just give the plotter the range to be plotted:
+You can visualize the cost function using Matplotlib, which provides insights into how the cost evolves over time:
 
 .. code-block:: python
 
@@ -71,12 +83,3 @@ The cost function can be plotted using matplotlib, just for information. Just gi
 .. note::
 
   The worker :attr:`cost_per_period` is useful to measure the total cost of a resource/a set of resources/a schedule, or to find the schedule that minimizes the total cost of a resource/a set of resources/ a schedule.
-
-CumulativeWorker
-----------------
-A cumulative worker can process several tasks in parallel. The maximal number of simultaneous tasks the worker can process is defined by the :attr:`size` parameter.
-
-.. code-block:: python
-
-    # the machine A can process up to 4 tasks at the same time
-    machine_A = CumulativeWorker('MachineA', size=4)
