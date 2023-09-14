@@ -12,11 +12,11 @@ import sys
 # -- Project information -----------------------------------------------------
 
 project = "ProcessScheduler"
-copyright = "2020-2021, Thomas Paviot"
+copyright = "2020-2023, Thomas Paviot"
 author = "Thomas Paviot"
 
 # The full version, including alpha/beta/rc tags
-version = "0.8.0"
+version = "0.9.dev"
 release = version
 
 # -- RTD configuration ------------------------------------------------
