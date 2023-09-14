@@ -1,39 +1,39 @@
+************
 Introduction
-============
+************
 
-ProcessScheduler is intended to be used in an industrial context (manufacturing, building industry, healthcare, etc.), and can be used for any related scheduling problem. It targets complex problems for which an obvious solution can not be found.
+ProcessScheduler is a versatile tool designed to streamline operations in various industrial domains, including manufacturing, construction, healthcare, and more. It serves as a solution for tackling intricate scheduling challenges that defy straightforward resolutions.
 
-The following features are provided:
+Within this toolkit, you'll find a rich array of features, including:
 
-- Task definition with zero, fixed or variable length, work_amount, 
+- **Task Definition**: Define tasks with zero, fixed, or variable durations, along with work_amount specifications.
 
-- Resource definition including productivity and cost, assignment of resource(s) to tasks,
+- **Resource Management**: Create and manage resources, complete with productivity and cost attributes. Efficiently assign resources to tasks.
 
-- Temporal tasks constraints (precedence, fixed start, fixed end etc.),
+- **Temporal Task Constraints**: Handle task temporal constraints such as precedence, fixed start times, and fixed end times.
 
-- Resource constraints: resource availability,
+- **Resource Constraints**: Manage resource availability and allocation.
 
-- First order logic operation between tasks/resources constraints: and/or/xor/not boolean operators, implication, if/then/else,
+- **Logical Operations**: Employ first-order logic operations to define relationships between tasks and resource constraints, including and/or/xor/not boolean operators, implications, if/then/else conditions.
 
-- Multi objective optimization,
+- **Multi-Objective Optimization**: Optimize schedules across multiple objectives.
 
-- Gantt chart rendering using matplotlib or plotly,
+- **Gantt Chart Visualization**: Visualize schedules effortlessly with Gantt chart rendering, compatible with both matplotlib and plotly libraries.
 
-- Export solution to json, SMT problem to SMTLIB.
+- **Export Capabilities**: Seamlessly export solutions to JSON format and SMT problems to SMTLIB format.
 
-This document explains how to write the model, run the solver, and finally analyze the solution(s).
+This comprehensive guide will walk you through the process of model creation, solver execution, and solution analysis, making it a valuable resource for harnessing the full potential of ProcessScheduler.
 
 What's inside
--------------
+=============
+ProcessScheduler operates on models written in the Python programming language, offering the flexibility to accommodate a wide range of scheduling requirements for tasks and resources.
 
-ProcessScheduler processes a model written using the Python programming language. It produces a schedule compliant with a set of constraints over tasks and/or resources.
+To tackle scheduling challenges, ProcessScheduler leverages the power of the Microsoft SMT `Z3 Prover <https://github.com/Z3Prover/z3>`_, a licensed MIT `SMT solver <https://en.wikipedia.org/wiki/Satisfiability_modulo_theories>`_. For those eager to delve deeper into the optimization aspects of the solver, a comprehensive reference can be found in the paper "Bjorner et al. νZ - An Optimizing SMT Solver (2016)." Additionally, an introductory guide to programming with Z3 in Python is available at `z3-py-tutorial <https://ericpony.github.io/z3py-tutorial/guide-examples.htm>`_. It's worth noting that Z3 is the only mandatory dependency for ProcessScheduler.
 
-The scheduling problem is solved using the Microsoft SMT `Z3 Prover <https://github.com/Z3Prover/z3>`_, a MIT licensed `SMT solver <https://en.wikipedia.org/wiki/Satisfiability_modulo_theories>`_. The optimization part of the solver is described in this paper: `Bjorner et al. νZ - An Optimizing SMT Solver (2016) <https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/nbjorner-nuz.pdf>`_. A good introduction to programming Z3 with Python can be read at `z3-py-tutorial <https://ericpony.github.io/z3py-tutorial/guide-examples.htm>`_. Z3 is the only mandatory dependency of ProcessScheduler.
-
-The solution of a scheduling problem can be rendered to a Gantt chart using the `matplotlib <https://www.matplotlib.org>`_ or `plotly <https://plotly.com/>`_ libraries, and exported to any of the common jpg, png, pdf or svg formats. matplotlib and plotly are not installed by default, they are optional dependencies.
+Furthermore, the tool offers the flexibility to visualize scheduling solutions by rendering them into Gantt charts, which can be exported in common formats such as JPG, PNG, PDF, or SVG. Please note that the optional libraries, matplotlib and plotly, are not pre-installed but can be easily integrated based on your preferences and needs.
 
 Download/install
-----------------
+================
 Use ``pip`` to install the package and the required dependencies (Z3) on your machine:
 
 .. code-block:: bash
@@ -47,7 +47,7 @@ and check the installation from a python3 prompt:
     >>> import processscheduler as ps
 
 Development version
--------------------
+===================
 Create a local copy of the `github <https://github.com/tpaviot/ProcessScheduler>`_ repository:
 
 .. code-block:: bash
