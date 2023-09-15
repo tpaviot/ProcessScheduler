@@ -30,8 +30,7 @@ TaskStartAfter
 --------------
 Enforces that a task must start after a given time instant.
 
-:class:`TaskStartAfterStrict`: the constraint  :math:`task.start > value`
-can be strict lor lax.
+:class:`TaskStartAfterStrict` can be strict lor lax.
 
 TaskEndAt
 ---------
@@ -43,8 +42,7 @@ TaskEndBefore
 -------------
 Requires that a task ends before or at a given time instant.
 
-- :class:`TaskEndBeforeStrict`: the constraint :math:`task.end < value`
-can be strict or lax.
+- :class:`TaskEndBeforeStrict` can be strict or lax.
 
 Two tasks temporal constraints
 ==============================
