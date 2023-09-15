@@ -37,7 +37,7 @@ A period represents the finest granularity level for defining the timeline, task
 
 
 Mapping integers to datetime objects
-------------------------------------
+====================================
 To enhance the readability of Gantt charts and make schedules more intuitive, ProcessScheduler allows you to represent time intervals in real dates and times rather than integers. You can explicitly set time values in seconds, minutes, hours, and more. The smallest time duration for a task, represented by the integer `1`, can be mapped to a Python `timedelta` object. Similarly, any point in time can be mapped to a Python `datetime` object.
 
 Creating Python timedelta objects can be achieved as follows:
