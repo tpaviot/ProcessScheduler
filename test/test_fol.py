@@ -132,9 +132,7 @@ class TestFirstOrderLogic(unittest.TestCase):
     def test_operator_and_1(self) -> None:
         pb = ps.SchedulingProblem("OperatorAnd1", horizon=23)
         t_1 = ps.FixedDurationTask("t1", duration=2)
-        and_constraint = ps.and_(
-            [ps.TaskStartAfterLax(t_1, 3), ps.TaskEndBeforeLax(t_1, 5)]
-        )
+        and_constraint = ps.and_([ps.TaskStartAfter(t_1, 3), ps.TaskEndBefore(t_1, 5)])
         self.assertIsInstance(and_constraint, ps.BoolRef)
         pb.add_constraint(and_constraint)
         solution = ps.SchedulingSolver(pb).solve()

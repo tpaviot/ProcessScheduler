@@ -168,15 +168,15 @@ class TestTask(unittest.TestCase):
     def test_create_task_start_after_strict(self) -> None:
         new_problem_or_clear()
         task = ps.FixedDurationTask("task", 2)
-        c = ps.TaskStartAfterStrict(task, 3)
-        self.assertIsInstance(c, ps.TaskStartAfterStrict)
+        c = ps.TaskStartAfter(task, 3, kind="strict")
+        self.assertIsInstance(c, ps.TaskStartAfter)
         self.assertEqual(c.value, 3)
 
     def test_create_task_start_after_lax(self) -> None:
         new_problem_or_clear()
         task = ps.FixedDurationTask("task", 2)
-        c = ps.TaskStartAfterLax(task, 3)
-        self.assertIsInstance(c, ps.TaskStartAfterLax)
+        c = ps.TaskStartAfter(task, 3, kind="lax")
+        self.assertIsInstance(c, ps.TaskStartAfter)
         self.assertEqual(c.value, 3)
 
     def test_create_task_end_at(self) -> None:
@@ -189,15 +189,15 @@ class TestTask(unittest.TestCase):
     def test_create_task_before_strict(self) -> None:
         new_problem_or_clear()
         task = ps.FixedDurationTask("task", 2)
-        c = ps.TaskEndBeforeStrict(task, 3)
-        self.assertIsInstance(c, ps.TaskEndBeforeStrict)
+        c = ps.TaskEndBefore(task, 3, kind="strict")
+        self.assertIsInstance(c, ps.TaskEndBefore)
         self.assertEqual(c.value, 3)
 
     def test_create_task_before_lax(self) -> None:
         new_problem_or_clear()
         task = ps.FixedDurationTask("task", 2)
-        constraint = ps.TaskEndBeforeLax(task, 3)
-        self.assertIsInstance(constraint, ps.TaskEndBeforeLax)
+        constraint = ps.TaskEndBefore(task, 3, kind="lax")
+        self.assertIsInstance(constraint, ps.TaskEndBefore)
         self.assertEqual(constraint.value, 3)
 
     def test_task_duration_depend_on_start(self) -> None:

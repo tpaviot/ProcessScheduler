@@ -211,17 +211,17 @@ class TestIndicator(unittest.TestCase):
         t_4.add_required_resource(worker_1)
         t_5.add_required_resource(worker_1)
 
-        ps.TaskEndBeforeLax(t_3, 35)
-        ps.TaskEndBeforeLax(t_2, 35)
-        ps.TaskEndBeforeLax(t_1, 35)
-        ps.TaskEndBeforeLax(t_4, 35)
-        ps.TaskEndBeforeLax(t_5, 35)
+        ps.TaskEndBefore(t_3, 35)
+        ps.TaskEndBefore(t_2, 35)
+        ps.TaskEndBefore(t_1, 35)
+        ps.TaskEndBefore(t_4, 35)
+        ps.TaskEndBefore(t_5, 35)
 
-        ps.TaskStartAfterLax(t_3, 10)
-        ps.TaskStartAfterLax(t_2, 10)
-        ps.TaskStartAfterLax(t_1, 10)
-        ps.TaskStartAfterLax(t_4, 10)
-        ps.TaskStartAfterLax(t_5, 10)
+        ps.TaskStartAfter(t_3, 10)
+        ps.TaskStartAfter(t_2, 10)
+        ps.TaskStartAfter(t_1, 10)
+        ps.TaskStartAfter(t_4, 10)
+        ps.TaskStartAfter(t_5, 10)
 
         return problem, worker_1, dur1 + dur2 + dur3 + dur4 + dur5
 
@@ -290,8 +290,8 @@ class TestIndicator(unittest.TestCase):
             for _ in range(nb_tasks_i):
                 tasks.append(ps.FixedDurationTask(f"T{len(tasks)}", duration=1))
                 tasks[-1].add_required_resource(worker_1)
-                ps.TaskStartAfterLax(tasks[-1], interval[0])
-                ps.TaskEndBeforeLax(tasks[-1], interval[1])
+                ps.TaskStartAfter(tasks[-1], interval[0])
+                ps.TaskEndBefore(tasks[-1], interval[1])
         return problem, worker_1, len(tasks)
 
     @staticmethod

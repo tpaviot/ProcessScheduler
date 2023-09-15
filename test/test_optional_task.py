@@ -239,8 +239,8 @@ class TestOptionalTask(unittest.TestCase):
         # force task_2 to be scheduled
         pb.add_constraint(task_2.scheduled == True)
 
-        ps.TaskStartAfterStrict(task_2, 1)
-        ps.TaskStartAfterLax(task_2, 4)
+        ps.TaskStartAfter(task_2, 1, kind="strict")
+        ps.TaskStartAfter(task_2, 4, kind="lax")
 
         solver = ps.SchedulingSolver(pb, debug=True)
         solution = solver.solve()
@@ -258,8 +258,8 @@ class TestOptionalTask(unittest.TestCase):
         # force task_2 to be scheduled
         pb.add_constraint(task_2.scheduled == True)
 
-        ps.TaskEndBeforeStrict(task_2, 7)
-        ps.TaskEndBeforeLax(task_2, 4)
+        ps.TaskEndBefore(task_2, 7, kind="strict")
+        ps.TaskEndBefore(task_2, 4, kind="lax")
 
         solver = ps.SchedulingSolver(pb)
         solution = solver.solve()

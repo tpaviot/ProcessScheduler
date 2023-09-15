@@ -35,7 +35,7 @@ class TaskPrecedence(TaskConstraint):
         task_before,
         task_after,
         offset=0,
-        kind="lax",
+        kind: Optional[str] = "lax",
         optional: Optional[bool] = False,
     ):
         """kind might be either LAX/STRICT/TIGHT
@@ -177,29 +177,25 @@ class TaskStartAt(TaskConstraint):
             self.set_z3_assertions(scheduled_assertion)
 
 
-class TaskStartAfterStrict(TaskConstraint):
-    """task.start > value"""
-
-    def __init__(self, task, value: int, optional: Optional[bool] = False) -> None:
+class TaskStartAfter(TaskConstraint):
+    def __init__(
+        self,
+        task,
+        value: int,
+        kind: Optional[str] = "lax",
+        optional: Optional[bool] = False,
+    ) -> None:
         super().__init__(optional)
+
+        if kind not in ["lax", "strict"]:
+            raise ValueError("kind must either be 'lax' or 'strict'")
+
         self.value = value
 
-        scheduled_assertion = task.start > value
-
-        if task.optional:
-            self.set_z3_assertions(Implies(task.scheduled, scheduled_assertion))
-        else:
-            self.set_z3_assertions(scheduled_assertion)
-
-
-class TaskStartAfterLax(TaskConstraint):
-    """task.start >= value"""
-
-    def __init__(self, task, value: int, optional: Optional[bool] = False) -> None:
-        super().__init__(optional)
-        self.value = value
-
-        scheduled_assertion = task.start >= value
+        if kind == "strict":
+            scheduled_assertion = task.start > value
+        elif kind == "lax":
+            scheduled_assertion = task.start >= value
 
         if task.optional:
             self.set_z3_assertions(Implies(task.scheduled, scheduled_assertion))
@@ -222,29 +218,27 @@ class TaskEndAt(TaskConstraint):
             self.set_z3_assertions(scheduled_assertion)
 
 
-class TaskEndBeforeStrict(TaskConstraint):
+class TaskEndBefore(TaskConstraint):
     """task.end < value"""
 
-    def __init__(self, task, value: int, optional: Optional[bool] = False) -> None:
+    def __init__(
+        self,
+        task,
+        value: int,
+        kind: Optional[str] = "lax",
+        optional: Optional[bool] = False,
+    ) -> None:
         super().__init__(optional)
+
+        if kind not in ["lax", "strict"]:
+            raise ValueError("kind must either be 'lax' or 'strict'")
+
         self.value = value
 
-        scheduled_assertion = task.end < value
-
-        if task.optional:
-            self.set_z3_assertions(Implies(task.scheduled, scheduled_assertion))
-        else:
-            self.set_z3_assertions(scheduled_assertion)
-
-
-class TaskEndBeforeLax(TaskConstraint):
-    """task.end <= value"""
-
-    def __init__(self, task, value: int, optional: Optional[bool] = False) -> None:
-        super().__init__(optional)
-        self.value = value
-
-        scheduled_assertion = task.end <= value
+        if kind == "strict":
+            scheduled_assertion = task.end < value
+        elif kind == "lax":
+            scheduled_assertion = task.end <= value
 
         if task.optional:
             self.set_z3_assertions(Implies(task.scheduled, scheduled_assertion))

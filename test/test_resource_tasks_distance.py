@@ -257,11 +257,11 @@ class TestResourceTasksDistance(unittest.TestCase):
             list_of_time_intervals=[[10, 20], [30, 40]],
         )
         ps.TaskStartAt(tasks[0], 10)
-        ps.TaskStartAfterLax(tasks[1], 10)
-        ps.TaskEndBeforeLax(tasks[1], 20)
+        ps.TaskStartAfter(tasks[1], 10)
+        ps.TaskEndBefore(tasks[1], 20)
         ps.TaskStartAt(tasks[2], 30)
-        ps.TaskStartAfterLax(tasks[3], 30)
-        ps.TaskEndBeforeLax(tasks[3], 40)
+        ps.TaskStartAfter(tasks[3], 30)
+        ps.TaskEndBefore(tasks[3], 40)
         # as a consequence, task2 should be scheduled 4 periods after and start at 15
         solver = ps.SchedulingSolver(pb)
 
