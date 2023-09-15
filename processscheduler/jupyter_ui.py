@@ -33,6 +33,10 @@ from processscheduler.task_constraint import (
     OptionalTasksDependency,
     ForceScheduleNOptionalTasks,
     ScheduleNTasksInTimeIntervals,
+    UnorderedTaskGroup,
+    OrderedTaskGroup,
+    TaskUnloadBuffer,
+    TaskLoadBuffer
 )
 from processscheduler.resource_constraint import (
     WorkLoad,
@@ -384,6 +388,10 @@ task_constraint_types = {
     "OptionalTasksDependency": OptionalTasksDependency,
     "ForceScheduleNOptionalTasks": ForceScheduleNOptionalTasks,
     "ScheduleNTasksInTimeIntervals": ScheduleNTasksInTimeIntervals,
+    "OrderedTaskGroup": OrderedTaskGroup,
+    "UnorderedTaskGroup": UnorderedTaskGroup,
+    "TaskLoadBuffer": TaskLoadBuffer,
+    "TaskUnloadBuffer": TaskUnloadBuffer
 }
 task_constraint_type_widget = widgets.Dropdown(
     options=list(task_constraint_types),
