@@ -1,11 +1,12 @@
+*******************
 Resource assignment
-===================
+*******************
 
-The solver decides which resource(s) should be assigned for a task to be processed. A :class:`Worker` instance can process only one task per time period whereas a :class:`CumulativeWorker` can process different tasks at the same time.
+In the context of scheduling, resource assignment is the process of determining which resource or resources should be assigned to a task for its successful processing. ProcessScheduler provides flexible ways to specify resource assignments for tasks, depending on your scheduling needs. A :class:`Worker` instance can process only one task per time period whereas a :class:`CumulativeWorker` can process multiple tasks at the same time.
 
 Single resource assignment
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-Tell the task that it requires a set of resources to be processed
+==========================
+For assigning a single resource to a task, you can use the following syntax:
 
 .. code-block:: python
 
@@ -17,9 +18,8 @@ Tell the task that it requires a set of resources to be processed
 
 
 Multiple resources assignment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To constraint different resources to process one single task.
+============================
+To assign multiple resources to a single task, you can use the following approach:
 
 .. code-block:: python
 
@@ -32,8 +32,8 @@ To constraint different resources to process one single task.
     paint_engine.add_required_resources([john, alice])
 
 Alternative resource assignment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The :class:`SelectWorkers` class let the solver decide which resource(s) to assign to a task, among a collection of workers that have the ability to process the task. The solver can decide to assign exactly :math:`n` resources, **at most** :math:`n` or **at least** :math:`n`. For example, if 3 drillers are available, and if a drilling task can be processed by any of one of these 3 drillers, it is defined as:
+===============================
+ProcessScheduler introduces the :class:`SelectWorkers` class, which allows the solver to decide which resource or resources to assign to a task from a collection of capable workers. You can specify whether the solver should assign exactly n resources, at most n resources, or at least n resources. Let's consider the following example: 3 drillers are available, a drilling task can be processed by any of one of these 3 drillers. This can be represented as:
 
 .. code-block:: python
 
@@ -42,10 +42,12 @@ The :class:`SelectWorkers` class let the solver decide which resource(s) to assi
     driller_2 = Worker('Driller2')
     driller_3 = Worker('Driller3')
     # the DrillHolePhi10mm task can be processed by the Driller1 OR the Driller2 OR the Driller 3
-    drilling_hole.add_required_resource(SelectWorkers([driller_1, driller_2, driller_3],
+    drilling_hole.add_required_resource(SelectWorkers([driller_1,
+                                                       driller_2,
+                                                       driller_3],
                                         nb_workers_to_select=1,
                                         kind='exact'))
 
-This tells the solver to assign *exactly 1* resource among the list of the three workers able to process the task. The :attr:`kind` parameter can take either :const:`'exact'` (default value), :const:`'min'` or :const:`'max'` values.
+In this case, the solver is instructed to assign exactly one resource from the list of three workers capable of performing the task. The ``kind`` parameter can be set to :const:`'exact'` (default), :const:`'min'`, or :const:`'max'`, depending on your requirements. Additionally, you can specify the number of workers to select with ``nb_workers_to_select``, which can be any integer between 1 (default) and the total number of eligible workers in the list.
 
-:const:`nb_workers` can take any integer between 1 (default value) and the number of capable workers from the list.
+These resource assignment options provide flexibility and control over how tasks are allocated to available resources, ensuring efficient scheduling in various use cases.
