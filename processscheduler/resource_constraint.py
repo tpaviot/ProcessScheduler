@@ -37,11 +37,13 @@ class WorkLoad(ResourceConstraint):
     A WorkLoad constraint restricts the number of tasks that can be executed on a resource
     during a certain time period. The resource can be a single Worker or a CumulativeWorker.
 
-    The list of time intervals is specified as a dict mapping interval tuples to integer bounds.
-    For example, {(1,20):6, (50,60):2} specifies that the resource can use no more than 6 slots
-    in the interval (1,20), and no more than 2 slots in the interval (50,60).
-
-    The kind parameter specifies whether the constraint is exact, a minimum, or a maximum.
+    Parameters:
+    - resource: The resource for which the workload constraint is defined.
+    - dict_time_intervals_and_bound: A dictionary that maps interval tuples to integer bounds.
+      For example, {(1,20):6, (50,60):2} specifies that the resource can use no more than 6 slots
+      in the interval (1,20), and no more than 2 slots in the interval (50,60).
+    - kind (str, optional): Specifies whether the constraint is exact, a minimum, or a maximum (default is "max").
+    - optional (bool, optional): Whether the constraint is optional (default is False).
     """
 
     def __init__(
@@ -51,6 +53,16 @@ class WorkLoad(ResourceConstraint):
         kind: Optional[str] = "max",
         optional: Optional[bool] = False,
     ) -> None:
+        """
+        Initialize a WorkLoad constraint.
+
+        :param resource: The resource for which the workload constraint is defined.
+        :param dict_time_intervals_and_bound: A dictionary that maps interval tuples to integer bounds.
+          For example, {(1,20):6, (50,60):2} specifies that the resource can use no more than 6 slots
+          in the interval (1,20), and no more than 2 slots in the interval (50,60).
+        :param kind: Specifies whether the constraint is exact, a minimum, or a maximum (default is "max").
+        :param optional: Whether the constraint is optional (default is False).
+        """
         super().__init__(optional)
 
         if kind not in ["exact", "max", "min"]:
@@ -149,15 +161,26 @@ class WorkLoad(ResourceConstraint):
 
 
 class ResourceUnavailable(ResourceConstraint):
-    """set unavailablity or a resource, in terms of busy intervals"""
+    """
+    This constraint sets the unavailability of a resource in terms of time intervals.
+
+    Parameters:
+    - resource: The resource for which unavailability is defined.
+    - list_of_time_intervals: A list of time intervals during which the resource is unavailable for any task.
+      For example, [(0, 2), (5, 8)] represents time intervals from 0 to 2 and from 5 to 8.
+    - optional (bool, optional): Whether the constraint is optional (default is False).
+    """
 
     def __init__(
         self, resource, list_of_time_intervals, optional: Optional[bool] = False
     ) -> None:
         """
-        :param resource: the resource
-        :param list_of_intervals: periods for which the resource is unavailable for any task.
-        for example [(0, 2), (5, 8)]
+        Initialize a ResourceUnavailable constraint.
+
+        :param resource: The resource for which unavailability is defined.
+        :param list_of_time_intervals: A list of time intervals during which the resource is unavailable for any task.
+          For example, [(0, 2), (5, 8)] represents time intervals from 0 to 2 and from 5 to 8.
+        :param optional: Whether the constraint is optional (default is False).
         """
         super().__init__(optional)
 
@@ -193,8 +216,17 @@ class ResourceUnavailable(ResourceConstraint):
 
 
 class ResourceTasksDistance(ResourceConstraint):
-    """Force a minimal/exact/maximal number time unitary periods between tasks for a single resource. This
-    distance constraint is restricted to a certain number of time intervals"""
+    """
+    This constraint enforces a specific number of time unitary periods between tasks for a single resource.
+    The constraint can be applied within specified time intervals.
+
+    Parameters:
+    - resource: The resource to which the constraint applies.
+    - distance (int): The desired number of time unitary periods between tasks.
+    - list_of_time_intervals (list, optional): A list of time intervals within which the constraint is restricted.
+    - optional (bool, optional): Whether the constraint is optional (default is False).
+    - mode (str, optional): The mode for enforcing the constraint - "exact" (default), "min", or "max".
+    """
 
     def __init__(
         self,
@@ -204,12 +236,21 @@ class ResourceTasksDistance(ResourceConstraint):
         optional: Optional[bool] = False,
         mode: Optional[str] = "exact",
     ):
+        """
+        Initialize a ResourceTasksDistance constraint.
+
+        :param resource: The resource to which the constraint applies.
+        :param distance: The desired number of time unitary periods between tasks.
+        :param list_of_time_intervals: A list of time intervals within which the constraint is restricted (optional).
+        :param optional: Whether the constraint is optional (default is False).
+        :param mode: The mode for enforcing the constraint - "exact" (default), "min", or "max" (optional).
+        """
+        super().__init__(optional)
+
         if mode not in {"min", "max", "exact"}:
             raise Exception("Mode should be min, max or exact")
 
         assert_resource_is_worker_or_cumulative_worker(resource)
-
-        super().__init__(optional)
 
         self.list_of_time_intervals = list_of_time_intervals
         self.resource = resource
@@ -271,20 +312,32 @@ class ResourceTasksDistance(ResourceConstraint):
 # SelectWorker specific constraints
 #
 class SameWorkers(ResourceConstraint):
-    """Selected workers by both AlternateWorkers are constrained to
-    be the same
+    """
+    This constraint ensures that workers selected by two SelectWorker instances are the same.
+
+    Parameters:
+    - select_workers_1: The first set of selected workers.
+    - select_workers_2: The second set of selected workers.
+    - optional (bool, optional): Whether the constraint is optional (default is False).
     """
 
     def __init__(
         self, select_workers_1, select_workers_2, optional: Optional[bool] = False
     ):
+        """
+        Initialize a SameWorkers constraint.
+
+        :param select_workers_1: The first set of selected workers.
+        :param select_workers_2: The second set of selected workers.
+        :param optional: Whether the constraint is optional (default is False).
+        """
         super().__init__(optional)
 
         self.select_workers_1 = select_workers_1
         self.select_workers_2 = select_workers_2
 
-        # we check resources in alt work 1, if it is present in
-        # Select worker 2 as well, then add a constraint
+        # Check for common resources in select_workers_1 and select_workers_2,
+        # then add a constraint to ensure they are the same.
         for res_work_1 in select_workers_1.selection_dict:
             if res_work_1 in select_workers_2.selection_dict:
                 self.set_z3_assertions(
@@ -294,20 +347,32 @@ class SameWorkers(ResourceConstraint):
 
 
 class DistinctWorkers(ResourceConstraint):
-    """Selected workers by both AlternateWorkers are constrained to
-    be the same
+    """
+    This constraint ensures that workers selected by two SelectWorker instances are distinct.
+
+    Parameters:
+    - select_workers_1: The first set of selected workers.
+    - select_workers_2: The second set of selected workers.
+    - optional (bool, optional): Whether the constraint is optional (default is False).
     """
 
     def __init__(
         self, select_workers_1, select_workers_2, optional: Optional[bool] = False
     ):
+        """
+        Initialize a DistinctWorkers constraint.
+
+        :param select_workers_1: The first set of selected workers.
+        :param select_workers_2: The second set of selected workers.
+        :param optional: Whether the constraint is optional (default is False).
+        """
         super().__init__(optional)
 
         self.select_workers_1 = select_workers_1
         self.select_workers_2 = select_workers_2
 
-        # we check resources in alt work 1, if it is present in
-        # alterna worker 2 as well, then add a constraint
+        # Check for common resources in select_workers_1 and select_workers_2,
+        # then add a constraint to ensure they are distinct.
         for res_work_1 in select_workers_1.selection_dict:
             if res_work_1 in select_workers_2.selection_dict:
                 self.set_z3_assertions(
