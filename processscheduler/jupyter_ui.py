@@ -36,7 +36,7 @@ from processscheduler.task_constraint import (
     UnorderedTaskGroup,
     OrderedTaskGroup,
     TaskUnloadBuffer,
-    TaskLoadBuffer
+    TaskLoadBuffer,
 )
 from processscheduler.resource_constraint import (
     WorkLoad,
@@ -391,7 +391,7 @@ task_constraint_types = {
     "OrderedTaskGroup": OrderedTaskGroup,
     "UnorderedTaskGroup": UnorderedTaskGroup,
     "TaskLoadBuffer": TaskLoadBuffer,
-    "TaskUnloadBuffer": TaskUnloadBuffer
+    "TaskUnloadBuffer": TaskUnloadBuffer,
 }
 task_constraint_type_widget = widgets.Dropdown(
     options=list(task_constraint_types),
