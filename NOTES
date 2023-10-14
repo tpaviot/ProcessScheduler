@@ -1,5 +1,21 @@
 RELEASE NOTES
 
+Version 0.9.2
+=============
+New features:
+  - export to excel
+
+Misc:
+  - documentation update
+  - delay solver initialization, better tracking for conflicting constraints
+  - explicitly raise an exception is ResourceUnavailable defined before the resource is assigned to the tasks. Fix issue #126
+  - raise exception if resource is identified by its name and not the variable name
+  - change report status in check_sat
+  - fix costs computation
+  - fix boolean examples in features notebook
+  - move first order logic tests to test_fol.py
+  - many typos/cosmetic changes
+
 Version 0.9.1
 =============
 Minor fixes
