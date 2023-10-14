@@ -28,7 +28,7 @@ User-end documentation available at https://processscheduler.readthedocs.io/
 *   first-order-logic operations (not, or, xor, and, implies, if/then/else) between task or resource constraints,
 *   builtin and customized indicators (resource utilization, resource cost),
 *   single and multiobjective optimization (makespan, flowtime, earliest, latest, resource cost, etc.),
-*   exporters: smtlib2.0, json
+*   exporters: excel, smtlib2.0, json
 *   Gantt chart rendering using matplotlib or plotly
 
 ## Install
