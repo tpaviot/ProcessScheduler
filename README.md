@@ -64,8 +64,7 @@ task_world = ps.FixedDurationTask('Scheduler', duration=2)
 
 # precedence constraint: task_world must be scheduled
 # after task_hello
-c1 = ps.TaskPrecedence(task_hello, task_world, offset=0)
-pb.add_constraint(c1) # explicitly add this constraint to the problem
+ps.TaskPrecedence(task_hello, task_world)
 
 # solve
 solver = ps.SchedulingSolver(pb)
