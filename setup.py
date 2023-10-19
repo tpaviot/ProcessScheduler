@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 DESCRIPTION = (
-    "A Python package for project and team management. Automatic resource allocation, constrained-resource scheduling, optimization."
+    "A Python package for project and team management. Automatic and optimized resource scheduling."
 )
 
 CLASSIFIERS = [

@@ -16,7 +16,7 @@ copyright = "2020-2023, Thomas Paviot"
 author = "Thomas Paviot"
 
 # The full version, including alpha/beta/rc tags
-version = "0.9.dev"
+version = "0.9.3"
 release = version
 
 # -- RTD configuration ------------------------------------------------

@@ -5,51 +5,51 @@
 [![Documentation Status](https://readthedocs.org/projects/processscheduler/badge/?version=latest)](https://processscheduler.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/ProcessScheduler.svg)](https://badge.fury.io/py/ProcessScheduler)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4480745.svg)](https://doi.org/10.5281/zenodo.4480745)
-[![slack](https://img.shields.io/badge/slack-ProcessScheduler-brightgreen)](https://join.slack.com/t/processscheduler/shared_invite/zt-pa152rki-126YyMsuLNxhOv_suqKtkQ)
 
 # ProcessScheduler
-A python library to compute resource-constrained task schedules. Express your scheduling problem in terms of tasks, resources and constraints, ProcessScheduler computes one/the best schedule that satisfies the requirements.
-
-The computation is based on a set of constraints expressed under the form of first-order logic assertions. Problem solving is performed by the SAT/SMT [Z3 Theorem Prover](https://github.com/Z3Prover/z3).
-
-## Documentation
-
-User-end documentation available at https://processscheduler.readthedocs.io/
+ProcessScheduler is a Python package for creating optimized scheduling based on identified resources and tasks to be carried out. It offers a set of classes and methods for finely modeling a wide range of use cases with rich semantics. Complex mathematical calculations necessary for problem resolution are transparently handled for the user, allowing them to focus on problem modeling. ProcessScheduler is aimed at project managers, business organization consultants, or industrial logistics experts looking to optimize the achievement of time or cost objectives.
 
 ## Features
 
-*   tasks: zero duration task, fixed duration task, variable duration task, work amount, optional task,
-*   resources: worker, cumulative workers, workers selection, productivity attribute,
-*   advanced cost functions,
-*   buffer: NonConcurrentBuffer,
-*   task constraints: precedence, start synced, end synced, start at, end at, start after, end before,
-*   resource constraints: AllSameSelected, AllDifferentSelected,
-*   everything can be set as optional (tasks, resources, constraints),
-*   first-order-logic operations (not, or, xor, and, implies, if/then/else) between task or resource constraints,
-*   builtin and customized indicators (resource utilization, resource cost),
-*   single and multiobjective optimization (makespan, flowtime, earliest, latest, resource cost, etc.),
-*   exporters: excel, smtlib2.0, json
-*   Gantt chart rendering using matplotlib or plotly
+* Tasks: Creation of tasks defined by their duration, priority, and required effort.
 
-## Install
+* Resources: Individual workers defined by their productivity, cost, and availability.
+
+* Resource Allocation: Allocation from a set of workers sharing common skills.
+
+* Buffers: Support for tasks that consume raw materials.
+
+* Indicators: Including cost, resource effort, or any customized indicator.
+
+* Task and resource constraints that can be combined using first-order logic operations (NOT, OR, XOR, AND, IMPLIES, IF/THEN ELSE) for rich representations.
+
+* Multi-optimized schedule computation, including makespan, flowtime, earliest start, latest start, resource cost, or any customized indicator you have defined.
+
+* Gantt diagram generation and rendering.
+
+* Results export to JSON, SMT-LIB 2.0, Excel, or other formats for further analysis.
+
+## Install latest version with pip
 
 Install with pip.
 
 ```bash
-pip install ProcessScheduler
+pip install ProcessScheduler==0.9.3
 ```
 
-The Z3 theorem prover is the only required dependency.
+This comes with the only required dependency: the Microsoft free and open source licenses [S3 solver](https://github.com/Z3Prover/z3). If you want to take advantage of all the features, you can install optional dependencies:
 
-Optional dependencies (install either with pip or conda):
+```bash
+pip install matplotlib plotly kaleido ipywidgets isodate ipympl psutil XlsxWriter
+```
 
-*   matplotlib (Gantt chart rendering),
-*   plotly (Gantt chart rendering),
-*   numpy
-
-## Try online
+## Run online
 
 There are some Jupypter notebooks that can be executed online at [myBinder.org](https://mybinder.org/v2/gh/tpaviot/ProcessScheduler/HEAD?filepath=examples-notebooks)
+
+## Documentation
+
+User-end documentation available at https://processscheduler.readthedocs.io/
 
 ## Helloworld
 
@@ -81,12 +81,17 @@ solution.render_gantt_matplotlib()
 
 ProcessScheduler uses the following tools to ensure code quality:
 
-*   unittests,
-*   code coverage (coverage.py, codecov.io),
-*   continuous-integration at MS azure,
-*   static code analysis (codacy),
-*   spelling mistakes tracking (codespell),
-*   code formatting using the black python formatter
+* unittests,
+
+* code coverage (coverage.py, codecov.io),
+
+* continuous-integration at MS azure,
+
+* static code analysis (codacy),
+
+* spelling mistakes tracking (codespell),
+
+* code formatting using the black python formatter
 
 ## License/Author
 
