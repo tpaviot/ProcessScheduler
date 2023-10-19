@@ -1,11 +1,11 @@
 from setuptools import find_packages, setup
 
 DESCRIPTION = (
-    "A package to solve resource-constrained scheduling problems using SAT/SMT."
+    "A Python package for project and team management. Automatic resource allocation, constrained-resource scheduling, optimization."
 )
 
 CLASSIFIERS = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Manufacturing",
     "Intended Audience :: Financial and Insurance Industry",
@@ -21,7 +21,7 @@ CLASSIFIERS = [
 
 setup(
     name="ProcessScheduler",
-    version="0.9.2",
+    version="0.9.3",
     description=DESCRIPTION,
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
