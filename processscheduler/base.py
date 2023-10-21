@@ -16,18 +16,22 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 from typing import List, Optional
-import uuid
+from uuid import uuid4
 
+from pydantic import BaseModel, PositiveInt, Field
 from z3 import BoolRef
 
 
 #
 # _NamedUIDObject, name and uid for hashing
 #
-class _NamedUIDObject:
+class _NamedUIDObject(BaseModel):
     """The base object for most ProcessScheduler classes"""
+    uid: int = Field(default_factory=lambda: uuid4().int)
+    name: str = Field(default_factory=lambda: f"{self.__class__.__name__}_{str(self.uid)[:8]}")
+    #name: str = Field(default="")
 
-    def __init__(self, name: Optional[str] = "") -> None:
+    def __init__(self, **data) -> None:
         """The base name for all ProcessScheduler objects.
 
         Provides an assertions list, a uniqueid.
@@ -36,22 +40,13 @@ class _NamedUIDObject:
             name: the object name. It must be unique
         """
         # check name type
-        if not isinstance(name, str):
-            raise TypeError("name must be a str instance")
-
-        # unique identifier
-        self.uid = uuid.uuid4().int  # type: int
-
-        # the object name
-        if name != "":
-            self.name = name  # type: str
-        else:  # auto generate name, eg. SelectWorkers_ae34cf52
-            self.name = f"{self.__class__.__name__}_{uuid.uuid4().hex[:8]}"
+        super().__init__(**data)
+        print("Base object being created!!")
 
         # SMT assertions
         # start and end integer values must be positive
-        self.z3_assertions = []  # type: List[BoolRef]
-        self.z3_assertion_hashes = []
+        self._z3_assertions = []  # type: List[BoolRef]
+        self._z3_assertion_hashes = []
 
     def __hash__(self) -> int:
         return self.uid

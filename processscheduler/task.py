@@ -17,6 +17,7 @@
 
 from typing import List, Optional
 
+from pydantic import Field
 from z3 import And, ArithRef, Bool, BoolRef, If, Int, Or
 
 from processscheduler.base import _NamedUIDObject
@@ -31,30 +32,35 @@ import processscheduler.context as ps_context
 
 class Task(_NamedUIDObject):
     """a Task object"""
+    optional: bool = Field(default=False)
+    work_amount: int = Field(default=0)
+    priority: int = Field(default=1)
 
-    def __init__(self, name: str, optional: bool = False) -> None:
-        super().__init__(name)
-        self.work_amount = 0
-        self.priority = 1  # by default
+    def __init__(self, **data) -> None:
+        """The base name for all ProcessScheduler objects.
+
+        Provides an assertions list, a uniqueid.
+
+        Args:
+            name: the object name. It must be unique
+        """
+        # check name type
+        super().__init__(**data)
 
         # workers required to process the task
-        self.required_resources = []  # type: List[Resource]
+        self._required_resources = []  # type: List[Resource]
         # the following list is used for json export only
         # it stores the parameter passed to the add_required_resource
         # method
-        self.required_resources_names = []  # type: List[str]
+        self._required_resources_names = []  # type: List[str]
 
         # z3 Int variables
-        self.start = Int(f"{name}_start")  # type: ArithRef
-        self.end = Int(f"{name}_end")  # type: ArithRef
-        self.duration = Int(f"{name}_duration")  # type: ArithRef
+        self._start = Int(f"{self.name}_start")  # type: ArithRef
+        self._end = Int(f"{self.name}_end")  # type: ArithRef
+        self._duration = Int(f"{self.name}_duration")  # type: ArithRef
 
         # by default, the task is mandatory
-        self.scheduled = True  # type: Union[bool, BoolRef]
-
-        # but it can be se as optional. In that case, the self.scheduled
-        # above flag will be overridden as a z3 BoolRef
-        self.optional = optional  # type: bool
+        self._scheduled = True  # type: Union[bool, BoolRef]
 
         # add this task to the current context
         if ps_context.main_context is None:
@@ -63,7 +69,7 @@ class Task(_NamedUIDObject):
             )
         # the task_number is an integer that is incremented each time
         # a task is created. The first task has number 1, the second number 2 etc.
-        self.task_number = ps_context.main_context.add_task(self)  # type: int
+        self._task_number = ps_context.main_context.add_task(self)  # type: int
 
         # the counter used for negative integers
         # negative integers are used to schedule optional tasks
