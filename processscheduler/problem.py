@@ -40,45 +40,30 @@ class SchedulingProblem(_NamedUIDObject):
     :param datetime_format: an optional string
 
     """
-
-    def __init__(
-        self,
-        name: str,
-        horizon: Optional[int] = None,
-        delta_time: Optional[timedelta] = None,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
-    ):
-        super().__init__(name)
+    horizon: int
+    delta_time: Optional[timedelta] = None,
+    start_time: Optional[datetime] = None,
+    end_time: Optional[datetime] = None,
+    
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
         # the problem context, where all will be stored
         # at creation
-        self.context = ps_context.SchedulingContext()
+        self._context = ps_context.SchedulingContext()
         # set this context as global
-        ps_context.main_context = self.context
+        ps_context.main_context = self._context
 
         # store the horizon value to be exported to json
-        self.horizon_defined_value = horizon
+        self._horizon_defined_value = self.horizon
         # define the horizon variable
-        self.horizon = Int("horizon")
-        if is_strict_positive_integer(horizon):
-            self.context.add_constraint(self.horizon <= horizon)
-        elif horizon is not None:
+        self._horizon = Int("horizon")
+        if is_strict_positive_integer(self.horizon):
+            self._context.add_constraint(self._horizon <= self._horizon_defined_value)
+        elif self.horizon is not None:
             raise TypeError("horizon must either be a strict positive integer or None")
 
-        # check time data
-        if delta_time is not None and not isinstance(delta_time, timedelta):
-            raise TypeError("delta_time must be a timedelta instance")
-        if start_time is not None and not isinstance(start_time, datetime):
-            raise TypeError("start_time must be a datetime instance")
-        if end_time is not None and not isinstance(end_time, datetime):
-            raise TypeError("delta_time must be a datetime instance")
-
-        self.delta_time = delta_time
-        self.start_time = start_time
-        self.end_time = end_time
-
     def add_constraint(self, constraint: BoolRef) -> None:
-        self.context.add_constraint(constraint)
+        self._context.add_constraint(constraint)
 
     def add_indicator_number_tasks_assigned(self, resource: Resource):
         """compute the number of tasks as resource is assigned"""

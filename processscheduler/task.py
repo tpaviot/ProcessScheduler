@@ -94,13 +94,13 @@ class Task(_NamedUIDObject):
         if not isinstance(resource, Resource):
             raise TypeError("you must pass a Resource instance")
 
-        if resource in self.required_resources:
+        if resource in self._required_resources:
             raise ValueError(
                 f"resource {resource.name} already defined as a required resource for task {self.name}"
             )
 
         # store the resource name
-        self.required_resources_names.append(resource.name)
+        self._required_resources_names.append(resource.name)
 
         if isinstance(resource, CumulativeWorker):
             # in the case for a CumulativeWorker, select at least one worker
@@ -141,7 +141,7 @@ class Task(_NamedUIDObject):
                 # ... and store it into the task assertions list
                 self.append_z3_assertion(assertion)
                 # finally, add each worker to the "required" resource list
-                self.required_resources.append(worker)
+                self._required_resources.append(worker)
             # also, don't forget to add the AlternativeWorker assertion
             self.append_z3_assertion(resource.selection_assertion)
         elif isinstance(resource, Worker):
@@ -158,7 +158,7 @@ class Task(_NamedUIDObject):
                 self.append_z3_assertion(resource_busy_end == self.end)
                 self.append_z3_assertion(resource_busy_start == self.start)
             # finally, store this resource into the resource list
-            self.required_resources.append(resource)
+            self._required_resources.append(resource)
 
     def add_required_resources(
         self, list_of_resources: List[Resource], dynamic=False
@@ -184,9 +184,9 @@ class Task(_NamedUIDObject):
             # etc.
             point_in_past = -self.task_number
             not_scheduled_assertion = And(
-                self.start == point_in_past,  # to past
-                self.end == point_in_past,  # to past
-                self.duration == 0,
+                self._start == point_in_past,  # to past
+                self._end == point_in_past,  # to past
+                self._duration == 0,
             )
             self.append_z3_assertion(
                 If(self.scheduled, And(list_of_z3_assertions), not_scheduled_assertion)
@@ -207,7 +207,7 @@ class ZeroDurationTask(Task):
     def __init__(self, name: str, optional: Optional[bool] = False) -> None:
         super().__init__(name, optional)
         # add an assertion: end = start because the duration is zero
-        assertions = [self.start == self.end, self.duration == 0]
+        assertions = [self._start == self._end, self._duration == 0]
 
         self.set_assertions(assertions)
 
@@ -245,9 +245,9 @@ class FixedDurationTask(Task):
         self.priority = priority
 
         assertions = [
-            self.start + self.duration == self.end,
-            self.duration == duration,
-            self.start >= 0,
+            self._start + self._duration == self._end,
+            self._duration == duration,
+            self._start >= 0,
         ]
 
         self.set_assertions(assertions)

@@ -76,10 +76,10 @@ class _NamedUIDObject(BaseModel):
             raise AssertionError(
                 f"assertion {z3_assertion} already added. Please report this bug at https://github.com/tpaviot/ProcessScheduler/issues"
             )
-        self.z3_assertions.append(z3_assertion)
-        self.z3_assertion_hashes.append(assertion_hash)
+        self._z3_assertions.append(z3_assertion)
+        self._z3_assertion_hashes.append(assertion_hash)
         return True
 
     def get_z3_assertions(self) -> List[BoolRef]:
         """Return the assertions list"""
-        return self.z3_assertions
+        return self._z3_assertions

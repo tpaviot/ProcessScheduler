@@ -74,7 +74,7 @@ class SchedulingSolver:
         optimizer: incremental or optimize
         """
         self.problem = problem
-        self.problem_context = problem.context
+        self.problem_context = problem._context
         self.debug = debug
         # objectives list
         self.objective = None  # the list of all objectives defined in this problem
@@ -177,7 +177,7 @@ class SchedulingSolver:
         # add all tasks z3 assertions to the solver
         for task in self.problem_context.tasks:
             self.append_z3_assertion(task.get_z3_assertions())
-            self.append_z3_assertion(task.end <= self.problem.horizon)
+            self.append_z3_assertion(task._end <= self.problem._horizon)
 
         # process resources assertions
         for ress in self.problem_context.resources:
