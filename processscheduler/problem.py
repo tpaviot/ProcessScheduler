@@ -19,6 +19,8 @@ from datetime import timedelta, datetime
 import uuid
 from typing import List, Optional, Union
 
+from pydantic import Field
+
 from z3 import And, BoolRef, If, Int, Or, Sum, Implies, ArithRef
 
 from processscheduler.base import _NamedUIDObject
@@ -40,11 +42,12 @@ class SchedulingProblem(_NamedUIDObject):
     :param datetime_format: an optional string
 
     """
-    horizon: int
-    delta_time: Optional[timedelta] = None,
-    start_time: Optional[datetime] = None,
-    end_time: Optional[datetime] = None,
-    
+
+    horizon: int = Field(default=None)
+    delta_time: Optional[timedelta] = (None,)
+    start_time: Optional[datetime] = (None,)
+    end_time: Optional[datetime] = (None,)
+
     def __init__(self, **data) -> None:
         super().__init__(**data)
         # the problem context, where all will be stored

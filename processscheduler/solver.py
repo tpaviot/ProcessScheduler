@@ -45,64 +45,52 @@ from processscheduler.solution import (
     ResourceSolution,
     BufferSolution,
 )
+from processscheduler.problem import SchedulingProblem
+
 from processscheduler.util import calc_parabola_from_three_points, sort_no_duplicates
+
+from typing import Literal
+from pydantic import BaseModel, Field, PositiveInt, Extra
 
 
 #
 # Solver class definition
 #
-class SchedulingSolver:
+class SchedulingSolver(BaseModel):
     """A solver class"""
 
-    def __init__(
-        self,
-        problem,
-        debug: Optional[bool] = False,
-        max_time: Optional[int] = 10,
-        parallel: Optional[bool] = False,
-        random_values: Optional[bool] = False,
-        logics: Optional[str] = None,
-        verbosity: Optional[int] = 0,
-        optimizer: Optional[str] = "incremental",
-        optimize_priority: Optional[str] = "pareto",
-    ):
-        """Scheduling Solver
+    problem: SchedulingProblem
+    debug: bool = Field(default=False)
+    max_time: PositiveInt = Field(default=10)
+    parallel: bool = Field(default=False)
+    random_values: bool = Field(default=False)
+    logics: Literal["QF_IDL", "QF_LIA"] = Field(default=None)
+    verbosity: int = Field(default=0)
+    optimizer: Literal["incremental", "optimize"] = Field(default="incremental")
+    optimize_priority: Literal["pareto", "lex", "box", "weight"] = Field(
+        default="pareto"
+    )
 
-        debug: True or False, False by default
-        max_time: time in seconds, 10 by default, "inf" means infinity, no max_time
-        parallel: True to enable mutlthreading, False by default
-        optimizer: incremental or optimize
-        """
-        self.problem = problem
-        self.problem_context = problem._context
-        self.debug = debug
-        # objectives list
-        self.objective = None  # the list of all objectives defined in this problem
-        self.current_solution = None  # no solution until the problem is solved
-        self.optimizer = optimizer
-        self.optimize_priority = optimize_priority
-        self.logics = logics
-        self.map_boolrefs_to_geometric_constraints = {}
-        self.initialized = False
+    class Config:
+        extra = Extra.forbid
 
-        if optimizer not in ["incremental", "optimize"]:
-            raise TypeError("optimizer must be either 'incremental' or 'optimize'")
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        self._objective = None  # the list of all objectives defined in this problem
+        self._current_solution = None  # no solution until the problem is solved
+        self._map_boolrefs_to_geometric_constraints = {}
+        self._initialized = False
 
-        if optimize_priority not in ["pareto", "lex", "box", "weight"]:
-            raise TypeError(
-                "optimize priority must be either 'pareto', 'box', 'lex' or 'weight'"
-            )
-
-        if debug:
+        if self.debug:
             set_option("verbose", 2)
             set_option(unsat_core=True)
         else:
             set_option("verbose", verbosity)
 
-        if parallel:
+        if self.parallel:
             set_option("parallel.enable", True)  # enable parallel computation
 
-        if random_values:
+        if self.random_values:
             set_option("sat.random_seed", random.randint(1, 1e3))
             set_option("smt.random_seed", random.randint(1, 1e3))
             set_option("smt.arith.random_initial_value", True)
@@ -112,13 +100,17 @@ class SchedulingSolver:
             set_option("smt.arith.random_initial_value", False)
 
         # set timeout
-        self.max_time = max_time  # in seconds
         if self.max_time != "inf":
             set_option("timeout", int(self.max_time * 1000))  # in milliseconds
 
+        # some flags that will be used after
+        self._is_not_optimization_problem = False
+        self._is_optimization_problem = False
+        self._is_multi_objective_optimization_problem = False
+
     def get_parameters_description(self):
         """return the solver parameter names and values as a dict"""
-        if not self.initialized:
+        if not self._initialized:
             raise AssertionError(
                 "please initialize solver before requesting for param name/values."
             )
@@ -157,13 +149,13 @@ class SchedulingSolver:
         print("Solver type:\n===========")
 
         # check if the problem is an optimization problem
-        self.is_not_optimization_problem = len(self.problem_context.objectives) == 0
-        self.is_optimization_problem = len(self.problem_context.objectives) > 0
-        self.is_multi_objective_optimization_problem = (
-            len(self.problem_context.objectives) > 1
+        self._is_not_optimization_problem = len(self.problem._context.objectives) == 0
+        self._is_optimization_problem = len(self.problem._context.objectives) > 0
+        self._is_multi_objective_optimization_problem = (
+            len(self.problem._context.objectives) > 1
         )
         # use the z3 Optimize solver if requested
-        if not self.is_not_optimization_problem and self.optimizer == "optimize":
+        if not self._is_not_optimization_problem and self.optimizer == "optimize":
             self._solver = Optimize()
             self._solver.set(priority=self.optimize_priority)
             print("\t-> Builtin z3 Optimize solver")
@@ -175,16 +167,16 @@ class SchedulingSolver:
             print("\t-> SMT solver using logics", self.logics)
 
         # add all tasks z3 assertions to the solver
-        for task in self.problem_context.tasks:
+        for task in self.problem._context.tasks:
             self.append_z3_assertion(task.get_z3_assertions())
             self.append_z3_assertion(task._end <= self.problem._horizon)
 
         # process resources assertions
-        for ress in self.problem_context.resources:
+        for ress in self.problem._context.resources:
             self.append_z3_assertion(ress.get_z3_assertions())
 
         # process resource intervals
-        for ress in self.problem_context.resources:
+        for ress in self.problem._context.resources:
             busy_intervals = ress.get_busy_intervals()
             nb_intervals = len(busy_intervals)
             for i in range(nb_intervals):
@@ -198,18 +190,18 @@ class SchedulingSolver:
         # add z3 assertions for constraints
         # that are *NOT* defined from an assertion
         constraints_not_from_assertion = [
-            c for c in self.problem_context.constraints if not c.created_from_assertion
+            c for c in self.problem._context.constraints if not c.created_from_assertion
         ]
         for constraint in constraints_not_from_assertion:
             self.append_z3_assertion(constraint.get_z3_assertions(), constraint.name)
 
         # process indicators
-        for indic in self.problem_context.indicators:
+        for indic in self.problem._context.indicators:
             self.append_z3_assertion(indic.get_z3_assertions())
 
         # work amounts
         # for each task, compute the total work for all required resources"""
-        for task in self.problem_context.tasks:
+        for task in self.problem._context.tasks:
             if task.work_amount > 0.0:
                 work_total_for_all_resources = []
                 for required_resource in task.required_resources:
@@ -224,7 +216,7 @@ class SchedulingSolver:
                 )
 
         # process buffers
-        for buffer in self.problem_context.buffers:
+        for buffer in self.problem._context.buffers:
             # create an array that stores the mapping between start times and
             # quantities. For example, if a task T1 starts at 2 and unloads
             # 8, and T3 ends at 6 and loads 5 then the mapping array
@@ -287,14 +279,14 @@ class SchedulingSolver:
                 )
 
         # Finally add other assertions (FOL, user defined)
-        for z3_assertion in self.problem_context.z3_assertions:
+        for z3_assertion in self.problem._context.z3_assertions:
             self.append_z3_assertion(z3_assertion)
 
         # optimization
-        if self.is_optimization_problem:
+        if self._is_optimization_problem:
             self.create_objective()
 
-        self.initialized = True
+        self._initialized = True
 
     def append_z3_assertion(self, assts, higher_constraint_name=None) -> bool:
         # set the method to use to add constraints
@@ -309,7 +301,7 @@ class SchedulingSolver:
                 # if the higher_contraint_name is defined, fill in the map_boolrefs_to_geometric_constraints dict
                 # to track the constraint that causes the conflict
                 if higher_constraint_name is not None:
-                    self.map_boolrefs_to_geometric_constraints[
+                    self._map_boolrefs_to_geometric_constraints[
                         asst_identifier
                     ] = higher_constraint_name
         else:
@@ -320,7 +312,7 @@ class SchedulingSolver:
         # O = WiOi+WjOj+WkOk etc.
         equivalent_single_objective = Int("EquivalentSingleObjective")
         weighted_objectives = []
-        for obj in self.problem_context.objectives:
+        for obj in self.problem._context.objectives:
             variable_to_optimize = obj.target
             weight = obj.weight
             if isinstance(obj, MaximizeObjective):
@@ -337,30 +329,30 @@ class SchedulingSolver:
         equivalent_objective = MinimizeObjective(
             "EquivalentObjective", equivalent_indicator
         )
-        self.objective = equivalent_objective
+        self._objective = equivalent_objective
         self.append_z3_assertion(equivalent_indicator.get_z3_assertions())
         return equivalent_objective, equivalent_indicator
 
     def create_objective(self) -> bool:
         """create optimization objectives"""
         # in case of a single value to optimize
-        if self.is_multi_objective_optimization_problem:
+        if self._is_multi_objective_optimization_problem:
             if self.optimizer == "incremental" or self.optimize_priority == "weight":
                 eq_obj, _ = self.build_equivalent_weighted_objective()
                 if self.optimizer == "optimize":
                     self._solver.minimize(eq_obj.target)
             else:
-                for obj in self.problem_context.objectives:
+                for obj in self.problem._context.objectives:
                     variable_to_optimize = obj.target
                     if isinstance(obj, MaximizeObjective):
                         self._solver.maximize(variable_to_optimize)
                     else:
                         self._solver.minimize(variable_to_optimize)
         else:
-            self.objective = self.problem.context.objectives[0]
+            self._objective = self.problem.context.objectives[0]
             if self.optimizer == "optimize":
-                variable_to_optimize = self.objective.target
-                if isinstance(self.objective, MaximizeObjective):
+                variable_to_optimize = self._objective.target
+                if isinstance(self._objective, MaximizeObjective):
                     self._solver.maximize(variable_to_optimize)
                 else:
                     self._solver.minimize(variable_to_optimize)
@@ -398,7 +390,7 @@ class SchedulingSolver:
     def build_solution(self, z3_sol):
         """create and return a SchedulingSolution instance"""
         solution = SchedulingSolution(self.problem)
-
+        print(solution)
         # set the horizon solution
         solution.horizon = z3_sol[self.problem.horizon].as_long()
 
@@ -513,21 +505,21 @@ class SchedulingSolver:
 
     def solve(self) -> Union[bool, SchedulingSolution]:
         """call the solver and returns the solution, if ever"""
-        if not self.initialized:
+        if not self._initialized:
             self.initialize()
 
         # for all cases
         if self.debug:
             self.print_assertions()
 
-        if self.is_optimization_problem and self.optimizer == "incremental":
-            if self.is_multi_objective_optimization_problem:
+        if self._is_optimization_problem and self.optimizer == "incremental":
+            if self._is_multi_objective_optimization_problem:
                 print("\tObjectives:\n\t======")
                 for obj in self.problem.context.objectives:
                     print(f"\t{obj}")
             solution = self.solve_optimize_incremental(
-                self.objective.target,
-                kind="min" if isinstance(self.objective, MinimizeObjective) else "max",
+                self._objective.target,
+                kind="min" if isinstance(self._objective, MinimizeObjective) else "max",
             )
             if not solution:
                 return False
@@ -549,8 +541,8 @@ class SchedulingSolver:
                     unknown_asst_origins = []
                     for asst in unsat_core:
                         # look for an entry in the map dict
-                        if f"{asst}" in self.map_boolrefs_to_geometric_constraints:
-                            constraint = self.map_boolrefs_to_geometric_constraints[
+                        if f"{asst}" in self._map_boolrefs_to_geometric_constraints:
+                            constraint = self._map_boolrefs_to_geometric_constraints[
                                 f"{asst}"
                             ]
                             conflicting_contraits.append(constraint)
@@ -580,7 +572,7 @@ class SchedulingSolver:
                 for obj in self.problem.context.objectives:
                     print(obj.name, "Value : ", solution[obj.target].as_long())
 
-        self.current_solution = solution
+        self._current_solution = solution
         sol = self.build_solution(solution)
 
         if self.debug:
@@ -597,7 +589,7 @@ class SchedulingSolver:
     ) -> int:
         """target a min or max for a variable, without the Optimize solver.
         The loop continues ever and ever until the next value is more than 90%"""
-        if not self.initialized:
+        if not self._initialized:
             self.initialize()
 
         if kind not in ["min", "max"]:
@@ -609,11 +601,13 @@ class SchedulingSolver:
         print("Incremental optimizer:\n======================")
         three_last_times = []
 
-        if self.objective.bounds is None:
+        if self._objective.bounds is None:
             bound = None
         else:
             bound = (
-                self.objective.bounds[0] if kind == "min" else self.objective.bounds[1]
+                self._objective.bounds[0]
+                if kind == "min"
+                else self._objective.bounds[1]
             )
 
         while True:  # infinite loop, break if unsat or max_depth
@@ -700,17 +694,17 @@ class SchedulingSolver:
     def print_solution(self):
         """A utility method that displays all internal variables for the current solution"""
         print("Solution:")
-        for decl in self.current_solution.decls():
+        for decl in self._current_solution.decls():
             var_name = decl.name()
-            var_value = self.current_solution[decl]
+            var_value = self._current_solution[decl]
             print(f"\t-> {var_name}={var_value}")
 
     def find_another_solution(self, variable: ArithRef) -> bool:
         """let the solver find another solution for the variable"""
-        if self.current_solution is None:
+        if self._current_solution is None:
             warnings.warn("No current solution. First call the solve() method.")
             return False
-        current_variable_value = self.current_solution[variable].as_long()
+        current_variable_value = self._current_solution[variable].as_long()
         self.append_z3_assertion(variable != current_variable_value)
         return self.solve()
 

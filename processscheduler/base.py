@@ -18,7 +18,7 @@
 from typing import List, Optional
 from uuid import uuid4
 
-from pydantic import BaseModel, PositiveInt, Field
+from pydantic import BaseModel, PositiveInt, Field, Extra
 from z3 import BoolRef
 
 
@@ -27,9 +27,14 @@ from z3 import BoolRef
 #
 class _NamedUIDObject(BaseModel):
     """The base object for most ProcessScheduler classes"""
+
     uid: int = Field(default_factory=lambda: uuid4().int)
-    name: str = Field(default_factory=lambda: f"{self.__class__.__name__}_{str(self.uid)[:8]}")
-    #name: str = Field(default="")
+    name: str = Field(
+        default_factory=lambda: f"{self.__class__.__name__}_{str(self.uid)[:8]}"
+    )
+
+    class Config:
+        extra = Extra.forbid
 
     def __init__(self, **data) -> None:
         """The base name for all ProcessScheduler objects.
@@ -72,7 +77,7 @@ class _NamedUIDObject(BaseModel):
         # check if the assertion is in the list
         # workaround to avoid heavy hash computations
         assertion_hash = hash(z3_assertion)
-        if assertion_hash in self.z3_assertion_hashes:
+        if assertion_hash in self._z3_assertion_hashes:
             raise AssertionError(
                 f"assertion {z3_assertion} already added. Please report this bug at https://github.com/tpaviot/ProcessScheduler/issues"
             )

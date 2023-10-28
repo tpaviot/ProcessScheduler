@@ -17,7 +17,7 @@
 
 from typing import List, Optional
 
-from pydantic import Field
+from pydantic import Field, PositiveInt, StrictBool
 from z3 import And, ArithRef, Bool, BoolRef, If, Int, Or
 
 from processscheduler.base import _NamedUIDObject
@@ -31,20 +31,14 @@ import processscheduler.context as ps_context
 
 
 class Task(_NamedUIDObject):
-    """a Task object"""
-    optional: bool = Field(default=False)
-    work_amount: int = Field(default=0)
-    priority: int = Field(default=1)
+    """The base class for all kind of tasks. Users may instanciate specialized classes that
+    inherit from the base class."""
+
+    optional: StrictBool = Field(default=False)
+    work_amount: PositiveInt = Field(default=0)
+    priority: PositiveInt = Field(default=1)
 
     def __init__(self, **data) -> None:
-        """The base name for all ProcessScheduler objects.
-
-        Provides an assertions list, a uniqueid.
-
-        Args:
-            name: the object name. It must be unique
-        """
-        # check name type
         super().__init__(**data)
 
         # workers required to process the task
@@ -60,7 +54,7 @@ class Task(_NamedUIDObject):
         self._duration = Int(f"{self.name}_duration")  # type: ArithRef
 
         # by default, the task is mandatory
-        self._scheduled = True  # type: Union[bool, BoolRef]
+        # self.scheduled = True  # type: Union[bool, BoolRef]
 
         # add this task to the current context
         if ps_context.main_context is None:
@@ -122,8 +116,8 @@ class Task(_NamedUIDObject):
                 # add assertions. If worker is selected then sync the resource with the task
                 selected_variable = resource.selection_dict[worker]
                 schedule_as_usual = And(
-                    resource_maybe_busy_start == self.start,
-                    resource_maybe_busy_end == self.end,
+                    resource_maybe_busy_start == self._start,
+                    resource_maybe_busy_end == self._end,
                 )
                 # in the case the worker is selected
                 # move the busy interval to a single point in time, in the
@@ -151,12 +145,12 @@ class Task(_NamedUIDObject):
             resource.add_busy_interval(self, (resource_busy_start, resource_busy_end))
             # set the busy resource to keep synced with the task
             if dynamic:
-                self.append_z3_assertion(resource_busy_end <= self.end)
-                self.append_z3_assertion(resource_busy_start >= self.start)
+                self.append_z3_assertion(resource_busy_end <= self._end)
+                self.append_z3_assertion(resource_busy_start >= self._start)
             else:
                 # self.append_z3_assertion(resource_busy_start + self.duration == resource_busy_end)
-                self.append_z3_assertion(resource_busy_end == self.end)
-                self.append_z3_assertion(resource_busy_start == self.start)
+                self.append_z3_assertion(resource_busy_end == self._end)
+                self.append_z3_assertion(resource_busy_start == self._start)
             # finally, store this resource into the resource list
             self._required_resources.append(resource)
 
@@ -179,7 +173,7 @@ class Task(_NamedUIDObject):
         """Take a list of constraint to satisfy. Create two cases: if the task is scheduled,
         nothing is done; if the task is optional, move task to the past"""
         if self.optional:  # in this case the previous assertions maybe skipped
-            self.scheduled = Bool(f"{self.name}_scheduled")
+            self._scheduled = Bool(f"{self.name}_scheduled")
             # the first task is moved to -1, the second to -2
             # etc.
             point_in_past = -self.task_number
@@ -189,27 +183,17 @@ class Task(_NamedUIDObject):
                 self._duration == 0,
             )
             self.append_z3_assertion(
-                If(self.scheduled, And(list_of_z3_assertions), not_scheduled_assertion)
+                If(self._scheduled, And(list_of_z3_assertions), not_scheduled_assertion)
             )
         else:
             self.append_z3_assertion(And(list_of_z3_assertions))
 
 
 class ZeroDurationTask(Task):
-    """Task with zero duration, an instant in the schedule.
-
-    The task end and start are constrained to be equal.
-
-    Args:
-        name: the task name. It must be unique
-    """
-
-    def __init__(self, name: str, optional: Optional[bool] = False) -> None:
-        super().__init__(name, optional)
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
         # add an assertion: end = start because the duration is zero
-        assertions = [self._start == self._end, self._duration == 0]
-
-        self.set_assertions(assertions)
+        self.set_assertions([self._start == self._end, self._duration == 0])
 
 
 class FixedDurationTask(Task):
@@ -223,30 +207,13 @@ class FixedDurationTask(Task):
         optional: True if task schedule is optional, False otherwise (default)
     """
 
-    def __init__(
-        self,
-        name: str,
-        duration: int,
-        work_amount: Optional[int] = 0,
-        priority: Optional[int] = 1,
-        optional: Optional[bool] = False,
-    ) -> None:
-        super().__init__(name, optional)
-        if not is_strict_positive_integer(duration):
-            raise TypeError("duration must be a strict positive integer")
-        self.duration_defined_value = duration
+    duration: PositiveInt
 
-        if not is_positive_integer(work_amount):
-            raise TypeError("work_amount me be a positive integer")
-        self.work_amount = work_amount
-
-        if not is_positive_integer(work_amount):
-            raise TypeError("work_amount me be a positive integer")
-        self.priority = priority
-
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
         assertions = [
             self._start + self._duration == self._end,
-            self._duration == duration,
+            self._duration == self.duration,
             self._start >= 0,
         ]
 
@@ -259,59 +226,35 @@ class UnavailabilityTask(FixedDurationTask):
     ResourceUnavailability.
     """
 
-    def __init__(self, name: str, duration: int) -> None:
-        super().__init__(name, duration, work_amount=0, priority=0)
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        self.work_amount = 0
+        self.priority = 0
 
 
 class VariableDurationTask(Task):
     """The duration can take any value, computed by the solver."""
 
-    def __init__(
-        self,
-        name: str,
-        min_duration: Optional[int] = 0,
-        max_duration: Optional[int] = None,
-        allowed_durations: Optional[List[int]] = None,
-        work_amount: Optional[int] = 0,
-        priority: Optional[int] = 1,
-        optional: Optional[bool] = False,
-    ):
-        super().__init__(name, optional)
+    min_duration: int = Field(default=0)
+    max_duration: int = Field(default=None)
+    allowed_durations: List[PositiveInt] = Field(default_factory=None)
 
-        # allowed durations and min/max are exclusive
-        if is_list_of_positive_integers(allowed_durations):
-            all_cstr = [self.duration == duration for duration in allowed_durations]
-            self.append_z3_assertion(Or(all_cstr))
-        else:
-            if is_positive_integer(max_duration):
-                self.append_z3_assertion(self.duration <= max_duration)
-            elif max_duration is not None:
-                raise TypeError(
-                    "length_as_most should either be a positive integer or None"
-                )
-
-            if not is_positive_integer(min_duration):
-                raise TypeError("min_duration must be a positive integer")
-
-            if not is_positive_integer(work_amount):
-                raise TypeError("work_amount must be a positive integer")
-
-        self.min_duration = min_duration
-        self.max_duration = max_duration
-        self.allowed_durations = allowed_durations
-        self.work_amount = work_amount
-        self.priority = priority
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
         assertions = [
-            self.start + self.duration == self.end,
-            self.start >= 0,
-            self.duration >= min_duration,
+            self._start + self._duration == self._end,
+            self._start >= 0,
+            self._duration >= self.min_duration,
         ]
 
-        if max_duration is not None:
-            assertions.append(self.duration <= max_duration)
+        if self.allowed_durations is not None:
+            all_cstr = [
+                self._duration == duration for duration in self.allowed_durations
+            ]
+            assertions.append(Or(all_cstr))
 
-        if min_duration is not None:
-            assertions.append(self.duration >= min_duration)
+        if self.max_duration is not None:
+            assertions.append(self._duration <= self.max_duration)
 
         self.set_assertions(assertions)
