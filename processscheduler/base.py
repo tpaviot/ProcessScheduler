@@ -46,7 +46,6 @@ class _NamedUIDObject(BaseModel):
         """
         # check name type
         super().__init__(**data)
-        print("Base object being created!!")
 
         # SMT assertions
         # start and end integer values must be positive

@@ -44,9 +44,9 @@ class SchedulingProblem(_NamedUIDObject):
     """
 
     horizon: int = Field(default=None)
-    delta_time: Optional[timedelta] = (None,)
-    start_time: Optional[datetime] = (None,)
-    end_time: Optional[datetime] = (None,)
+    delta_time: timedelta = Field(default=None)
+    start_time: datetime = Field(default=None)
+    end_time: datetime = Field(default=None)
 
     def __init__(self, **data) -> None:
         super().__init__(**data)

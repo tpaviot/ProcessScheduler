@@ -17,71 +17,69 @@
 
 from pathlib import Path
 import random
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
+from processscheduler.problem import SchedulingProblem
 from processscheduler.json_io import solution_to_json_string
 from processscheduler.excel_io import export_solution_to_excel_file
 
+from pydantic import BaseModel, Field
 
-class TaskSolution:
+
+class TaskSolution(BaseModel):
     """Class to represent the solution for a scheduled Task."""
 
-    def __init__(self, name: str) -> None:
-        self.name = name  # type: str
-        self.type = ""  # the name of the task type
-        self.start = 0  # type: int
-        self.end = 0  # type: int
-        self.duration = 0  # type: int
+    name: str
+    type: str = Field(default="")
+    start: int = Field(default=0)
+    end: int = Field(default=0)
+    duration: int = Field(default=0)
 
-        self.start_time = ""  # type: str
-        self.end_time = ""  # type: str
-        self.duration_time = ""  # type: str
+    start_time: str = Field(default="")
+    end_time: str = Field(default="")
+    duration_time: str = Field(default="")
 
-        self.optional = False  # type: bool
-        self.scheduled = False  # type: bool
-        # the name of assigned resources
-        self.assigned_resources = []  # type: List[str]
+    optional: bool = Field(default=False)
+    scheduled: bool = Field(default=False)
+
+    # the name of assigned resources
+    assigned_resources: List[str] = Field(default=[])
 
 
-class ResourceSolution:
+class ResourceSolution(BaseModel):
     """Class to represent the solution for the resource assignments."""
 
-    def __init__(self, name: str):
-        self.name = name  # type: str
-        self.type = ""  # type: str
-        # an assignment is a list of tuples : [(Task_name, start, end), (task_2name, start2, end2) etc.]
-        self.assignments = []  # type: List[Tuple[str, int, int]]
+    name: str
+    type: str = Field(default="")
+    # an assignment is a list of tuples : [(Task_name, start, end), (task_2name, start2, end2) etc.]
+    assignments: List[Tuple[str, int, int]] = Field(default=[])
 
 
-class BufferSolution:
+class BufferSolution(BaseModel):
     """Class to represent the solution for a Buffer."""
 
-    def __init__(self, name: str):
-        self.name = name  # type: str
-        # a collection of instants where the buffer state changes
-        self.state_change_times = []  # type: List[int]
-        # a collection that represents the buffer state along the
-        # whole schedule. Represented a integer values
-        self.state = []  # type: List[int]
+    name: str
+    # a collection of instants where the buffer state changes
+    state_change_times: List[int] = Field(default=[])  # type: List[int]
+    # a collection that represents the buffer state along the
+    # whole schedule. Represented a integer values
+    state: List[int] = Field(default=[])
 
 
-class SchedulingSolution:
+class SchedulingSolution(BaseModel):
     """A class that represent the solution of a scheduling problem. Can be rendered
     to a matplotlib Gantt chart, or exported to json
     """
 
-    def __init__(self, problem):
-        """problem: a scheduling problem."""
-        self.problem_name = problem.name  # type: str
-        self.problem = problem
-        self.horizon = 0  # type: int
-        self.tasks = {}  # type: Dict[str, TaskSolution]
-        self.resources = {}  # type: Dict[str, ResourceSolution]
-        self.buffers = {}  # type: Dict[str, BufferSolution]
-        self.indicators = {}  # type: Dict[str, int]
+    problem: SchedulingProblem
+    horizon: int = Field(default=0)
+    tasks: Dict[str, TaskSolution] = Field(default={})
+    resources: Dict[str, ResourceSolution] = Field(default={})
+    buffers: Dict[str, BufferSolution] = Field(default={})
+    indicators: Dict[str, int] = Field(default={})
 
-    def __repr__(self):
-        return self.to_json_string()
+    # def __repr__(self):
+    #    return self.to_json_string()
 
     def get_all_tasks_but_unavailable(self):
         """Return all tasks except those of the type UnavailabilityTask
@@ -254,12 +252,12 @@ class SchedulingSolution:
 
         # render mode is Resource by default, can be set to 'Task'
         if render_mode == "Resource":
-            plot_title = f"Resources schedule - {self.problem_name}"
+            plot_title = f"Resources schedule - {self.problem.name}"
             plot_ylabel = "Resources"
             plot_ticklabels = list(self.resources.keys())
             nbr_y_values = len(self.resources)
         elif render_mode == "Task":
-            plot_title = f"Task schedule - {self.problem_name}"
+            plot_title = f"Task schedule - {self.problem.name}"
             plot_ylabel = "Tasks"
             plot_ticklabels = list(tasks_to_render.keys())
             nbr_y_values = len(tasks_to_render)

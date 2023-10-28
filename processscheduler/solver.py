@@ -204,9 +204,9 @@ class SchedulingSolver(BaseModel):
         for task in self.problem._context.tasks:
             if task.work_amount > 0.0:
                 work_total_for_all_resources = []
-                for required_resource in task.required_resources:
+                for required_resource in task._required_resources:
                     # work contribution for the resource
-                    interv_low, interv_up = required_resource.busy_intervals[task]
+                    interv_low, interv_up = required_resource._busy_intervals[task]
                     work_contribution = required_resource.productivity * (
                         interv_up - interv_low
                     )
@@ -349,7 +349,7 @@ class SchedulingSolver(BaseModel):
                     else:
                         self._solver.minimize(variable_to_optimize)
         else:
-            self._objective = self.problem.context.objectives[0]
+            self._objective = self.problem._context.objectives[0]
             if self.optimizer == "optimize":
                 variable_to_optimize = self._objective.target
                 if isinstance(self._objective, MaximizeObjective):
@@ -389,19 +389,18 @@ class SchedulingSolver(BaseModel):
 
     def build_solution(self, z3_sol):
         """create and return a SchedulingSolution instance"""
-        solution = SchedulingSolution(self.problem)
-        print(solution)
+        solution = SchedulingSolution(problem=self.problem)
         # set the horizon solution
-        solution.horizon = z3_sol[self.problem.horizon].as_long()
+        solution.horizon = z3_sol[self.problem._horizon].as_long()
 
         # process tasks
-        for task in self.problem.context.tasks:
+        for task in self.problem._context.tasks:
             # for each task, create a TaskSolution instance
-            new_task_solution = TaskSolution(task.name)
+            new_task_solution = TaskSolution(name=task.name)
             new_task_solution.type = type(task).__name__
-            new_task_solution.start = z3_sol[task.start].as_long()
-            new_task_solution.end = z3_sol[task.end].as_long()
-            new_task_solution.duration = z3_sol[task.duration].as_long()
+            new_task_solution.start = z3_sol[task._start].as_long()
+            new_task_solution.end = z3_sol[task._end].as_long()
+            new_task_solution.duration = z3_sol[task._duration].as_long()
             new_task_solution.optional = task.optional
 
             # times, if ever delta_time and start_time are defined
@@ -429,12 +428,12 @@ class SchedulingSolver(BaseModel):
                 new_task_solution.scheduled = True
 
             # process resource assignments
-            for req_res in task.required_resources:
+            for req_res in task._required_resources:
                 # among those workers, some of them
                 # are busy "in the past", that is to say they
                 # should not be assigned to the related task
                 # for each interval
-                lower_bound, _ = req_res.busy_intervals[task]
+                lower_bound, _ = req_res._busy_intervals[task]
                 resource_is_assigned = z3_sol[lower_bound].as_long() >= 0
                 # add this resource to assigned resources, anytime
                 if resource_is_assigned and (
@@ -448,7 +447,7 @@ class SchedulingSolver(BaseModel):
             solution.add_task_solution(new_task_solution)
 
         # process resources
-        for resource in self.problem.context.resources:
+        for resource in self.problem._context.resources:
             # for each task, create a TaskSolution instance
             # for cumulative workers, we append the current work
             if "_CumulativeWorker_" in resource.name:
@@ -458,12 +457,12 @@ class SchedulingSolver(BaseModel):
                 else:
                     new_resource_solution = solution.resources[cumulative_worker_name]
             else:
-                new_resource_solution = ResourceSolution(resource.name)
+                new_resource_solution = ResourceSolution(name=resource.name)
             new_resource_solution.type = type(resource).__name__
             # check for task processed by this resource
-            for task in resource.busy_intervals.keys():
+            for task in resource._busy_intervals.keys():
                 task_name = task.name
-                st_var, end_var = resource.busy_intervals[task]
+                st_var, end_var = resource._busy_intervals[task]
                 start = z3_sol[st_var].as_long()
                 end = z3_sol[end_var].as_long()
                 if (
@@ -481,7 +480,7 @@ class SchedulingSolver(BaseModel):
                 solution.add_resource_solution(new_resource_solution)
 
         # process buffers
-        for buffer in self.problem.context.buffers:
+        for buffer in self.problem._context.buffers:
             buffer_name = buffer.name
             new_buffer_solution = BufferSolution(buffer_name)
             # change_state_times
@@ -496,7 +495,7 @@ class SchedulingSolver(BaseModel):
 
             solution.add_buffer_solution(new_buffer_solution)
         # process indicators
-        for indicator in self.problem.context.indicators:
+        for indicator in self.problem._context.indicators:
             indicator_name = indicator.name
             indicator_value = z3_sol[indicator.indicator_variable].as_long()
             solution.add_indicator_solution(indicator_name, indicator_value)
@@ -515,7 +514,7 @@ class SchedulingSolver(BaseModel):
         if self._is_optimization_problem and self.optimizer == "incremental":
             if self._is_multi_objective_optimization_problem:
                 print("\tObjectives:\n\t======")
-                for obj in self.problem.context.objectives:
+                for obj in self.problem._context.objectives:
                     print(f"\t{obj}")
             solution = self.solve_optimize_incremental(
                 self._objective.target,
@@ -569,10 +568,11 @@ class SchedulingSolver(BaseModel):
 
             # print objectives values if optimizer
             if self.optimizer == "optimize":
-                for obj in self.problem.context.objectives:
+                for obj in self.problem._context.objectives:
                     print(obj.name, "Value : ", solution[obj.target].as_long())
 
         self._current_solution = solution
+
         sol = self.build_solution(solution)
 
         if self.debug:

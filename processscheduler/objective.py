@@ -21,68 +21,65 @@ from z3 import Int, BoolRef, ArithRef
 from processscheduler.base import _NamedUIDObject
 import processscheduler.context as ps_context
 
+from pydantic import Field
+
 
 class Indicator(_NamedUIDObject):
     """an performance indicator, can be evaluated after the solver has finished solving,
     or being optimized (Max or Min) *before* calling the solver."""
 
-    def __init__(
-        self,
-        name: str,
-        expression: Union[BoolRef, ArithRef],
-        bounds: Optional[Tuple[Optional[int]]] = None,
-    ) -> None:
-        super().__init__(name)
-        # scheduled start, end and duration set to 0 by default
-        # be set after the solver is called
-        if not isinstance(expression, (BoolRef, ArithRef)):
-            raise TypeError(
-                "the indicator expression must be either a BoolRef or ArithRef."
-            )
-        self.name = name
-        self.indicator_variable = Int(f"Indicator_{name}")
+    # -- Bound --
+    # None if not bounded
+    # (lower_bound, None), (None, upper_bound) if only one-side bounded
+    # (lower_bound, upper_bound) if full bounded
+    expression: Union[BoolRef, ArithRef]
+    bounds: Tuple[Optional[int]] = Field(default=None)
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        self._indicator_variable = Int(f"Indicator_{name}")
         # by default the scheduled value is set to None
         # set by the solver
-        self.scheduled_value = None
+        self._scheduled_value = None
 
-        # -- Bound --
-        # None if not bounded
-        # (lower_bound, None), (None, upper_bound) if only one-side bounded
-        # (lower_bound, upper_bound) if full bounded
-        self.bounds = bounds
-
-        self.append_z3_assertion(self.indicator_variable == expression)
+        self.append_z3_assertion(self._indicator_variable == expression)
 
         ps_context.main_context.add_indicator(self)
 
 
 class Objective(_NamedUIDObject):
-    def __init__(self, name: str, target: Union[ArithRef, Indicator]) -> None:
-        super().__init__(name)
+    target: Union[ArithRef, Indicator]
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
         if not isinstance(target, (ArithRef, Indicator)):
             raise TypeError(
                 "the indicator expression must be either a BoolRef, ArithRef or Indicator instance."
             )
         if isinstance(target, Indicator):
-            self.target = target.indicator_variable
-            self.bounds = target.bounds
+            self._target = self.target.indicator_variable
+            self._bounds = self.target.bounds
         else:
-            self.target = target
-            self.bounds = None
+            self._target = self.target
+            self._bounds = None
         ps_context.main_context.add_objective(self)
 
 
 class MaximizeObjective(Objective):
-    def __init__(
-        self, name: str, target: Union[ArithRef, Indicator], weight: Optional[int] = 1
-    ) -> None:
-        super().__init__(name, target)
-        self.weight = weight
+    weight: int = Field(default=1)
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
 
 class MinimizeObjective(Objective):
-    def __init__(
-        self, name: str, target: Union[ArithRef, Indicator], weight: Optional[int] = 1
-    ) -> None:
-        super().__init__(name, target)
-        self.weight = weight
+    weight: int = Field(default=1)
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
