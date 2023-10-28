@@ -108,12 +108,12 @@ class SelectWorkers(Resource):
         # instances from this list mght either be Workers or CumulativeWorkers. If
         # this is a cumulative, then we add the list of all workers from the cumulative
         # into this list.
-        self.list_of_workers = []
-        for worker in list_of_workers:
+        self._list_of_workers = []
+        for worker in self.list_of_workers:
             if isinstance(worker, CumulativeWorker):
-                self.list_of_workers.extend(worker.cumulative_workers)
+                self._list_of_workers.extend(worker.cumulative_workers)
             else:
-                self.list_of_workers.append(worker)
+                self._list_of_workers.append(worker)
 
         # a dict that maps workers and selected boolean
         self._selection_dict = {}
