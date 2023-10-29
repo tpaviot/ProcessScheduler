@@ -190,7 +190,9 @@ class SchedulingSolver(BaseModel):
         # add z3 assertions for constraints
         # that are *NOT* defined from an assertion
         constraints_not_from_assertion = [
-            c for c in self.problem._context.constraints if not c.created_from_assertion
+            c
+            for c in self.problem._context.constraints
+            if not c._created_from_assertion
         ]
         for constraint in constraints_not_from_assertion:
             self.append_z3_assertion(constraint.get_z3_assertions(), constraint.name)
@@ -601,13 +603,13 @@ class SchedulingSolver(BaseModel):
         print("Incremental optimizer:\n======================")
         three_last_times = []
 
-        if self._objective.bounds is None:
+        if self._objective._bounds is None:
             bound = None
         else:
             bound = (
-                self._objective.bounds[0]
+                self._objective._bounds[0]
                 if kind == "min"
-                else self._objective.bounds[1]
+                else self._objective._bounds[1]
             )
 
         while True:  # infinite loop, break if unsat or max_depth

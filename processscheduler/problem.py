@@ -161,8 +161,8 @@ class SchedulingProblem(_NamedUIDObject):
     #
     def add_objective_makespan(self, weight=1) -> Union[ArithRef, Indicator]:
         """makespan objective"""
-        MinimizeObjective("MakeSpan", self.horizon, weight)
-        return self.horizon
+        MinimizeObjective(name="MakeSpan", target=self._horizon, weight=weight)
+        return self._horizon
 
     def add_objective_resource_utilization(
         self, resource: Resource, weight=1

@@ -16,12 +16,15 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
-from typing import Optional
+from typing import Optional, Literal, List
 
 from z3 import And, Bool, BoolRef, If, Implies, Int, Not, Or, PbEq, PbGe, PbLe, Xor
 
 from processscheduler.constraint import TaskConstraint
+from processscheduler.task import Task
 from processscheduler.util import sort_no_duplicates
+
+from pydantic import Field, PositiveInt
 
 
 #
@@ -30,14 +33,13 @@ from processscheduler.util import sort_no_duplicates
 class TaskPrecedence(TaskConstraint):
     """Task precedence relation"""
 
-    def __init__(
-        self,
-        task_before,
-        task_after,
-        offset=0,
-        kind: Optional[str] = "lax",
-        optional: Optional[bool] = False,
-    ):
+    task_before: Task
+    task_after: Task
+    offset: PositiveInt = Field(default=0)
+    kind: Literal["lax", "strict", "tight"] = Field(default="lax")
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
         """kind might be either LAX/STRICT/TIGHT
         Semantics : task after will start at least after offset periods
         task_before is finished.
@@ -45,32 +47,26 @@ class TaskPrecedence(TaskConstraint):
         STRICT constraint: task1_before_end + offset < task_after_start
         TIGHT constraint: task1_before_end + offset == task_after_start
         """
-        super().__init__(optional)
 
-        if kind not in ["lax", "strict", "tight"]:
-            raise ValueError("kind must either be 'lax', 'strict' or 'tight'")
+        lower = (
+            self.task_before._end + self.offset
+            if self.offset > 0
+            else self.task_before._end
+        )
+        upper = self.task_after._start
 
-        if not isinstance(offset, int) or offset < 0:
-            raise ValueError("offset must be a positive integer")
-
-        self.offset = offset
-        self.kind = kind
-
-        lower = task_before.end + offset if offset > 0 else task_before.end
-        upper = task_after.start
-
-        if kind == "lax":
+        if self.kind == "lax":
             scheduled_assertion = lower <= upper
-        elif kind == "strict":
+        elif self.kind == "strict":
             scheduled_assertion = lower < upper
         else:  # kind == 'tight':
             scheduled_assertion = lower == upper
 
-        if task_before.optional or task_after.optional:
+        if self.task_before.optional or self.task_after.optional:
             # both tasks must be scheduled so that the precedence constraint applies
             self.set_z3_assertions(
                 Implies(
-                    And(task_before.scheduled, task_after.scheduled),
+                    And(self.task_before._scheduled, self.task_after._scheduled),
                     scheduled_assertion,
                 )
             )
@@ -81,15 +77,21 @@ class TaskPrecedence(TaskConstraint):
 class TasksStartSynced(TaskConstraint):
     """Two tasks that must start at the same time"""
 
-    def __init__(self, task_1, task_2, optional: Optional[bool] = False) -> None:
-        super().__init__(optional)
+    task_1: Task
+    task_2: Task
 
-        scheduled_assertion = task_1.start == task_2.start
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
-        if task_1.optional or task_2.optional:
+        scheduled_assertion = self.task_1._start == self.task_2._start
+
+        if self.task_1.optional or self.task_2.optional:
             # both tasks must be scheduled so that the startsynced constraint applies
             self.set_z3_assertions(
-                Implies(And(task_1.scheduled, task_2.scheduled), scheduled_assertion)
+                Implies(
+                    And(self.task_1._scheduled, self.task_2._scheduled),
+                    scheduled_assertion,
+                )
             )
         else:
             self.set_z3_assertions(scheduled_assertion)
@@ -98,15 +100,21 @@ class TasksStartSynced(TaskConstraint):
 class TasksEndSynced(TaskConstraint):
     """Two tasks that must complete at the same time"""
 
-    def __init__(self, task_1, task_2, optional: Optional[bool] = False) -> None:
-        super().__init__(optional)
+    task_1: Task
+    task_2: Task
 
-        scheduled_assertion = task_1.end == task_2.end
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
-        if task_1.optional or task_2.optional:
+        scheduled_assertion = self.task_1._end == self.task_2._end
+
+        if self.task_1.optional or self.task_2.optional:
             # both tasks must be scheduled so that the endsynced constraint applies
             self.set_z3_assertions(
-                Implies(And(task_1.scheduled, task_2.scheduled), scheduled_assertion)
+                Implies(
+                    And(self.task_1._scheduled, self.task_2._scheduled),
+                    scheduled_assertion,
+                )
             )
         else:
             self.set_z3_assertions(scheduled_assertion)
@@ -116,17 +124,24 @@ class TasksDontOverlap(TaskConstraint):
     """Two tasks must not overlap, i.e. one needs to be completed before
     the other can be processed"""
 
-    def __init__(self, task_1, task_2, optional: Optional[bool] = False) -> None:
-        super().__init__(optional)
+    task_1: Task
+    task_2: Task
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
         scheduled_assertion = Xor(
-            task_2.start >= task_1.end, task_1.start >= task_2.end
+            self.task_2._start >= self.task_1._end,
+            self.task_1._start >= self.task_2._end,
         )
 
-        if task_1.optional or task_2.optional:
+        if self.task_1.optional or self.task_2.optional:
             # if one task is not scheduledboth tasks must be scheduled so that the not overlap constraint applies
             self.set_z3_assertions(
-                Implies(And(task_1.scheduled, task_2.scheduled), scheduled_assertion)
+                Implies(
+                    And(self.task_1._scheduled, self.task_2._scheduled),
+                    scheduled_assertion,
+                )
             )
         else:
             self.set_z3_assertions(scheduled_assertion)
@@ -135,11 +150,13 @@ class TasksDontOverlap(TaskConstraint):
 class TasksContiguous(TaskConstraint):
     """A list of tasks are scheduled contiguously."""
 
-    def __init__(self, list_of_tasks, optional: Optional[bool] = False) -> None:
-        super().__init__(optional)
+    list_of_tasks: List[Task]
 
-        starts = [t.start for t in list_of_tasks]
-        ends = [t.end for t in list_of_tasks]
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        starts = [t._start for t in self.list_of_tasks]
+        ends = [t._end for t in self.list_of_tasks]
         # sort both lists
         sorted_starts, constraints_start = sort_no_duplicates(starts)
         sorted_ends, constraints_end = sort_no_duplicates(ends)
@@ -165,40 +182,35 @@ class TasksContiguous(TaskConstraint):
 class TaskStartAt(TaskConstraint):
     """One task must start at the desired time"""
 
-    def __init__(self, task, value: int, optional: Optional[bool] = False) -> None:
-        super().__init__(optional)
-        self.value = value
+    task: Task
+    value: int
 
-        scheduled_assertion = task.start == value
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
-        if task.optional:
-            self.set_z3_assertions(Implies(task.scheduled, scheduled_assertion))
+        scheduled_assertion = self.task._start == self.value
+
+        if self.task.optional:
+            self.set_z3_assertions(Implies(self.task._scheduled, scheduled_assertion))
         else:
             self.set_z3_assertions(scheduled_assertion)
 
 
 class TaskStartAfter(TaskConstraint):
-    def __init__(
-        self,
-        task,
-        value: int,
-        kind: Optional[str] = "lax",
-        optional: Optional[bool] = False,
-    ) -> None:
-        super().__init__(optional)
+    task: Task
+    value: int
+    kind: Literal["lax", "strict"] = Field(default="lax")
 
-        if kind not in ["lax", "strict"]:
-            raise ValueError("kind must either be 'lax' or 'strict'")
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
-        self.value = value
+        if self.kind == "strict":
+            scheduled_assertion = self.task._start > self.value
+        elif self.kind == "lax":
+            scheduled_assertion = self.task._start >= self.value
 
-        if kind == "strict":
-            scheduled_assertion = task.start > value
-        elif kind == "lax":
-            scheduled_assertion = task.start >= value
-
-        if task.optional:
-            self.set_z3_assertions(Implies(task.scheduled, scheduled_assertion))
+        if self.task.optional:
+            self.set_z3_assertions(Implies(task._scheduled, scheduled_assertion))
         else:
             self.set_z3_assertions(scheduled_assertion)
 
@@ -206,14 +218,16 @@ class TaskStartAfter(TaskConstraint):
 class TaskEndAt(TaskConstraint):
     """On task must complete at the desired time"""
 
-    def __init__(self, task, value: int, optional: Optional[bool] = False) -> None:
-        super().__init__(optional)
-        self.value = value
+    task: Task
+    value: int
 
-        scheduled_assertion = task.end == value
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
-        if task.optional:
-            self.set_z3_assertions(Implies(task.scheduled, scheduled_assertion))
+        scheduled_assertion = self.task._end == self.value
+
+        if self.task.optional:
+            self.set_z3_assertions(Implies(task._scheduled, scheduled_assertion))
         else:
             self.set_z3_assertions(scheduled_assertion)
 
@@ -221,26 +235,19 @@ class TaskEndAt(TaskConstraint):
 class TaskEndBefore(TaskConstraint):
     """task.end < value"""
 
-    def __init__(
-        self,
-        task,
-        value: int,
-        kind: Optional[str] = "lax",
-        optional: Optional[bool] = False,
-    ) -> None:
-        super().__init__(optional)
+    task: Task
+    value: int
+    kind: Literal["lax", "strict"] = Field(default="lax")
 
-        if kind not in ["lax", "strict"]:
-            raise ValueError("kind must either be 'lax' or 'strict'")
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
-        self.value = value
+        if self.kind == "strict":
+            scheduled_assertion = self.task._end < self.value
+        elif self.kind == "lax":
+            scheduled_assertion = self.task._end <= self.value
 
-        if kind == "strict":
-            scheduled_assertion = task.end < value
-        elif kind == "lax":
-            scheduled_assertion = task.end <= value
-
-        if task.optional:
+        if self.task.optional:
             self.set_z3_assertions(Implies(task.scheduled, scheduled_assertion))
         else:
             self.set_z3_assertions(scheduled_assertion)

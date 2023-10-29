@@ -58,11 +58,11 @@ class Objective(_NamedUIDObject):
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
-        if not isinstance(target, (ArithRef, Indicator)):
+        if not isinstance(self.target, (ArithRef, Indicator)):
             raise TypeError(
                 "the indicator expression must be either a BoolRef, ArithRef or Indicator instance."
             )
-        if isinstance(target, Indicator):
+        if isinstance(self.target, Indicator):
             self._target = self.target.indicator_variable
             self._bounds = self.target.bounds
         else:

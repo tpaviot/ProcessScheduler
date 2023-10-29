@@ -21,6 +21,8 @@ from z3 import Bool, BoolRef, Implies, PbEq, PbGe, PbLe
 from processscheduler.base import _NamedUIDObject
 import processscheduler.context as ps_context
 
+from pydantic import Field
+
 
 #
 # Base Constraint class
@@ -28,20 +30,20 @@ import processscheduler.context as ps_context
 class Constraint(_NamedUIDObject):
     """The base class for all constraints, including Task and Resource constraints."""
 
-    def __init__(self, optional):
-        super().__init__("")
+    optional: bool = Field(default=False)
 
-        self.optional = optional
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
         # by default, we dont know if the constraint is created from
         # an assertion
-        self.created_from_assertion = False
+        self._created_from_assertion = False
 
         # by default, this constraint has to be applied
         if self.optional:
-            self.applied = Bool(f"constraint_{self.uid}_applied")
+            self._applied = Bool(f"constraint_{self.uid}_applied")
         else:
-            self.applied = True
+            self._applied = True
 
         # store this constraint into the current context
         ps_context.main_context.add_constraint(self)
@@ -52,7 +54,7 @@ class Constraint(_NamedUIDObject):
         ps.not_(ps.TaskStartAt(task_1, 0))
         thus, the Task task_1 assertions must not be add to the z3 solver.
         """
-        self.created_from_assertion = True
+        self._created_from_assertion = True
 
     def set_z3_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
         """Each constraint comes with a set of z3 assertions
