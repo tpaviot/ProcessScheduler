@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Dict, List, Optional, Tuple, Literal
+from typing import Dict, List, Optional, Tuple, Literal, Union
 
 from z3 import ArithRef, Bool, PbEq, PbGe, PbLe
 
@@ -22,7 +22,7 @@ from processscheduler.util import is_strict_positive_integer, is_positive_intege
 from processscheduler.cost import _Cost, ConstantCostPerPeriod
 import processscheduler.context as ps_context
 
-from pydantic import Field, PositiveInt
+from pydantic import Field, PositiveInt, ValidationError
 
 
 #
@@ -85,13 +85,53 @@ class Worker(Resource):
         ps_context.main_context.add_resource(self)
 
 
+class CumulativeWorker(Resource):
+    """A cumulative worker can process multiple tasks in parallel."""
+
+    # size is 2 min, otherwise it should be a single worker
+    size: int = Field(gt=2)
+    productivity: PositiveInt = Field(default=1)
+    cost: _Cost = Field(default=None)
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        self.cost_defined_value = cost
+
+        # productivity and cost_per_period are distributed over
+        # individual workers
+        # for example, a productivty of 7 for a size of 3 will be distributed
+        # as 3 on worker 1, 2 on worker 2 and 2 on worker 3. Same for cost_per_periods
+        productivities = _distribute_p_over_n(productivity, size)
+
+        costs_per_period = _distribute_p_over_n(cost, size)
+
+        # we create as much elementary workers as the cumulative size
+        self.cumulative_workers = [
+            Worker(
+                name=f"{name}_CumulativeWorker_{i+1}",
+                productivity=productivities[i],
+                cost=costs_per_period[i],
+            )
+            for i in range(size)
+        ]
+
+        ps_context.main_context.add_resource_cumulative_worker(self)
+
+    def get_select_workers(self):
+        """Each time the cumulative resource is assigned to a task, a SelectWorker
+        instance is assigned to the task."""
+        return SelectWorkers(
+            list_of_workers=self.cumulative_workers, nb_workers_to_select=1, kind="min"
+        )
+
+
 class SelectWorkers(Resource):
     """Class representing the selection of n workers chosen among a list
     of possible workers"""
 
-    list_of_workers: List[Resource] = (Field(default=[]),)
-    nb_workers_to_select: PositiveInt = (Field(default=1),)
-    kind: Literal["exact", "min", "max"] = (Field(default="exact"),)
+    list_of_workers: List[Union[Worker, CumulativeWorker]] = Field(min_length=2)
+    nb_workers_to_select: PositiveInt = Field(default=1)
+    kind: Literal["exact", "min", "max"] = Field(default="exact")
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -128,62 +168,7 @@ class SelectWorkers(Resource):
         # see https://github.com/Z3Prover/z3/issues/694
         # and https://stackoverflow.com/questions/43081929/k-out-of-n-constraint-in-z3py
         selection_list = list(self._selection_dict.values())
-        self.selection_assertion = problem_function[kind](
-            [(selected, True) for selected in selection_list], nb_workers_to_select
+        self._selection_assertion = problem_function[self.kind](
+            [(selected, True) for selected in selection_list], self.nb_workers_to_select
         )
         ps_context.main_context.add_resource_select_workers(self)
-
-
-class CumulativeWorker(Resource):
-    """A cumulative worker can process multiple tasks in parallel."""
-
-    def __init__(
-        self,
-        name: str,
-        size: int,
-        productivity: Optional[int] = 1,
-        cost: Optional[int] = None,
-    ) -> None:
-        super().__init__(name)
-
-        if not (isinstance(size, int) and size >= 2):
-            raise ValueError("CumulativeWorker 'size' attribute must be >=2.")
-        self.size = size
-
-        if not is_positive_integer(productivity):
-            raise TypeError("productivity must be an integer >= 0")
-        self.productivity = productivity
-
-        if cost is None:
-            self.cost = None
-
-        elif not isinstance(cost, _Cost):
-            raise TypeError("cost must be a _Cost instance")
-        self.cost_defined_value = cost
-
-        # productivity and cost_per_period are distributed over
-        # individual workers
-        # for example, a productivty of 7 for a size of 3 will be distributed
-        # as 3 on worker 1, 2 on worker 2 and 2 on worker 3. Same for cost_per_periods
-        productivities = _distribute_p_over_n(productivity, size)
-
-        costs_per_period = _distribute_p_over_n(cost, size)
-
-        # we create as much elementary workers as the cumulative size
-        self.cumulative_workers = [
-            Worker(
-                f"{name}_CumulativeWorker_{i+1}",
-                productivity=productivities[i],
-                cost=costs_per_period[i],
-            )
-            for i in range(size)
-        ]
-
-        ps_context.main_context.add_resource_cumulative_worker(self)
-
-    def get_select_workers(self):
-        """Each time the cumulative resource is assigned to a task, a SelectWorker
-        instance is assigned to the task."""
-        return SelectWorkers(
-            self.cumulative_workers, nb_workers_to_select=1, kind="min"
-        )

@@ -18,6 +18,8 @@ import unittest
 import processscheduler as ps
 import processscheduler.context as ps_context
 
+from pydantic import ValidationError
+
 
 def new_problem_or_clear() -> None:
     """clear the current context. If no context is defined,
@@ -37,13 +39,13 @@ class TestFeatures(unittest.TestCase):
     def test_create_problem_with_horizon(self) -> None:
         pb = ps.SchedulingProblem(name="ProblemWithHorizon", horizon=10)
         self.assertIsInstance(pb, ps.SchedulingProblem)
-        with self.assertRaises(TypeError):
-            ps.SchedulingProblem(4)  # name not string
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValidationError):
+            ps.SchedulingProblem(name=4)  # name not string
+        with self.assertRaises(ValidationError):
             ps.SchedulingProblem(name="NullIntegerHorizon", horizon=0)
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValidationError):
             ps.SchedulingProblem(name="FloatHorizon", horizon=3.5)
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValidationError):
             ps.SchedulingProblem(name="NegativeIntegerHorizon", horizon=-2)
 
     def test_create_problem_without_horizon(self) -> None:
@@ -57,9 +59,9 @@ class TestFeatures(unittest.TestCase):
         new_problem_or_clear()
         worker = ps.Worker(name="wkr")
         self.assertIsInstance(worker, ps.Worker)
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValidationError):
             ps.Worker(name="WorkerNegativeIntProductivity", productivity=-3)
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValidationError):
             ps.Worker(name="WorkerFloatProductivity", productivity=3.14)
 
     def test_create_select_workers(self) -> None:
@@ -83,18 +85,23 @@ class TestFeatures(unittest.TestCase):
         ps.SelectWorkers(list_of_workers=[worker_1, worker_2], nb_workers_to_select=2)
         ps.SelectWorkers(list_of_workers=[worker_1, worker_2], nb_workers_to_select=1)
         with self.assertRaises(ValueError):
-            ps.SelectWorkers([worker_1, worker_2], 3)
-        with self.assertRaises(TypeError):
-            ps.SelectWorkers([worker_1, worker_2], -1)
+            ps.SelectWorkers(
+                list_of_workers=[worker_1, worker_2], nb_workers_to_select=3
+            )
+        with self.assertRaises(ValidationError):
+            ps.SelectWorkers(
+                list_of_workers=[worker_1, worker_2], nb_workers_to_select=-1
+            )
 
     def test_select_worker_bad_type(self) -> None:
         new_problem_or_clear()
         worker_1 = ps.Worker(name="wkr_1")
         self.assertIsInstance(worker_1, ps.Worker)
         worker_2 = ps.Worker(name="wkr_2")
-        ps.SelectWorkers(
-            list_of_workers=[worker_1, worker_2], nb_workers_to_select=1, kind="ee"
-        )
+        with self.assertRaises(ValidationError):
+            ps.SelectWorkers(
+                list_of_workers=[worker_1, worker_2], nb_workers_to_select=1, kind="ee"
+            )
 
     def test_worker_same_name(self) -> None:
         new_problem_or_clear()
@@ -108,9 +115,13 @@ class TestFeatures(unittest.TestCase):
     #
     def test_create_indicator(self) -> None:
         pb = ps.SchedulingProblem(name="CreateIndicator", horizon=3)
-        i_1 = ps.Indicator(name="SquareHorizon", expression=pb.horizon**2)  # ArithRef
+        i_1 = ps.Indicator(
+            name="SquareHorizon", expression=pb._horizon**2
+        )  # ArithRef
         self.assertIsInstance(i_1, ps.Indicator)
-        i_2 = ps.Indicator(name="IsLooooong ?", expression=pb.horizon > 1000)  # BoolRef
+        i_2 = ps.Indicator(
+            name="IsLooooong ?", expression=pb._horizon > 1000
+        )  # BoolRef
         self.assertIsInstance(i_2, ps.Indicator)
 
     #

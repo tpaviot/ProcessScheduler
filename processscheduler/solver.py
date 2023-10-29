@@ -85,7 +85,7 @@ class SchedulingSolver(BaseModel):
             set_option("verbose", 2)
             set_option(unsat_core=True)
         else:
-            set_option("verbose", verbosity)
+            set_option("verbose", self.verbosity)
 
         if self.parallel:
             set_option("parallel.enable", True)  # enable parallel computation

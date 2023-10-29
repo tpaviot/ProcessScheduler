@@ -102,7 +102,7 @@ class Task(_NamedUIDObject):
 
         if isinstance(resource, SelectWorkers):
             # loop over each resource
-            for worker in resource.list_of_workers:
+            for worker in resource._list_of_workers:
                 resource_maybe_busy_start = Int(
                     f"{worker.name}_maybe_busy_{self.name}_start"
                 )
@@ -137,7 +137,7 @@ class Task(_NamedUIDObject):
                 # finally, add each worker to the "required" resource list
                 self._required_resources.append(worker)
             # also, don't forget to add the AlternativeWorker assertion
-            self.append_z3_assertion(resource.selection_assertion)
+            self.append_z3_assertion(resource._selection_assertion)
         elif isinstance(resource, Worker):
             resource_busy_start = Int(f"{resource.name}_busy_{self.name}_start")
             resource_busy_end = Int(f"{resource.name}_busy_{self.name}_end")
@@ -235,9 +235,9 @@ class UnavailabilityTask(FixedDurationTask):
 class VariableDurationTask(Task):
     """The duration can take any value, computed by the solver."""
 
-    min_duration: int = Field(default=0)
-    max_duration: int = Field(default=None)
-    allowed_durations: List[PositiveInt] = Field(default_factory=None)
+    min_duration: PositiveInt = Field(default=0)
+    max_duration: PositiveInt = Field(default=None)
+    allowed_durations: List[PositiveInt] = Field(default=None)
 
     def __init__(self, **data) -> None:
         super().__init__(**data)

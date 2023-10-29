@@ -19,7 +19,7 @@ from datetime import timedelta, datetime
 import uuid
 from typing import List, Optional, Union
 
-from pydantic import Field
+from pydantic import Field, PositiveInt
 
 from z3 import And, BoolRef, If, Int, Or, Sum, Implies, ArithRef
 
@@ -43,7 +43,7 @@ class SchedulingProblem(_NamedUIDObject):
 
     """
 
-    horizon: int = Field(default=None)
+    horizon: PositiveInt = Field(default=None)
     delta_time: timedelta = Field(default=None)
     start_time: datetime = Field(default=None)
     end_time: datetime = Field(default=None)
@@ -56,14 +56,10 @@ class SchedulingProblem(_NamedUIDObject):
         # set this context as global
         ps_context.main_context = self._context
 
-        # store the horizon value to be exported to json
-        self._horizon_defined_value = self.horizon
         # define the horizon variable
         self._horizon = Int("horizon")
-        if is_strict_positive_integer(self.horizon):
-            self._context.add_constraint(self._horizon <= self._horizon_defined_value)
-        elif self.horizon is not None:
-            raise TypeError("horizon must either be a strict positive integer or None")
+        if self.horizon is not None:
+            self._context.add_constraint(self._horizon <= self.horizon)
 
     def add_constraint(self, constraint: BoolRef) -> None:
         self._context.add_constraint(constraint)

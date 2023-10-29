@@ -29,9 +29,7 @@ class _NamedUIDObject(BaseModel):
     """The base object for most ProcessScheduler classes"""
 
     uid: int = Field(default_factory=lambda: uuid4().int)
-    name: str = Field(
-        default_factory=lambda: f"{self.__class__.__name__}_{str(self.uid)[:8]}"
-    )
+    name: str = Field(default=None)
 
     class Config:
         extra = Extra.forbid
@@ -46,6 +44,9 @@ class _NamedUIDObject(BaseModel):
         """
         # check name type
         super().__init__(**data)
+
+        if self.name is None:
+            self.name = f"{self.__class__.__name__}_{str(self.uid)[:8]}"
 
         # SMT assertions
         # start and end integer values must be positive

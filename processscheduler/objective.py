@@ -40,12 +40,12 @@ class Indicator(_NamedUIDObject):
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
-        self._indicator_variable = Int(f"Indicator_{name}")
+        self._indicator_variable = Int(f"Indicator_{self.name}")
         # by default the scheduled value is set to None
         # set by the solver
         self._scheduled_value = None
 
-        self.append_z3_assertion(self._indicator_variable == expression)
+        self.append_z3_assertion(self._indicator_variable == self.expression)
 
         ps_context.main_context.add_indicator(self)
 
