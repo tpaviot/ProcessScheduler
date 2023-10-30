@@ -15,21 +15,22 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Optional
+from typing import Optional, Literal, Union, Dict, Tuple
 import uuid
 
 from z3 import And, Implies, Int, Not, Or, Sum, Xor
 
-from processscheduler.resource import Worker, CumulativeWorker
+from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
 from processscheduler.constraint import ResourceConstraint
 from processscheduler.util import sort_no_duplicates
 
+from pydantic import Field
 
-def assert_resource_is_worker_or_cumulative_worker(resource):
-    if not isinstance(resource, (Worker, CumulativeWorker)):
-        raise TypeError(
-            f"you passed a {type(resource)} object. resource must be either a Worker or CumulativeWorker."
-        )
+# def assert_resource_is_worker_or_cumulative_worker(resource):
+#     if not isinstance(resource, (Worker, CumulativeWorker)):
+#         raise TypeError(
+#             f"you passed a {type(resource)} object. resource must be either a Worker or CumulativeWorker."
+#         )
 
 
 class WorkLoad(ResourceConstraint):
@@ -46,13 +47,20 @@ class WorkLoad(ResourceConstraint):
     - optional (bool, optional): Whether the constraint is optional (default is False).
     """
 
-    def __init__(
-        self,
-        resource,
-        dict_time_intervals_and_bound,
-        kind: Optional[str] = "max",
-        optional: Optional[bool] = False,
-    ) -> None:
+    resource: Union[Worker, CumulativeWorker]
+    dict_time_intervals_and_bound: Dict[Tuple[int, int], int]
+    kind: Literal["exact", "max", "min"] = Field(default="max")
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        # def __init__(
+        #     self,
+        #     resource,
+        #     dict_time_intervals_and_bound,
+        #     kind: Optional[str] = "max",
+        #     optional: Optional[bool] = False,
+        # ) -> None:
         """
         Initialize a WorkLoad constraint.
 
@@ -63,16 +71,16 @@ class WorkLoad(ResourceConstraint):
         :param kind: Specifies whether the constraint is exact, a minimum, or a maximum (default is "max").
         :param optional: Whether the constraint is optional (default is False).
         """
-        super().__init__(optional)
+        # super().__init__(optional)
 
-        if kind not in ["exact", "max", "min"]:
-            raise ValueError("kind must either be 'exact', 'min' or 'max'")
+        # if kind not in ["exact", "max", "min"]:
+        #     raise ValueError("kind must either be 'exact', 'min' or 'max'")
 
-        assert_resource_is_worker_or_cumulative_worker(resource)
+        # assert_resource_is_worker_or_cumulative_worker(resource)
 
-        self.dict_time_intervals_and_bound = dict_time_intervals_and_bound
-        self.resource = resource
-        self.kind = kind
+        # self.dict_time_intervals_and_bound = dict_time_intervals_and_bound
+        # self.resource = resource
+        # self.kind = kind
 
         if isinstance(resource, Worker):
             workers = [resource]
@@ -321,28 +329,20 @@ class SameWorkers(ResourceConstraint):
     - optional (bool, optional): Whether the constraint is optional (default is False).
     """
 
-    def __init__(
-        self, select_workers_1, select_workers_2, optional: Optional[bool] = False
-    ):
-        """
-        Initialize a SameWorkers constraint.
+    select_workers_1: SelectWorkers
+    select_workers_2: SelectWorkers
 
-        :param select_workers_1: The first set of selected workers.
-        :param select_workers_2: The second set of selected workers.
-        :param optional: Whether the constraint is optional (default is False).
-        """
-        super().__init__(optional)
-
-        self.select_workers_1 = select_workers_1
-        self.select_workers_2 = select_workers_2
-
+    # class Config:
+    # arbitrary_types_allowed = True
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
         # Check for common resources in select_workers_1 and select_workers_2,
         # then add a constraint to ensure they are the same.
-        for res_work_1 in select_workers_1.selection_dict:
-            if res_work_1 in select_workers_2.selection_dict:
+        for res_work_1 in self.select_workers_1._selection_dict:
+            if res_work_1 in self.select_workers_2._selection_dict:
                 self.set_z3_assertions(
-                    select_workers_1.selection_dict[res_work_1]
-                    == select_workers_2.selection_dict[res_work_1]
+                    self.select_workers_1._selection_dict[res_work_1]
+                    == self.select_workers_2._selection_dict[res_work_1]
                 )
 
 
@@ -356,26 +356,17 @@ class DistinctWorkers(ResourceConstraint):
     - optional (bool, optional): Whether the constraint is optional (default is False).
     """
 
-    def __init__(
-        self, select_workers_1, select_workers_2, optional: Optional[bool] = False
-    ):
-        """
-        Initialize a DistinctWorkers constraint.
+    select_workers_1: SelectWorkers
+    select_workers_2: SelectWorkers
 
-        :param select_workers_1: The first set of selected workers.
-        :param select_workers_2: The second set of selected workers.
-        :param optional: Whether the constraint is optional (default is False).
-        """
-        super().__init__(optional)
-
-        self.select_workers_1 = select_workers_1
-        self.select_workers_2 = select_workers_2
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
         # Check for common resources in select_workers_1 and select_workers_2,
         # then add a constraint to ensure they are distinct.
-        for res_work_1 in select_workers_1.selection_dict:
-            if res_work_1 in select_workers_2.selection_dict:
+        for res_work_1 in self.select_workers_1._selection_dict:
+            if res_work_1 in self.select_workers_2._selection_dict:
                 self.set_z3_assertions(
-                    select_workers_1.selection_dict[res_work_1]
-                    != select_workers_2.selection_dict[res_work_1]
+                    self.select_workers_1._selection_dict[res_work_1]
+                    != self.select_workers_2._selection_dict[res_work_1]
                 )

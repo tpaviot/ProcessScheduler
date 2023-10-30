@@ -114,7 +114,7 @@ class Task(_NamedUIDObject):
                     self, (resource_maybe_busy_start, resource_maybe_busy_end)
                 )
                 # add assertions. If worker is selected then sync the resource with the task
-                selected_variable = resource.selection_dict[worker]
+                selected_variable = resource._selection_dict[worker]
                 schedule_as_usual = And(
                     resource_maybe_busy_start == self._start,
                     resource_maybe_busy_end == self._end,
@@ -176,7 +176,7 @@ class Task(_NamedUIDObject):
             self._scheduled = Bool(f"{self.name}_scheduled")
             # the first task is moved to -1, the second to -2
             # etc.
-            point_in_past = -self.task_number
+            point_in_past = -self._task_number
             not_scheduled_assertion = And(
                 self._start == point_in_past,  # to past
                 self._end == point_in_past,  # to past

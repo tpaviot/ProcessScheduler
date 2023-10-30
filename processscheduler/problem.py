@@ -186,54 +186,54 @@ class SchedulingProblem(_NamedUIDObject):
         """optimize the solution such that all task with a higher
         priority value are scheduled before other tasks"""
         all_priorities = []
-        for task in self.context.tasks:
+        for task in self._context.tasks:
             if task.optional:
-                all_priorities.append(task.end * task.priority * task.scheduled)
+                all_priorities.append(task._end * task.priority * task._scheduled)
             else:
-                all_priorities.append(task.end * task.priority)
+                all_priorities.append(task._end * task.priority)
         priority_sum = Sum(all_priorities)
-        priority_indicator = Indicator("PriorityTotal", priority_sum)
-        MinimizeObjective("", priority_indicator, weight)
+        priority_indicator = Indicator(name="PriorityTotal", expression=priority_sum)
+        MinimizeObjective(name="", target=priority_indicator, weight=weight)
         return priority_indicator
 
     def add_objective_start_latest(self, weight=1) -> Union[ArithRef, Indicator]:
         """maximize the minimum start time, i.e. all the tasks
         are scheduled as late as possible"""
         mini = Int("SmallestStartTime")
-        smallest_start_time = Indicator("SmallestStartTime", mini)
+        smallest_start_time = Indicator(name="SmallestStartTime", expression=mini)
         smallest_start_time.append_z3_assertion(
-            Or([mini == task.start for task in self.context.tasks])
+            Or([mini == task._start for task in self._context.tasks])
         )
-        for tsk in self.context.tasks:
-            smallest_start_time.append_z3_assertion(mini <= tsk.start)
-        MaximizeObjective("", smallest_start_time, weight)
+        for tsk in self._context.tasks:
+            smallest_start_time.append_z3_assertion(mini <= tsk._start)
+        MaximizeObjective(name="", target=smallest_start_time, weight=weight)
         return smallest_start_time
 
     def add_objective_start_earliest(self, weight=1) -> Union[ArithRef, Indicator]:
         """minimize the greatest start time, i.e. tasks are schedules
         as early as possible"""
         maxi = Int("GreatestStartTime")
-        greatest_start_time = Indicator("GreatestStartTime", maxi)
+        greatest_start_time = Indicator(name="GreatestStartTime", expression=maxi)
         greatest_start_time.append_z3_assertion(
-            Or([maxi == task.start for task in self.context.tasks])
+            Or([maxi == task._start for task in self._context.tasks])
         )
-        for tsk in self.context.tasks:
-            greatest_start_time.append_z3_assertion(maxi >= tsk.start)
-        MinimizeObjective("", greatest_start_time, weight)
+        for tsk in self._context.tasks:
+            greatest_start_time.append_z3_assertion(maxi >= tsk._start)
+        MinimizeObjective(name="", target=greatest_start_time, weight=weight)
         return greatest_start_time
 
     def add_objective_flowtime(self, weight=1) -> Union[ArithRef, Indicator]:
         """the flowtime is the sum of all ends, minimize. Be carful that
         it is contradictory with makespan"""
         task_ends = []
-        for task in self.context.tasks:
+        for task in self._context.tasks:
             if task.optional:
-                task_ends.append(task.end * task.scheduled)
+                task_ends.append(task._end * task._scheduled)
             else:
-                task_ends.append(task.end)
+                task_ends.append(task._end)
         flow_time_expr = Sum(task_ends)
-        flow_time = Indicator("FlowTime", flow_time_expr)
-        MinimizeObjective("", flow_time, weight)
+        flow_time = Indicator(name="FlowTime", expression=flow_time_expr)
+        MinimizeObjective(name="", target=flow_time, weight=weight)
         return flow_time
 
     def add_objective_flowtime_single_resource(

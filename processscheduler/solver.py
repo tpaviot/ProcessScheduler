@@ -50,7 +50,7 @@ from processscheduler.problem import SchedulingProblem
 from processscheduler.util import calc_parabola_from_three_points, sort_no_duplicates
 
 from typing import Literal
-from pydantic import BaseModel, Field, PositiveInt, Extra
+from pydantic import BaseModel, Field, PositiveFloat, Extra
 
 
 #
@@ -61,7 +61,7 @@ class SchedulingSolver(BaseModel):
 
     problem: SchedulingProblem
     debug: bool = Field(default=False)
-    max_time: PositiveInt = Field(default=10)
+    max_time: PositiveFloat = Field(default=10)
     parallel: bool = Field(default=False)
     random_values: bool = Field(default=False)
     logics: Literal["QF_IDL", "QF_LIA"] = Field(default=None)
@@ -315,7 +315,7 @@ class SchedulingSolver(BaseModel):
         equivalent_single_objective = Int("EquivalentSingleObjective")
         weighted_objectives = []
         for obj in self.problem._context.objectives:
-            variable_to_optimize = obj.target
+            variable_to_optimize = obj._target
             weight = obj.weight
             if isinstance(obj, MaximizeObjective):
                 weighted_objectives.append(-weight * variable_to_optimize)
@@ -342,10 +342,10 @@ class SchedulingSolver(BaseModel):
             if self.optimizer == "incremental" or self.optimize_priority == "weight":
                 eq_obj, _ = self.build_equivalent_weighted_objective()
                 if self.optimizer == "optimize":
-                    self._solver.minimize(eq_obj.target)
+                    self._solver.minimize(eq_obj._target)
             else:
                 for obj in self.problem._context.objectives:
-                    variable_to_optimize = obj.target
+                    variable_to_optimize = obj._target
                     if isinstance(obj, MaximizeObjective):
                         self._solver.maximize(variable_to_optimize)
                     else:
@@ -353,7 +353,7 @@ class SchedulingSolver(BaseModel):
         else:
             self._objective = self.problem._context.objectives[0]
             if self.optimizer == "optimize":
-                variable_to_optimize = self._objective.target
+                variable_to_optimize = self._objective._target
                 if isinstance(self._objective, MaximizeObjective):
                     self._solver.maximize(variable_to_optimize)
                 else:
@@ -425,7 +425,7 @@ class SchedulingSolver(BaseModel):
             if task.optional:
                 # ugly hack, necessary because there's no as_bool()
                 # method for Bool objects
-                new_task_solution.scheduled = f"{z3_sol[task.scheduled]}" == "True"
+                new_task_solution.scheduled = f"{z3_sol[task._scheduled]}" == "True"
             else:
                 new_task_solution.scheduled = True
 
@@ -499,7 +499,7 @@ class SchedulingSolver(BaseModel):
         # process indicators
         for indicator in self.problem._context.indicators:
             indicator_name = indicator.name
-            indicator_value = z3_sol[indicator.indicator_variable].as_long()
+            indicator_value = z3_sol[indicator._indicator_variable].as_long()
             solution.add_indicator_solution(indicator_name, indicator_value)
 
         return solution
@@ -519,7 +519,7 @@ class SchedulingSolver(BaseModel):
                 for obj in self.problem._context.objectives:
                     print(f"\t{obj}")
             solution = self.solve_optimize_incremental(
-                self._objective.target,
+                self._objective._target,
                 kind="min" if isinstance(self._objective, MinimizeObjective) else "max",
             )
             if not solution:
@@ -571,7 +571,7 @@ class SchedulingSolver(BaseModel):
             # print objectives values if optimizer
             if self.optimizer == "optimize":
                 for obj in self.problem._context.objectives:
-                    print(obj.name, "Value : ", solution[obj.target].as_long())
+                    print(obj.name, "Value : ", solution[obj._target].as_long())
 
         self._current_solution = solution
 
@@ -637,7 +637,6 @@ class SchedulingSolver(BaseModel):
                 break
             # at this stage, is_sat should be sat
             solution = self._solver.model()
-
             current_variable_value = solution[variable].as_long()
             total_time += sat_computation_time
             print(

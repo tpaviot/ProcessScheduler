@@ -46,7 +46,6 @@ class Indicator(_NamedUIDObject):
         self._scheduled_value = None
 
         self.append_z3_assertion(self._indicator_variable == self.expression)
-
         ps_context.main_context.add_indicator(self)
 
 
@@ -63,7 +62,7 @@ class Objective(_NamedUIDObject):
                 "the indicator expression must be either a BoolRef, ArithRef or Indicator instance."
             )
         if isinstance(self.target, Indicator):
-            self._target = self.target.indicator_variable
+            self._target = self.target._indicator_variable
             self._bounds = self.target.bounds
         else:
             self._target = self.target
