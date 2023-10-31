@@ -64,15 +64,15 @@ class WorkLoad(ResourceConstraint):
         :param optional: Whether the constraint is optional (default is False).
         """
 
-        if isinstance(resource, Worker):
-            workers = [resource]
-        elif isinstance(resource, CumulativeWorker):
-            workers = resource.cumulative_workers
+        if isinstance(self.resource, Worker):
+            workers = [self.resource]
+        elif isinstance(self.resource, CumulativeWorker):
+            workers = self.resource.cumulative_workers
 
         resource_assigned = False
 
-        for time_interval in dict_time_intervals_and_bound:
-            number_of_time_slots = dict_time_intervals_and_bound[time_interval]
+        for time_interval in self.dict_time_intervals_and_bound:
+            number_of_time_slots = self.dict_time_intervals_and_bound[time_interval]
 
             time_interval_lower_bound, time_interval_upper_bound = time_interval
 
@@ -140,11 +140,11 @@ class WorkLoad(ResourceConstraint):
                 )
 
             # workload constraint depends on the kind
-            if kind == "exact":
+            if self.kind == "exact":
                 workload_constraint = Sum(durations) == number_of_time_slots
-            elif kind == "max":
+            elif self.kind == "max":
                 workload_constraint = Sum(durations) <= number_of_time_slots
-            elif kind == "min":
+            elif self.kind == "min":
                 workload_constraint = Sum(durations) >= number_of_time_slots
 
             self.set_z3_assertions(workload_constraint)

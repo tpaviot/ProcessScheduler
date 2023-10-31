@@ -62,9 +62,9 @@ class _NamedUIDObject(BaseModel):
     def __repr__(self) -> str:
         """Print the object name, its uid and the assertions."""
         str_to_return = (
-            f"{self.name}({type(self)})\n{len(self.z3_assertions)} assertion(s):\n"
+            f"{self.name}({type(self)})\n{len(self._z3_assertions)} assertion(s):\n"
         )
-        assertions_str = "".join(f"{assertion}" for assertion in self.z3_assertions)
+        assertions_str = "".join(f"{assertion}" for assertion in self._z3_assertions)
         return str_to_return + assertions_str
 
     def append_z3_assertion(self, z3_assertion: BoolRef) -> bool:
