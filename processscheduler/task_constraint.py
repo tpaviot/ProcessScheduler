@@ -210,7 +210,7 @@ class TaskStartAfter(TaskConstraint):
             scheduled_assertion = self.task._start >= self.value
 
         if self.task.optional:
-            self.set_z3_assertions(Implies(task._scheduled, scheduled_assertion))
+            self.set_z3_assertions(Implies(self.task._scheduled, scheduled_assertion))
         else:
             self.set_z3_assertions(scheduled_assertion)
 
@@ -227,7 +227,7 @@ class TaskEndAt(TaskConstraint):
         scheduled_assertion = self.task._end == self.value
 
         if self.task.optional:
-            self.set_z3_assertions(Implies(task._scheduled, scheduled_assertion))
+            self.set_z3_assertions(Implies(self.task._scheduled, scheduled_assertion))
         else:
             self.set_z3_assertions(scheduled_assertion)
 
@@ -248,7 +248,7 @@ class TaskEndBefore(TaskConstraint):
             scheduled_assertion = self.task._end <= self.value
 
         if self.task.optional:
-            self.set_z3_assertions(Implies(task.scheduled, scheduled_assertion))
+            self.set_z3_assertions(Implies(self.task._scheduled, scheduled_assertion))
         else:
             self.set_z3_assertions(scheduled_assertion)
 
@@ -259,57 +259,66 @@ class TaskEndBefore(TaskConstraint):
 class OptionalTaskConditionSchedule(TaskConstraint):
     """An optional task that is scheduled only if a condition is fulfilled."""
 
-    def __init__(
-        self, task, condition: BoolRef, optional: Optional[bool] = False
-    ) -> None:
-        super().__init__(optional)
+    task: Task
+    condition: BoolRef
 
-        if not task.optional:
-            raise TypeError(f"Task {task.name} must be optional.")
+    class Config:
+        arbitrary_types_allowed = True
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        if not self.task.optional:
+            raise TypeError(f"Task {self.task.name} must be optional.")
 
         self.set_z3_assertions(
-            If(condition, task.scheduled == True, task.scheduled == False)
+            If(
+                self.condition,
+                self.task._scheduled == True,
+                self.task._scheduled == False,
+            )
         )
 
 
 class OptionalTasksDependency(TaskConstraint):
     """task_2 is scheduled if and only if task_1 is scheduled"""
 
-    def __init__(self, task_1, task_2, optional: Optional[bool] = False) -> None:
-        super().__init__(optional)
+    task_1: Task
+    task_2: Task
 
-        if not task_2.optional:
-            raise TypeError(f"Task {task_2.name} must be optional.")
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
-        self.set_z3_assertions(task_1.scheduled == task_2.scheduled)
+        if not self.task_2.optional:
+            raise TypeError(f"Task {self.task_2.name} must be optional.")
+
+        self.set_z3_assertions(self.task_1._scheduled == self.task_2._scheduled)
 
 
 class ForceScheduleNOptionalTasks(TaskConstraint):
     """Given a set of m different optional tasks, force the solver to schedule
     at at least/at most/exactly n tasks, with 0 < n <= m."""
 
-    def __init__(
-        self,
-        list_of_optional_tasks,
-        nb_tasks_to_schedule: Optional[int] = 1,
-        kind: Optional[str] = "exact",
-        optional: Optional[bool] = False,
-    ) -> None:
-        super().__init__(optional)
+    list_of_optional_tasks: List[Task]
+    nb_tasks_to_schedule: PositiveInt = Field(default=1)
+    kind: Literal["min", "max", "exact"] = Field(default="exact")
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
         problem_function = {"min": PbGe, "max": PbLe, "exact": PbEq}
 
         # first check that all tasks from the list_of_optional_tasks are
         # actually optional
-        for task in list_of_optional_tasks:
+        for task in self.list_of_optional_tasks:
             if not task.optional:
                 raise TypeError(
-                    "The task {task.name} must excplicitely be set as optional."
+                    "The task {task.name} must expilicitly be set as optional."
                 )
         # all scheduled variables to take into account
-        sched_vars = [task.scheduled for task in list_of_optional_tasks]
-        asst = problem_function[kind](
-            [(scheduled, True) for scheduled in sched_vars], nb_tasks_to_schedule
+        sched_vars = [task._scheduled for task in self.list_of_optional_tasks]
+        asst = problem_function[self.kind](
+            [(scheduled, True) for scheduled in sched_vars], self.nb_tasks_to_schedule
         )
         self.set_z3_assertions(asst)
 

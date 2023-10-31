@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Optional, Literal, Union, Dict, Tuple
+from typing import Optional, Literal, Union, Dict, Tuple, List
 import uuid
 
 from z3 import And, Implies, Int, Not, Or, Sum, Xor
@@ -53,14 +53,6 @@ class WorkLoad(ResourceConstraint):
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
-
-        # def __init__(
-        #     self,
-        #     resource,
-        #     dict_time_intervals_and_bound,
-        #     kind: Optional[str] = "max",
-        #     optional: Optional[bool] = False,
-        # ) -> None:
         """
         Initialize a WorkLoad constraint.
 
@@ -71,16 +63,6 @@ class WorkLoad(ResourceConstraint):
         :param kind: Specifies whether the constraint is exact, a minimum, or a maximum (default is "max").
         :param optional: Whether the constraint is optional (default is False).
         """
-        # super().__init__(optional)
-
-        # if kind not in ["exact", "max", "min"]:
-        #     raise ValueError("kind must either be 'exact', 'min' or 'max'")
-
-        # assert_resource_is_worker_or_cumulative_worker(resource)
-
-        # self.dict_time_intervals_and_bound = dict_time_intervals_and_bound
-        # self.resource = resource
-        # self.kind = kind
 
         if isinstance(resource, Worker):
             workers = [resource]
@@ -179,9 +161,11 @@ class ResourceUnavailable(ResourceConstraint):
     - optional (bool, optional): Whether the constraint is optional (default is False).
     """
 
-    def __init__(
-        self, resource, list_of_time_intervals, optional: Optional[bool] = False
-    ) -> None:
+    resource: Union[Worker, CumulativeWorker]
+    list_of_time_intervals: List[Tuple[int, int]]
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
         """
         Initialize a ResourceUnavailable constraint.
 
@@ -190,22 +174,15 @@ class ResourceUnavailable(ResourceConstraint):
           For example, [(0, 2), (5, 8)] represents time intervals from 0 to 2 and from 5 to 8.
         :param optional: Whether the constraint is optional (default is False).
         """
-        super().__init__(optional)
-
-        assert_resource_is_worker_or_cumulative_worker(resource)
-
-        self.list_of_time_intervals = list_of_time_intervals
-        self.resource = resource
-
         # for each interval we create a task 'UnavailableResource%i'
-        if isinstance(resource, Worker):
-            workers = [resource]
-        elif isinstance(resource, CumulativeWorker):
-            workers = resource.cumulative_workers
+        if isinstance(self.resource, Worker):
+            workers = [self.resource]
+        elif isinstance(self.resource, CumulativeWorker):
+            workers = self.resource.cumulative_workers
 
         resource_assigned = False
 
-        for interval_lower_bound, interval_upper_bound in list_of_time_intervals:
+        for interval_lower_bound, interval_upper_bound in self.list_of_time_intervals:
             # add constraints on each busy interval
             for worker in workers:
                 for start_task_i, end_task_i in worker.get_busy_intervals():

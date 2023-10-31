@@ -54,7 +54,7 @@ class Task(_NamedUIDObject):
         self._duration = Int(f"{self.name}_duration")  # type: ArithRef
 
         # by default, the task is mandatory
-        # self.scheduled = True  # type: Union[bool, BoolRef]
+        self._scheduled = True  # type: Union[bool, BoolRef]
 
         # add this task to the current context
         if ps_context.main_context is None:

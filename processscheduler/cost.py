@@ -13,16 +13,22 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+from typing import Callable
+
+
 from processscheduler.base import _NamedUIDObject
 from processscheduler.util import is_positive_integer
 
+from pydantic import Field
 
-class _Cost(_NamedUIDObject):
+
+class Cost(_NamedUIDObject):
     """The base class for cost definition, to be assigned to a resource"""
 
-    def __init__(self):
-        super().__init__("")
-        self.f = lambda x: 0  # by default
+    cost_function: Callable[[float], float] = Field(default=lambda x: 0)
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
     def plot(self, interval, show_plot=False) -> None:
         """Plot the cost curve using matplotlib."""
@@ -50,27 +56,26 @@ class _Cost(_NamedUIDObject):
             plt.show()
 
 
-class ConstantCostPerPeriod(_Cost):
-    def __init__(self, value: int) -> None:
-        super().__init__()
-        if not is_positive_integer(value):
-            raise ValueError("the cost per period must be a positive integer")
-        self.value = value
-        self.f = lambda x: value
+class ConstantCostPerPeriod(Cost):
+    value: int
+
+    def __init__(self, **data) -> None:
+        print("Pasé:, ", data)
+        super().__init__(**data)
 
     def __call__(self, value):
         """compute the value of the cost function for a given value"""
-        return self.f(value)
+        return self.cost_function(value)
 
 
-class PolynomialCostFunction(_Cost):
+class PolynomialCostFunction(Cost):
     """A function of time under a polynomial form."""
 
     def __init__(self, function: callable) -> None:
         super().__init__()
         if not callable(function):
             raise TypeError("function must be a callable")
-        self.f = function
+        self.cost_function = function
 
     def __call__(self, value):
         """compute the value of the cost function for a given value"""
@@ -82,4 +87,4 @@ class PolynomialCostFunction(_Cost):
             raise AssertionError(
                 "Warning: ToReal conversion, the cost function must be linear."
             )
-        return self.f(value)
+        return self.cost_function(value)

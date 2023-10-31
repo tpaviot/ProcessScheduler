@@ -19,7 +19,7 @@ from z3 import ArithRef, Bool, PbEq, PbGe, PbLe
 
 from processscheduler.base import _NamedUIDObject
 from processscheduler.util import is_strict_positive_integer, is_positive_integer
-from processscheduler.cost import _Cost, ConstantCostPerPeriod
+from processscheduler.cost import Cost, ConstantCostPerPeriod
 import processscheduler.context as ps_context
 
 from pydantic import Field, PositiveInt, ValidationError
@@ -72,7 +72,7 @@ class Worker(Resource):
     Typical workers are human beings, machines etc."""
 
     productivity: PositiveInt = Field(default=1)
-    cost: _Cost = Field(default=None)
+    cost: Cost = Field(default=None)
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -91,28 +91,26 @@ class CumulativeWorker(Resource):
     # size is 2 min, otherwise it should be a single worker
     size: int = Field(gt=2)
     productivity: PositiveInt = Field(default=1)
-    cost: _Cost = Field(default=None)
+    cost: Cost = Field(default=None)
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
-        self.cost_defined_value = cost
-
         # productivity and cost_per_period are distributed over
         # individual workers
         # for example, a productivty of 7 for a size of 3 will be distributed
         # as 3 on worker 1, 2 on worker 2 and 2 on worker 3. Same for cost_per_periods
-        productivities = _distribute_p_over_n(productivity, size)
+        productivities = _distribute_p_over_n(self.productivity, self.size)
 
-        costs_per_period = _distribute_p_over_n(cost, size)
+        costs_per_period = _distribute_p_over_n(self.cost, self.size)
 
         # we create as much elementary workers as the cumulative size
         self.cumulative_workers = [
             Worker(
-                name=f"{name}_CumulativeWorker_{i+1}",
+                name=f"{self.name}_CumulativeWorker_{i+1}",
                 productivity=productivities[i],
-                cost=costs_per_period[i],
+                cost=ConstantCostPerPeriod(value=costs_per_period[i]),
             )
-            for i in range(size)
+            for i in range(self.size)
         ]
 
         ps_context.main_context.add_resource_cumulative_worker(self)
