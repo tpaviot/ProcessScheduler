@@ -15,13 +15,13 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Optional, List
+from typing import Optional, List, Literal
 
 from z3 import Bool, BoolRef, Implies, PbEq, PbGe, PbLe
 from processscheduler.base import _NamedUIDObject
 import processscheduler.context as ps_context
 
-from pydantic import Field
+from pydantic import Field, PositiveInt
 
 
 #
@@ -60,7 +60,7 @@ class Constraint(_NamedUIDObject):
         """Each constraint comes with a set of z3 assertions
         to satisfy."""
         if self.optional:
-            self.append_z3_assertion(Implies(self.applied, list_of_z3_assertions))
+            self.append_z3_assertion(Implies(self._applied, list_of_z3_assertions))
         else:
             self.append_z3_assertion(list_of_z3_assertions)
 
@@ -81,20 +81,18 @@ class ForceApplyNOptionalConstraints(Constraint):
     at at least/at most/exactly n tasks, with 0 < n <= m. Work for both
     Task and/or Resource constraints."""
 
-    def __init__(
-        self,
-        list_of_optional_constraints,
-        nb_constraints_to_apply: Optional[int] = 1,
-        kind: Optional[str] = "exact",
-        optional: Optional[bool] = False,
-    ) -> None:
-        super().__init__(optional)
+    list_of_optional_constraints: List[Constraint]
+    nb_constraints_to_apply: PositiveInt = Field(default=1)
+    kind: Literal["min", "max", "exact"] = Field(default="exact")
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
         problem_function = {"min": PbGe, "max": PbLe, "exact": PbEq}
 
         # first check that all tasks from the list_of_optional_tasks are
         # actually optional
-        for constraint in list_of_optional_constraints:
+        for constraint in self.list_of_optional_constraints:
             if not constraint.optional:
                 raise TypeError(
                     f"The constraint {constraint.name} must explicitly be set as optional."
@@ -102,10 +100,10 @@ class ForceApplyNOptionalConstraints(Constraint):
 
         # all scheduled variables to take into account
         applied_vars = [
-            constraint.applied for constraint in list_of_optional_constraints
+            constraint._applied for constraint in self.list_of_optional_constraints
         ]
 
-        asst = problem_function[kind](
-            [(applied, True) for applied in applied_vars], nb_constraints_to_apply
+        asst = problem_function[self.kind](
+            [(applied, True) for applied in applied_vars], self.nb_constraints_to_apply
         )
         self.set_z3_assertions(asst)

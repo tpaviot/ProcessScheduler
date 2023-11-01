@@ -20,46 +20,48 @@ import processscheduler as ps
 
 class TestIndicator(unittest.TestCase):
     def test_indicator_flowtime(self) -> None:
-        problem = ps.SchedulingProblem("IndicatorFlowTime", horizon=2)
-        t_1 = ps.FixedDurationTask("t1", 2)
-        t_2 = ps.FixedDurationTask("t2", 2)
+        problem = ps.SchedulingProblem(name="IndicatorFlowTime", horizon=2)
+        t_1 = ps.FixedDurationTask(name="t1", duration=2)
+        t_2 = ps.FixedDurationTask(name="t2", duration=2)
 
-        i_1 = ps.Indicator("FlowTime", t_1.end + t_2.end)
+        i_1 = ps.Indicator(name="FlowTime", expression=t_1._end + t_2._end)
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[i_1.name], 4)
 
     def test_resource_utilization_indicator_1(self) -> None:
-        problem = ps.SchedulingProblem("IndicatorUtilization1", horizon=10)
-        t_1 = ps.FixedDurationTask("T1", duration=5)
-        worker_1 = ps.Worker("Worker1")
+        problem = ps.SchedulingProblem(name="IndicatorUtilization1", horizon=10)
+        t_1 = ps.FixedDurationTask(name="T1", duration=5)
+        worker_1 = ps.Worker(name="Worker1")
         t_1.add_required_resource(worker_1)
         utilization_ind = problem.add_indicator_resource_utilization(worker_1)
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[utilization_ind.name], 50)
 
     def test_resource_utilization_indicator_2(self) -> None:
         """Two tasks, two workers."""
-        problem = ps.SchedulingProblem("IndicatorUtilization2", horizon=10)
+        problem = ps.SchedulingProblem(name="IndicatorUtilization2", horizon=10)
 
-        t_1 = ps.FixedDurationTask("T1", duration=5)
-        t_2 = ps.FixedDurationTask("T2", duration=5)
+        t_1 = ps.FixedDurationTask(name="T1", duration=5)
+        t_2 = ps.FixedDurationTask(name="T2", duration=5)
 
-        worker_1 = ps.Worker("Worker1")
-        worker_2 = ps.Worker("Worker2")
+        worker_1 = ps.Worker(name="Worker1")
+        worker_2 = ps.Worker(name="Worker2")
 
         t_1.add_required_resource(worker_1)
-        t_2.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
+        t_2.add_required_resource(
+            ps.SelectWorkers(list_of_workers=[worker_1, worker_2])
+        )
 
         utilization_res_1 = problem.add_indicator_resource_utilization(worker_1)
         utilization_res_2 = problem.add_indicator_resource_utilization(worker_2)
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         result_res_1 = solution.indicators[utilization_res_1.name]
@@ -71,23 +73,29 @@ class TestIndicator(unittest.TestCase):
     def test_resource_utilization_indicator_3(self) -> None:
         """Same as above, but both workers are selectable. Force one with resource
         utilization maximization objective."""
-        problem = ps.SchedulingProblem("IndicatorUtilization3", horizon=10)
+        problem = ps.SchedulingProblem(name="IndicatorUtilization3", horizon=10)
 
-        t_1 = ps.FixedDurationTask("T1", duration=5)
-        t_2 = ps.FixedDurationTask("T2", duration=5)
+        t_1 = ps.FixedDurationTask(name="T1", duration=5)
+        t_2 = ps.FixedDurationTask(name="T2", duration=5)
 
-        worker_1 = ps.Worker("Worker1")
-        worker_2 = ps.Worker("Worker2")
+        worker_1 = ps.Worker(name="Worker1")
+        worker_2 = ps.Worker(name="Worker2")
 
-        t_1.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
-        t_2.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
+        t_1.add_required_resource(
+            ps.SelectWorkers(list_of_workers=[worker_1, worker_2])
+        )
+        t_2.add_required_resource(
+            ps.SelectWorkers(list_of_workers=[worker_1, worker_2])
+        )
 
         utilization_res_1 = problem.add_indicator_resource_utilization(worker_1)
         utilization_res_2 = problem.add_indicator_resource_utilization(worker_2)
 
-        ps.MaximizeObjective("MaximieResource1Utilization", utilization_res_1)
+        ps.MaximizeObjective(
+            name="MaximizeResource1Utilization", target=utilization_res_1
+        )
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[utilization_res_1.name], 100)
@@ -95,18 +103,18 @@ class TestIndicator(unittest.TestCase):
 
     def test_resource_utilization_indicator_4(self) -> None:
         """20 optional tasks, one worker. Force resource utilization maximization objective."""
-        problem = ps.SchedulingProblem("IndicatorUtilization4", horizon=20)
+        problem = ps.SchedulingProblem(name="IndicatorUtilization4", horizon=20)
 
-        worker = ps.Worker("Worker")
+        worker = ps.Worker(name="Worker")
 
         for i in range(20):
-            t = ps.FixedDurationTask(f"T{i+1}", duration=1, optional=True)
+            t = ps.FixedDurationTask(name=f"T{i+1}", duration=1, optional=True)
             t.add_required_resource(worker)
 
         utilization_res = problem.add_indicator_resource_utilization(worker)
         problem.maximize_indicator(utilization_res)
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[utilization_res.name], 100)
@@ -115,30 +123,36 @@ class TestIndicator(unittest.TestCase):
         """Same input data than previous tests, but we dont use
         an optimisation solver, the objective of 100% is set by an
         additional constraint. This should be **much faster**."""
-        problem = ps.SchedulingProblem("IndicatorUtilization5", horizon=20)
+        problem = ps.SchedulingProblem(name="IndicatorUtilization5", horizon=20)
 
-        worker = ps.Worker("Worker")
+        worker = ps.Worker(name="Worker")
 
         for i in range(40):
-            t = ps.FixedDurationTask(f"T{i+1}", duration=1, optional=True)
+            t = ps.FixedDurationTask(name=f"T{i+1}", duration=1, optional=True)
             t.add_required_resource(worker)
 
         utilization_res = problem.add_indicator_resource_utilization(worker)
 
-        problem.add_constraint(utilization_res.indicator_variable == 100)
+        problem.add_constraint(utilization_res._indicator_variable == 100)
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[utilization_res.name], 100)
 
     def test_optimize_indicator_multi_objective(self) -> None:
-        problem = ps.SchedulingProblem("OptimizeIndicatorMultiObjective", horizon=10)
-        task_1 = ps.FixedDurationTask("task1", duration=2, priority=1)
-        task_2 = ps.FixedDurationTask("task2", duration=2, priority=10, optional=True)
-        task_3 = ps.FixedDurationTask("task3", duration=2, priority=100, optional=True)
+        problem = ps.SchedulingProblem(
+            name="OptimizeIndicatorMultiObjective", horizon=10
+        )
+        task_1 = ps.FixedDurationTask(name="task1", duration=2, priority=1)
+        task_2 = ps.FixedDurationTask(
+            name="task2", duration=2, priority=10, optional=True
+        )
+        task_3 = ps.FixedDurationTask(
+            name="task3", duration=2, priority=100, optional=True
+        )
 
-        worker = ps.Worker("AWorker")
+        worker = ps.Worker(name="AWorker")
         task_1.add_required_resource(worker)
         task_2.add_required_resource(worker)
         task_3.add_required_resource(worker)
@@ -146,18 +160,18 @@ class TestIndicator(unittest.TestCase):
         problem.add_objective_resource_utilization(worker)
         problem.add_objective_priorities()
 
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
         solution = solver.solve()
         self.assertTrue(solution)
 
     def test_incremental_optimizer_1(self) -> None:
-        problem = ps.SchedulingProblem("IncrementalOptimizer1", horizon=100)
-        task_1 = ps.FixedDurationTask("task1", duration=2)
+        problem = ps.SchedulingProblem(name="IncrementalOptimizer1", horizon=100)
+        task_1 = ps.FixedDurationTask(name="task1", duration=2)
 
-        task_1_start_ind = ps.Indicator("Task1Start", task_1.start)
+        task_1_start_ind = ps.Indicator(name="Task1Start", expression=task_1._start)
         problem.maximize_indicator(task_1_start_ind)
 
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
         solution = solver.solve()
 
         self.assertTrue(solution)
@@ -166,22 +180,26 @@ class TestIndicator(unittest.TestCase):
     def test_resource_utilization_maximization_incremental_1(self) -> None:
         """Same as above, but both workers are selectable. Force one with resource
         utilization maximization objective."""
-        problem = ps.SchedulingProblem("IndicatorMaximizeIncremental", horizon=10)
+        problem = ps.SchedulingProblem(name="IndicatorMaximizeIncremental", horizon=10)
 
-        t_1 = ps.FixedDurationTask("T1", duration=5)
-        t_2 = ps.FixedDurationTask("T2", duration=5)
+        t_1 = ps.FixedDurationTask(name="T1", duration=5)
+        t_2 = ps.FixedDurationTask(name="T2", duration=5)
 
-        worker_1 = ps.Worker("Worker1")
-        worker_2 = ps.Worker("Worker2")
+        worker_1 = ps.Worker(name="Worker1")
+        worker_2 = ps.Worker(name="Worker2")
 
-        t_1.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
-        t_2.add_required_resource(ps.SelectWorkers([worker_1, worker_2]))
+        t_1.add_required_resource(
+            ps.SelectWorkers(list_of_workers=[worker_1, worker_2])
+        )
+        t_2.add_required_resource(
+            ps.SelectWorkers(list_of_workers=[worker_1, worker_2])
+        )
 
         utilization_res_1 = problem.add_indicator_resource_utilization(worker_1)
         utilization_res_2 = problem.add_indicator_resource_utilization(worker_2)
 
         problem.maximize_indicator(utilization_res_1)
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
 
         solution = solver.solve()
 
@@ -190,7 +208,9 @@ class TestIndicator(unittest.TestCase):
         self.assertEqual(solution.indicators[utilization_res_2.name], 0)
 
     def get_single_resource_utilization_problem(self, problem_name):
-        problem = ps.SchedulingProblem("IndicatorFlowtimeSingleResource1", horizon=50)
+        problem = ps.SchedulingProblem(
+            name="IndicatorFlowtimeSingleResource1", horizon=50
+        )
 
         dur1 = 5
         dur2 = 5
@@ -198,12 +218,12 @@ class TestIndicator(unittest.TestCase):
         dur4 = 3
         dur5 = 2
 
-        t_1 = ps.FixedDurationTask("T1", duration=dur1)
-        t_2 = ps.FixedDurationTask("T2", duration=dur2)
-        t_3 = ps.FixedDurationTask("T3", duration=dur3)
-        t_4 = ps.FixedDurationTask("T4", duration=dur4)
-        t_5 = ps.FixedDurationTask("T5", duration=dur5)
-        worker_1 = ps.Worker("Worker1")
+        t_1 = ps.FixedDurationTask(name="T1", duration=dur1)
+        t_2 = ps.FixedDurationTask(name="T2", duration=dur2)
+        t_3 = ps.FixedDurationTask(name="T3", duration=dur3)
+        t_4 = ps.FixedDurationTask(name="T4", duration=dur4)
+        t_5 = ps.FixedDurationTask(name="T5", duration=dur5)
+        worker_1 = ps.Worker(name="Worker1")
 
         t_1.add_required_resource(worker_1)
         t_2.add_required_resource(worker_1)
@@ -211,17 +231,17 @@ class TestIndicator(unittest.TestCase):
         t_4.add_required_resource(worker_1)
         t_5.add_required_resource(worker_1)
 
-        ps.TaskEndBefore(t_3, 35)
-        ps.TaskEndBefore(t_2, 35)
-        ps.TaskEndBefore(t_1, 35)
-        ps.TaskEndBefore(t_4, 35)
-        ps.TaskEndBefore(t_5, 35)
+        ps.TaskEndBefore(task=t_3, value=35)
+        ps.TaskEndBefore(task=t_2, value=35)
+        ps.TaskEndBefore(task=t_1, value=35)
+        ps.TaskEndBefore(task=t_4, value=35)
+        ps.TaskEndBefore(task=t_5, value=35)
 
-        ps.TaskStartAfter(t_3, 10)
-        ps.TaskStartAfter(t_2, 10)
-        ps.TaskStartAfter(t_1, 10)
-        ps.TaskStartAfter(t_4, 10)
-        ps.TaskStartAfter(t_5, 10)
+        ps.TaskStartAfter(task=t_3, value=10)
+        ps.TaskStartAfter(task=t_2, value=10)
+        ps.TaskStartAfter(task=t_1, value=10)
+        ps.TaskStartAfter(task=t_4, value=10)
+        ps.TaskStartAfter(task=t_5, value=10)
 
         return problem, worker_1, dur1 + dur2 + dur3 + dur4 + dur5
 
@@ -231,7 +251,7 @@ class TestIndicator(unittest.TestCase):
         )
         # there should not be any task scheduled in this time period
         problem.add_objective_flowtime_single_resource(worker_1, time_interval=[40, 50])
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
 
         solution = solver.solve()
         self.assertTrue(solution)
@@ -244,7 +264,7 @@ class TestIndicator(unittest.TestCase):
             "IndicatorFlowtimeSingleResource2"
         )
         problem.add_objective_flowtime_single_resource(worker_1, time_interval=[10, 40])
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
 
         solution = solver.solve()
         self.assertTrue(solution)
@@ -256,7 +276,7 @@ class TestIndicator(unittest.TestCase):
             "IndicatorFlowtimeSingleResource3"
         )
         problem.add_objective_flowtime_single_resource(worker_1, time_interval=[5, 9])
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
 
         solution = solver.solve()
         self.assertTrue(solution)
@@ -269,7 +289,7 @@ class TestIndicator(unittest.TestCase):
             "IndicatorFlowtimeSingleResource4"
         )
         problem.add_objective_flowtime_single_resource(worker_1)
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
 
         solution = solver.solve()
         print(solution)
@@ -282,16 +302,16 @@ class TestIndicator(unittest.TestCase):
     def get_single_resource_utilization_problem_2(time_intervals, tst_name):
         horizon = time_intervals[-1][-1] + 3
         nb_tasks = [5 for interval in time_intervals if interval[1] - interval[0] > 3]
-        problem = ps.SchedulingProblem(tst_name, horizon=horizon)
-        worker_1 = ps.Worker("Worker1")
+        problem = ps.SchedulingProblem(name=tst_name, horizon=horizon)
+        worker_1 = ps.Worker(name="Worker1")
 
         tasks: list[ps.FixedDurationTask] = []
         for interval, nb_tasks_i in zip(time_intervals, nb_tasks):
             for _ in range(nb_tasks_i):
-                tasks.append(ps.FixedDurationTask(f"T{len(tasks)}", duration=1))
+                tasks.append(ps.FixedDurationTask(name=f"T{len(tasks)}", duration=1))
                 tasks[-1].add_required_resource(worker_1)
-                ps.TaskStartAfter(tasks[-1], interval[0])
-                ps.TaskEndBefore(tasks[-1], interval[1])
+                ps.TaskStartAfter(task=tasks[-1], value=interval[0])
+                ps.TaskEndBefore(task=tasks[-1], value=interval[1])
         return problem, worker_1, len(tasks)
 
     @staticmethod
@@ -317,7 +337,7 @@ class TestIndicator(unittest.TestCase):
                 worker_1, time_interval=interval
             )
 
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
         solution = solver.solve()
 
         self.assertTrue(solution)
@@ -345,7 +365,7 @@ class TestIndicator(unittest.TestCase):
                 worker_1, time_interval=interval
             )
 
-        solver = ps.SchedulingSolver(problem, optimizer="optimize")
+        solver = ps.SchedulingSolver(problem=problem, optimizer="optimize")
 
         solution = solver.solve()
 
@@ -355,16 +375,16 @@ class TestIndicator(unittest.TestCase):
     # number of tasks assigned to a resource
     def test_indicator_nb_tasks_assigned_to_resource_1(self) -> None:
         n = 5
-        problem = ps.SchedulingProblem("IndicatorUtilization5", horizon=n)
-        worker = ps.Worker("Worker1")
+        problem = ps.SchedulingProblem(name="IndicatorUtilization5", horizon=n)
+        worker = ps.Worker(name="Worker1")
 
         for i in range(n):
-            t = ps.FixedDurationTask(f"T{i+1}", duration=1)
+            t = ps.FixedDurationTask(name=f"T{i+1}", duration=1)
             t.add_required_resource(worker)
 
         problem.add_indicator_number_tasks_assigned(worker)
 
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
         solution = solver.solve()
 
         self.assertTrue(solution)

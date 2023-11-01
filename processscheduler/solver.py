@@ -86,10 +86,9 @@ class SchedulingSolver(BaseModel):
             set_option(unsat_core=True)
         else:
             set_option("verbose", self.verbosity)
+            set_option(unsat_core=False)
 
-        if self.parallel:
-            set_option("parallel.enable", True)  # enable parallel computation
-
+        set_option("parallel.enable", self.parallel)
         if self.random_values:
             set_option("sat.random_seed", random.randint(1, 1e3))
             set_option("smt.random_seed", random.randint(1, 1e3))
@@ -326,10 +325,10 @@ class SchedulingSolver(BaseModel):
         )
         # create an indicator
         equivalent_indicator = Indicator(
-            "EquivalentIndicator", equivalent_single_objective
+            name="EquivalentIndicator", expression=equivalent_single_objective
         )
         equivalent_objective = MinimizeObjective(
-            "EquivalentObjective", equivalent_indicator
+            name="MinimizeEquivalentObjective", target=equivalent_indicator
         )
         self._objective = equivalent_objective
         self.append_z3_assertion(equivalent_indicator.get_z3_assertions())

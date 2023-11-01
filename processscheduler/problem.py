@@ -68,13 +68,13 @@ class SchedulingProblem(_NamedUIDObject):
         """compute the number of tasks as resource is assigned"""
         # this list contains
         scheduled_tasks = [
-            If(start > -1, 1, 0) for start, end in resource.busy_intervals.values()
+            If(start > -1, 1, 0) for start, end in resource._busy_intervals.values()
         ]
 
         nb_tasks_assigned_indicator_variable = Sum(scheduled_tasks)
         return Indicator(
-            f"Nb Tasks Assigned ({resource.name})",
-            nb_tasks_assigned_indicator_variable,
+            name=f"Nb Tasks Assigned ({resource.name})",
+            expression=nb_tasks_assigned_indicator_variable,
         )
 
     def add_indicator_resource_cost(
@@ -90,7 +90,7 @@ class SchedulingProblem(_NamedUIDObject):
             local_constant_costs = []
             local_variable_costs = []
 
-            for interv_low, interv_up in res.busy_intervals.values():
+            for interv_low, interv_up in res._busy_intervals.values():
                 # Constant cost per period
                 if isinstance(res.cost, ConstantCostPerPeriod):
                     # res.cost(interv_up), res.cost(interv_low)
@@ -140,21 +140,25 @@ class SchedulingProblem(_NamedUIDObject):
         """
         durations = [
             interv_up - interv_low
-            for interv_low, interv_up in resource.busy_intervals.values()
+            for interv_low, interv_up in resource._busy_intervals.values()
         ]
-        if self.horizon_defined_value is not None:
-            utilization = Sum(durations) * int(100 / self.horizon_defined_value)
+        if self.horizon is not None:
+            utilization = Sum(durations) * int(100 / self.horizon)
         else:
-            utilization = (Sum(durations) * 100) / self.horizon  # in percentage
-        return Indicator(f"Utilization ({resource.name})", utilization, bounds=(0, 100))
+            utilization = (Sum(durations) * 100) / self._horizon  # in percentage
+        return Indicator(
+            name=f"Utilization ({resource.name})",
+            expression=utilization,
+            bounds=(0, 100),
+        )
 
     def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:
         """Maximize indicator"""
-        return MaximizeObjective("", indicator)
+        return MaximizeObjective(name="CustomizedMaximizeIndicator", target=indicator)
 
     def minimize_indicator(self, indicator: Indicator) -> MinimizeObjective:
         """Minimize indicator"""
-        return MinimizeObjective("", indicator)
+        return MinimizeObjective(name="CustomizedMinimizeIndicator", target=indicator)
 
     #
     # Optimization objectives
@@ -171,7 +175,11 @@ class SchedulingProblem(_NamedUIDObject):
         resource_utilization_indicator = self.add_indicator_resource_utilization(
             resource
         )
-        MaximizeObjective("", resource_utilization_indicator, weight)
+        MaximizeObjective(
+            name="MaximizeResourceUtilization",
+            target=resource_utilization_indicator,
+            weight=weight,
+        )
         return resource_utilization_indicator
 
     def add_objective_resource_cost(
@@ -179,7 +187,9 @@ class SchedulingProblem(_NamedUIDObject):
     ) -> Union[ArithRef, Indicator]:
         """minimise the cost of selected resources"""
         cost_indicator = self.add_indicator_resource_cost(list_of_resources)
-        MinimizeObjective("", cost_indicator, weight)
+        MinimizeObjective(
+            name="MinimizeResourceCost", target=cost_indicator, weight=weight
+        )
         return cost_indicator
 
     def add_objective_priorities(self, weight=1) -> Union[ArithRef, Indicator]:
@@ -192,8 +202,10 @@ class SchedulingProblem(_NamedUIDObject):
             else:
                 all_priorities.append(task._end * task.priority)
         priority_sum = Sum(all_priorities)
-        priority_indicator = Indicator(name="PriorityTotal", expression=priority_sum)
-        MinimizeObjective(name="", target=priority_indicator, weight=weight)
+        priority_indicator = Indicator(name="TotalPriority", expression=priority_sum)
+        MinimizeObjective(
+            name="MinimizePriority", target=priority_indicator, weight=weight
+        )
         return priority_indicator
 
     def add_objective_start_latest(self, weight=1) -> Union[ArithRef, Indicator]:
@@ -206,7 +218,7 @@ class SchedulingProblem(_NamedUIDObject):
         )
         for tsk in self._context.tasks:
             smallest_start_time.append_z3_assertion(mini <= tsk._start)
-        MaximizeObjective(name="", target=smallest_start_time, weight=weight)
+        MaximizeObjective(name="StartLatest", target=smallest_start_time, weight=weight)
         return smallest_start_time
 
     def add_objective_start_earliest(self, weight=1) -> Union[ArithRef, Indicator]:
@@ -219,7 +231,9 @@ class SchedulingProblem(_NamedUIDObject):
         )
         for tsk in self._context.tasks:
             greatest_start_time.append_z3_assertion(maxi >= tsk._start)
-        MinimizeObjective(name="", target=greatest_start_time, weight=weight)
+        MinimizeObjective(
+            name="StartEarliest", target=greatest_start_time, weight=weight
+        )
         return greatest_start_time
 
     def add_objective_flowtime(self, weight=1) -> Union[ArithRef, Indicator]:
@@ -232,8 +246,8 @@ class SchedulingProblem(_NamedUIDObject):
             else:
                 task_ends.append(task._end)
         flow_time_expr = Sum(task_ends)
-        flow_time = Indicator(name="FlowTime", expression=flow_time_expr)
-        MinimizeObjective(name="", target=flow_time, weight=weight)
+        flow_time = Indicator(name="Flowtime", expression=flow_time_expr)
+        MinimizeObjective(name="Flowtime", target=flow_time, weight=weight)
         return flow_time
 
     def add_objective_flowtime_single_resource(
@@ -246,31 +260,32 @@ class SchedulingProblem(_NamedUIDObject):
             lower_bound, upper_bound = time_interval
         else:
             lower_bound = 0
-            upper_bound = self.horizon
+            upper_bound = self._horizon
         uid = uuid.uuid4().hex
         # for this resource, we look for the minimal starting time of scheduled tasks
         # as well as the maximum
         flowtime = Int(f"FlowtimeSingleResource{resource.name}_{uid}")
 
         flowtime_single_resource_indicator = Indicator(
-            f"FlowTime({resource.name}:{lower_bound}:{upper_bound})", flowtime
+            name=f"FlowTime({resource.name}:{lower_bound}:{upper_bound})",
+            expression=flowtime,
         )
         # find the max end time in the time_interval
         maxi = Int(f"GreatestTaskEndTimeInTimePeriodForResource{resource.name}_{uid}")
 
         asst_max = [
             Implies(
-                And(task.end <= upper_bound, task.start >= lower_bound),
-                maxi == task.end,
+                And(task._end <= upper_bound, task._start >= lower_bound),
+                maxi == task._end,
             )
-            for task in resource.busy_intervals
+            for task in resource._busy_intervals
         ]
         flowtime_single_resource_indicator.append_z3_assertion(Or(asst_max))
-        for task in resource.busy_intervals:
+        for task in resource._busy_intervals:
             flowtime_single_resource_indicator.append_z3_assertion(
                 Implies(
-                    And(task.end <= upper_bound, task.start >= lower_bound),
-                    maxi >= task.end,
+                    And(task._end <= upper_bound, task._start >= lower_bound),
+                    maxi >= task._end,
                 )
             )
 
@@ -279,17 +294,17 @@ class SchedulingProblem(_NamedUIDObject):
 
         asst_min = [
             Implies(
-                And(task.end <= upper_bound, task.start <= lower_bound),
-                mini == task.start,
+                And(task._end <= upper_bound, task._start <= lower_bound),
+                mini == task._start,
             )
-            for task in resource.busy_intervals
+            for task in resource._busy_intervals
         ]
         flowtime_single_resource_indicator.append_z3_assertion(Or(asst_min))
-        for task in resource.busy_intervals:
+        for task in resource._busy_intervals:
             flowtime_single_resource_indicator.append_z3_assertion(
                 Implies(
-                    And(task.end <= upper_bound, task.start >= lower_bound),
-                    mini <= task.start,
+                    And(task._end <= upper_bound, task._start >= lower_bound),
+                    mini <= task._start,
                 )
             )
 
@@ -297,5 +312,9 @@ class SchedulingProblem(_NamedUIDObject):
         flowtime_single_resource_indicator.append_z3_assertion(flowtime == maxi - mini)
         flowtime_single_resource_indicator.append_z3_assertion(flowtime >= 0)
 
-        MinimizeObjective("", flowtime_single_resource_indicator, weight)
+        MinimizeObjective(
+            name="FlowtimeSingleResource",
+            target=flowtime_single_resource_indicator,
+            weight=weight,
+        )
         return flowtime_single_resource_indicator
