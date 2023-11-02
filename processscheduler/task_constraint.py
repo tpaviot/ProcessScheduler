@@ -16,7 +16,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
-from typing import Optional, Literal, List
+from typing import Optional, Literal, List, Tuple
 
 from z3 import And, Bool, BoolRef, If, Implies, Int, Not, Or, PbEq, PbGe, PbLe, Xor
 
@@ -327,47 +327,37 @@ class ScheduleNTasksInTimeIntervals(TaskConstraint):
     """Given a set of m different tasks, and a list of time intervals, schedule N tasks among m
     in this time interval"""
 
-    def __init__(
-        self,
-        list_of_tasks,
-        nb_tasks_to_schedule,
-        list_of_time_intervals,
-        kind: Optional[str] = "exact",
-        optional: Optional[bool] = False,
-    ) -> None:
-        super().__init__(optional)
+    list_of_tasks: List[Task]
+    nb_tasks_to_schedule: int
+    list_of_time_intervals: List[Tuple[int, int]]
+    kind: Literal["min", "max", "exact"] = Field(default="exact")
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
         problem_function = {"min": PbGe, "max": PbLe, "exact": PbEq}
 
-        # first check that all tasks from the list_of_optional_tasks are
-        # actually optional
-        if not isinstance(list_of_tasks, list):
-            raise TypeError("list_of_task must be a list")
-
-        if not isinstance(list_of_time_intervals, list):
-            raise TypeError("list_of_time_intervals must be a list of list")
-
         # count the number of tasks that re scheduled in this time interval
         all_bools = []
-        for task in list_of_tasks:
+        for task in self.list_of_tasks:
             # for this task, the logic expression is that any of its start or end must be
             # between two consecutive intervals
             bools_for_this_task = []
-            for time_interval in list_of_time_intervals:
+            for time_interval in self.list_of_time_intervals:
                 task_in_time_interval = Bool(
                     "InTimeIntervalTask_%s_%i" % (task.name, uuid.uuid4().int)
                 )
                 lower_bound, upper_bound = time_interval
                 cstrs = [
-                    task.start >= lower_bound,
-                    task.end <= upper_bound,
+                    task._start >= lower_bound,
+                    task._end <= upper_bound,
                     Not(
-                        And(task.start < lower_bound, task.end > lower_bound)
+                        And(task._start < lower_bound, task._end > lower_bound)
                     ),  # overlap at start
                     Not(
-                        And(task.start < upper_bound, task.end > upper_bound)
+                        And(task._start < upper_bound, task._end > upper_bound)
                     ),  # overlap at end
-                    Not(And(task.start < lower_bound, task.end > upper_bound)),
+                    Not(And(task._start < lower_bound, task._end > upper_bound)),
                 ]  # full overlap
                 asst = Implies(task_in_time_interval, And(cstrs))
                 self.set_z3_assertions(asst)
@@ -379,8 +369,8 @@ class ScheduleNTasksInTimeIntervals(TaskConstraint):
 
         # we also have to exclude all the other cases, where start or end can be between two intervals
         # then set the constraint for the number of tasks to schedule
-        asst_pb = problem_function[kind](
-            [(scheduled, True) for scheduled in all_bools], nb_tasks_to_schedule
+        asst_pb = problem_function[self.kind](
+            [(scheduled, True) for scheduled in all_bools], self.nb_tasks_to_schedule
         )
         self.set_z3_assertions(asst_pb)
 

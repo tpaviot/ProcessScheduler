@@ -23,13 +23,13 @@ import processscheduler as ps
 class TestGantt(unittest.TestCase):
     def test_gantt_matplotlib_base(self):
         """take the single task/single resource and display output"""
-        problem = ps.SchedulingProblem("RenderSolution", horizon=7)
-        task = ps.FixedDurationTask("task", duration=7)
+        problem = ps.SchedulingProblem(name="RenderSolution", horizon=7)
+        task = ps.FixedDurationTask(name="task", duration=7)
         # problem.add_task(task)
-        worker = ps.Worker("worker")
+        worker = ps.Worker(name="worker")
         # problem.add_resource(worker)
         task.add_required_resource(worker)
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
         solution = solver.solve()
         self.assertTrue(solution)
 
@@ -48,72 +48,72 @@ class TestGantt(unittest.TestCase):
         self.assertTrue(os.path.isfile("test_render_tasks_matplotlib.svg"))
 
     def test_gantt_matplotlib_indicator(self):
-        problem = ps.SchedulingProblem("GanttIndicator", horizon=10)
+        problem = ps.SchedulingProblem(name="GanttIndicator", horizon=10)
 
-        t_1 = ps.FixedDurationTask("T1", duration=5)
-        ps.FixedDurationTask("T2", duration=5)  # task with no resource
-        worker_1 = ps.Worker("Worker1")
+        t_1 = ps.FixedDurationTask(name="T1", duration=5)
+        ps.FixedDurationTask(name="T2", duration=5)  # task with no resource
+        worker_1 = ps.Worker(name="Worker1")
         t_1.add_required_resource(worker_1)
 
         problem.add_indicator_resource_utilization(worker_1)
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         # display solution, using both ascii or matplotlib
         solution.render_gantt_matplotlib(render_mode="Resource", show_plot=False)
 
     def test_gantt_matplotlib_navaible_resource(self):
-        pb = ps.SchedulingProblem("GanttResourceUnavailable", horizon=10)
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        worker_1 = ps.Worker("Worker1")
+        pb = ps.SchedulingProblem(name="GanttResourceUnavailable", horizon=10)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        worker_1 = ps.Worker(name="Worker1")
         task_1.add_required_resource(worker_1)
-        ps.ResourceUnavailable(worker_1, [(1, 3)])
+        ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3)])
 
-        solver = ps.SchedulingSolver(pb)
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         solution.render_gantt_matplotlib(render_mode="Resource", show_plot=False)
 
     def test_gantt_matplotlib_no_resource(self):
-        pb = ps.SchedulingProblem("GanttNoResource", horizon=10)
-        ps.FixedDurationTask("task1", duration=3)
-        solver = ps.SchedulingSolver(pb)
+        pb = ps.SchedulingProblem(name="GanttNoResource", horizon=10)
+        ps.FixedDurationTask(name="task1", duration=3)
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         solution.render_gantt_matplotlib(render_mode="Resource", show_plot=False)
 
     def test_gantt_matplotlib_resource_unavailable(self) -> None:
-        pb = ps.SchedulingProblem("GanttResourceUnavailable1", horizon=10)
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        worker_1 = ps.Worker("Worker1")
+        pb = ps.SchedulingProblem(name="GanttResourceUnavailable1", horizon=10)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        worker_1 = ps.Worker(name="Worker1")
         task_1.add_required_resource(worker_1)
-        ps.ResourceUnavailable(worker_1, [(1, 3)])
+        ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3)])
 
-        solver = ps.SchedulingSolver(pb)
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         solution.render_gantt_matplotlib(show_plot=False)
 
     def test_gantt_matplotlib_zero_duration_task(self):
-        pb = ps.SchedulingProblem("GanttZeroDuration", horizon=10)
-        ps.ZeroDurationTask("task1")
-        solver = ps.SchedulingSolver(pb)
+        pb = ps.SchedulingProblem(name="GanttZeroDuration", horizon=10)
+        ps.ZeroDurationTask(name="task1")
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         solution.render_gantt_matplotlib(show_plot=False)
 
     def test_gantt_matplotlib_real_date_1(self):
         pb = ps.SchedulingProblem(
-            "GanttMatplotLibRealDate1",
+            name="GanttMatplotLibRealDate1",
             horizon=10,
             start_time=datetime.now(),
             delta_time=timedelta(minutes=15),
         )
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        worker_1 = ps.Worker("Worker1")
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        worker_1 = ps.Worker(name="Worker1")
         task_1.add_required_resource(worker_1)
-        solver = ps.SchedulingSolver(pb)
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         solution.render_gantt_matplotlib(render_mode="Task", show_plot=False)
@@ -121,25 +121,25 @@ class TestGantt(unittest.TestCase):
 
     def test_gantt_matplotlib_real_date_no_start_time(self):
         pb = ps.SchedulingProblem(
-            "GanttMatplotLibRealDateNoStartTime",
+            name="GanttMatplotLibRealDateNoStartTime",
             horizon=10,
             delta_time=timedelta(hours=2),
         )
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        worker_1 = ps.Worker("Worker1")
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        worker_1 = ps.Worker(name="Worker1")
         task_1.add_required_resource(worker_1)
-        solver = ps.SchedulingSolver(pb)
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         solution.render_gantt_matplotlib(render_mode="Task", show_plot=False)
         solution.render_gantt_matplotlib(render_mode="Resource", show_plot=False)
 
     def test_gantt_matplotlib_wrong_render_mode(self):
-        pb = ps.SchedulingProblem("GanttWrongRenderMode", horizon=10)
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        worker_1 = ps.Worker("Worker1")
+        pb = ps.SchedulingProblem(name="GanttWrongRenderMode", horizon=10)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        worker_1 = ps.Worker(name="Worker1")
         task_1.add_required_resource(worker_1)
-        solver = ps.SchedulingSolver(pb)
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         with self.assertRaises(ValueError):
@@ -147,13 +147,13 @@ class TestGantt(unittest.TestCase):
 
     def test_gantt_plotly_base(self):
         """take the single task/single resource and display output"""
-        problem = ps.SchedulingProblem("RenderSolutionPlotly", horizon=7)
-        task = ps.FixedDurationTask("task", duration=7)
+        problem = ps.SchedulingProblem(name="RenderSolutionPlotly", horizon=7)
+        task = ps.FixedDurationTask(name="task", duration=7)
         # problem.add_task(task)
-        worker = ps.Worker("worker")
+        worker = ps.Worker(name="worker")
         # problem.add_resource(worker)
         task.add_required_resource(worker)
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
         solution = solver.solve()
         self.assertTrue(solution)
 
@@ -188,16 +188,16 @@ class TestGantt(unittest.TestCase):
         self.assertTrue(os.path.isfile("test_render_tasks_plotly.html"))
 
     def test_gantt_plotly_with_indicators_figsize(self):
-        problem = ps.SchedulingProblem("GanttIndicator", horizon=10)
+        problem = ps.SchedulingProblem(name="GanttIndicator", horizon=10)
 
-        t_1 = ps.FixedDurationTask("T1", duration=5)
-        ps.FixedDurationTask("T2", duration=5)  # task with no resource
-        worker_1 = ps.Worker("Worker1")
+        t_1 = ps.FixedDurationTask(name="T1", duration=5)
+        ps.FixedDurationTask(name="T2", duration=5)  # task with no resource
+        worker_1 = ps.Worker(name="Worker1")
         t_1.add_required_resource(worker_1)
 
         problem.add_indicator_resource_utilization(worker_1)
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         # display solution, using both ascii or matplotlib
@@ -206,14 +206,14 @@ class TestGantt(unittest.TestCase):
         )
 
     def test_gantt_plotly_raise_wrong_type(self):
-        problem = ps.SchedulingProblem("GanttIndicator", horizon=10)
+        problem = ps.SchedulingProblem(name="GanttIndicator", horizon=10)
 
-        t_1 = ps.FixedDurationTask("T1", duration=5)
-        ps.FixedDurationTask("T2", duration=5)  # task with no resource
-        worker_1 = ps.Worker("Worker1")
+        t_1 = ps.FixedDurationTask(name="T1", duration=5)
+        ps.FixedDurationTask(name="T2", duration=5)  # task with no resource
+        worker_1 = ps.Worker(name="Worker1")
         t_1.add_required_resource(worker_1)
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         # display solution, using both ascii or matplotlib
