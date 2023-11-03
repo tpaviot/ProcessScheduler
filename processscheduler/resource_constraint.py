@@ -26,12 +26,6 @@ from processscheduler.util import sort_no_duplicates
 
 from pydantic import Field
 
-# def assert_resource_is_worker_or_cumulative_worker(resource):
-#     if not isinstance(resource, (Worker, CumulativeWorker)):
-#         raise TypeError(
-#             f"you passed a {type(resource)} object. resource must be either a Worker or CumulativeWorker."
-#         )
-
 
 class WorkLoad(ResourceConstraint):
     """
@@ -213,38 +207,16 @@ class ResourceTasksDistance(ResourceConstraint):
     - mode (str, optional): The mode for enforcing the constraint - "exact" (default), "min", or "max".
     """
 
-    def __init__(
-        self,
-        resource,
-        distance: int,
-        list_of_time_intervals: Optional[list] = None,
-        optional: Optional[bool] = False,
-        mode: Optional[str] = "exact",
-    ):
-        """
-        Initialize a ResourceTasksDistance constraint.
+    resource: Union[Worker, CumulativeWorker]
+    distance: int
+    list_of_time_intervals: List[Tuple[int, int]] = Field(default=None)
+    mode: Literal["min", "max", "exact"] = Field(default="exact")
 
-        :param resource: The resource to which the constraint applies.
-        :param distance: The desired number of time unitary periods between tasks.
-        :param list_of_time_intervals: A list of time intervals within which the constraint is restricted (optional).
-        :param optional: Whether the constraint is optional (default is False).
-        :param mode: The mode for enforcing the constraint - "exact" (default), "min", or "max" (optional).
-        """
-        super().__init__(optional)
-
-        if mode not in {"min", "max", "exact"}:
-            raise Exception("Mode should be min, max or exact")
-
-        assert_resource_is_worker_or_cumulative_worker(resource)
-
-        self.list_of_time_intervals = list_of_time_intervals
-        self.resource = resource
-        self.distance = distance
-        self.mode = mode
-
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
         starts = []
         ends = []
-        for start_var, end_var in resource.busy_intervals.values():
+        for start_var, end_var in self.resource._busy_intervals.values():
             starts.append(start_var)
             ends.append(end_var)
 
@@ -263,15 +235,15 @@ class ResourceTasksDistance(ResourceConstraint):
         # the space between two consecutive tasks is the sorted_start[i+1]-sorted_end[i]
         # we just have to constraint this variable
         for i in range(1, len(sorted_starts)):
-            if mode == "exact":
-                asst = sorted_starts[i] - sorted_ends[i - 1] == distance
-            elif mode == "max":
-                asst = sorted_starts[i] - sorted_ends[i - 1] <= distance
-            elif mode == "min":
-                asst = sorted_starts[i] - sorted_ends[i - 1] >= distance
+            if self.mode == "exact":
+                asst = sorted_starts[i] - sorted_ends[i - 1] == self.distance
+            elif self.mode == "max":
+                asst = sorted_starts[i] - sorted_ends[i - 1] <= self.distance
+            elif self.mode == "min":
+                asst = sorted_starts[i] - sorted_ends[i - 1] >= self.distance
             #  another set of conditions, related to the time periods
             conditions = []
-            if list_of_time_intervals is not None:
+            if self.list_of_time_intervals is not None:
                 conditions.extend(
                     And(
                         sorted_starts[i] >= lower_bound,
@@ -279,7 +251,7 @@ class ResourceTasksDistance(ResourceConstraint):
                         sorted_starts[i] <= upper_bound,
                         sorted_ends[i - 1] <= upper_bound,
                     )
-                    for lower_bound, upper_bound in list_of_time_intervals
+                    for lower_bound, upper_bound in self.list_of_time_intervals
                 )
             else:
                 # add the constraint only if start and ends are positive integers,
