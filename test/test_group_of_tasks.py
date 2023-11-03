@@ -21,12 +21,14 @@ import processscheduler as ps
 class TestGroupOfTasks(unittest.TestCase):
     def test_unordered_group_task_1(self) -> None:
         """Task can be scheduled."""
-        pb = ps.SchedulingProblem("UnorderedGroupOfTasks1", horizon=20)
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        task_2 = ps.FixedDurationTask("task2", duration=7)
-        task_3 = ps.FixedDurationTask("task3", duration=2)
-        ps.UnorderedTaskGroup([task_1, task_2, task_3], time_interval=[6, 17])
-        solver = ps.SchedulingSolver(pb)
+        pb = ps.SchedulingProblem(name="UnorderedGroupOfTasks1", horizon=20)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        task_2 = ps.FixedDurationTask(name="task2", duration=7)
+        task_3 = ps.FixedDurationTask(name="task3", duration=2)
+        ps.UnorderedTaskGroup(
+            list_of_tasks=[task_1, task_2, task_3], time_interval=[6, 17]
+        )
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         self.assertTrue(solution.tasks[task_1.name].start <= 6)
@@ -38,12 +40,14 @@ class TestGroupOfTasks(unittest.TestCase):
 
     def test_unordered_group_task_2(self) -> None:
         """Task can be scheduled."""
-        pb = ps.SchedulingProblem("UnorderedGroupOfTasks2", horizon=20)
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        task_2 = ps.FixedDurationTask("task2", duration=7)
-        task_3 = ps.FixedDurationTask("task3", duration=2)
-        ps.UnorderedTaskGroup([task_1, task_2, task_3], time_interval_length=8)
-        solver = ps.SchedulingSolver(pb)
+        pb = ps.SchedulingProblem(name="UnorderedGroupOfTasks2", horizon=20)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        task_2 = ps.FixedDurationTask(name="task2", duration=7)
+        task_3 = ps.FixedDurationTask(name="task3", duration=2)
+        ps.UnorderedTaskGroup(
+            list_of_tasks=[task_1, task_2, task_3], time_interval_length=8
+        )
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         s_1 = solution.tasks[task_1.name].start
@@ -57,15 +61,19 @@ class TestGroupOfTasks(unittest.TestCase):
 
     def test_unordered_group_task_precedence_1(self) -> None:
         """Task can be scheduled."""
-        pb = ps.SchedulingProblem("UnorderedGroupOfTasks3", horizon=20)
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        task_2 = ps.FixedDurationTask("task2", duration=7)
-        task_3 = ps.FixedDurationTask("task3", duration=2)
-        task_4 = ps.FixedDurationTask("task4", duration=2)
-        group1 = ps.UnorderedTaskGroup([task_1, task_2], time_interval_length=8)
-        group2 = ps.UnorderedTaskGroup([task_3, task_4], time_interval_length=8)
-        ps.TaskPrecedence(group1, group2)
-        solver = ps.SchedulingSolver(pb)
+        pb = ps.SchedulingProblem(name="UnorderedGroupOfTasks3", horizon=20)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        task_2 = ps.FixedDurationTask(name="task2", duration=7)
+        task_3 = ps.FixedDurationTask(name="task3", duration=2)
+        task_4 = ps.FixedDurationTask(name="task4", duration=2)
+        group1 = ps.UnorderedTaskGroup(
+            list_of_tasks=[task_1, task_2], time_interval_length=8
+        )
+        group2 = ps.UnorderedTaskGroup(
+            list_of_tasks=[task_3, task_4], time_interval_length=8
+        )
+        ps.TaskPrecedence(task_before=group1, task_after=group2)
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         s_1 = solution.tasks[task_1.name].start
@@ -83,16 +91,18 @@ class TestGroupOfTasks(unittest.TestCase):
 
     def test_ordered_group_task_1(self) -> None:
         """Task can be scheduled."""
-        pb = ps.SchedulingProblem("OrderedGroupOfTasks1", horizon=40)
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        task_2 = ps.FixedDurationTask("task2", duration=7)
-        task_3 = ps.FixedDurationTask("task3", duration=2)
-        task_4 = ps.FixedDurationTask("task4", duration=2)
+        pb = ps.SchedulingProblem(name="OrderedGroupOfTasks1", horizon=40)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        task_2 = ps.FixedDurationTask(name="task2", duration=7)
+        task_3 = ps.FixedDurationTask(name="task3", duration=2)
+        task_4 = ps.FixedDurationTask(name="task4", duration=2)
         group1 = ps.OrderedTaskGroup(
-            [task_1, task_2, task_3, task_4], kind="tight", time_interval=[23, 39]
+            list_of_tasks=[task_1, task_2, task_3, task_4],
+            kind="tight",
+            time_interval=[23, 39],
         )
 
-        solver = ps.SchedulingSolver(pb)
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         s_1 = solution.tasks[task_1.name].start

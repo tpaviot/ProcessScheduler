@@ -16,7 +16,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
-from typing import Optional, Literal, List, Tuple
+from typing import Optional, Literal, List, Tuple, Union
 
 from z3 import And, Bool, BoolRef, If, Implies, Int, Not, Or, PbEq, PbGe, PbLe, Xor
 
@@ -29,13 +29,79 @@ from pydantic import Field, PositiveInt
 
 
 #
+# Task groups
+#
+class TaskGroup(TaskConstraint):
+    list_of_tasks: List[Task]
+    time_interval: Tuple[int, int] = Field(default=None)
+    time_interval_length: int = Field(default=0)
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        u_id = uuid.uuid4().int
+        self._start = Int(f"task_group_start_{u_id}")
+        self._end = Int(f"task_group_end_{u_id}")
+
+        if self.time_interval is not None:
+            self._scheduled_assertion = [
+                self._start >= self.time_interval[0],
+                self._end <= self.time_interval[1],
+            ]
+        elif self.time_interval_length is not None:
+            self._scheduled_assertion = [
+                self._end <= self._start + self.time_interval_length
+            ]
+
+        for task in self.list_of_tasks:
+            self._scheduled_assertion += [
+                task._start >= self._start,
+                task._end <= self._end,
+            ]
+
+
+class UnorderedTaskGroup(TaskGroup):
+    """A set of tasks that can be scheduled in any order, with time bounds."""
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        self.set_z3_assertions(And(self._scheduled_assertion))
+
+
+class OrderedTaskGroup(TaskGroup):
+    """A set of tasks that can be scheduled in a specified order, with time bounds."""
+
+    kind: Literal["lax", "strict", "tight"] = Field(default="lax")
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        # add a constraint between each task
+        for i in range(len(self.list_of_tasks) - 1):
+            if self.kind == "lax":
+                self._scheduled_assertion += [
+                    self.list_of_tasks[i]._end <= self.list_of_tasks[i + 1]._start
+                ]
+            elif self.kind == "strict":
+                self._scheduled_assertion += [
+                    self.list_of_tasks[i]._end < self.list_of_tasks[i + 1]._start
+                ]
+            else:  # kind == 'tight':
+                self._scheduled_assertion += [
+                    self.list_of_tasks[i]._end == self.list_of_tasks[i + 1]._start
+                ]
+
+        self.set_z3_assertions(And(self._scheduled_assertion))
+
+
+#
 # Tasks constraints for two or more classes
 #
 class TaskPrecedence(TaskConstraint):
     """Task precedence relation"""
 
-    task_before: Task
-    task_after: Task
+    task_before: Union[Task, TaskGroup]
+    task_after: Union[Task, TaskGroup]
     offset: PositiveInt = Field(default=0)
     kind: Literal["lax", "strict", "tight"] = Field(default="lax")
 
@@ -374,104 +440,6 @@ class ScheduleNTasksInTimeIntervals(TaskConstraint):
             [(scheduled, True) for scheduled in all_bools], self.nb_tasks_to_schedule
         )
         self.set_z3_assertions(asst_pb)
-
-
-#
-# Task groups
-#
-class UnorderedTaskGroup(TaskConstraint):
-    """A set of tasks that can be scheduled in any order, with time bounds."""
-
-    def __init__(
-        self,
-        list_of_tasks,
-        time_interval=None,
-        time_interval_length: Optional[int] = 0,
-        optional: Optional[bool] = False,
-    ) -> None:
-        super().__init__(optional)
-
-        # first check that all tasks from the list_of_optional_tasks are
-        # actually optional
-        if not isinstance(list_of_tasks, list):
-            raise TypeError("list_of_task must be a list")
-
-        u_id = uuid.uuid4().int
-        self.start = Int(f"task_group_start_{u_id}")
-        self.end = Int(f"task_group_end_{u_id}")
-
-        if time_interval is not None:
-            scheduled_assertion = [
-                self.start >= time_interval[0],
-                self.end <= time_interval[1],
-            ]
-        elif time_interval_length is not None:
-            scheduled_assertion = [self.end <= self.start + time_interval_length]
-
-        for task in list_of_tasks:
-            scheduled_assertion += [task.start >= self.start, task.end <= self.end]
-
-        if task.optional:
-            self.set_z3_assertions(Implies(task.scheduled, And(scheduled_assertion)))
-        else:
-            self.set_z3_assertions(And(scheduled_assertion))
-
-
-class OrderedTaskGroup(TaskConstraint):
-    """A set of tasks that can be scheduled in a specified order, with time bounds."""
-
-    def __init__(
-        self,
-        list_of_tasks,
-        time_interval=None,
-        kind: Optional[str] = "lax",
-        time_interval_length: Optional[int] = 0,
-        optional: Optional[bool] = False,
-    ) -> None:
-        super().__init__(optional)
-
-        # first check that all tasks from the list_of_optional_tasks are
-        # actually optional
-        if not isinstance(list_of_tasks, list):
-            raise TypeError("list_of_task must be a list")
-
-        if kind not in ["lax", "strict", "tight"]:
-            raise ValueError("kind must either be 'lax', 'strict' or 'tight'")
-
-        u_id = uuid.uuid4().int
-        self.start = Int(f"task_group_start_{u_id}")
-        self.end = Int(f"task_group_end_{u_id}")
-
-        if time_interval is not None:
-            scheduled_assertion = [
-                self.start >= time_interval[0],
-                self.end <= time_interval[1],
-            ]
-        elif time_interval_length is not None:
-            scheduled_assertion = [self.end <= self.start + time_interval_length]
-
-        for task in list_of_tasks:
-            scheduled_assertion += [task.start >= self.start, task.end <= self.end]
-
-        # add a constraint between each task
-        for i in range(len(list_of_tasks) - 1):
-            if kind == "lax":
-                scheduled_assertion += [
-                    list_of_tasks[i].end <= list_of_tasks[i + 1].start
-                ]
-            elif kind == "strict":
-                scheduled_assertion += [
-                    list_of_tasks[i].end < list_of_tasks[i + 1].start
-                ]
-            else:  # kind == 'tight':
-                scheduled_assertion += [
-                    list_of_tasks[i].end == list_of_tasks[i + 1].start
-                ]
-
-        if task.optional:
-            self.set_z3_assertions(Implies(task.scheduled, And(scheduled_assertion)))
-        else:
-            self.set_z3_assertions(And(scheduled_assertion))
 
 
 #
