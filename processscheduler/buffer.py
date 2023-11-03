@@ -21,37 +21,30 @@ from processscheduler.base import _NamedUIDObject
 import processscheduler.context as ps_context
 
 
-#
-# Buffer class definition
-#
+from pydantic import Field
+
+
 class NonConcurrentBuffer(_NamedUIDObject):
     """A buffer that cannot be accessed by different tasks at the same time"""
 
-    def __init__(
-        self,
-        name: str,
-        initial_state: Optional[int] = None,
-        final_state: Optional[int] = None,
-        lower_bound: Optional[int] = None,
-        upper_bound: Optional[int] = None,
-    ) -> None:
-        super().__init__(name)
+    initial_state: int = Field(default=None)
+    final_state: int = Field(default=None)
+    lower_bound: int = Field(default=None)
+    upper_bound: int = Field(default=None)
 
-        self.initial_state = initial_state
-        self.final_state = final_state
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
         # a dict that contains all tasks that consume this buffer
         # unloading tasks contribute to decrement the buffer state
-        self.unloading_tasks = {}
+        self._unloading_tasks = {}
         # a dict that contains all tasks that feed this buffer
         # loading tasks contribute to increment the buffer state
-        self.loading_tasks = {}
+        self._loading_tasks = {}
         # a list that contains the instants where the buffer state changes
-        self.state_changes_time = []
+        self._state_changes_time = []
         # a list that stores the buffer state between each state change
         # the first item of this list is always the initial state
-        self.buffer_states = []
+        self._buffer_states = []
 
         # add this task to the current context
         if ps_context.main_context is None:
@@ -61,7 +54,7 @@ class NonConcurrentBuffer(_NamedUIDObject):
         ps_context.main_context.add_buffer(self)
 
     def add_unloading_task(self, task, quantity) -> None:
-        self.unloading_tasks[task] = quantity
+        self._unloading_tasks[task] = quantity
 
     def add_loading_task(self, task, quantity) -> None:
-        self.loading_tasks[task] = quantity
+        self._loading_tasks[task] = quantity

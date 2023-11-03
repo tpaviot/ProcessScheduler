@@ -22,6 +22,7 @@ from z3 import And, Bool, BoolRef, If, Implies, Int, Not, Or, PbEq, PbGe, PbLe, 
 
 from processscheduler.constraint import TaskConstraint
 from processscheduler.task import Task
+from processscheduler.buffer import NonConcurrentBuffer
 from processscheduler.util import sort_no_duplicates
 
 from pydantic import Field, PositiveInt
@@ -479,36 +480,24 @@ class OrderedTaskGroup(TaskConstraint):
 class TaskUnloadBuffer(TaskConstraint):
     """A tasks that unloads a buffer"""
 
-    def __init__(
-        self,
-        task,
-        buffer,
-        quantity,
-        optional: Optional[bool] = False,
-    ) -> None:
-        super().__init__(optional)
-        self.quantity = quantity
-        self.task = task
-        self.buffer = buffer
-        self.quantity = quantity
+    task: Task
+    buffer: NonConcurrentBuffer
+    quantity: int
 
-        buffer.add_unloading_task(task, quantity)
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        self.buffer.add_unloading_task(self.task, self.quantity)
 
 
 class TaskLoadBuffer(TaskConstraint):
     """A task that loads a buffer"""
 
-    def __init__(
-        self,
-        task,
-        buffer,
-        quantity,
-        optional: Optional[bool] = False,
-    ) -> None:
-        super().__init__(optional)
-        self.quantity = quantity
-        self.task = task
-        self.buffer = buffer
-        self.quantity = quantity
+    task: Task
+    buffer: NonConcurrentBuffer
+    quantity: int
 
-        buffer.add_loading_task(task, quantity)
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        self.buffer.add_loading_task(self.task, self.quantity)

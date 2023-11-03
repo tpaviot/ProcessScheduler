@@ -20,49 +20,49 @@ import processscheduler as ps
 
 class TestBuffer(unittest.TestCase):
     def test_instanciate_buffer(self) -> None:
-        ps.SchedulingProblem("BufferBasic", horizon=12)
-        ps.NonConcurrentBuffer("Buffer1", initial_state=10)
+        ps.SchedulingProblem(name="BufferBasic", horizon=12)
+        ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
 
     def test_instanciate_buffer_error(self) -> None:
-        ps.SchedulingProblem("BufferError", horizon=12)
-        ps.NonConcurrentBuffer("Buffer1", initial_state=10)
+        ps.SchedulingProblem(name="BufferError", horizon=12)
+        ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
         # a buffer with that name already exist, adding a new
         # one with the same name should raise an ValueError exception
         with self.assertRaises(ValueError):
-            ps.NonConcurrentBuffer("Buffer1", initial_state=10)
+            ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
 
     def test_unload_buffer_1(self) -> None:
         # only one buffer and one task
-        pb = ps.SchedulingProblem("UnloadBuffer1")
+        pb = ps.SchedulingProblem(name="UnloadBuffer1")
 
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
 
-        ps.TaskStartAt(task_1, 5)
-        ps.TaskUnloadBuffer(task_1, buffer, quantity=3)
+        ps.TaskStartAt(task=task_1, value=5)
+        ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=3)
 
-        solver = ps.SchedulingSolver(pb)
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         self.assertEqual(solution.buffers[buffer.name].state, [10, 7])
         self.assertEqual(solution.buffers[buffer.name].state_change_times, [5])
 
     def test_unload_buffer_2(self) -> None:
-        pb = ps.SchedulingProblem("UnloadBuffer2")
+        pb = ps.SchedulingProblem(name="UnloadBuffer2")
 
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        task_2 = ps.FixedDurationTask("task2", duration=3)
-        task_3 = ps.FixedDurationTask("task3", duration=3)
-        buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        task_2 = ps.FixedDurationTask(name="task2", duration=3)
+        task_3 = ps.FixedDurationTask(name="task3", duration=3)
+        buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
 
-        ps.TaskStartAt(task_1, 5)
-        ps.TaskStartAt(task_2, 10)
-        ps.TaskStartAt(task_3, 15)
-        ps.TaskUnloadBuffer(task_1, buffer, quantity=3)
-        ps.TaskUnloadBuffer(task_2, buffer, quantity=2)
-        ps.TaskUnloadBuffer(task_3, buffer, quantity=1)
+        ps.TaskStartAt(task=task_1, value=5)
+        ps.TaskStartAt(task=task_2, value=10)
+        ps.TaskStartAt(task=task_3, value=15)
+        ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=3)
+        ps.TaskUnloadBuffer(task=task_2, buffer=buffer, quantity=2)
+        ps.TaskUnloadBuffer(task=task_3, buffer=buffer, quantity=1)
 
-        solver = ps.SchedulingSolver(pb)
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         self.assertEqual(solution.buffers[buffer.name].state, [10, 7, 5, 4])
@@ -70,36 +70,36 @@ class TestBuffer(unittest.TestCase):
 
     def test_load_buffer_1(self) -> None:
         # only one buffer and one task
-        pb = ps.SchedulingProblem("LoadBuffer1")
+        pb = ps.SchedulingProblem(name="LoadBuffer1")
 
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
 
-        ps.TaskStartAt(task_1, 5)
-        ps.TaskLoadBuffer(task_1, buffer, quantity=3)
+        ps.TaskStartAt(task=task_1, value=5)
+        ps.TaskLoadBuffer(task=task_1, buffer=buffer, quantity=3)
 
-        solver = ps.SchedulingSolver(pb)
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         self.assertEqual(solution.buffers[buffer.name].state, [10, 13])
         self.assertEqual(solution.buffers[buffer.name].state_change_times, [8])
 
     def test_load_buffer_2(self) -> None:
-        pb = ps.SchedulingProblem("LoadBuffer2")
+        pb = ps.SchedulingProblem(name="LoadBuffer2")
 
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        task_2 = ps.FixedDurationTask("task2", duration=3)
-        task_3 = ps.FixedDurationTask("task3", duration=3)
-        buffer = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        task_2 = ps.FixedDurationTask(name="task2", duration=3)
+        task_3 = ps.FixedDurationTask(name="task3", duration=3)
+        buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
 
-        ps.TaskStartAt(task_1, 5)
-        ps.TaskStartAt(task_2, 10)
-        ps.TaskStartAt(task_3, 15)
-        ps.TaskLoadBuffer(task_1, buffer, quantity=3)
-        ps.TaskLoadBuffer(task_2, buffer, quantity=2)
-        ps.TaskLoadBuffer(task_3, buffer, quantity=1)
+        ps.TaskStartAt(task=task_1, value=5)
+        ps.TaskStartAt(task=task_2, value=10)
+        ps.TaskStartAt(task=task_3, value=15)
+        ps.TaskLoadBuffer(task=task_1, buffer=buffer, quantity=3)
+        ps.TaskLoadBuffer(task=task_2, buffer=buffer, quantity=2)
+        ps.TaskLoadBuffer(task=task_3, buffer=buffer, quantity=1)
 
-        solver = ps.SchedulingSolver(pb)
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         self.assertEqual(solution.buffers[buffer.name].state, [10, 13, 15, 16])
@@ -107,17 +107,17 @@ class TestBuffer(unittest.TestCase):
 
     def test_load_unload_feed_buffers_1(self) -> None:
         # one task that consumes and feed two different buffers
-        pb = ps.SchedulingProblem("LoadUnloadBuffer1")
+        pb = ps.SchedulingProblem(name="LoadUnloadBuffer1")
 
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        buffer_1 = ps.NonConcurrentBuffer("Buffer1", initial_state=10)
-        buffer_2 = ps.NonConcurrentBuffer("Buffer2", initial_state=0)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+        buffer_2 = ps.NonConcurrentBuffer(name="Buffer2", initial_state=0)
 
-        ps.TaskStartAt(task_1, 5)
-        ps.TaskUnloadBuffer(task_1, buffer_1, quantity=3)
-        ps.TaskLoadBuffer(task_1, buffer_2, quantity=2)
+        ps.TaskStartAt(task=task_1, value=5)
+        ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=3)
+        ps.TaskLoadBuffer(task=task_1, buffer=buffer_2, quantity=2)
 
-        solver = ps.SchedulingSolver(pb)
+        solver = ps.SchedulingSolver(problem=pb)
         solution = solver.solve()
         self.assertTrue(solution)
         self.assertEqual(solution.buffers[buffer_1.name].state, [10, 7])
@@ -130,28 +130,28 @@ class TestBuffer(unittest.TestCase):
 
     def test_buffer_bounds_1(self) -> None:
         # n tasks take 1, n tasks feed one. Bounds 0 to 1
-        pb = ps.SchedulingProblem("BufferBounds1")
+        pb = ps.SchedulingProblem(name="BufferBounds1")
 
         n = 3
         unloading_tasks = [
-            ps.FixedDurationTask("LoadTask_%i" % i, duration=3) for i in range(n)
+            ps.FixedDurationTask(name="LoadTask_%i" % i, duration=3) for i in range(n)
         ]
         loading_tasks = [
-            ps.FixedDurationTask("UnloadTask_%i" % i, duration=3) for i in range(n)
+            ps.FixedDurationTask(name="UnloadTask_%i" % i, duration=3) for i in range(n)
         ]
         # create buffer
-        buffer = ps.NonConcurrentBuffer("Buffer1", lower_bound=0, upper_bound=1)
+        buffer = ps.NonConcurrentBuffer(name="Buffer1", lower_bound=0, upper_bound=1)
 
         for t in unloading_tasks:
-            ps.TaskUnloadBuffer(t, buffer, quantity=1)
+            ps.TaskUnloadBuffer(task=t, buffer=buffer, quantity=1)
 
         for t in loading_tasks:
-            ps.TaskLoadBuffer(t, buffer, quantity=1)
+            ps.TaskLoadBuffer(task=t, buffer=buffer, quantity=1)
 
         pb.add_objective_makespan()
 
         solver = ps.SchedulingSolver(
-            pb, max_time=300, parallel=True
+            problem=pb, max_time=300, parallel=True
         )  # , debug=True)#, logics="QF_UFIDL")
         solution = solver.solve()
         self.assertTrue(solution)

@@ -225,58 +225,60 @@ class SchedulingSolver(BaseModel):
             buffer_mapping = Array(
                 f"Buffer_{buffer.name}_mapping", IntSort(), IntSort()
             )
-            for t in buffer.unloading_tasks:
+            for t in buffer._unloading_tasks:
                 self.append_z3_assertion(
                     buffer_mapping
-                    == Store(buffer_mapping, t.start, -buffer.unloading_tasks[t])
+                    == Store(buffer_mapping, t._start, -buffer._unloading_tasks[t])
                 )
-            for t in buffer.loading_tasks:
+            for t in buffer._loading_tasks:
                 self.append_z3_assertion(
                     buffer_mapping
-                    == Store(buffer_mapping, t.end, +buffer.loading_tasks[t])
+                    == Store(buffer_mapping, t._end, +buffer._loading_tasks[t])
                 )
             # sort consume/feed times in asc order
-            tasks_start_unload = [t.start for t in buffer.unloading_tasks]
-            tasks_end_load = [t.end for t in buffer.loading_tasks]
+            tasks_start_unload = [t._start for t in buffer._unloading_tasks]
+            tasks_end_load = [t._end for t in buffer._loading_tasks]
 
             sorted_times, sort_assertions = sort_no_duplicates(
                 tasks_start_unload + tasks_end_load
             )
             self.append_z3_assertion(sort_assertions)
             # create as many buffer state changes as sorted_times
-            buffer.state_changes_time = [
+            buffer._state_changes_time = [
                 Int(f"{buffer.name}_sc_time_{k}") for k in range(len(sorted_times))
             ]
 
             # add the constraints that give the buffer state change times
-            for st, bfst in zip(sorted_times, buffer.state_changes_time):
+            for st, bfst in zip(sorted_times, buffer._state_changes_time):
                 self.append_z3_assertion(st == bfst)
 
             # compute the different buffer states according to state changes
-            buffer.buffer_states = [
+            buffer._buffer_states = [
                 Int(f"{buffer.name}_state_{k}")
-                for k in range(len(buffer.state_changes_time) + 1)
+                for k in range(len(buffer._state_changes_time) + 1)
             ]
             # add constraints for buffer states
             # the first buffer state is equal to the buffer initial level
             if buffer.initial_state is not None:
                 self.append_z3_assertion(
-                    buffer.buffer_states[0] == buffer.initial_state
+                    buffer._buffer_states[0] == buffer.initial_state
                 )
             if buffer.final_state is not None:
-                self.append_z3_assertion(buffer.buffer_states[-1] == buffer.final_state)
+                self.append_z3_assertion(
+                    buffer._buffer_states[-1] == buffer.final_state
+                )
             if buffer.lower_bound is not None:
-                for st in buffer.buffer_states:
+                for st in buffer._buffer_states:
                     self.append_z3_assertion(st >= buffer.lower_bound)
             if buffer.upper_bound is not None:
-                for st in buffer.buffer_states:
+                for st in buffer._buffer_states:
                     self.append_z3_assertion(st <= buffer.upper_bound)
             # and, for the other, the buffer state i+1 is the buffer state i +/- the buffer change
-            for i in range(len(buffer.buffer_states) - 1):
+            for i in range(len(buffer._buffer_states) - 1):
                 self.append_z3_assertion(
-                    buffer.buffer_states[i + 1]
-                    == buffer.buffer_states[i]
-                    + buffer_mapping[buffer.state_changes_time[i]]
+                    buffer._buffer_states[i + 1]
+                    == buffer._buffer_states[i]
+                    + buffer_mapping[buffer._state_changes_time[i]]
                 )
 
         # Finally add other assertions (FOL, user defined)
@@ -483,15 +485,18 @@ class SchedulingSolver(BaseModel):
         # process buffers
         for buffer in self.problem._context.buffers:
             buffer_name = buffer.name
-            new_buffer_solution = BufferSolution(buffer_name)
+            new_buffer_solution = BufferSolution(name=buffer_name)
             # change_state_times
             cst_lst = [
-                z3_sol[sct_z3_var].as_long() for sct_z3_var in buffer.state_changes_time
+                z3_sol[sct_z3_var].as_long()
+                for sct_z3_var in buffer._state_changes_time
             ]
 
             new_buffer_solution.state_change_times = cst_lst
             # state values
-            sv_lst = [z3_sol[sv_z3_var].as_long() for sv_z3_var in buffer.buffer_states]
+            sv_lst = [
+                z3_sol[sv_z3_var].as_long() for sv_z3_var in buffer._buffer_states
+            ]
             new_buffer_solution.state = sv_lst
 
             solution.add_buffer_solution(new_buffer_solution)
