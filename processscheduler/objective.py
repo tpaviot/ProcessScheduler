@@ -32,7 +32,7 @@ class Indicator(_NamedUIDObject):
     # None if not bounded
     # (lower_bound, None), (None, upper_bound) if only one-side bounded
     # (lower_bound, upper_bound) if full bounded
-    expression: Union[BoolRef, ArithRef]
+    expression: Union[int, float, BoolRef, ArithRef]
     bounds: Optional[Tuple[int, int]] = Field(default=None)
 
     class Config:

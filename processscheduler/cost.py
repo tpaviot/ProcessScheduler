@@ -30,6 +30,18 @@ class Cost(_NamedUIDObject):
     def __init__(self, **data) -> None:
         super().__init__(**data)
 
+    def __call__(self, value):
+        """compute the value of the cost function for a given value"""
+        to_return = self.cost_function(value)
+        # check if there is a ToReal conversion in the function
+        # this may occur if the cost function is not linear
+        # and this would result in an unexpected computation
+        if "ToReal" in f"{to_return}":
+            raise AssertionError(
+                "Warning: ToReal conversion, the cost function must be linear."
+            )
+        return to_return
+
     def plot(self, interval, show_plot=False) -> None:
         """Plot the cost curve using matplotlib."""
         try:
@@ -44,7 +56,7 @@ class Cost(_NamedUIDObject):
 
         lower_bound, upper_bound = interval
         x = np.linspace(lower_bound, upper_bound, 1000)
-        y = [self.f(x_) for x_ in x]
+        y = [self.cost_function(x_) for x_ in x]
         plt.plot(x, y, label="Cost function")
 
         plt.legend()
@@ -57,34 +69,29 @@ class Cost(_NamedUIDObject):
 
 
 class ConstantCostPerPeriod(Cost):
-    value: int
+    value: int  # TODO: should this be positive only?
 
     def __init__(self, **data) -> None:
-        print("Pasé:, ", data)
         super().__init__(**data)
-
-    def __call__(self, value):
-        """compute the value of the cost function for a given value"""
-        return self.cost_function(value)
+        self.cost_function = lambda x: self.value
 
 
 class PolynomialCostFunction(Cost):
     """A function of time under a polynomial form."""
 
-    def __init__(self, function: callable) -> None:
-        super().__init__()
-        if not callable(function):
-            raise TypeError("function must be a callable")
-        self.cost_function = function
+    pass
 
-    def __call__(self, value):
-        """compute the value of the cost function for a given value"""
-        to_return = self.f(value)
-        # check if there is a ToReal conversion in the function
-        # this may occur if the cost function is not linear
-        # and this would result in an unexpected computation
-        if "ToReal" in f"{to_return}":
-            raise AssertionError(
-                "Warning: ToReal conversion, the cost function must be linear."
-            )
-        return self.cost_function(value)
+    # def __init__(self, **data) -> None:
+    #     super().__init__(**data)
+
+    # def __call__(self, value):
+    #     """compute the value of the cost function for a given value"""
+    #     to_return = self.f(value)
+    #     # check if there is a ToReal conversion in the function
+    #     # this may occur if the cost function is not linear
+    #     # and this would result in an unexpected computation
+    #     if "ToReal" in f"{to_return}":
+    #         raise AssertionError(
+    #             "Warning: ToReal conversion, the cost function must be linear."
+    #         )
+    #     return self.cost_function(value)

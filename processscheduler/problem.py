@@ -96,6 +96,8 @@ class SchedulingProblem(_NamedUIDObject):
                     # res.cost(interv_up), res.cost(interv_low)
                     # or res.cost.value give the same result because the function is constant
                     cost_for_this_period = res.cost(interv_up)
+                    print(res.cost.value)
+                    print("Cost for this period: ", cost_for_this_period)
                     if cost_for_this_period == 0:
                         continue
                     elif cost_for_this_period == 1:
@@ -115,11 +117,13 @@ class SchedulingProblem(_NamedUIDObject):
 
         for resource in list_of_resources:
             if isinstance(resource, CumulativeWorker):
+                print("Cumulative Worker!!")
                 for res in resource.cumulative_workers:
                     loc_cst_cst, loc_var_cst = get_resource_cost(res)
                     constant_costs.extend(loc_cst_cst)
                     variable_costs.extend(loc_var_cst)
             else:  # for a single worker
+                print("Single worker!")
                 loc_cst_cst, loc_var_cst = get_resource_cost(resource)
                 constant_costs.extend(loc_cst_cst)
                 variable_costs.extend(loc_var_cst)
@@ -128,8 +132,10 @@ class SchedulingProblem(_NamedUIDObject):
         # TODO: what if we multiply the line below by 2? This would remove a division
         # by 2, and make the cost computation linear if costs are linear
         cost_indicator_variable = Sum(constant_costs) + Sum(variable_costs) / 2
+        print("Cost indicator variable: ", cost_indicator_variable)
+        print("Cost indicator type: ", type(cost_indicator_variable))
         cost_indicator = Indicator(
-            f"Total Cost ({resource_names})", cost_indicator_variable
+            name=f"Total Cost ({resource_names})", expression=cost_indicator_variable
         )
         return cost_indicator
 

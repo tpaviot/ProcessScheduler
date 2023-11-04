@@ -23,17 +23,17 @@ class TestDatetime(unittest.TestCase):
     def test_datetime_1(self):
         """take the single task/single resource and display output"""
         problem = ps.SchedulingProblem(
-            "DateTimeBase",
+            name="DateTimeBase",
             horizon=7,
             delta_time=timedelta(minutes=15),
             start_time=datetime.now(),
         )
-        task = ps.FixedDurationTask("task", duration=7)
+        task = ps.FixedDurationTask(name="task", duration=7)
         # problem.add_task(task)
-        worker = ps.Worker("worker")
+        worker = ps.Worker(name="worker")
         # problem.add_resource(worker)
         task.add_required_resource(worker)
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
         solution = solver.solve()
         self.assertTrue(solution)
         print(solution)
@@ -41,28 +41,28 @@ class TestDatetime(unittest.TestCase):
     def test_datetime_time(self):
         """take the single task/single resource and display output"""
         problem = ps.SchedulingProblem(
-            "DateTimeBase", horizon=7, delta_time=timedelta(minutes=15)
+            name="DateTimeBase", horizon=7, delta_time=timedelta(minutes=15)
         )
-        task = ps.FixedDurationTask("task", duration=7)
+        task = ps.FixedDurationTask(name="task", duration=7)
         # problem.add_task(task)
-        worker = ps.Worker("worker")
-        # problem.add_resource(worker)
+        worker = ps.Worker(name="worker")
         task.add_required_resource(worker)
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
         solution = solver.solve()
         self.assertTrue(solution)
         print(solution)
 
     def test_datetime_export_to_json(self):
         problem = ps.SchedulingProblem(
-            "DateTimeJson", delta_time=timedelta(hours=1), start_time=datetime.now()
+            name="DateTimeJson",
+            delta_time=timedelta(hours=1),
+            start_time=datetime.now(),
         )
-        task = ps.FixedDurationTask("task", duration=7)
+        task = ps.FixedDurationTask(name="task", duration=7)
         # problem.add_task(task)
-        worker = ps.Worker("worker")
-        # problem.add_resource(worker)
+        worker = ps.Worker(name="worker")
         task.add_required_resource(worker)
-        solver = ps.SchedulingSolver(problem)
+        solver = ps.SchedulingSolver(problem=problem)
         solution = solver.solve()
         self.assertTrue(solution)
         solution.to_json_string()

@@ -39,8 +39,8 @@ def _distribute_p_over_n(p, n):
         return to_return
     if isinstance(p, ConstantCostPerPeriod):
         int_div = p.value // n
-        to_return = [ConstantCostPerPeriod(int_div + p.value % n)]
-        to_return.extend(ConstantCostPerPeriod(int_div) for _ in range(n - 1))
+        to_return = [ConstantCostPerPeriod(value=int_div + p.value % n)]
+        to_return.extend(ConstantCostPerPeriod(value=int_div) for _ in range(n - 1))
         return to_return
     raise AssertionError("wrong type for parameter p")
 
@@ -76,7 +76,7 @@ class Worker(Resource):
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
-        # only worker are add to the main context, not SelectWorkers
+        # only worker are added to the main context, not SelectWorkers
         # add this resource to the current context
         if ps_context.main_context is None:
             raise AssertionError(

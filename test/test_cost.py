@@ -17,86 +17,92 @@ import unittest
 
 import processscheduler as ps
 
+from pydantic import ValidationError
+
 
 class TestCost(unittest.TestCase):
     def test_cost_basic(self) -> None:
-        ps.SchedulingProblem("CostBasic", horizon=12)
-        ress_cost = ps.ConstantCostPerPeriod(5)
-        ps.Worker("Worker1", cost=ress_cost)
-
-    def test_cost_assertion_fail(self) -> None:
-        with self.assertRaises(ValueError):
-            ps.ConstantCostPerPeriod(-4)
+        ps.SchedulingProblem(name="CostBasic", horizon=12)
+        ress_cost = ps.ConstantCostPerPeriod(value=5)
+        ps.Worker(name="Worker1", cost=ress_cost)
 
     def test_cost_polynomial_1(self) -> None:
-        ps.SchedulingProblem("PolynomialCost1", horizon=12)
+        ps.SchedulingProblem(name="PolynomialCost1", horizon=12)
 
         def c(t):
             return 0.5 * t * t + 50
 
-        ress_cost = ps.PolynomialCostFunction(c)
-        ps.Worker("Worker1", cost=ress_cost)
+        ress_cost = ps.PolynomialCostFunction(cost_function=c)
+        ps.Worker(name="Worker1", cost=ress_cost)
 
     def test_cost_polynomial_lambda(self) -> None:
-        ps.SchedulingProblem("PolynomialCostLambdaFunction", horizon=12)
-        ress_cost = ps.PolynomialCostFunction(lambda t: 2 * t + 10)
-        ps.Worker("Worker1", cost=ress_cost)
+        ps.SchedulingProblem(name="PolynomialCostLambdaFunction", horizon=12)
+        ress_cost = ps.PolynomialCostFunction(cost_function=lambda t: 2 * t + 10)
+        ps.Worker(name="Worker1", cost=ress_cost)
 
     def test_cost_failure(self) -> None:
-        ps.SchedulingProblem("CostWrongType", horizon=12)
-        with self.assertRaises(TypeError):
-            ps.Worker("ress1", cost=5)  # only accepts a _Cost instance
-        with self.assertRaises(TypeError):
-            ps.PolynomialCostFunction("f")  # only accepts a callable
+        ps.SchedulingProblem(name="CostWrongType", horizon=12)
+        with self.assertRaises(ValidationError):
+            ps.Worker(name="ress1", cost=5)  # only accepts a Cost instance
+        with self.assertRaises(ValidationError):
+            ps.PolynomialCostFunction(cost_function="f")  # only accepts a callable
 
     def test_constant_cost_per_period_1(self) -> None:
-        problem = ps.SchedulingProblem("IndicatorResourceConstantCostPerPeriod1")
-        t_1 = ps.FixedDurationTask("t1", duration=11)
-        worker_1 = ps.Worker("Worker1", cost=ps.ConstantCostPerPeriod(7))
+        problem = ps.SchedulingProblem(name="IndicatorResourceConstantCostPerPeriod0")
+        c = ps.ConstantCostPerPeriod(value=7)
+        self.assertEqual(c(1), 7)
+        self.assertEqual(c(10), 7)
+        self.assertEqual(c(0), 7)
+
+    def test_constant_cost_per_period_1(self) -> None:
+        problem = ps.SchedulingProblem(name="IndicatorResourceConstantCostPerPeriod1")
+        t_1 = ps.FixedDurationTask(name="t1", duration=11)
+        worker_1 = ps.Worker(name="Worker1", cost=ps.ConstantCostPerPeriod(value=7))
         t_1.add_required_resource(worker_1)
         cost_ind = problem.add_indicator_resource_cost([worker_1])
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[cost_ind.name], 77)
 
     def test_constant_cost_per_period_2(self) -> None:
-        problem = ps.SchedulingProblem("IndicatorResourceConstantCostPerPeriod2")
-        t_1 = ps.VariableDurationTask("t1", work_amount=100)
+        problem = ps.SchedulingProblem(name="IndicatorResourceConstantCostPerPeriod2")
+        t_1 = ps.VariableDurationTask(name="t1", work_amount=100)
         worker_1 = ps.Worker(
-            "Worker1", productivity=4, cost=ps.ConstantCostPerPeriod(10)
+            name="Worker1", productivity=4, cost=ps.ConstantCostPerPeriod(value=10)
         )
         worker_2 = ps.Worker(
-            "Worker2", productivity=7, cost=ps.ConstantCostPerPeriod(20)
+            name="Worker2", productivity=7, cost=ps.ConstantCostPerPeriod(value=20)
         )
         all_workers = [worker_1, worker_2]
         problem.add_objective_makespan()
         t_1.add_required_resources(all_workers)
         cost_ind = problem.add_indicator_resource_cost(all_workers)
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[cost_ind.name], 300)
 
     def test_linear_cost_1(self) -> None:
-        problem = ps.SchedulingProblem("IndicatorResourcePolynomialCost1")
+        problem = ps.SchedulingProblem(name="IndicatorResourcePolynomialCost1")
 
-        t_1 = ps.FixedDurationTask("t1", duration=17)
+        t_1 = ps.FixedDurationTask(name="t1", duration=17)
 
         def int_cost_function(t):
             return 23 * t + 3
 
         worker_1 = ps.Worker(
-            "Worker1", cost=ps.PolynomialCostFunction(int_cost_function)
+            name="Worker1",
+            cost=ps.PolynomialCostFunction(cost_function=int_cost_function),
         )
         t_1.add_required_resource(worker_1)
 
-        ps.TaskStartAt(t_1, 13)
+        ps.TaskStartAt(task=t_1, value=13)
         cost_ind = problem.add_indicator_resource_cost([worker_1])
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         # expected cost should be 8457
@@ -108,22 +114,23 @@ class TestCost(unittest.TestCase):
     def test_optimize_linear_cost_1(self) -> None:
         # same cost function as above, we minimize the cst,
         # the task should be scheduled at 0 (because the cost function increases)
-        problem = ps.SchedulingProblem("OptimizeLinearCost1")
+        problem = ps.SchedulingProblem(name="OptimizeLinearCost1")
 
-        t_1 = ps.FixedDurationTask("t1", duration=17)
+        t_1 = ps.FixedDurationTask(name="t1", duration=17)
 
         def int_cost_function(t):
             return 23 * t + 3
 
         worker_1 = ps.Worker(
-            "Worker1", cost=ps.PolynomialCostFunction(int_cost_function)
+            name="Worker1",
+            cost=ps.PolynomialCostFunction(cost_function=int_cost_function),
         )
         t_1.add_required_resource(worker_1)
 
         cost_ind = problem.add_indicator_resource_cost([worker_1])
         problem.add_objective_resource_cost([worker_1])
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         # the task is scheduled at the beginning of the workplan
@@ -136,23 +143,24 @@ class TestCost(unittest.TestCase):
         # now we have a cost function that decreases over time,
         # then minimizing the cost should schedule the task at the end.
         # so we define an horizon for the problem
-        problem = ps.SchedulingProblem("OptimizeLinear2", horizon=87)
+        problem = ps.SchedulingProblem(name="OptimizeLinear2", horizon=87)
 
-        t_1 = ps.FixedDurationTask("t1", duration=13)
+        t_1 = ps.FixedDurationTask(name="t1", duration=13)
 
         # be sure however that this function is positive on the interval
         def int_cost_function(t):
             return 711 - 5 * t
 
         worker_1 = ps.Worker(
-            "Worker1", cost=ps.PolynomialCostFunction(int_cost_function)
+            name="Worker1",
+            cost=ps.PolynomialCostFunction(cost_function=int_cost_function),
         )
         t_1.add_required_resource(worker_1)
 
         cost_ind = problem.add_indicator_resource_cost([worker_1])
         problem.add_objective_resource_cost([worker_1])
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         # the task is scheduled at the beginning of the workplan
@@ -166,38 +174,40 @@ class TestCost(unittest.TestCase):
         # if the cost function involves float numbers, this will
         # result in a ToReal conversion of z3 interger variables,
         # and may lead to unepexted behaviours
-        problem = ps.SchedulingProblem("OptimizeLinearCost3")
+        problem = ps.SchedulingProblem(name="OptimizeLinearCost3")
 
-        t_1 = ps.FixedDurationTask("t1", duration=17)
+        t_1 = ps.FixedDurationTask(name="t1", duration=17)
 
         def real_cost_function(t):
             return 23.12 * t + 3.4
 
         worker_1 = ps.Worker(
-            "Worker1", cost=ps.PolynomialCostFunction(real_cost_function)
+            name="Worker1",
+            cost=ps.PolynomialCostFunction(cost_function=real_cost_function),
         )
         t_1.add_required_resource(worker_1)
 
-        # with self.assertRaises(AssertionError):
-        #    cost_ind = problem.add_indicator_resource_cost([worker_1])
+        with self.assertRaises(AssertionError):
+            cost_ind = problem.add_indicator_resource_cost([worker_1])
 
     def test_quadratic_cost_1(self) -> None:
-        problem = ps.SchedulingProblem("IndicatorResourceQuadraticCost1")
+        problem = ps.SchedulingProblem(name="IndicatorResourceQuadraticCost1")
 
-        t_1 = ps.FixedDurationTask("t1", duration=17)
+        t_1 = ps.FixedDurationTask(name="t1", duration=17)
 
         def int_cost_function(t):
             return 23 * t * t - 13 * t + 513
 
         worker_1 = ps.Worker(
-            "Worker1", cost=ps.PolynomialCostFunction(int_cost_function)
+            name="Worker1",
+            cost=ps.PolynomialCostFunction(cost_function=int_cost_function),
         )
         t_1.add_required_resource(worker_1)
 
-        ps.TaskStartAt(t_1, 13)
+        ps.TaskStartAt(task=t_1, value=13)
         cost_ind = problem.add_indicator_resource_cost([worker_1])
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         # expected cost should be 8457
@@ -210,9 +220,9 @@ class TestCost(unittest.TestCase):
         # TODO: add an horizon, it should return the expected result
         # but there's an issue, see
         # https://github.com/Z3Prover/z3/issues/5254
-        problem = ps.SchedulingProblem("OptimizeQuadraticCost2", horizon=20)
+        problem = ps.SchedulingProblem(name="OptimizeQuadraticCost2", horizon=20)
 
-        t_1 = ps.FixedDurationTask("t1", duration=4)
+        t_1 = ps.FixedDurationTask(name="t1", duration=4)
 
         # we chosse a function where we know the minimum is
         # let's imagine the minimum is at t=8
@@ -220,14 +230,15 @@ class TestCost(unittest.TestCase):
             return (t - 8) * (t - 8) + 100
 
         worker_1 = ps.Worker(
-            "Worker1", cost=ps.PolynomialCostFunction(int_cost_function)
+            name="Worker1",
+            cost=ps.PolynomialCostFunction(cost_function=int_cost_function),
         )
         t_1.add_required_resource(worker_1)
 
         cost_ind = problem.add_indicator_resource_cost([worker_1])
         problem.minimize_indicator(cost_ind)
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.tasks[t_1.name].start, 6)
@@ -237,17 +248,17 @@ class TestCost(unittest.TestCase):
         def int_cost_function(t):
             return (t - 8) * (t - 8) + 513
 
-        cost = ps.PolynomialCostFunction(int_cost_function)
+        cost = ps.PolynomialCostFunction(cost_function=int_cost_function)
 
         cost.plot([0, 40], show_plot=False)
 
     def test_cumulative_cost(self):
-        problem = ps.SchedulingProblem("CumulativeCost", horizon=5)
-        t_1 = ps.FixedDurationTask("t1", duration=5)
-        t_2 = ps.FixedDurationTask("t2", duration=5)
-        t_3 = ps.FixedDurationTask("t3", duration=5)
+        problem = ps.SchedulingProblem(name="CumulativeCost", horizon=5)
+        t_1 = ps.FixedDurationTask(name="t1", duration=5)
+        t_2 = ps.FixedDurationTask(name="t2", duration=5)
+        t_3 = ps.FixedDurationTask(name="t3", duration=5)
         worker_1 = ps.CumulativeWorker(
-            "CumulWorker", size=3, cost=ps.ConstantCostPerPeriod(5)
+            name="CumulWorker", size=3, cost=ps.ConstantCostPerPeriod(value=5)
         )
         t_1.add_required_resource(worker_1)
         t_2.add_required_resource(worker_1)
@@ -255,7 +266,7 @@ class TestCost(unittest.TestCase):
 
         cost_ind = problem.add_indicator_resource_cost([worker_1])
 
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[cost_ind.name], 25)
@@ -265,23 +276,26 @@ class TestCost(unittest.TestCase):
     def test_incremental_optimizer_linear_cost_1(self) -> None:
         # same cost function as above, we minimize the cst,
         # the task should be scheduled at 0 (because the cost function increases)
-        problem = ps.SchedulingProblem("IncrementalOptimizerLinearCost1", horizon=40)
+        problem = ps.SchedulingProblem(
+            name="IncrementalOptimizerLinearCost1", horizon=40
+        )
 
-        t_1 = ps.FixedDurationTask("t1", duration=17)
+        t_1 = ps.FixedDurationTask(name="t1", duration=17)
 
         # the task should be scheduled at the end
         def int_cost_function(t):
             return -23 * t + 321
 
         worker_1 = ps.Worker(
-            "Worker1", cost=ps.PolynomialCostFunction(int_cost_function)
+            name="Worker1",
+            cost=ps.PolynomialCostFunction(cost_function=int_cost_function),
         )
         t_1.add_required_resource(worker_1)
 
         cost_ind = problem.add_indicator_resource_cost([worker_1])
         problem.minimize_indicator(cost_ind)
 
-        solver = ps.SchedulingSolver(problem, random_values=True)
+        solver = ps.SchedulingSolver(problem=problem, random_values=True)
 
         solution = solver.solve()
 
