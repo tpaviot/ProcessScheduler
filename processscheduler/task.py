@@ -124,7 +124,7 @@ class Task(_NamedUIDObject):
                 # past. This way, it does not conflict with tasks to be
                 # actuallt scheduled.
                 # This single point in time results in a zero duration time: related
-                # task will not be considered when cimputing resource utilization or cost.
+                # task will not be considered when computing resource utilization or cost.
                 single_point_in_past = self._get_unique_negative_integer()
                 move_to_past = And(
                     resource_maybe_busy_start == single_point_in_past,  # to past

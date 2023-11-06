@@ -31,7 +31,7 @@ from pydantic import Field, PositiveInt, ValidationError
 def _distribute_p_over_n(p, n):
     """Returns a list of integer p distributed over n values."""
     if p is None:
-        return [p for _ in range(n)]
+        return [None for _ in range(n)]
     if isinstance(p, int):
         int_div = p // n
         to_return = [int_div + p % n]
@@ -71,8 +71,8 @@ class Worker(Resource):
     """A worker is an atomic resource that cannot be split into smaller parts.
     Typical workers are human beings, machines etc."""
 
-    productivity: PositiveInt = Field(default=1)
-    cost: Cost = Field(default=None)
+    productivity: int = Field(default=1, ge=0)  # productivity >= 0
+    cost: Union[Cost, None] = Field(default=None)
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -89,7 +89,7 @@ class CumulativeWorker(Resource):
     """A cumulative worker can process multiple tasks in parallel."""
 
     # size is 2 min, otherwise it should be a single worker
-    size: int = Field(gt=2)
+    size: int = Field(gt=1)  # size strictly > 1
     productivity: PositiveInt = Field(default=1)
     cost: Cost = Field(default=None)
 
@@ -102,13 +102,15 @@ class CumulativeWorker(Resource):
         productivities = _distribute_p_over_n(self.productivity, self.size)
 
         costs_per_period = _distribute_p_over_n(self.cost, self.size)
-
+        print("Costs per period:", costs_per_period)
         # we create as much elementary workers as the cumulative size
-        self.cumulative_workers = [
+        self._cumulative_workers = [
             Worker(
                 name=f"{self.name}_CumulativeWorker_{i+1}",
                 productivity=productivities[i],
-                cost=ConstantCostPerPeriod(value=costs_per_period[i]),
+                cost=ConstantCostPerPeriod(value=costs_per_period[i])
+                if costs_per_period[i] is not None
+                else None,
             )
             for i in range(self.size)
         ]
@@ -119,7 +121,7 @@ class CumulativeWorker(Resource):
         """Each time the cumulative resource is assigned to a task, a SelectWorker
         instance is assigned to the task."""
         return SelectWorkers(
-            list_of_workers=self.cumulative_workers, nb_workers_to_select=1, kind="min"
+            list_of_workers=self._cumulative_workers, nb_workers_to_select=1, kind="min"
         )
 
 
@@ -149,7 +151,7 @@ class SelectWorkers(Resource):
         self._list_of_workers = []
         for worker in self.list_of_workers:
             if isinstance(worker, CumulativeWorker):
-                self._list_of_workers.extend(worker.cumulative_workers)
+                self._list_of_workers.extend(worker._cumulative_workers)
             else:
                 self._list_of_workers.append(worker)
 
@@ -160,7 +162,8 @@ class SelectWorkers(Resource):
         for worker in self.list_of_workers:
             worker_is_selected = Bool(f"Selected_{worker.name}_{self.uid}")
             self._selection_dict[worker] = worker_is_selected
-
+        print("Selection dict:", self._selection_dict)
+        print("Len selection dict:", len(self._selection_dict))
         # create the assertion : exactly n boolean flags are allowed to be True,
         # the others must be False
         # see https://github.com/Z3Prover/z3/issues/694

@@ -456,7 +456,9 @@ class SchedulingSolver(BaseModel):
             if "_CumulativeWorker_" in resource.name:
                 cumulative_worker_name = resource.name.split("_CumulativeWorker_")[0]
                 if cumulative_worker_name not in solution.resources:
-                    new_resource_solution = ResourceSolution(cumulative_worker_name)
+                    new_resource_solution = ResourceSolution(
+                        name=cumulative_worker_name
+                    )
                 else:
                     new_resource_solution = solution.resources[cumulative_worker_name]
             else:

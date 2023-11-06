@@ -26,17 +26,17 @@ import processscheduler as ps
 
 class MultiObjective(unittest.TestCase):
     def test_multi_two_tasks_1(self) -> None:
-        pb = ps.SchedulingProblem("MultiObjective1", horizon=20)
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        task_2 = ps.FixedDurationTask("task2", duration=3)
+        pb = ps.SchedulingProblem(name="MultiObjective1", horizon=20)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        task_2 = ps.FixedDurationTask(name="task2", duration=3)
 
-        pb.add_constraint(task_1.end == 20 - task_2.start)
+        pb.add_constraint(task_1._end == 20 - task_2._start)
 
         # Maximize only task_1 end
-        ind = ps.Indicator("Task1End", task_1.end)
+        ind = ps.Indicator(name="Task1End", expression=task_1._end)
         pb.maximize_indicator(ind)
 
-        solution = ps.SchedulingSolver(pb).solve()
+        solution = ps.SchedulingSolver(problem=pb).solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.tasks[task_1.name].end, 20)
@@ -44,17 +44,17 @@ class MultiObjective(unittest.TestCase):
 
     def test_multi_two_tasks_lex(self) -> None:
         # the same model, optimize task2 end
-        pb = ps.SchedulingProblem("MultiObjective2", horizon=20)
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        task_2 = ps.FixedDurationTask("task2", duration=3)
+        pb = ps.SchedulingProblem(name="MultiObjective2", horizon=20)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        task_2 = ps.FixedDurationTask(name="task2", duration=3)
 
-        pb.add_constraint(task_1.end == 20 - task_2.start)
+        pb.add_constraint(task_1._end == 20 - task_2._start)
 
         # Maximize only task_2 end
-        ind = ps.Indicator("Task2End", task_2.end)
+        ind = ps.Indicator(name="Task2End", expression=task_2._end)
         pb.maximize_indicator(ind)
 
-        solution = ps.SchedulingSolver(pb, optimizer="incremental").solve()
+        solution = ps.SchedulingSolver(problem=pb, optimizer="incremental").solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.tasks[task_1.name].start, 0)
@@ -62,17 +62,19 @@ class MultiObjective(unittest.TestCase):
 
     def test_multi_two_tasks_optimize_default(self) -> None:
         # the same model, optimize task2 end
-        pb = ps.SchedulingProblem("MultiObjectiveOptimizeDefault", horizon=20)
-        task_1 = ps.FixedDurationTask("task1", duration=3)
-        task_2 = ps.FixedDurationTask("task2", duration=3)
+        pb = ps.SchedulingProblem(name="MultiObjectiveOptimizeDefault", horizon=20)
+        task_1 = ps.FixedDurationTask(name="task1", duration=3)
+        task_2 = ps.FixedDurationTask(name="task2", duration=3)
 
-        pb.add_constraint(task_1.end == 20 - task_2.start)
+        pb.add_constraint(task_1._end == 20 - task_2._start)
 
         # Maximize only task_2 end
-        ind = ps.Indicator("Task2End", task_2.end)
+        ind = ps.Indicator(name="Task2End", expression=task_2._end)
         pb.maximize_indicator(ind)
 
-        solution = ps.SchedulingSolver(pb, verbosity=2, optimizer="optimize").solve()
+        solution = ps.SchedulingSolver(
+            problem=pb, verbosity=2, optimizer="optimize"
+        ).solve()
 
         self.assertTrue(solution)
         self.assertEqual(solution.tasks[task_1.name].start, 0)

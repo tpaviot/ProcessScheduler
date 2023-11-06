@@ -21,43 +21,49 @@ import processscheduler as ps
 
 def build_excavator_problem() -> ps.SchedulingProblem:
     """returns a problem with n tasks and n * 3 workers"""
-    problem = ps.SchedulingProblem("Excavators")
+    problem = ps.SchedulingProblem(name="Excavators")
 
     # three tasks
-    dig_small_hole = ps.VariableDurationTask("DigSmallHole", work_amount=3)
-    dig_medium_hole = ps.VariableDurationTask("DigMediumHole", work_amount=7)
-    dig_huge_hole = ps.VariableDurationTask("DigHugeHole", work_amount=15)
+    dig_small_hole = ps.VariableDurationTask(name="DigSmallHole", work_amount=3)
+    dig_medium_hole = ps.VariableDurationTask(name="DigMediumHole", work_amount=7)
+    dig_huge_hole = ps.VariableDurationTask(name="DigHugeHole", work_amount=15)
 
     # cost function for the small excavator is linear
     def cost_function_small_exc(t):
         """Linear cost function"""
         return 10 * t + 20
 
-    small_exc_cost = ps.PolynomialCostFunction(cost_function_small_exc)
+    small_exc_cost = ps.PolynomialCostFunction(cost_function=cost_function_small_exc)
 
     # cost function for the medium excavator is quadratic, max at the middle
     def cost_function_medium_exc(t):
         """Quadratic cost function"""
         return 400 - (t - 20) * (t - 20)
 
-    medium_exc_cost = ps.PolynomialCostFunction(cost_function_medium_exc)
+    medium_exc_cost = ps.PolynomialCostFunction(cost_function=cost_function_medium_exc)
 
     # two workers
     small_exc = ps.Worker(
-        "SmallExcavator", productivity=4, cost=ps.ConstantCostPerPeriod(5)
+        name="SmallExcavator", productivity=4, cost=ps.ConstantCostPerPeriod(value=5)
     )
     medium_ex = ps.Worker(
-        "MediumExcavator", productivity=6, cost=ps.ConstantCostPerPeriod(10)
+        name="MediumExcavator", productivity=6, cost=ps.ConstantCostPerPeriod(value=10)
     )
 
     dig_small_hole.add_required_resource(
-        ps.SelectWorkers([small_exc, medium_ex], 1, kind="min")
+        ps.SelectWorkers(
+            list_of_workers=[small_exc, medium_ex], nb_workers_to_select=1, kind="min"
+        )
     )
     dig_medium_hole.add_required_resource(
-        ps.SelectWorkers([small_exc, medium_ex], 1, kind="min")
+        ps.SelectWorkers(
+            list_of_workers=[small_exc, medium_ex], nb_workers_to_select=1, kind="min"
+        )
     )
     dig_huge_hole.add_required_resource(
-        ps.SelectWorkers([small_exc, medium_ex], 1, kind="min")
+        ps.SelectWorkers(
+            list_of_workers=[small_exc, medium_ex], nb_workers_to_select=1, kind="min"
+        )
     )
 
     problem.add_objective_makespan()
@@ -68,7 +74,7 @@ def build_excavator_problem() -> ps.SchedulingProblem:
 
 
 PROBLEM = build_excavator_problem()
-SOLVER = ps.SchedulingSolver(PROBLEM)
+SOLVER = ps.SchedulingSolver(problem=PROBLEM)
 SOLUTION = SOLVER.solve()
 
 if not SOLUTION:
