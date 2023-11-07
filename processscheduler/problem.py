@@ -118,7 +118,7 @@ class SchedulingProblem(_NamedUIDObject):
         for resource in list_of_resources:
             if isinstance(resource, CumulativeWorker):
                 print("Cumulative Worker!!")
-                for res in resource.cumulative_workers:
+                for res in resource._cumulative_workers:
                     loc_cst_cst, loc_var_cst = get_resource_cost(res)
                     constant_costs.extend(loc_cst_cst)
                     variable_costs.extend(loc_var_cst)

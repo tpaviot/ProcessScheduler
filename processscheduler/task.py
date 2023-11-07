@@ -102,7 +102,7 @@ class Task(_NamedUIDObject):
 
         if isinstance(resource, SelectWorkers):
             # loop over each resource
-            for worker in resource._list_of_workers:
+            for worker in resource.list_of_workers:
                 resource_maybe_busy_start = Int(
                     f"{worker.name}_maybe_busy_{self.name}_start"
                 )

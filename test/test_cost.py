@@ -270,7 +270,7 @@ class TestCost(unittest.TestCase):
 
         self.assertTrue(solution)
         self.assertEqual(solution.indicators[cost_ind.name], 25)
-        solution = ps.SchedulingSolver(problem).solve()
+        solution = ps.SchedulingSolver(problem=problem).solve()
         self.assertTrue(solution)
 
     def test_incremental_optimizer_linear_cost_1(self) -> None:

@@ -32,17 +32,20 @@ def _distribute_p_over_n(p, n):
     """Returns a list of integer p distributed over n values."""
     if p is None:
         return [None for _ in range(n)]
-    if isinstance(p, int):
-        int_div = p // n
-        to_return = [int_div + p % n]
-        to_return.extend(int_div for _ in range(n - 1))
-        return to_return
-    if isinstance(p, ConstantCostPerPeriod):
-        int_div = p.value // n
-        to_return = [ConstantCostPerPeriod(value=int_div + p.value % n)]
-        to_return.extend(ConstantCostPerPeriod(value=int_div) for _ in range(n - 1))
-        return to_return
-    raise AssertionError("wrong type for parameter p")
+    elif isinstance(p, int):
+        int_value = p
+    elif isinstance(p, ConstantCostPerPeriod):
+        int_value = p.value
+    else:
+        raise AssertionError("wrong type for parameter p")
+    to_return = [int_value // n + int_value % n]
+    to_return.extend(int_value // n for _ in range(n - 1))
+    # check that the list to return has the good length
+    if len(to_return) != n:
+        raise AssertionError("wrong length")
+    if sum(to_return) != int_value:
+        raise AssertionError("wrong sum")
+    return to_return
 
 
 #
@@ -102,7 +105,6 @@ class CumulativeWorker(Resource):
         productivities = _distribute_p_over_n(self.productivity, self.size)
 
         costs_per_period = _distribute_p_over_n(self.cost, self.size)
-        print("Costs per period:", costs_per_period)
         # we create as much elementary workers as the cumulative size
         self._cumulative_workers = [
             Worker(
@@ -162,8 +164,6 @@ class SelectWorkers(Resource):
         for worker in self.list_of_workers:
             worker_is_selected = Bool(f"Selected_{worker.name}_{self.uid}")
             self._selection_dict[worker] = worker_is_selected
-        print("Selection dict:", self._selection_dict)
-        print("Len selection dict:", len(self._selection_dict))
         # create the assertion : exactly n boolean flags are allowed to be True,
         # the others must be False
         # see https://github.com/Z3Prover/z3/issues/694
