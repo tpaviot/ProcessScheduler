@@ -158,7 +158,7 @@ for logics in all_logics:
 
     print("Logics:", logics, "Total Time:", computing_time)
     results[logics] = {
-        "computing_time": f"{computing_time:.2f}",
+        "computing_time (s)": f"{computing_time:.2f}",
         "flowtime result (lower is better)": flowtime_result,
         "priorty_result (lower is better)": priority_result,
     }
