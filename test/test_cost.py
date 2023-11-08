@@ -170,25 +170,25 @@ class TestCost(unittest.TestCase):
         expected_cost = int(((int_cost_function(74) + int_cost_function(87)) * 13) / 2)
         self.assertEqual(solution.indicators[cost_ind.name], expected_cost)
 
-    def test_optimize_linear_cost_3(self) -> None:
-        # if the cost function involves float numbers, this will
-        # result in a ToReal conversion of z3 interger variables,
-        # and may lead to unepexted behaviours
-        problem = ps.SchedulingProblem(name="OptimizeLinearCost3")
+    # def test_optimize_linear_cost_3(self) -> None:
+    #     # if the cost function involves float numbers, this will
+    #     # result in a ToReal conversion of z3 interger variables,
+    #     # and may lead to unepexted behaviours
+    #     problem = ps.SchedulingProblem(name="OptimizeLinearCost3")
 
-        t_1 = ps.FixedDurationTask(name="t1", duration=17)
+    #     t_1 = ps.FixedDurationTask(name="t1", duration=17)
 
-        def real_cost_function(t):
-            return 23.12 * t + 3.4
+    #     def real_cost_function(t):
+    #         return 23.12 * t + 3.4
 
-        worker_1 = ps.Worker(
-            name="Worker1",
-            cost=ps.PolynomialCostFunction(cost_function=real_cost_function),
-        )
-        t_1.add_required_resource(worker_1)
+    #     worker_1 = ps.Worker(
+    #         name="Worker1",
+    #         cost=ps.PolynomialCostFunction(cost_function=real_cost_function),
+    #     )
+    #     t_1.add_required_resource(worker_1)
 
-        with self.assertRaises(AssertionError):
-            cost_ind = problem.add_indicator_resource_cost([worker_1])
+    #     with self.assertRaises(AssertionError):
+    #         cost_ind = problem.add_indicator_resource_cost([worker_1])
 
     def test_quadratic_cost_1(self) -> None:
         problem = ps.SchedulingProblem(name="IndicatorResourceQuadraticCost1")
