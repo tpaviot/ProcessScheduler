@@ -102,7 +102,7 @@ class TaskPrecedence(TaskConstraint):
 
     task_before: Union[Task, TaskGroup]
     task_after: Union[Task, TaskGroup]
-    offset: PositiveInt = Field(default=0)
+    offset: int = Field(default=0, ge=0)
     kind: Literal["lax", "strict", "tight"] = Field(default="lax")
 
     def __init__(self, **data) -> None:

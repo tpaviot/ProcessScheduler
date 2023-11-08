@@ -31,6 +31,7 @@ n = int(args.nmax)  # max number of dev teams
 mt = int(args.max_time)  # max time in seconds
 step = int(args.step)
 
+
 #
 # Display machine identification
 #
@@ -94,24 +95,24 @@ for num_dev_teams in N:
     init_time = time.perf_counter()
     # Resources
     digital_transformation = ps.SchedulingProblem(
-        "DigitalTransformation", horizon=num_dev_teams
+        name="DigitalTransformation", horizon=num_dev_teams
     )
-    r_a = [ps.Worker("A_%i" % (i + 1)) for i in range(num_resource_a)]
-    r_b = [ps.Worker("B_%i" % (i + 1)) for i in range(num_resource_b)]
+    r_a = [ps.Worker(name="A_%i" % (i + 1)) for i in range(num_resource_a)]
+    r_b = [ps.Worker(name="B_%i" % (i + 1)) for i in range(num_resource_b)]
 
     # Dev Team Tasks
     # For each dev_team pick one resource a and one resource b.
     ts_team_migration = [
-        ps.FixedDurationTask("DevTeam_%i" % (i + 1), duration=1, priority=10)
+        ps.FixedDurationTask(name="DevTeam_%i" % (i + 1), duration=1, priority=10)
         for i in range(num_dev_teams)
     ]
     for t_team_migration in ts_team_migration:
-        t_team_migration.add_required_resource(ps.SelectWorkers(r_a))
-        t_team_migration.add_required_resource(ps.SelectWorkers(r_b))
+        t_team_migration.add_required_resource(ps.SelectWorkers(list_of_workers=r_a))
+        t_team_migration.add_required_resource(ps.SelectWorkers(list_of_workers=r_b))
 
     # create the solver and solve
     solver = ps.SchedulingSolver(
-        digital_transformation, max_time=mt, logics=args.logics
+        problem=digital_transformation, max_time=mt, logics=args.logics
     )
     solution = solver.solve()
 
