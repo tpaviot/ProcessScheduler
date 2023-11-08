@@ -549,7 +549,7 @@ class SchedulingSolver(BaseModel):
             if self._is_multi_objective_optimization_problem:
                 print("\tObjectives:\n\t======")
                 for obj in self.problem._context.objectives:
-                    print(f"\t{obj}")
+                    print(f"\t{obj.name}")
             solution = self.solve_optimize_incremental(
                 self._objective._target,
                 kind="min" if isinstance(self._objective, MinimizeObjective) else "max",
