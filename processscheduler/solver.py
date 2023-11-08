@@ -64,7 +64,33 @@ class SchedulingSolver(BaseModel):
     max_time: PositiveFloat = Field(default=10)
     parallel: bool = Field(default=False)
     random_values: bool = Field(default=False)
-    logics: Literal["QF_IDL", "QF_LIA"] = Field(default=None)
+    logics: Literal[
+        "QF_LRA",
+        "HORN",
+        "QF_LIA",
+        "QF_RDL",
+        "QF_IDL",
+        "QF_AUFLIA",
+        "QF_ALIA",
+        "QF_AUFLIRA",
+        "QF_AUFNIA",
+        "QF_AUFNIRA",
+        "QF_ANIA",
+        "QF_LIRA",
+        "QF_UFLIA",
+        "QF_UFLRA",
+        "QF_UFIDL",
+        "QF_UFRDL",
+        "QF_NIRA",
+        "QF_UFNRA",
+        "QF_UFNIA",
+        "QF_UFNIRA",
+        "QF_S",
+        "QF_SLIA",
+        "UFIDL",
+        "HORN",
+        "QF_FPLRA",
+    ] = Field(default=None)
     verbosity: int = Field(default=0)
     optimizer: Literal["incremental", "optimize"] = Field(default="incremental")
     optimize_priority: Literal["pareto", "lex", "box", "weight"] = Field(

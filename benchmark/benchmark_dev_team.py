@@ -23,7 +23,7 @@ parser.add_argument("-s", "--step", default=10, help="step")
 parser.add_argument(
     "-mt", "--max_time", default=60, help="Maximum time in seconds to find a solution"
 )
-parser.add_argument("-l", "--logics", default=None, help="SMT logics")
+parser.add_argument("-l", "--logics", default="QF_IDL", help="SMT logics")
 
 args = parser.parse_args()
 

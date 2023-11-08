@@ -10,6 +10,12 @@ import uuid
 import processscheduler as ps
 import z3
 
+try:
+    from rich import print
+except:
+    pass
+
+
 #
 # Display machine identification
 #
@@ -100,22 +106,26 @@ num_resource_a = 3
 num_resource_b = 3
 
 init_time = time.perf_counter()
+
+
 # Resources
 def get_problem():
-    digital_transformation = ps.SchedulingProblem("DigitalTransformation")
+    digital_transformation = ps.SchedulingProblem(name="DigitalTransformation")
     print("Create model...", end="")
-    r_a = [ps.Worker("A_%i" % (i + 1)) for i in range(num_resource_a)]
-    r_b = [ps.Worker("B_%i" % (i + 1)) for i in range(num_resource_b)]
+    r_a = [ps.Worker(name="A_%i" % (i + 1)) for i in range(num_resource_a)]
+    r_b = [ps.Worker(name="B_%i" % (i + 1)) for i in range(num_resource_b)]
 
     # Dev Team Tasks
     # For each dev_team pick one resource a and one resource b.
     ts_team_migration = [
-        ps.FixedDurationTask("DevTeam_%i" % (i + 1), duration=1, priority=i % 3 + 1)
+        ps.FixedDurationTask(
+            name="DevTeam_%i" % (i + 1), duration=1, priority=i % 3 + 1
+        )
         for i in range(num_dev_teams)
     ]
     for t_team_migration in ts_team_migration:
-        t_team_migration.add_required_resource(ps.SelectWorkers(r_a))
-        t_team_migration.add_required_resource(ps.SelectWorkers(r_b))
+        t_team_migration.add_required_resource(ps.SelectWorkers(list_of_workers=r_a))
+        t_team_migration.add_required_resource(ps.SelectWorkers(list_of_workers=r_b))
 
     # solve
     digital_transformation.add_objective_priorities()
@@ -131,15 +141,15 @@ for logics in all_logics:
     digital_transformation = get_problem()
     top2 = time.perf_counter()
     solver = ps.SchedulingSolver(
-        digital_transformation,
+        problem=digital_transformation,
         logics=logics,
         random_values=False,
         parallel=False,
         max_time=10,
     )
     if solution := solver.solve():
-        flowtime_result = solution.indicators["FlowTime"]
-        priority_result = solution.indicators["PriorityTotal"]
+        flowtime_result = solution.indicators["Flowtime"]
+        priority_result = solution.indicators["TotalPriority"]
     else:
         flowtime_result, priority_result = None, None
     computing_time = time.perf_counter() - top2
@@ -147,7 +157,11 @@ for logics in all_logics:
     computation_times.append(computing_time)
 
     print("Logics:", logics, "Total Time:", computing_time)
-    results[logics] = (computing_time, flowtime_result, priority_result)
+    results[logics] = {
+        "computing_time": f"{computing_time:.2f}",
+        "flowtime result (lower is better)": flowtime_result,
+        "priorty_result (lower is better)": priority_result,
+    }
 test_final_time = time.perf_counter()
 print("TOTAL BENCH TIME:", test_final_time - test_init_time)
 print("Results:")
