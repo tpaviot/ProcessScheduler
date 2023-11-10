@@ -15,9 +15,7 @@
 
 from typing import Callable
 
-
 from processscheduler.base import _NamedUIDObject
-from processscheduler.util import is_positive_integer
 
 from pydantic import Field
 

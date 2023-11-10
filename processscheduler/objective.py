@@ -16,12 +16,13 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Optional, Union, Tuple
+
 from z3 import Int, BoolRef, ArithRef
+
+from pydantic import Field
 
 from processscheduler.base import _NamedUIDObject
 import processscheduler.context as ps_context
-
-from pydantic import Field
 
 
 class Indicator(_NamedUIDObject):

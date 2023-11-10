@@ -21,28 +21,6 @@ from z3 import And, FreshInt, If, Or
 
 
 #
-# Functions over python types (ints, strings, etc.)
-#
-def is_strict_positive_integer(value: int) -> bool:
-    """Return True if the parameter value is an integer > 0"""
-    return isinstance(value, int) and value > 0
-
-
-def is_positive_integer(value: int) -> bool:
-    """Return True if the parameter value is an integer >= 0"""
-    return isinstance(value, int) and value >= 0
-
-
-def is_list_of_positive_integers(value: List[int]) -> bool:
-    return False if not value else all(is_positive_integer(n) for n in value)
-
-
-#
-# Functions over python and z3 types
-#
-
-
-#
 # Functions over z3 types only (ArithRef, BoolRef, etc.)
 #
 def calc_parabola_from_three_points(vector_x, vector_y):
