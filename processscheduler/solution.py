@@ -19,11 +19,11 @@ from pathlib import Path
 import random
 from typing import List, Optional, Tuple, Dict
 
+from pydantic import BaseModel, Field
+
 from processscheduler.problem import SchedulingProblem
 from processscheduler.json_io import solution_to_json_string
 from processscheduler.excel_io import export_solution_to_excel_file
-
-from pydantic import BaseModel, Field
 
 
 class TaskSolution(BaseModel):
@@ -60,7 +60,7 @@ class BufferSolution(BaseModel):
 
     name: str
     # a collection of instants where the buffer state changes
-    state_change_times: List[int] = Field(default=[])  # type: List[int]
+    state_change_times: List[int] = Field(default=[])
     # a collection that represents the buffer state along the
     # whole schedule. Represented a integer values
     state: List[int] = Field(default=[])

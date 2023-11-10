@@ -13,16 +13,15 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Dict, List, Optional, Tuple, Literal, Union
+from typing import Dict, List, Tuple, Literal, Union
 
 from z3 import ArithRef, Bool, PbEq, PbGe, PbLe
 
+from pydantic import Field, PositiveInt
+
 from processscheduler.base import _NamedUIDObject
-from processscheduler.util import is_strict_positive_integer, is_positive_integer
 from processscheduler.cost import Cost, ConstantCostPerPeriod
 import processscheduler.context as ps_context
-
-from pydantic import Field, PositiveInt, ValidationError
 
 
 #
@@ -32,7 +31,7 @@ def _distribute_p_over_n(p, n):
     """Returns a list of integer p distributed over n values."""
     if p is None:
         return [None for _ in range(n)]
-    elif isinstance(p, int):
+    if isinstance(p, int):
         int_value = p
     elif isinstance(p, ConstantCostPerPeriod):
         int_value = p.value

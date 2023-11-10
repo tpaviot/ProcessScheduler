@@ -17,14 +17,13 @@
 
 from datetime import timedelta, datetime
 import uuid
-from typing import List, Optional, Union
+from typing import List, Union
 
 from pydantic import Field, PositiveInt
 
 from z3 import And, BoolRef, If, Int, Or, Sum, Implies, ArithRef
 
 from processscheduler.base import _NamedUIDObject
-from processscheduler.util import is_strict_positive_integer
 from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective
 from processscheduler.resource import Resource, CumulativeWorker
 from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
@@ -98,7 +97,7 @@ class SchedulingProblem(_NamedUIDObject):
                     cost_for_this_period = res.cost(interv_up)
                     if cost_for_this_period == 0:
                         continue
-                    elif cost_for_this_period == 1:
+                    if cost_for_this_period == 1:
                         period_cost = interv_up - interv_low
                     else:
                         period_cost = res.cost(interv_up) * (interv_up - interv_low)

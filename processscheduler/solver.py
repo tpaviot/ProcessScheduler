@@ -21,6 +21,8 @@ from typing import Optional, Union
 import uuid
 import warnings
 
+from typing import Literal
+
 from z3 import (
     ArithRef,
     Array,
@@ -38,6 +40,8 @@ from z3 import (
     set_option,
 )
 
+from pydantic import BaseModel, Field, PositiveFloat, Extra
+
 from processscheduler.objective import MaximizeObjective, MinimizeObjective, Indicator
 from processscheduler.solution import (
     SchedulingSolution,
@@ -48,9 +52,6 @@ from processscheduler.solution import (
 from processscheduler.problem import SchedulingProblem
 
 from processscheduler.util import calc_parabola_from_three_points, sort_no_duplicates
-
-from typing import Literal
-from pydantic import BaseModel, Field, PositiveFloat, Extra
 
 
 #

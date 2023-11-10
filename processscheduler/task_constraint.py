@@ -16,7 +16,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
-from typing import Optional, Literal, List, Tuple, Union
+from typing import Literal, List, Tuple, Union
 
 from z3 import (
     And,
@@ -34,12 +34,12 @@ from z3 import (
     ArithRef,
 )
 
+from pydantic import Field, PositiveInt
+
 from processscheduler.constraint import TaskConstraint
 from processscheduler.task import Task
 from processscheduler.buffer import NonConcurrentBuffer
 from processscheduler.util import sort_no_duplicates
-
-from pydantic import Field, PositiveInt
 
 
 #
@@ -120,7 +120,6 @@ class TaskPrecedence(TaskConstraint):
     kind: Literal["lax", "strict", "tight"] = Field(default="lax")
 
     def __init__(self, **data) -> None:
-        super().__init__(**data)
         """kind might be either LAX/STRICT/TIGHT
         Semantics : task after will start at least after offset periods
         task_before is finished.
@@ -128,6 +127,7 @@ class TaskPrecedence(TaskConstraint):
         STRICT constraint: task1_before_end + offset < task_after_start
         TIGHT constraint: task1_before_end + offset == task_after_start
         """
+        super().__init__(**data)
 
         lower = (
             self.task_before._end + self.offset
@@ -423,7 +423,7 @@ class ScheduleNTasksInTimeIntervals(TaskConstraint):
             bools_for_this_task = []
             for time_interval in self.list_of_time_intervals:
                 task_in_time_interval = Bool(
-                    "InTimeIntervalTask_%s_%i" % (task.name, uuid.uuid4().int)
+                    f"InTimeIntervalTask_{task.name}_{uuid.uuid4().int}"
                 )
                 lower_bound, upper_bound = time_interval
                 cstrs = [

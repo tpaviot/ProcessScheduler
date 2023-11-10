@@ -15,13 +15,14 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Optional, List, Literal
+from typing import List, Literal
 
 from z3 import Bool, BoolRef, Implies, PbEq, PbGe, PbLe
-from processscheduler.base import _NamedUIDObject
-import processscheduler.context as ps_context
 
 from pydantic import Field, PositiveInt
+
+from processscheduler.base import _NamedUIDObject
+import processscheduler.context as ps_context
 
 
 #

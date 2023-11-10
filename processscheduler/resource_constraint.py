@@ -15,16 +15,16 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Optional, Literal, Union, Dict, Tuple, List
+from typing import Literal, Union, Dict, Tuple, List
 import uuid
 
 from z3 import And, Implies, Int, Not, Or, Sum, Xor
 
+from pydantic import Field
+
 from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
 from processscheduler.constraint import ResourceConstraint
 from processscheduler.util import sort_no_duplicates
-
-from pydantic import Field
 
 
 class WorkLoad(ResourceConstraint):
@@ -46,7 +46,6 @@ class WorkLoad(ResourceConstraint):
     kind: Literal["exact", "max", "min"] = Field(default="max")
 
     def __init__(self, **data) -> None:
-        super().__init__(**data)
         """
         Initialize a WorkLoad constraint.
 
@@ -57,6 +56,7 @@ class WorkLoad(ResourceConstraint):
         :param kind: Specifies whether the constraint is exact, a minimum, or a maximum (default is "max").
         :param optional: Whether the constraint is optional (default is False).
         """
+        super().__init__(**data)
 
         if isinstance(self.resource, Worker):
             workers = [self.resource]
@@ -159,7 +159,6 @@ class ResourceUnavailable(ResourceConstraint):
     list_of_time_intervals: List[Tuple[int, int]]
 
     def __init__(self, **data) -> None:
-        super().__init__(**data)
         """
         Initialize a ResourceUnavailable constraint.
 
@@ -168,6 +167,8 @@ class ResourceUnavailable(ResourceConstraint):
           For example, [(0, 2), (5, 8)] represents time intervals from 0 to 2 and from 5 to 8.
         :param optional: Whether the constraint is optional (default is False).
         """
+        super().__init__(**data)
+
         # for each interval we create a task 'UnavailableResource%i'
         if isinstance(self.resource, Worker):
             workers = [self.resource]

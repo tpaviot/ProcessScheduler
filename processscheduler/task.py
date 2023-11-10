@@ -15,17 +15,12 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List, Optional
+from typing import List
 
 from pydantic import Field, PositiveInt, StrictBool
 from z3 import And, ArithRef, Bool, BoolRef, If, Int, Or
 
 from processscheduler.base import _NamedUIDObject
-from processscheduler.util import (
-    is_strict_positive_integer,
-    is_positive_integer,
-    is_list_of_positive_integers,
-)
 from processscheduler.resource import Resource, Worker, CumulativeWorker, SelectWorkers
 import processscheduler.context as ps_context
 
