@@ -18,7 +18,21 @@
 import uuid
 from typing import Optional, Literal, List, Tuple, Union
 
-from z3 import And, Bool, BoolRef, If, Implies, Int, Not, Or, PbEq, PbGe, PbLe, Xor
+from z3 import (
+    And,
+    Bool,
+    BoolRef,
+    If,
+    Implies,
+    Int,
+    Not,
+    Or,
+    PbEq,
+    PbGe,
+    PbLe,
+    Xor,
+    ArithRef,
+)
 
 from processscheduler.constraint import TaskConstraint
 from processscheduler.task import Task
@@ -250,7 +264,7 @@ class TaskStartAt(TaskConstraint):
     """One task must start at the desired time"""
 
     task: Task
-    value: int
+    value: Union[int, ArithRef]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -265,7 +279,7 @@ class TaskStartAt(TaskConstraint):
 
 class TaskStartAfter(TaskConstraint):
     task: Task
-    value: int
+    value: Union[int, ArithRef]
     kind: Literal["lax", "strict"] = Field(default="lax")
 
     def __init__(self, **data) -> None:
@@ -286,7 +300,7 @@ class TaskEndAt(TaskConstraint):
     """On task must complete at the desired time"""
 
     task: Task
-    value: int
+    value: Union[int, ArithRef]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -303,7 +317,7 @@ class TaskEndBefore(TaskConstraint):
     """task.end < value"""
 
     task: Task
-    value: int
+    value: Union[int, ArithRef]
     kind: Literal["lax", "strict"] = Field(default="lax")
 
     def __init__(self, **data) -> None:
@@ -328,9 +342,6 @@ class OptionalTaskConditionSchedule(TaskConstraint):
 
     task: Task
     condition: BoolRef
-
-    class Config:
-        arbitrary_types_allowed = True
 
     def __init__(self, **data) -> None:
         super().__init__(**data)

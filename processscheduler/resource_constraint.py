@@ -281,8 +281,6 @@ class SameWorkers(ResourceConstraint):
     select_workers_1: SelectWorkers
     select_workers_2: SelectWorkers
 
-    # class Config:
-    # arbitrary_types_allowed = True
     def __init__(self, **data) -> None:
         super().__init__(**data)
         # Check for common resources in select_workers_1 and select_workers_2,

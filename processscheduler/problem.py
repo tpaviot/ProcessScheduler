@@ -43,7 +43,7 @@ class SchedulingProblem(_NamedUIDObject):
 
     """
 
-    horizon: PositiveInt = Field(default=None)
+    horizon: Union[PositiveInt, ArithRef] = Field(default=None)
     delta_time: timedelta = Field(default=None)
     start_time: datetime = Field(default=None)
     end_time: datetime = Field(default=None)

@@ -35,9 +35,6 @@ class Indicator(_NamedUIDObject):
     expression: Union[int, float, BoolRef, ArithRef]
     bounds: Optional[Tuple[int, int]] = Field(default=None)
 
-    class Config:
-        arbitrary_types_allowed = True
-
     def __init__(self, **data) -> None:
         super().__init__(**data)
         self._indicator_variable = Int(f"Indicator_{self.name}")
@@ -51,9 +48,6 @@ class Indicator(_NamedUIDObject):
 
 class Objective(_NamedUIDObject):
     target: Union[ArithRef, Indicator]
-
-    class Config:
-        arbitrary_types_allowed = True
 
     def __init__(self, **data) -> None:
         super().__init__(**data)

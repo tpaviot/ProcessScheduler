@@ -33,6 +33,7 @@ class _NamedUIDObject(BaseModel):
 
     class Config:
         extra = Extra.forbid
+        arbitrary_types_allowed = True
 
     def __init__(self, **data) -> None:
         """The base name for all ProcessScheduler objects.
