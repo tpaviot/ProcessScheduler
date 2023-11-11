@@ -2,14 +2,20 @@ V2 Roadmap
 ==========
 The V2 branch is a reformating of the codebase that results in backward incompatible changes.
 
-[ ] : port to pydantic V2
+[ ] port to pydantic V2
 
-[ ] : results in a pandas dataframe
+[ ] results in a pandas dataframe
 
-[ ] : get rid off context, only use problem
+[ ] get rid off context, only use problem
 
-[ ] : clearly separate plots and code
+[ ] clearly separate plots and code
 
-[ ] : define LinearFunction, PolynomialFunction etc. for both costs and productivity
+[ ] define LinearFunction, PolynomialFunction etc. for both costs and productivity
 
-[ ] : JSON importer/exporter for a scheduling problem, based on pydantic should be straitforward
+[ ] JSON importer/exporter for a scheduling problem, based on pydantic should be straitforward
+
+[ ] Move to pytest
+
+[ ] pyproject.toml
+
+[ ] extend tasks constraints (StartSync, EndSync etc.) to a list of n entries rather than 2 entries
