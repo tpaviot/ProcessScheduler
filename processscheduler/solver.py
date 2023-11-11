@@ -40,7 +40,7 @@ from z3 import (
     set_option,
 )
 
-from pydantic import BaseModel, Field, PositiveFloat, Extra
+from pydantic import BaseModel, Field, PositiveFloat, Extra, ConfigDict
 
 from processscheduler.objective import MaximizeObjective, MinimizeObjective, Indicator
 from processscheduler.solution import (
@@ -59,6 +59,8 @@ from processscheduler.util import calc_parabola_from_three_points, sort_no_dupli
 #
 class SchedulingSolver(BaseModel):
     """A solver class"""
+
+    model_config = ConfigDict(extra="forbid")
 
     problem: SchedulingProblem
     debug: bool = Field(default=False)
@@ -97,9 +99,6 @@ class SchedulingSolver(BaseModel):
     optimize_priority: Literal["pareto", "lex", "box", "weight"] = Field(
         default="pareto"
     )
-
-    class Config:
-        extra = Extra.forbid
 
     def __init__(self, **data) -> None:
         super().__init__(**data)

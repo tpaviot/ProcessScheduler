@@ -18,7 +18,8 @@
 from typing import List, Optional
 from uuid import uuid4
 
-from pydantic import BaseModel, PositiveInt, Field, Extra
+from pydantic import BaseModel, PositiveInt, Field, Extra, ConfigDict
+
 from z3 import BoolRef
 
 
@@ -28,12 +29,10 @@ from z3 import BoolRef
 class _NamedUIDObject(BaseModel):
     """The base object for most ProcessScheduler classes"""
 
+    model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
+
     uid: int = Field(default_factory=lambda: uuid4().int)
     name: str = Field(default=None)
-
-    class Config:
-        extra = Extra.forbid
-        arbitrary_types_allowed = True
 
     def __init__(self, **data) -> None:
         """The base name for all ProcessScheduler objects.
