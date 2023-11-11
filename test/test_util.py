@@ -17,9 +17,6 @@ import unittest
 
 from processscheduler.util import (
     calc_parabola_from_three_points,
-    is_positive_integer,
-    is_strict_positive_integer,
-    is_list_of_positive_integers,
     sort_no_duplicates,
     sort_bubble,
 )
@@ -28,29 +25,6 @@ from z3 import Solver, sat
 
 
 class TestUtil(unittest.TestCase):
-    def test_is_positive_integer(self):
-        self.assertTrue(is_positive_integer(1))
-        self.assertTrue(is_positive_integer(0))
-        self.assertTrue(is_positive_integer(7))
-        self.assertFalse(is_positive_integer(7.5))
-        self.assertFalse(is_positive_integer(-1))
-        self.assertFalse(is_positive_integer(-0.3))
-
-    def test_is_strict_positive_integer(self):
-        self.assertTrue(is_strict_positive_integer(1))
-        self.assertFalse(is_strict_positive_integer(0))  # strict
-        self.assertTrue(is_strict_positive_integer(7))
-        self.assertFalse(is_strict_positive_integer(7.5))
-        self.assertFalse(is_strict_positive_integer(-1))
-        self.assertFalse(is_strict_positive_integer(-0.3))
-
-    def test_is_list_of_positive_integers(self):
-        self.assertTrue(is_list_of_positive_integers([1, 2, 3]))
-        self.assertFalse(is_list_of_positive_integers([-1, 2, 3]))
-        self.assertFalse(is_list_of_positive_integers([1, 2.5, 3]))
-        self.assertFalse(is_list_of_positive_integers([1, 2, "3"]))
-        self.assertFalse(is_list_of_positive_integers([]))
-
     def test_calc_parabola_from_three_points(self):
         a, b, c = calc_parabola_from_three_points([0, 1, 2], [0, 2, 4])
         self.assertEqual([a, b, c], [0, 2, 0])
