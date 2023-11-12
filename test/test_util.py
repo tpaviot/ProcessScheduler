@@ -13,7 +13,6 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 
 from processscheduler.util import (
     calc_parabola_from_three_points,
@@ -24,35 +23,32 @@ from processscheduler.util import (
 from z3 import Solver, sat
 
 
-class TestUtil(unittest.TestCase):
-    def test_calc_parabola_from_three_points(self):
-        a, b, c = calc_parabola_from_three_points([0, 1, 2], [0, 2, 4])
-        self.assertEqual([a, b, c], [0, 2, 0])
-        d, e, f = calc_parabola_from_three_points([0, 1, 2], [0, 1, 4])
-        self.assertEqual([d, e, f], [1, 0, 0])
-
-    def test_sort_no_duplicates(self):
-        lst_to_sort = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2]
-        sorted_variables, assertions = sort_no_duplicates(lst_to_sort)
-        s = Solver()
-        s.add(assertions)
-        result = s.check()
-        solution = s.model()
-        sorted_integers = [solution[v].as_long() for v in sorted_variables]
-        self.assertEqual(result, sat)
-        self.assertEqual(sorted_integers, [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-
-    def test_sort_duplicates(self):
-        lst_to_sort = [10, 9, 8, 7, 6, 10, 9, 8, 7, 6, 1]
-        sorted_variables, assertions = sort_bubble(lst_to_sort)
-        s = Solver()
-        s.add(assertions)
-        result = s.check()
-        solution = s.model()
-        sorted_integers = [solution[v].as_long() for v in sorted_variables]
-        self.assertEqual(result, sat)
-        self.assertEqual(sorted_integers, [1, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10])
+def test_calc_parabola_from_three_points():
+    a, b, c = calc_parabola_from_three_points([0, 1, 2], [0, 2, 4])
+    assert [a, b, c] == [0, 2, 0]
+    d, e, f = calc_parabola_from_three_points([0, 1, 2], [0, 1, 4])
+    assert [d, e, f] == [1, 0, 0]
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_sort_no_duplicates():
+    lst_to_sort = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2]
+    sorted_variables, assertions = sort_no_duplicates(lst_to_sort)
+    s = Solver()
+    s.add(assertions)
+    result = s.check()
+    solution = s.model()
+    sorted_integers = [solution[v].as_long() for v in sorted_variables]
+    assert result == sat
+    assert sorted_integers == [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+
+def test_sort_duplicates():
+    lst_to_sort = [10, 9, 8, 7, 6, 10, 9, 8, 7, 6, 1]
+    sorted_variables, assertions = sort_bubble(lst_to_sort)
+    s = Solver()
+    s.add(assertions)
+    result = s.check()
+    solution = s.model()
+    sorted_integers = [solution[v].as_long() for v in sorted_variables]
+    assert result == sat
+    assert sorted_integers == [1, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]

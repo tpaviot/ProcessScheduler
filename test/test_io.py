@@ -14,7 +14,6 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import unittest
 
 import processscheduler as ps
 
@@ -81,27 +80,25 @@ if not SOLUTION:
     raise AssertionError("problem has no solution")
 
 
-class TestIO(unittest.TestCase):
-    def test_export_to_smt2(self):
-        SOLVER.export_to_smt2("excavator_problem.smt2")
-        self.assertTrue(os.path.isfile("excavator_problem.smt2"))
-
-    def test_export_solution_to_json_string(self):
-        self.assertTrue(SOLUTION)
-        SOLUTION.to_json_string()
-
-    def test_export_solution_to_json_file(self):
-        self.assertTrue(SOLUTION)
-        SOLUTION.export_to_json_file("excavator_solution.json")
-        self.assertTrue(os.path.isfile("excavator_solution.json"))
-
-    def test_export_solution_to_excel_file(self):
-        self.assertTrue(SOLUTION)
-        SOLUTION.export_to_excel_file("excavator_nb.xlsx")
-        self.assertTrue(os.path.isfile("excavator_nb.xlsx"))
-        SOLUTION.export_to_excel_file("excavator_colors.xlsx", colors=True)
-        self.assertTrue(os.path.isfile("excavator_colors.xlsx"))
+def test_export_to_smt2():
+    SOLVER.export_to_smt2("excavator_problem.smt2")
+    assert os.path.isfile("excavator_problem.smt2")
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_export_solution_to_json_string():
+    assert SOLUTION
+    SOLUTION.to_json_string()
+
+
+def test_export_solution_to_json_file():
+    assert SOLUTION
+    SOLUTION.export_to_json_file("excavator_solution.json")
+    assert os.path.isfile("excavator_solution.json")
+
+
+def test_export_solution_to_excel_file():
+    assert SOLUTION
+    SOLUTION.export_to_excel_file("excavator_nb.xlsx")
+    assert os.path.isfile("excavator_nb.xlsx")
+    SOLUTION.export_to_excel_file("excavator_colors.xlsx", colors=True)
+    assert os.path.isfile("excavator_colors.xlsx")

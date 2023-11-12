@@ -9,3 +9,4 @@ isodate
 ipympl
 psutil
 XlsxWriter
+pytest

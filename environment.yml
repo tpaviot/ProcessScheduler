@@ -17,4 +17,5 @@ dependencies:
     - coverage
     - pydantic
     - rich
+    - pytest
     - -e .

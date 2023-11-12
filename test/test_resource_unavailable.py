@@ -13,89 +13,87 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
 
 import processscheduler as ps
 
+import pytest
 
-class TestResourceUnavailable(unittest.TestCase):
-    def test_resource_unavailable_1(self) -> None:
-        pb = ps.SchedulingProblem(name="ResourceUnavailable1", horizon=10)
-        task_1 = ps.FixedDurationTask(name="task1", duration=3)
-        worker_1 = ps.Worker(name="Worker1")
-        task_1.add_required_resource(worker_1)
-        ps.ResourceUnavailable(
-            resource=worker_1, list_of_time_intervals=[(1, 3), (6, 8)]
-        )
 
-        solver = ps.SchedulingSolver(problem=pb)
-        solution = solver.solve()
-        self.assertTrue(solution)
-        self.assertEqual(solution.tasks[task_1.name].start, 3)
-        self.assertEqual(solution.tasks[task_1.name].end, 6)
+def test_resource_unavailable_1() -> None:
+    pb = ps.SchedulingProblem(name="ResourceUnavailable1", horizon=10)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    worker_1 = ps.Worker(name="Worker1")
+    task_1.add_required_resource(worker_1)
+    ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3), (6, 8)])
 
-    def test_resource_unavailable_2(self) -> None:
-        pb = ps.SchedulingProblem(name="ResourceUnavailable2", horizon=10)
-        task_1 = ps.FixedDurationTask(name="task1", duration=3)
-        worker_1 = ps.Worker(name="Worker1")
-        task_1.add_required_resource(worker_1)
-        # difference with the first one: build 2 constraints
-        # merged using a and_
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    assert solution.tasks[task_1.name].start == 3
+    assert solution.tasks[task_1.name].end == 6
+
+
+def test_resource_unavailable_2() -> None:
+    pb = ps.SchedulingProblem(name="ResourceUnavailable2", horizon=10)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    worker_1 = ps.Worker(name="Worker1")
+    task_1.add_required_resource(worker_1)
+    # difference with the first one: build 2 constraints
+    # merged using a and_
+    ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3)])
+    ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(6, 8)])
+
+    # that should not change the problem solution
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    assert solution.tasks[task_1.name].start == 3
+    assert solution.tasks[task_1.name].end == 6
+
+
+def test_resource_unavailable_3() -> None:
+    pb = ps.SchedulingProblem(name="ResourceUnavailable3", horizon=10)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    worker_1 = ps.Worker(name="Worker1")
+    task_1.add_required_resource(worker_1)
+    # difference with the previous ones: too much unavailability,
+    # so possible solution
+    # merged using a and_
+    ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3)])
+    ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(5, 8)])
+
+    # that should not change the problem solution
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert not solution
+
+
+def test_resource_unavailable_4() -> None:
+    pb = ps.SchedulingProblem(name="ResourceUnavailable3", horizon=10)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    worker_1 = ps.Worker(name="Worker1")
+    with pytest.raises(AssertionError):
         ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3)])
-        ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(6, 8)])
-
-        # that should not change the problem solution
-        solver = ps.SchedulingSolver(problem=pb)
-        solution = solver.solve()
-        self.assertTrue(solution)
-        self.assertEqual(solution.tasks[task_1.name].start, 3)
-        self.assertEqual(solution.tasks[task_1.name].end, 6)
-
-    def test_resource_unavailable_3(self) -> None:
-        pb = ps.SchedulingProblem(name="ResourceUnavailable3", horizon=10)
-        task_1 = ps.FixedDurationTask(name="task1", duration=3)
-        worker_1 = ps.Worker(name="Worker1")
-        task_1.add_required_resource(worker_1)
-        # difference with the previous ones: too much unavailability,
-        # so possible solution
-        # merged using a and_
-        ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3)])
-        ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(5, 8)])
-
-        # that should not change the problem solution
-        solver = ps.SchedulingSolver(problem=pb)
-        solution = solver.solve()
-        self.assertFalse(solution)
-
-    def test_resource_unavailable_4(self) -> None:
-        pb = ps.SchedulingProblem(name="ResourceUnavailable3", horizon=10)
-        task_1 = ps.FixedDurationTask(name="task1", duration=3)
-        worker_1 = ps.Worker(name="Worker1")
-        with self.assertRaises(AssertionError):
-            ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3)])
-
-    # def test_resource_unavailable_cumulative_5(self):
-    #     pb_bs = ps.SchedulingProblem(name="ResourceUnavailableCumulative1", horizon=10)
-    #     # tasks
-    #     t1 = ps.FixedDurationTask(name="T1", duration=2)
-    #     t2 = ps.FixedDurationTask(name="T2", duration=2)
-    #     t3 = ps.FixedDurationTask(name="T3", duration=2)
-
-    #     # workers
-    #     r1 = ps.CumulativeWorker(name="Machine1", size=3)
-
-    #     # resource assignment
-    #     t1.add_required_resource(r1)
-    #     t2.add_required_resource(r1)
-    #     t3.add_required_resource(r1)
-
-    #     ps.ResourceUnavailable(resource=r1, list_of_time_intervals=[(1, 10)])
-
-    #     # plot solution
-    #     solver = ps.SchedulingSolver(problem=pb_bs)
-    #     solution = solver.solve()
-    #     self.assertFalse(solution)
 
 
-if __name__ == "__main__":
-    unittest.main()
+# def test_resource_unavailable_cumulative_5() :
+#     pb_bs = ps.SchedulingProblem(name="ResourceUnavailableCumulative1", horizon=10)
+#     # tasks
+#     t1 = ps.FixedDurationTask(name="T1", duration=2)
+#     t2 = ps.FixedDurationTask(name="T2", duration=2)
+#     t3 = ps.FixedDurationTask(name="T3", duration=2)
+
+#     # workers
+#     r1 = ps.CumulativeWorker(name="Machine1", size=3)
+
+#     # resource assignment
+#     t1.add_required_resource(r1)
+#     t2.add_required_resource(r1)
+#     t3.add_required_resource(r1)
+
+#     ps.ResourceUnavailable(resource=r1, list_of_time_intervals=[(1, 10)])
+
+#     # plot solution
+#     solver = ps.SchedulingSolver(problem=pb_bs)
+#     solution = solver.solve()
+#     assert not (solution)
