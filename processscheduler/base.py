@@ -32,6 +32,7 @@ class NamedUIDObject(BaseModel):
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
     name: str = Field(default=None)
+    type: str = Field(default=None)
 
     def __init__(self, **data) -> None:
         """The base name for all ProcessScheduler objects.
@@ -48,6 +49,8 @@ class NamedUIDObject(BaseModel):
 
         if self.name is None:
             self.name = f"{self.__class__.__name__}_{str(self._uid)[:8]}"
+
+        self.type = f"{self.__class__.__name__}"
 
         # SMT assertions
         # start and end integer values must be positive
