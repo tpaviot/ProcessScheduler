@@ -141,10 +141,10 @@ def test_buffer_bounds_1() -> None:
 
     n = 3
     unloading_tasks = [
-        ps.FixedDurationTask(name="LoadTask_%i" % i, duration=3) for i in range(n)
+        ps.FixedDurationTask(name=f"LoadTask_{i}", duration=3) for i in range(n)
     ]
     loading_tasks = [
-        ps.FixedDurationTask(name="UnloadTask_%i" % i, duration=3) for i in range(n)
+        ps.FixedDurationTask(name=f"UnloadTask_{i}", duration=3) for i in range(n)
     ]
     # create buffer
     buffer = ps.NonConcurrentBuffer(name="Buffer1", lower_bound=0, upper_bound=1)

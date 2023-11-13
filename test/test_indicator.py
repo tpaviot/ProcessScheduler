@@ -197,7 +197,7 @@ def test_resource_utilization_maximization_incremental_1() -> None:
 
 
 def get_single_resource_utilization_problem(problem_name):
-    problem = ps.SchedulingProblem(name="IndicatorFlowtimeSingleResource1", horizon=50)
+    problem = ps.SchedulingProblem(name=problem_name, horizon=50)
 
     dur1 = 5
     dur2 = 5

@@ -16,7 +16,6 @@
 
 import processscheduler as ps
 
-# import processscheduler.context as ps_context
 import processscheduler.base
 import pytest
 
@@ -348,8 +347,8 @@ def test_tasks_end_sync() -> None:
 def test_tasks_contiguous() -> None:
     pb = ps.SchedulingProblem(name="TasksContiguous")
     n = 7
-    tasks_w1 = [ps.FixedDurationTask(name="t_w1_%i" % i, duration=3) for i in range(n)]
-    tasks_w2 = [ps.FixedDurationTask(name="t_w2_%i" % i, duration=5) for i in range(n)]
+    tasks_w1 = [ps.FixedDurationTask(name=f"t_w1_{i}", duration=3) for i in range(n)]
+    tasks_w2 = [ps.FixedDurationTask(name=f"t_w2_{i}", duration=5) for i in range(n)]
     worker_1 = ps.Worker(name="Worker1")
     worker_2 = ps.Worker(name="Worker2")
     for t in tasks_w1:

@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+import pytest
+
 import processscheduler as ps
 
 
@@ -47,7 +49,7 @@ def build_complex_problem(name: str, n: int) -> ps.SchedulingProblem:
     return problem
 
 
-def _solve_problem(problem, debug=True):
+def solve_problem(problem, debug=True):
     """create a solver instance, return True if sat else False"""
     solver = ps.SchedulingSolver(problem=problem, debug=debug)
     return solver.solve()
@@ -57,7 +59,7 @@ def test_schedule_single_fixed_duration_task() -> None:
     problem = ps.SchedulingProblem(name="SingleFixedDurationTaskScheduling", horizon=2)
     task = ps.FixedDurationTask(name="task", duration=2)
 
-    solution = _solve_problem(problem=problem)
+    solution = solve_problem(problem=problem)
     assert solution
     # task should have been scheduled with start at 0
     # and end at 2
@@ -74,7 +76,7 @@ def test_schedule_single_variable_duration_task() -> None:
     ps.TaskStartAt(task=task, value=1)
     ps.TaskEndAt(task=task, value=4)
 
-    solution = _solve_problem(problem=problem)
+    solution = solve_problem(problem=problem)
     assert solution
     # task should have been scheduled with start at 0
     # and end at 2
@@ -94,7 +96,7 @@ def test_schedule_two_fixed_duration_task_with_precedence() -> None:
     # add two constraints to set start and end
     ps.TaskStartAt(task=task_1, value=0)
     ps.TaskPrecedence(task_before=task_1, task_after=task_2)
-    solution = _solve_problem(problem=problem)
+    solution = solve_problem(problem=problem)
     assert solution
 
     task_1_solution = solution.tasks[task_1.name]
@@ -115,7 +117,7 @@ def test_schedule_single_task_single_resource() -> None:
 
     task.add_required_resource(worker)
 
-    solution = _solve_problem(problem)
+    solution = solve_problem(problem)
     assert solution
     # task should have been scheduled with start at 0
     # and end at 2
@@ -142,7 +144,7 @@ def test_schedule_two_tasks_two_alternative_workers() -> None:
         ps.SelectWorkers(list_of_workers=[worker_1, worker_2], nb_workers_to_select=1)
     )
 
-    solution = _solve_problem(problem=problem)
+    solution = solve_problem(problem=problem)
     assert solution
     # each task should have one worker assigned
     task_1_solution = solution.tasks[task_1.name]
@@ -175,7 +177,7 @@ def test_schedule_three_tasks_three_alternative_workers() -> None:
         ps.SelectWorkers(list_of_workers=all_workers, nb_workers_to_select=3)
     )
 
-    solution = _solve_problem(problem=problem)
+    solution = solve_problem(problem=problem)
     assert solution
     # each task should have one worker assigned
     assert len(solution.tasks[task_1.name].assigned_resources) == 1
@@ -235,7 +237,7 @@ def test_unsat_1():
     ps.TaskStartAt(task=task, value=1)
     ps.TaskEndAt(task=task, value=4)
 
-    assert not _solve_problem(problem)
+    assert not solve_problem(problem)
 
 
 def test_solve_parallel():
@@ -273,14 +275,14 @@ def test_solve_non_integer_max_time():
 def test_makespan_objective():
     problem = build_complex_problem(name="SolveMakeSpanObjective", n=20)
     # first look for a solution without optimization
-    solution_1 = _solve_problem(problem)
+    solution_1 = solve_problem(problem)
     assert solution_1
 
     horizon_without_optimization = solution_1.horizon
     # then add the objective and look for another solution
     problem.add_objective_makespan()
     # another solution
-    solution_2 = _solve_problem(problem)
+    solution_2 = solve_problem(problem)
     assert solution_2
 
     horizon_with_optimization = solution_2.horizon
@@ -291,19 +293,19 @@ def test_makespan_objective():
 def test_flowtime_objective_big_problem():
     problem = build_complex_problem("SolveFlowTimeObjective", 5)  # long to compute
     problem.add_objective_flowtime()
-    assert _solve_problem(problem)
+    assert solve_problem(problem)
 
 
 def test_start_latest_objective_big_problem():
     problem = build_complex_problem("SolveStartLatestObjective", 10)
     problem.add_objective_start_latest()
-    assert _solve_problem(problem)
+    assert solve_problem(problem)
 
 
 def test_start_earliest_objective_big_problem():
     problem = build_complex_problem("SolveStartEarliestObjective", 10)
     problem.add_objective_start_earliest()
-    assert _solve_problem(problem)
+    assert solve_problem(problem)
 
 
 def test_start_latest():
@@ -315,7 +317,7 @@ def test_start_latest():
     ps.TaskPrecedence(task_before=task_1, task_after=task_2)
 
     problem.add_objective_start_latest()
-    solution = _solve_problem(problem)
+    solution = solve_problem(problem)
     assert solution
     # check that the task is not scheduled to start à 0
     # the only solution is 1
@@ -337,7 +339,7 @@ def test_priorities():
 
     # set debug to False because assert_and_track
     # does not properly handles optimization
-    solution = _solve_problem(problem, debug=False)
+    solution = solve_problem(problem, debug=False)
     assert solution
     # check that the task is not scheduled to start à 0
     # the only solution is 1
@@ -368,8 +370,8 @@ def test_find_another_solution_solve_before():
 
     task_1 = ps.FixedDurationTask(name="task1", duration=2)
     solver = ps.SchedulingSolver(problem=problem)
-    result = solver.find_another_solution(task_1._start)  # error, first have to solve
-    assert not result
+    with pytest.raises(AssertionError):
+        solver.find_another_solution(task_1._start)
 
 
 #
@@ -383,7 +385,7 @@ def test_work_amount_1():
     worker_1 = ps.Worker(name="Worker1", productivity=2)
     task_1.add_required_resource(worker_1)
     # solve
-    solution = _solve_problem(problem)
+    solution = solve_problem(problem)
     assert solution
     # the expected duration for task 1 is 6
     assert solution.tasks[task_1.name].duration == 6
@@ -400,7 +402,7 @@ def test_work_amount_2():
     worker_2 = ps.Worker(name="Worker2", productivity=3)
     task_1.add_required_resources([worker_1, worker_2])
     # solve
-    solution = _solve_problem(problem)
+    solution = solve_problem(problem)
     assert solution
     assert solution.tasks[task_1.name].duration < 6
 

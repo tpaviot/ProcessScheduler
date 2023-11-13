@@ -671,11 +671,13 @@ class SchedulingSolver(BaseModel):
                 f"\tFound value: {current_variable_value} elapsed time:{total_time:.3f}s"
             )
             if self.max_time != "inf" and total_time > self.max_time:
-                warnings.warn("max time exceeded")
+                print("Max time exceeded. Stop incremental solver.")
                 break
 
             if bound is not None and current_variable_value == bound:
-                print(f"\tFound optimum {current_variable_value}. Stopping iteration.")
+                print(
+                    f"\tFound optimum {current_variable_value}. Stop incremental solver."
+                )
                 break
 
             # prevent the solver to start a new round if we expect it to be
@@ -691,7 +693,9 @@ class SchedulingSolver(BaseModel):
                 a, b, c = calc_parabola_from_three_points([0, 1, 2], three_last_times)
                 expected_next_time = a * 9 + 3 * b + c
                 if self.max_time != "inf" and expected_next_time > self.max_time:
-                    warnings.warn("time may exceed max time. Stopping iteration.")
+                    print(
+                        "Max time expected on the next iteration. Stop incremental solver."
+                    )
                     break
             self._solver.push()
             if kind == "min":
@@ -731,8 +735,7 @@ class SchedulingSolver(BaseModel):
     def find_another_solution(self, variable: ArithRef) -> bool:
         """let the solver find another solution for the variable"""
         if self._current_solution is None:
-            warnings.warn("No current solution. First call the solve() method.")
-            return False
+            raise AssertionError("No current solution. First call the solve() method.")
         current_variable_value = self._current_solution[variable].as_long()
         self.append_z3_assertion(variable != current_variable_value)
         return self.solve()

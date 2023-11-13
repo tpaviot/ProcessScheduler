@@ -69,8 +69,7 @@ def test_resource_unavailable_3() -> None:
 
 
 def test_resource_unavailable_4() -> None:
-    pb = ps.SchedulingProblem(name="ResourceUnavailable3", horizon=10)
-    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    ps.SchedulingProblem(name="ResourceUnavailable3", horizon=10)
     worker_1 = ps.Worker(name="Worker1")
     with pytest.raises(AssertionError):
         ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3)])

@@ -124,7 +124,7 @@ def test_cumulative_select_worker_1():
         ps.SelectWorkers(list_of_workers=[r1, r2], nb_workers_to_select=1)
     )
     t2.add_required_resource(
-        ps.SelectWorkers(list_of_workers=[r1, r2], nb_workers_to_select=1)
+        ps.SelectWorkers(list_of_workers=[r1, r3], nb_workers_to_select=1)
     )
 
     # plot solution
@@ -141,7 +141,7 @@ def test_cumulative_hosp():
     r1 = ps.CumulativeWorker(name="Room", size=capa)
 
     for i in range(n):
-        t = ps.FixedDurationTask(name="T%i" % (i + 1), duration=1)
+        t = ps.FixedDurationTask(name=f"T{i+1}", duration=1)
         t.add_required_resource(r1)
 
     solver = ps.SchedulingSolver(problem=pb_bs)

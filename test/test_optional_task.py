@@ -446,7 +446,7 @@ def test_optional_task_select_workers_2() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert not (solution.tasks[task_1.name].scheduled)
+    assert not solution.tasks[task_1.name].scheduled
     assert len(solution.tasks[task_1.name].assigned_resources) == 0
 
 

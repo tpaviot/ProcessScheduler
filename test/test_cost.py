@@ -51,8 +51,8 @@ def test_cost_failure() -> None:
         ps.PolynomialCostFunction(cost_function="f")  # only accepts a callable
 
 
-def test_constant_cost_per_period_1() -> None:
-    problem = ps.SchedulingProblem(name="IndicatorResourceConstantCostPerPeriod0")
+def test_constant_cost_per_period_0() -> None:
+    ps.SchedulingProblem(name="IndicatorResourceConstantCostPerPeriod0")
     c = ps.ConstantCostPerPeriod(value=7)
     assert c(1) == 7
     assert c(10) == 7

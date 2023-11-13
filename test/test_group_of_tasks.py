@@ -74,14 +74,10 @@ def test_unordered_group_task_precedence_1() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    s_1 = solution.tasks[task_1.name].start
     e_1 = solution.tasks[task_1.name].end
-    s_2 = solution.tasks[task_2.name].start
     e_2 = solution.tasks[task_2.name].end
     s_3 = solution.tasks[task_3.name].start
-    e_3 = solution.tasks[task_3.name].end
     s_4 = solution.tasks[task_4.name].start
-    e_4 = solution.tasks[task_4.name].end
     assert e_1 <= s_3
     assert e_1 <= s_4
     assert e_2 <= s_3
@@ -95,7 +91,7 @@ def test_ordered_group_task_1() -> None:
     task_2 = ps.FixedDurationTask(name="task2", duration=7)
     task_3 = ps.FixedDurationTask(name="task3", duration=2)
     task_4 = ps.FixedDurationTask(name="task4", duration=2)
-    group1 = ps.OrderedTaskGroup(
+    ps.OrderedTaskGroup(
         list_of_tasks=[task_1, task_2, task_3, task_4],
         kind="tight",
         time_interval=[23, 39],
@@ -111,7 +107,6 @@ def test_ordered_group_task_1() -> None:
     s_3 = solution.tasks[task_3.name].start
     e_3 = solution.tasks[task_3.name].end
     s_4 = solution.tasks[task_4.name].start
-    e_4 = solution.tasks[task_4.name].end
     assert e_1 == s_2
     assert e_2 == s_3
     assert e_3 == s_4
