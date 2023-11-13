@@ -25,7 +25,12 @@ from z3 import And, BoolRef, If, Int, Or, Sum, Implies, ArithRef
 
 from processscheduler.base import NamedUIDObject
 import processscheduler.base
-from processscheduler.task import Task
+from processscheduler.task import (
+    Task,
+    FixedDurationTask,
+    ZeroDurationTask,
+    VariableDurationTask,
+)
 from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
 from processscheduler.objective import (
     Indicator,
@@ -55,8 +60,10 @@ class SchedulingProblem(NamedUIDObject):
     start_time: datetime = Field(default=None)
     end_time: datetime = Field(default=None)
 
-    tasks: List[Task] = Field(default=[])
-    resources: List[Resource] = Field(default=[])
+    tasks: List[
+        Union[FixedDurationTask, VariableDurationTask, ZeroDurationTask]
+    ] = Field(default=[])
+    workers: List[Worker] = Field(default=[])
     select_workers: List[SelectWorkers] = Field(default=[])
     cumulative_workers: List[CumulativeWorker] = Field(default=[])
     constraints: List[Constraint] = Field(default=[])
@@ -95,13 +102,11 @@ class SchedulingProblem(NamedUIDObject):
         self.tasks.append(task)
         return len(self.tasks)
 
-    def add_resource(self, resource: Worker) -> None:
+    def add_resource_worker(self, worker: Worker) -> None:
         """Add a single resource to the problem"""
-        if resource.name in [t.name for t in self.resources]:
-            raise ValueError(
-                f"a resource with the name {resource.name} already exists."
-            )
-        self.resources.append(resource)
+        if worker.name in [t.name for t in self.workers]:
+            raise ValueError(f"a worker with the name {worker.name} already exists.")
+        self.workers.append(worker)
 
     def add_resource_select_workers(self, resource: SelectWorkers) -> None:
         """Add a single resource to the problem"""

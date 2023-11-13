@@ -135,8 +135,8 @@ def test_redondant_tasks_resources() -> None:
     assert pb.tasks == [task_1]
     # do the same for resources
     worker_1 = ps.Worker(name="Worker1")
-    assert pb.resources == [worker_1]
-    assert pb.resources == [worker_1]
+    assert pb.workers == [worker_1]
+    assert pb.workers == [worker_1]
 
 
 def test_resource_requirements() -> None:

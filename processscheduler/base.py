@@ -31,7 +31,6 @@ class NamedUIDObject(BaseModel):
 
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
 
-    uid: int = Field(default_factory=lambda: uuid4().int)
     name: str = Field(default=None)
 
     def __init__(self, **data) -> None:
@@ -45,8 +44,10 @@ class NamedUIDObject(BaseModel):
         # check name type
         super().__init__(**data)
 
+        self._uid = uuid4().int
+
         if self.name is None:
-            self.name = f"{self.__class__.__name__}_{str(self.uid)[:8]}"
+            self.name = f"{self.__class__.__name__}_{str(self._uid)[:8]}"
 
         # SMT assertions
         # start and end integer values must be positive
@@ -54,10 +55,10 @@ class NamedUIDObject(BaseModel):
         self._z3_assertion_hashes = []
 
     def __hash__(self) -> int:
-        return self.uid
+        return self._uid
 
     def __eq__(self, other) -> bool:
-        return self.uid == other.uid
+        return self._uid == other._uid
 
     def __repr__(self) -> str:
         """Print the object name, its uid and the assertions."""

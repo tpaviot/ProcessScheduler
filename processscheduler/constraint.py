@@ -44,7 +44,7 @@ class Constraint(NamedUIDObject):
 
         # by default, this constraint has to be applied
         if self.optional:
-            self._applied = Bool(f"constraint_{self.uid}_applied")
+            self._applied = Bool(f"constraint_{self._uid}_applied")
         else:
             self._applied = True
 

@@ -195,11 +195,11 @@ class SchedulingSolver(BaseModel):
             self.append_z3_assertion(task._end <= self.problem._horizon)
 
         # process resources assertions
-        for ress in self.problem.resources:
+        for ress in self.problem.workers:
             self.append_z3_assertion(ress.get_z3_assertions())
 
         # process resource intervals
-        for ress in self.problem.resources:
+        for ress in self.problem.workers:
             busy_intervals = ress.get_busy_intervals()
             nb_intervals = len(busy_intervals)
             for i in range(nb_intervals):
@@ -472,7 +472,7 @@ class SchedulingSolver(BaseModel):
             solution.add_task_solution(new_task_solution)
 
         # process resources
-        for resource in self.problem.resources:
+        for resource in self.problem.workers:
             # for each task, create a TaskSolution instance
             # for cumulative workers, we append the current work
             if "_CumulativeWorker_" in resource.name:

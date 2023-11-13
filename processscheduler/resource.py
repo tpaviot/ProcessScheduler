@@ -86,7 +86,7 @@ class Worker(Resource):
             raise AssertionError(
                 "No context available. First create a SchedulingProblem"
             )
-        processscheduler.base.active_problem.add_resource(self)
+        processscheduler.base.active_problem.add_resource_worker(self)
 
 
 class CumulativeWorker(Resource):
@@ -163,7 +163,7 @@ class SelectWorkers(Resource):
 
         # create as many booleans as resources in the list
         for worker in self.list_of_workers:
-            worker_is_selected = Bool(f"Selected_{worker.name}_{self.uid}")
+            worker_is_selected = Bool(f"Selected_{worker.name}_{self._uid}")
             self._selection_dict[worker] = worker_is_selected
         # create the assertion : exactly n boolean flags are allowed to be True,
         # the others must be False

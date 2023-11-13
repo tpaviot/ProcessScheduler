@@ -95,9 +95,7 @@ def export_json_to_string(scheduling_problem, scheduling_solver) -> str:
     workers = {}
     # we dont export workers created by cumulative resource
     all_workers_but_cumulative = [
-        res
-        for res in scheduling_problem.resources
-        if "CumulativeWorker_" not in res.name
+        res for res in scheduling_problem.workers if "CumulativeWorker_" not in res.name
     ]
 
     for resource in all_workers_but_cumulative:  # Worker
