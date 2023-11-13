@@ -20,12 +20,12 @@ from typing import List
 from pydantic import Field, PositiveInt, StrictBool
 from z3 import And, ArithRef, Bool, BoolRef, If, Int, Or
 
-from processscheduler.base import _NamedUIDObject
+from processscheduler.base import NamedUIDObject
 from processscheduler.resource import Resource, Worker, CumulativeWorker, SelectWorkers
-import processscheduler.context as ps_context
+import processscheduler.base
 
 
-class Task(_NamedUIDObject):
+class Task(NamedUIDObject):
     """The base class for all kind of tasks. Users may instanciate specialized classes that
     inherit from the base class."""
 
@@ -52,13 +52,13 @@ class Task(_NamedUIDObject):
         self._scheduled = True  # type: Union[bool, BoolRef]
 
         # add this task to the current context
-        if ps_context.main_context is None:
-            raise AssertionError(
-                "No context available. First create a SchedulingProblem"
-            )
+        if processscheduler.base.active_problem is None:
+            raise AssertionError("No active problem. First create a SchedulingProblem")
         # the task_number is an integer that is incremented each time
         # a task is created. The first task has number 1, the second number 2 etc.
-        self._task_number = ps_context.main_context.add_task(self)  # type: int
+        self._task_number = processscheduler.base.active_problem.add_task(
+            self
+        )  # type: int
 
         # the counter used for negative integers
         # negative integers are used to schedule optional tasks

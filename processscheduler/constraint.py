@@ -21,14 +21,16 @@ from z3 import Bool, BoolRef, Implies, PbEq, PbGe, PbLe
 
 from pydantic import Field, PositiveInt
 
-from processscheduler.base import _NamedUIDObject
-import processscheduler.context as ps_context
+from processscheduler.base import NamedUIDObject
+import processscheduler.base
+
+# import processscheduler.context as ps_context
 
 
 #
 # Base Constraint class
 #
-class Constraint(_NamedUIDObject):
+class Constraint(NamedUIDObject):
     """The base class for all constraints, including Task and Resource constraints."""
 
     optional: bool = Field(default=False)
@@ -47,7 +49,7 @@ class Constraint(_NamedUIDObject):
             self._applied = True
 
         # store this constraint into the current context
-        ps_context.main_context.add_constraint(self)
+        processscheduler.base.active_problem.add_constraint(self)
 
     def set_created_from_assertion(self) -> None:
         """Set the flag created_from_assertion True. This flag must be set to True

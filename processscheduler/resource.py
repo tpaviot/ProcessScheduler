@@ -19,9 +19,11 @@ from z3 import ArithRef, Bool, PbEq, PbGe, PbLe
 
 from pydantic import Field, PositiveInt
 
-from processscheduler.base import _NamedUIDObject
+from processscheduler.base import NamedUIDObject
 from processscheduler.cost import Cost, ConstantCostPerPeriod
-import processscheduler.context as ps_context
+
+# import processscheduler.context as ps_context
+import processscheduler.base
 
 
 #
@@ -50,7 +52,7 @@ def _distribute_p_over_n(p, n):
 #
 # Resources class definition
 #
-class Resource(_NamedUIDObject):
+class Resource(NamedUIDObject):
     """base class for the representation of a resource"""
 
     def __init__(self, **data) -> None:
@@ -80,11 +82,11 @@ class Worker(Resource):
         super().__init__(**data)
         # only worker are added to the main context, not SelectWorkers
         # add this resource to the current context
-        if ps_context.main_context is None:
+        if processscheduler.base.active_problem is None:
             raise AssertionError(
                 "No context available. First create a SchedulingProblem"
             )
-        ps_context.main_context.add_resource(self)
+        processscheduler.base.active_problem.add_resource(self)
 
 
 class CumulativeWorker(Resource):
@@ -116,7 +118,7 @@ class CumulativeWorker(Resource):
             for i in range(self.size)
         ]
 
-        ps_context.main_context.add_resource_cumulative_worker(self)
+        processscheduler.base.active_problem.add_resource_cumulative_worker(self)
 
     def get_select_workers(self):
         """Each time the cumulative resource is assigned to a task, a SelectWorker
@@ -171,4 +173,4 @@ class SelectWorkers(Resource):
         self._selection_assertion = problem_function[self.kind](
             [(selected, True) for selected in selection_list], self.nb_workers_to_select
         )
-        ps_context.main_context.add_resource_select_workers(self)
+        processscheduler.base.active_problem.add_resource_select_workers(self)

@@ -24,9 +24,9 @@ from z3 import BoolRef
 
 
 #
-# _NamedUIDObject, name and uid for hashing
+# NamedUIDObject, name and uid for hashing
 #
-class _NamedUIDObject(BaseModel):
+class NamedUIDObject(BaseModel):
     """The base object for most ProcessScheduler classes"""
 
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
@@ -88,3 +88,15 @@ class _NamedUIDObject(BaseModel):
     def get_z3_assertions(self) -> List[BoolRef]:
         """Return the assertions list"""
         return self._z3_assertions
+
+
+# Define a global problem
+# None by default
+# the scheduling problem will set this variable
+active_problem = None
+
+
+def clear_active_problem() -> None:
+    """Clear current context"""
+    if active_problem is not None:
+        active_problem.clear()

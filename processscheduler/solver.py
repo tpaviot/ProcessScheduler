@@ -174,11 +174,9 @@ class SchedulingSolver(BaseModel):
         print("Solver type:\n===========")
 
         # check if the problem is an optimization problem
-        self._is_not_optimization_problem = len(self.problem._context.objectives) == 0
-        self._is_optimization_problem = len(self.problem._context.objectives) > 0
-        self._is_multi_objective_optimization_problem = (
-            len(self.problem._context.objectives) > 1
-        )
+        self._is_not_optimization_problem = len(self.problem.objectives) == 0
+        self._is_optimization_problem = len(self.problem.objectives) > 0
+        self._is_multi_objective_optimization_problem = len(self.problem.objectives) > 1
         # use the z3 Optimize solver if requested
         if not self._is_not_optimization_problem and self.optimizer == "optimize":
             self._solver = Optimize()
@@ -192,16 +190,16 @@ class SchedulingSolver(BaseModel):
             print("\t-> SMT solver using logics", self.logics)
 
         # add all tasks z3 assertions to the solver
-        for task in self.problem._context.tasks:
+        for task in self.problem.tasks:
             self.append_z3_assertion(task.get_z3_assertions())
             self.append_z3_assertion(task._end <= self.problem._horizon)
 
         # process resources assertions
-        for ress in self.problem._context.resources:
+        for ress in self.problem.resources:
             self.append_z3_assertion(ress.get_z3_assertions())
 
         # process resource intervals
-        for ress in self.problem._context.resources:
+        for ress in self.problem.resources:
             busy_intervals = ress.get_busy_intervals()
             nb_intervals = len(busy_intervals)
             for i in range(nb_intervals):
@@ -215,20 +213,18 @@ class SchedulingSolver(BaseModel):
         # add z3 assertions for constraints
         # that are *NOT* defined from an assertion
         constraints_not_from_assertion = [
-            c
-            for c in self.problem._context.constraints
-            if not c._created_from_assertion
+            c for c in self.problem.constraints if not c._created_from_assertion
         ]
         for constraint in constraints_not_from_assertion:
             self.append_z3_assertion(constraint.get_z3_assertions(), constraint.name)
 
         # process indicators
-        for indic in self.problem._context.indicators:
+        for indic in self.problem.indicators:
             self.append_z3_assertion(indic.get_z3_assertions())
 
         # work amounts
         # for each task, compute the total work for all required resources"""
-        for task in self.problem._context.tasks:
+        for task in self.problem.tasks:
             if task.work_amount > 0.0:
                 work_total_for_all_resources = []
                 for required_resource in task._required_resources:
@@ -243,7 +239,7 @@ class SchedulingSolver(BaseModel):
                 )
 
         # process buffers
-        for buffer in self.problem._context.buffers:
+        for buffer in self.problem.buffers:
             # create an array that stores the mapping between start times and
             # quantities. For example, if a task T1 starts at 2 and unloads
             # 8, and T3 ends at 6 and loads 5 then the mapping array
@@ -308,7 +304,7 @@ class SchedulingSolver(BaseModel):
                 )
 
         # Finally add other assertions (FOL, user defined)
-        for z3_assertion in self.problem._context.z3_assertions:
+        for z3_assertion in self.problem.get_z3_assertions():
             self.append_z3_assertion(z3_assertion)
 
         # optimization
@@ -341,7 +337,7 @@ class SchedulingSolver(BaseModel):
         # O = WiOi+WjOj+WkOk etc.
         equivalent_single_objective = Int("EquivalentSingleObjective")
         weighted_objectives = []
-        for obj in self.problem._context.objectives:
+        for obj in self.problem.objectives:
             variable_to_optimize = obj._target
             weight = obj.weight
             if isinstance(obj, MaximizeObjective):
@@ -371,14 +367,14 @@ class SchedulingSolver(BaseModel):
                 if self.optimizer == "optimize":
                     self._solver.minimize(eq_obj._target)
             else:
-                for obj in self.problem._context.objectives:
+                for obj in self.problem.objectives:
                     variable_to_optimize = obj._target
                     if isinstance(obj, MaximizeObjective):
                         self._solver.maximize(variable_to_optimize)
                     else:
                         self._solver.minimize(variable_to_optimize)
         else:
-            self._objective = self.problem._context.objectives[0]
+            self._objective = self.problem.objectives[0]
             if self.optimizer == "optimize":
                 variable_to_optimize = self._objective._target
                 if isinstance(self._objective, MaximizeObjective):
@@ -423,7 +419,7 @@ class SchedulingSolver(BaseModel):
         solution.horizon = z3_sol[self.problem._horizon].as_long()
 
         # process tasks
-        for task in self.problem._context.tasks:
+        for task in self.problem.tasks:
             # for each task, create a TaskSolution instance
             new_task_solution = TaskSolution(name=task.name)
             new_task_solution.type = type(task).__name__
@@ -476,7 +472,7 @@ class SchedulingSolver(BaseModel):
             solution.add_task_solution(new_task_solution)
 
         # process resources
-        for resource in self.problem._context.resources:
+        for resource in self.problem.resources:
             # for each task, create a TaskSolution instance
             # for cumulative workers, we append the current work
             if "_CumulativeWorker_" in resource.name:
@@ -511,7 +507,7 @@ class SchedulingSolver(BaseModel):
                 solution.add_resource_solution(new_resource_solution)
 
         # process buffers
-        for buffer in self.problem._context.buffers:
+        for buffer in self.problem.buffers:
             buffer_name = buffer.name
             new_buffer_solution = BufferSolution(name=buffer_name)
             # change_state_times
@@ -529,7 +525,7 @@ class SchedulingSolver(BaseModel):
 
             solution.add_buffer_solution(new_buffer_solution)
         # process indicators
-        for indicator in self.problem._context.indicators:
+        for indicator in self.problem.indicators:
             indicator_name = indicator.name
             indicator_value = z3_sol[indicator._indicator_variable].as_long()
             solution.add_indicator_solution(indicator_name, indicator_value)
@@ -548,7 +544,7 @@ class SchedulingSolver(BaseModel):
         if self._is_optimization_problem and self.optimizer == "incremental":
             if self._is_multi_objective_optimization_problem:
                 print("\tObjectives:\n\t======")
-                for obj in self.problem._context.objectives:
+                for obj in self.problem.objectives:
                     print(f"\t{obj.name}")
             solution = self.solve_optimize_incremental(
                 self._objective._target,
@@ -602,7 +598,7 @@ class SchedulingSolver(BaseModel):
 
             # print objectives values if optimizer
             if self.optimizer == "optimize":
-                for obj in self.problem._context.objectives:
+                for obj in self.problem.objectives:
                     print(obj.name, "Value : ", solution[obj._target].as_long())
 
         self._current_solution = solution

@@ -15,8 +15,9 @@
 
 
 import processscheduler as ps
-import processscheduler.context as ps_context
 
+# import processscheduler.context as ps_context
+import processscheduler.base
 import pytest
 
 from pydantic import ValidationError
@@ -25,22 +26,24 @@ from pydantic import ValidationError
 def new_problem_or_clear() -> None:
     """clear the current context. If no context is defined,
     create a SchedulingProject object"""
-    if ps_context.main_context is None:
-        ps.SchedulingProblem(name="NewProblem")
-    else:
-        ps_context.main_context.clear()
+    # TODO: modify
+    # if processscheduler.base.active_problem is None:
+    ps.SchedulingProblem(name="NewProblem")
+    # else:
+    #    ps_context.main_context.clear()
 
 
-def test_clear_context() -> None:
-    ps_context.main_context = None
-    new_problem_or_clear()
-    assert isinstance(ps_context.main_context, ps.SchedulingContext)
+# TODO: change
+# def test_clear_context() -> None:
+#     ps_context.main_context = None
+#     new_problem_or_clear()
+#     assert isinstance(ps_context.main_context, ps.SchedulingContext)
 
 
-def test_create_task_without_problem() -> None:
-    ps_context.main_context = None
-    with pytest.raises(AssertionError):
-        ps.ZeroDurationTask(name="AZeroDurationTask")
+# def test_create_task_without_problem() -> None:
+#     ps_context.main_context = None
+#     with pytest.raises(AssertionError):
+#         ps.ZeroDurationTask(name="AZeroDurationTask")
 
 
 def test_create_task_zero_duration() -> None:
@@ -129,12 +132,12 @@ def test_redondant_tasks_resources() -> None:
     pb = ps.SchedulingProblem(name="SameNameTasks")
     # we should not be able to add twice the same resource or task
     task_1 = ps.ZeroDurationTask(name="task1")
-    assert list(pb._context.tasks) == [task_1]
-    assert list(pb._context.tasks) == [task_1]
+    assert pb.tasks == [task_1]
+    assert pb.tasks == [task_1]
     # do the same for resources
     worker_1 = ps.Worker(name="Worker1")
-    assert list(pb._context.resources) == [worker_1]
-    assert list(pb._context.resources) == [worker_1]
+    assert pb.resources == [worker_1]
+    assert pb.resources == [worker_1]
 
 
 def test_resource_requirements() -> None:

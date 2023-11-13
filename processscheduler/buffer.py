@@ -17,16 +17,15 @@
 
 from typing import Optional
 
-from processscheduler.base import _NamedUIDObject
-import processscheduler.context as ps_context
+from processscheduler.base import NamedUIDObject
 
+# import processscheduler.context as ps_context
+import processscheduler.base
 
 from pydantic import Field
 
 
-class NonConcurrentBuffer(_NamedUIDObject):
-    """A buffer that cannot be accessed by different tasks at the same time"""
-
+class Buffer(NamedUIDObject):
     initial_state: int = Field(default=None)
     final_state: int = Field(default=None)
     lower_bound: int = Field(default=None)
@@ -47,14 +46,18 @@ class NonConcurrentBuffer(_NamedUIDObject):
         self._buffer_states = []
 
         # add this task to the current context
-        if ps_context.main_context is None:
+        if processscheduler.base.active_problem is None:
             raise AssertionError(
                 "No context available. First create a SchedulingProblem"
             )
-        ps_context.main_context.add_buffer(self)
+        processscheduler.base.active_problem.add_buffer(self)
 
     def add_unloading_task(self, task, quantity) -> None:
         self._unloading_tasks[task] = quantity
 
     def add_loading_task(self, task, quantity) -> None:
         self._loading_tasks[task] = quantity
+
+
+class NonConcurrentBuffer(Buffer):
+    """A buffer that cannot be accessed by different tasks at the same time"""

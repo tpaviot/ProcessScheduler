@@ -23,14 +23,22 @@ from pydantic import Field, PositiveInt
 
 from z3 import And, BoolRef, If, Int, Or, Sum, Implies, ArithRef
 
-from processscheduler.base import _NamedUIDObject
-from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective
-from processscheduler.resource import Resource, CumulativeWorker
+from processscheduler.base import NamedUIDObject
+import processscheduler.base
+from processscheduler.task import Task
 from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
-import processscheduler.context as ps_context
+from processscheduler.objective import (
+    Indicator,
+    Objective,
+    MaximizeObjective,
+    MinimizeObjective,
+)
+from processscheduler.resource import Resource, Worker, CumulativeWorker, SelectWorkers
+from processscheduler.constraint import Constraint
+from processscheduler.buffer import Buffer
 
 
-class SchedulingProblem(_NamedUIDObject):
+class SchedulingProblem(NamedUIDObject):
     """A scheduling problem
 
     :param name: the problem name, a string type
@@ -47,21 +55,88 @@ class SchedulingProblem(_NamedUIDObject):
     start_time: datetime = Field(default=None)
     end_time: datetime = Field(default=None)
 
+    tasks: List[Task] = Field(default=[])
+    resources: List[Resource] = Field(default=[])
+    select_workers: List[SelectWorkers] = Field(default=[])
+    cumulative_workers: List[CumulativeWorker] = Field(default=[])
+    constraints: List[Constraint] = Field(default=[])
+    # z3_assertions: List[BoolRef]=Field(default=[])
+    indicators: List[Indicator] = Field(default=[])
+    objectives: List[Union[Indicator, ArithRef]] = Field(default=[])
+    buffers: List[Buffer] = Field(default=[])
+
     def __init__(self, **data) -> None:
         super().__init__(**data)
-        # the problem context, where all will be stored
-        # at creation
-        self._context = ps_context.SchedulingContext()
-        # set this context as global
-        ps_context.main_context = self._context
+
+        # the active problem, where all will be stored
+        processscheduler.base.active_problem = self
 
         # define the horizon variable
         self._horizon = Int("horizon")
         if self.horizon is not None:
-            self._context.add_constraint(self._horizon <= self.horizon)
+            self.add_constraint(self._horizon <= self.horizon)
 
-    def add_constraint(self, constraint: BoolRef) -> None:
-        self._context.add_constraint(constraint)
+    #
+    # fonctions coming from context
+    #
+    def add_indicator(self, indicator: Indicator) -> bool:
+        """Add an indicatr to the problem"""
+        if indicator not in self.indicators:
+            self.indicators.append(indicator)
+        else:
+            warnings.warn(f"indicator {indicator} already part of the problem")
+            return False
+        return True
+
+    def add_task(self, task: Task) -> int:
+        """Add a single task to the problem. There must not be two tasks with the same name"""
+        if task.name in [t.name for t in self.tasks]:
+            raise ValueError(f"a task with the name {task.name} already exists.")
+        self.tasks.append(task)
+        return len(self.tasks)
+
+    def add_resource(self, resource: Worker) -> None:
+        """Add a single resource to the problem"""
+        if resource.name in [t.name for t in self.resources]:
+            raise ValueError(
+                f"a resource with the name {resource.name} already exists."
+            )
+        self.resources.append(resource)
+
+    def add_resource_select_workers(self, resource: SelectWorkers) -> None:
+        """Add a single resource to the problem"""
+        self.select_workers.append(resource)
+
+    def add_resource_cumulative_worker(self, resource: CumulativeWorker) -> None:
+        """Add a single resource to the problem"""
+        self.cumulative_workers.append(resource)
+
+    def add_constraint(self, constraint: Constraint) -> None:
+        """Add a constraint to the problem. A constraint can be either
+        a z3 assertion or a processscheduler Constraint instance."""
+        if isinstance(constraint, Constraint):
+            if constraint not in self.constraints:
+                self.constraints.append(constraint)
+            else:
+                raise AssertionError("constraint already added to the problem.")
+        elif isinstance(constraint, BoolRef):
+            self.append_z3_assertion(
+                constraint
+            )  # self.z3_assertions.append(constraint)
+        else:
+            raise TypeError(
+                "You must provide either a _Constraint or BoolRef instance."
+            )
+
+    def add_objective(self, objective: Objective) -> None:
+        """Add an optimization objective"""
+        self.objectives.append(objective)
+
+    def add_buffer(self, buffer: Buffer) -> None:
+        """Add a single task to the problem. There must not be two tasks with the same name"""
+        if buffer.name in [b.name for b in self.buffers]:
+            raise ValueError(f"a buffer with the name {buffer.name} already exists.")
+        self.buffers.append(buffer)
 
     def add_indicator_number_tasks_assigned(self, resource: Resource):
         """compute the number of tasks as resource is assigned"""
@@ -195,7 +270,8 @@ class SchedulingProblem(_NamedUIDObject):
         """optimize the solution such that all task with a higher
         priority value are scheduled before other tasks"""
         all_priorities = []
-        for task in self._context.tasks:
+        # for task in self._context.tasks:
+        for task in self.tasks:
             if task.optional:
                 all_priorities.append(task._end * task.priority * task._scheduled)
             else:
@@ -213,9 +289,9 @@ class SchedulingProblem(_NamedUIDObject):
         mini = Int("SmallestStartTime")
         smallest_start_time = Indicator(name="SmallestStartTime", expression=mini)
         smallest_start_time.append_z3_assertion(
-            Or([mini == task._start for task in self._context.tasks])
+            Or([mini == task._start for task in self.tasks])
         )
-        for tsk in self._context.tasks:
+        for tsk in self.tasks:
             smallest_start_time.append_z3_assertion(mini <= tsk._start)
         MaximizeObjective(name="StartLatest", target=smallest_start_time, weight=weight)
         return smallest_start_time
@@ -226,9 +302,9 @@ class SchedulingProblem(_NamedUIDObject):
         maxi = Int("GreatestStartTime")
         greatest_start_time = Indicator(name="GreatestStartTime", expression=maxi)
         greatest_start_time.append_z3_assertion(
-            Or([maxi == task._start for task in self._context.tasks])
+            Or([maxi == task._start for task in self.tasks])
         )
-        for tsk in self._context.tasks:
+        for tsk in self.tasks:
             greatest_start_time.append_z3_assertion(maxi >= tsk._start)
         MinimizeObjective(
             name="StartEarliest", target=greatest_start_time, weight=weight
@@ -239,7 +315,7 @@ class SchedulingProblem(_NamedUIDObject):
         """the flowtime is the sum of all ends, minimize. Be carful that
         it is contradictory with makespan"""
         task_ends = []
-        for task in self._context.tasks:
+        for task in self.tasks:
             if task.optional:
                 task_ends.append(task._end * task._scheduled)
             else:

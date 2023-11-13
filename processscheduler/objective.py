@@ -21,11 +21,11 @@ from z3 import Int, BoolRef, ArithRef
 
 from pydantic import Field
 
-from processscheduler.base import _NamedUIDObject
-import processscheduler.context as ps_context
+from processscheduler.base import NamedUIDObject
+import processscheduler.base
 
 
-class Indicator(_NamedUIDObject):
+class Indicator(NamedUIDObject):
     """an performance indicator, can be evaluated after the solver has finished solving,
     or being optimized (Max or Min) *before* calling the solver."""
 
@@ -44,10 +44,10 @@ class Indicator(_NamedUIDObject):
         self._scheduled_value = None
 
         self.append_z3_assertion(self._indicator_variable == self.expression)
-        ps_context.main_context.add_indicator(self)
+        processscheduler.base.active_problem.add_indicator(self)
 
 
-class Objective(_NamedUIDObject):
+class Objective(NamedUIDObject):
     target: Union[ArithRef, Indicator]
 
     def __init__(self, **data) -> None:
@@ -62,7 +62,7 @@ class Objective(_NamedUIDObject):
         else:
             self._target = self.target
             self._bounds = None
-        ps_context.main_context.add_objective(self)
+        processscheduler.base.active_problem.add_objective(self)
 
 
 class MaximizeObjective(Objective):

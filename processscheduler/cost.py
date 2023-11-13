@@ -15,12 +15,12 @@
 
 from typing import Callable
 
-from processscheduler.base import _NamedUIDObject
+from processscheduler.base import NamedUIDObject
 
 from pydantic import Field
 
 
-class Cost(_NamedUIDObject):
+class Cost(NamedUIDObject):
     """The base class for cost definition, to be assigned to a resource"""
 
     cost_function: Callable[[float], float] = Field(default=lambda x: 0)
