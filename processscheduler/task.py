@@ -225,9 +225,9 @@ class UnavailabilityTask(FixedDurationTask):
 class VariableDurationTask(Task):
     """The duration can take any value, computed by the solver."""
 
-    min_duration: PositiveInt = Field(default=0)
-    max_duration: PositiveInt = Field(default=None)
-    allowed_durations: List[PositiveInt] = Field(default=None)
+    min_duration: int = Field(default=0, ge=0)
+    max_duration: Union[PositiveInt, None] = Field(default=None)
+    allowed_durations: Union[List[PositiveInt], None] = Field(default=None)
 
     def __init__(self, **data) -> None:
         super().__init__(**data)

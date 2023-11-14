@@ -54,18 +54,51 @@ def test_ZeroDurationTask_from_json():
 
 
 def test_VariableDurationTask_to_json():
-    ps.VariableDurationTask(name="T_variable").to_json()
+    ps.SchedulingProblem(name="VariableDurationTaskToJson")
+    ps.VariableDurationTask(name="T_variable").to_json_file(
+        "variable_duration_task.json"
+    )
+
+
+def test_VariableDurationTask_from_json():
+    ps.SchedulingProblem(name="VariableDurationTaskFromJson")
+    with open("variable_duration_task.json", "r") as f:
+        t = ps.VariableDurationTask.model_validate_json(f.read())
+    assert t.name == "T_variable"
+    assert not t.optional
+    assert t.priority == 0
+    assert t.work_amount == 0
 
 
 # workers
 def test_Worker_to_json():
-    ps.Worker(name="W1").to_json()
-    ps.Worker(name="W2", productivity=3).to_json()
+    ps.SchedulingProblem(name="WorkerToJson")
+    ps.Worker(name="W1", productivity=3).to_json_file("worker_W1.json")
+
+
+def test_Worker_from_json():
+    ps.SchedulingProblem(name="WorkerFromJson")
+    with open("worker_W1.json", "r") as f:
+        w = ps.Worker.model_validate_json(f.read())
+    assert w.name == "W1"
+    assert w.productivity == 3
+    assert w.cost is None
 
 
 def test_CumulativeWorker_to_json():
-    ps.CumulativeWorker(name="CW1", size=2).to_json()
-    ps.CumulativeWorker(name="CW2", productivity=3, size=12).to_json()
+    ps.CumulativeWorker(name="CW1", productivity=3, size=12).to_json_file(
+        "cumulative_worker_W2.json"
+    )
+
+
+def test_CumulativeWorker_from_json():
+    ps.SchedulingProblem(name="CumulativeWorkerFromJson")
+    with open("cumulative_worker_W2.json", "r") as f:
+        cw = ps.CumulativeWorker.model_validate_json(f.read())
+    assert cw.name == "CW1"
+    assert cw.productivity == 3
+    assert cw.size == 12
+    assert cw.cost is None
 
 
 def test_json_export_problem_solver_1():

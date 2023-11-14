@@ -95,7 +95,7 @@ class CumulativeWorker(Resource):
     # size is 2 min, otherwise it should be a single worker
     size: int = Field(gt=1)  # size strictly > 1
     productivity: PositiveInt = Field(default=1)
-    cost: Cost = Field(default=None)
+    cost: Union[Cost, None] = Field(default=None)
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
