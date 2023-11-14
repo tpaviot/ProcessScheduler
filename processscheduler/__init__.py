@@ -49,8 +49,3 @@ from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
 from processscheduler.problem import SchedulingProblem
 from processscheduler.solver import SchedulingSolver
 from processscheduler.buffer import NonConcurrentBuffer
-from processscheduler.json_io import (
-    export_json_to_file,
-    export_json_to_string,
-    import_json,
-)

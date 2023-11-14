@@ -65,4 +65,4 @@ def test_datetime_export_to_json():
     solver = ps.SchedulingSolver(problem=problem)
     solution = solver.solve()
     assert solution
-    solution.to_json_string()
+    solution.to_json()

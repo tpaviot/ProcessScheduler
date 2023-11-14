@@ -15,18 +15,19 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import timedelta, datetime
 from pathlib import Path
-import random
 from typing import List, Optional, Tuple, Dict
+import random
 
 from pydantic import BaseModel, Field
 
+from processscheduler.base import BaseModelWithJson
 from processscheduler.problem import SchedulingProblem
-from processscheduler.json_io import solution_to_json_string
 from processscheduler.excel_io import export_solution_to_excel_file
 
 
-class TaskSolution(BaseModel):
+class TaskSolution(BaseModelWithJson):
     """Class to represent the solution for a scheduled Task."""
 
     name: str
@@ -35,9 +36,9 @@ class TaskSolution(BaseModel):
     end: int = Field(default=0)
     duration: int = Field(default=0)
 
-    start_time: str = Field(default="")
-    end_time: str = Field(default="")
-    duration_time: str = Field(default="")
+    start_time: datetime = Field(default=None)
+    end_time: datetime = Field(default=None)
+    duration_time: timedelta = Field(default=None)
 
     optional: bool = Field(default=False)
     scheduled: bool = Field(default=False)
@@ -46,7 +47,7 @@ class TaskSolution(BaseModel):
     assigned_resources: List[str] = Field(default=[])
 
 
-class ResourceSolution(BaseModel):
+class ResourceSolution(BaseModelWithJson):
     """Class to represent the solution for the resource assignments."""
 
     name: str
@@ -55,7 +56,7 @@ class ResourceSolution(BaseModel):
     assignments: List[Tuple[str, int, int]] = Field(default=[])
 
 
-class BufferSolution(BaseModel):
+class BufferSolution(BaseModelWithJson):
     """Class to represent the solution for a Buffer."""
 
     name: str
@@ -66,7 +67,7 @@ class BufferSolution(BaseModel):
     state: List[int] = Field(default=[])
 
 
-class SchedulingSolution(BaseModel):
+class SchedulingSolution(BaseModelWithJson):
     """A class that represent the solution of a scheduling problem. Can be rendered
     to a matplotlib Gantt chart, or exported to json
     """
@@ -77,9 +78,6 @@ class SchedulingSolution(BaseModel):
     resources: Dict[str, ResourceSolution] = Field(default={})
     buffers: Dict[str, BufferSolution] = Field(default={})
     indicators: Dict[str, int] = Field(default={})
-
-    # def __repr__(self):
-    #    return self.to_json_string()
 
     def get_all_tasks_but_unavailable(self):
         """Return all tasks except those of the type UnavailabilityTask
@@ -410,13 +408,5 @@ class SchedulingSolution(BaseModel):
     #
     # File export
     #
-    def to_json_string(self) -> str:
-        """Export the solution to a json string."""
-        return solution_to_json_string(self)
-
-    def export_to_json_file(self, json_filename):
-        with open(json_filename, "w", encoding="utf-8") as outfile:
-            outfile.write(self.to_json_string())
-
     def export_to_excel_file(self, excel_filename, colors=False):
         return export_solution_to_excel_file(self, excel_filename, colors)

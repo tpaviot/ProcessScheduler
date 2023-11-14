@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+import os
 from typing import List, Optional
 from uuid import uuid4
 
@@ -23,10 +24,7 @@ from pydantic import BaseModel, PositiveInt, Field, Extra, ConfigDict
 from z3 import BoolRef
 
 
-#
-# NamedUIDObject, name and uid for hashing
-#
-class NamedUIDObject(BaseModel):
+class BaseModelWithJson(BaseModel):
     """The base object for most ProcessScheduler classes"""
 
     model_config = ConfigDict(extra="forbid", arbitrary_types_allowed=True)
@@ -52,16 +50,43 @@ class NamedUIDObject(BaseModel):
 
         self.type = f"{self.__class__.__name__}"
 
-        # SMT assertions
-        # start and end integer values must be positive
-        self._z3_assertions = []  # type: List[BoolRef]
-        self._z3_assertion_hashes = []
-
     def __hash__(self) -> int:
         return self._uid
 
     def __eq__(self, other) -> bool:
         return self._uid == other._uid
+
+    # def __repr__(self) -> str:
+    #     """Print the object name, its uid and the assertions."""
+    #     str_to_return = (
+    #         f"{self.name}({type(self)})\n{len(self._z3_assertions)} assertion(s):\n"
+    #     )
+    #     assertions_str = "".join(f"{assertion}" for assertion in self._z3_assertions)
+    #     return str_to_return + assertions_str
+
+    def to_json(self, compact=False):
+        """return a json string"""
+        return self.model_dump_json(indent=None if compact else 4)
+
+    def to_json_file(self, filename, compact=False):
+        with open(filename, "w") as f:
+            f.write(self.to_json(compact))
+        return os.path.isfile(filename)  # success
+
+
+#
+# NamedUIDObject, name and uid for hashing
+#
+class NamedUIDObject(BaseModelWithJson):
+    """The base object for most ProcessScheduler classes"""
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        # SMT assertions
+        # start and end integer values must be positive
+        self._z3_assertions = []  # type: List[BoolRef]
+        self._z3_assertion_hashes = []
 
     def __repr__(self) -> str:
         """Print the object name, its uid and the assertions."""
@@ -82,9 +107,7 @@ class NamedUIDObject(BaseModel):
         # workaround to avoid heavy hash computations
         assertion_hash = hash(z3_assertion)
         if assertion_hash in self._z3_assertion_hashes:
-            raise AssertionError(
-                f"assertion {z3_assertion} already added. Please report this bug at https://github.com/tpaviot/ProcessScheduler/issues"
-            )
+            raise AssertionError(f"assertion {z3_assertion} already added.")
         self._z3_assertions.append(z3_assertion)
         self._z3_assertion_hashes.append(assertion_hash)
         return True

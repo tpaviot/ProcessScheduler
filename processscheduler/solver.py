@@ -40,8 +40,9 @@ from z3 import (
     set_option,
 )
 
-from pydantic import BaseModel, Field, PositiveFloat, Extra, ConfigDict
+from pydantic import Field, PositiveFloat, Extra, ConfigDict
 
+from processscheduler.base import BaseModelWithJson
 from processscheduler.objective import MaximizeObjective, MinimizeObjective, Indicator
 from processscheduler.solution import (
     SchedulingSolution,
@@ -57,7 +58,7 @@ from processscheduler.util import calc_parabola_from_three_points, sort_no_dupli
 #
 # Solver class definition
 #
-class SchedulingSolver(BaseModel):
+class SchedulingSolver(BaseModelWithJson):
     """A solver class"""
 
     model_config = ConfigDict(extra="forbid")

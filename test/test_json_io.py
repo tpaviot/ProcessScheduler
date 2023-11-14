@@ -13,12 +13,63 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-
 import processscheduler as ps
 
+a_problem = ps.SchedulingProblem(name="JSONExportProblem1", horizon=10)
 
-def test_json_export_1():
-    pb = ps.SchedulingProblem(name="JSONExport1", horizon=10)
+
+# tasks
+def test_FixedDurationTask_to_json():
+    ps.SchedulingProblem(name="FixedDurationTaskToJson")
+    ps.FixedDurationTask(name="T_fixed", duration=3).to_json_file(
+        "fixed_duration_task.json"
+    )
+
+
+def test_FixedDurationTask_from_json():
+    ps.SchedulingProblem(name="FixedDurationTaskFromJson")
+    with open("fixed_duration_task.json", "r") as f:
+        t = ps.FixedDurationTask.model_validate_json(f.read())
+    assert t.name == "T_fixed"
+    assert not t.optional
+    assert t.duration == 3
+    assert t.priority == 0
+    assert t.work_amount == 0
+
+
+def test_ZeroDurationTask_to_json():
+    ps.SchedulingProblem(name="ZeroDurationTaskToJson")
+    ps.ZeroDurationTask(name="T_zero").to_json_file("zero_duration_task.json")
+
+
+def test_ZeroDurationTask_from_json():
+    ps.SchedulingProblem(name="ZeroDurationTaskFromJson")
+    with open("zero_duration_task.json", "r") as f:
+        t = ps.ZeroDurationTask.model_validate_json(f.read())
+    assert t.name == "T_zero"
+    assert not t.optional
+    assert t.duration == 0
+    assert t.priority == 0
+    assert t.work_amount == 0
+
+
+def test_VariableDurationTask_to_json():
+    ps.VariableDurationTask(name="T_variable").to_json()
+
+
+# workers
+def test_Worker_to_json():
+    ps.Worker(name="W1").to_json()
+    ps.Worker(name="W2", productivity=3).to_json()
+
+
+def test_CumulativeWorker_to_json():
+    ps.CumulativeWorker(name="CW1", size=2).to_json()
+    ps.CumulativeWorker(name="CW2", productivity=3, size=12).to_json()
+
+
+def test_json_export_problem_solver_1():
+    pb = ps.SchedulingProblem(name="JSONExportProblem1", horizon=1)
     # tasks
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.VariableDurationTask(name="task2")
@@ -67,6 +118,8 @@ def test_json_export_1():
         list_of_time_intervals=[[10, 18]],
     )
 
+    pb.to_json(compact=True)
+    pb.to_json_file("problem.json")
     # export to json
     solver = ps.SchedulingSolver(problem=pb)
-    ps.export_json_to_file(pb, solver, "test_export_1.json")
+    solver.to_json()

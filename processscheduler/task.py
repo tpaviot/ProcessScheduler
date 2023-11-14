@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List
+from typing import List, Union, Literal
 
 from pydantic import Field, PositiveInt, StrictBool
 from z3 import And, ArithRef, Bool, BoolRef, If, Int, Or
@@ -30,18 +30,14 @@ class Task(NamedUIDObject):
     inherit from the base class."""
 
     optional: StrictBool = Field(default=False)
-    work_amount: PositiveInt = Field(default=0)
-    priority: PositiveInt = Field(default=1)
+    work_amount: int = Field(default=0, ge=0)
+    priority: int = Field(default=0, ge=0)
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
 
         # workers required to process the task
         self._required_resources = []  # type: List[Resource]
-        # the following list is used for json export only
-        # it stores the parameter passed to the add_required_resource
-        # method
-        self._required_resources_names = []  # type: List[str]
 
         # z3 Int variables
         self._start = Int(f"{self.name}_start")  # type: ArithRef
@@ -87,9 +83,6 @@ class Task(NamedUIDObject):
             raise ValueError(
                 f"resource {resource.name} already defined as a required resource for task {self.name}"
             )
-
-        # store the resource name
-        self._required_resources_names.append(resource.name)
 
         if isinstance(resource, CumulativeWorker):
             # in the case for a CumulativeWorker, select at least one worker
@@ -185,6 +178,8 @@ class Task(NamedUIDObject):
 
 
 class ZeroDurationTask(Task):
+    duration: Literal[0] = 0
+
     def __init__(self, **data) -> None:
         super().__init__(**data)
         # add an assertion: end = start because the duration is zero
