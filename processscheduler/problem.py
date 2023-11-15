@@ -16,8 +16,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import timedelta, datetime
+import json
 import uuid
-from typing import List, Union
+from typing import List, Union, Any
 
 from pydantic import Field, PositiveInt
 
@@ -41,6 +42,15 @@ from processscheduler.objective import (
 from processscheduler.resource import Resource, Worker, CumulativeWorker, SelectWorkers
 from processscheduler.constraint import Constraint
 from processscheduler.buffer import Buffer
+
+_object_types = {
+    "FixedDurationTask": FixedDurationTask,
+    "ZeroDurationTask": ZeroDurationTask,
+    "VariableDurationTask": VariableDurationTask,
+    "Worker": Worker,
+    "CumulativeWorker": CumulativeWorker,
+    "SelectWorkers": SelectWorkers,
+}
 
 
 class SchedulingProblem(NamedUIDObject):
@@ -83,9 +93,25 @@ class SchedulingProblem(NamedUIDObject):
         if self.horizon is not None:
             self.add_constraint(self._horizon <= self.horizon)
 
-    #
-    # fonctions coming from context
-    #
+    def add_from_json_file(self, filename):
+        """take filename and returns the object"""
+        with open(filename, "r") as f:
+            return self.add_from_json(f.read())
+
+    def add_from_json(self, json_string) -> Any:
+        """takes a json string an returns the object.
+        Example of json string:
+        {'name': 'W2', 'type': 'Worker', 'productivity': 1, 'cost': None}
+        """
+        s = json.loads(json_string)
+        # first find the class to instanciate
+        s_type = s["type"]
+        if not s_type in _object_types:
+            raise AssertionError(f"{s_type} type not known")
+
+        # create and return the object
+        return _object_types[s_type].model_validate_json(json_string)
+
     def add_indicator(self, indicator: Indicator) -> bool:
         """Add an indicatr to the problem"""
         if indicator not in self.indicators:
