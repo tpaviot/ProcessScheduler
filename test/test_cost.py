@@ -224,8 +224,7 @@ def test_optimize_linear_cost_3() -> None:
     )
     t_1.add_required_resource(worker_1)
 
-    with pytest.raises(AssertionError):
-        cost_ind = problem.add_indicator_resource_cost([worker_1])
+    cost_ind = problem.add_indicator_resource_cost([worker_1])
 
 
 def test_quadratic_cost_1() -> None:

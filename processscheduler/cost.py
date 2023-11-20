@@ -14,6 +14,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Callable, Union, List
+import warnings
 
 from processscheduler.base import NamedUIDObject
 
@@ -39,35 +40,10 @@ class Cost(NamedUIDObject):
         # this may occur if the cost function is not linear
         # and this would result in an unexpected computation
         if "ToReal" in f"{to_return}":
-            raise AssertionError(
-                "Warning: ToReal conversion, the cost function must be linear."
+            warnings.warn(
+                "Warning: ToReal conversion in the cost function, might result in computation issues."
             )
         return to_return
-
-    def plot(self, interval, show_plot=False) -> None:
-        """Plot the cost curve using matplotlib."""
-        try:
-            import matplotlib.pyplot as plt
-        except ImportError as exc:
-            raise ModuleNotFoundError("matplotlib is not installed.") from exc
-
-        try:
-            import numpy as np
-        except ImportError as exc:
-            raise ModuleNotFoundError("numpy is not installed.") from exc
-
-        lower_bound, upper_bound = interval
-        x = np.linspace(lower_bound, upper_bound, 1000)
-        y = [self.cost_function(x_) for x_ in x]
-        plt.plot(x, y, label="Cost function")
-
-        plt.legend()
-        plt.grid(True)
-        plt.xlabel("x")
-        plt.ylabel("y")
-
-        if show_plot:
-            plt.show()
 
 
 class ConstantCostFunction(Cost):

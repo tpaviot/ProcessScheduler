@@ -54,3 +54,8 @@ from processscheduler.cost import (
 from processscheduler.problem import SchedulingProblem
 from processscheduler.solver import SchedulingSolver
 from processscheduler.buffer import NonConcurrentBuffer
+from processscheduler.plotter import (
+    plot_cost,
+    render_gantt_matplotlib,
+    render_gantt_plotly,
+)

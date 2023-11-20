@@ -34,12 +34,14 @@ def test_gantt_matplotlib_base():
     assert solution
 
     # display solution, using both ascii or matplotlib
-    solution.render_gantt_matplotlib(
+    ps.render_gantt_matplotlib(
+        solution,
         render_mode="Resource",
         show_plot=False,
         fig_filename="test_render_resources_matplotlib.svg",
     )
-    solution.render_gantt_matplotlib(
+    ps.render_gantt_matplotlib(
+        solution,
         render_mode="Task",
         show_plot=False,
         fig_filename="test_render_tasks_matplotlib.svg",
@@ -62,7 +64,7 @@ def test_gantt_matplotlib_indicator():
 
     assert solution
     # display solution, using both ascii or matplotlib
-    solution.render_gantt_matplotlib(render_mode="Resource", show_plot=False)
+    ps.render_gantt_matplotlib(solution, render_mode="Resource", show_plot=False)
 
 
 def test_gantt_matplotlib_navaible_resource():
@@ -75,7 +77,7 @@ def test_gantt_matplotlib_navaible_resource():
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    solution.render_gantt_matplotlib(render_mode="Resource", show_plot=False)
+    ps.render_gantt_matplotlib(solution, render_mode="Resource", show_plot=False)
 
 
 def test_gantt_matplotlib_no_resource():
@@ -84,7 +86,7 @@ def test_gantt_matplotlib_no_resource():
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    solution.render_gantt_matplotlib(render_mode="Resource", show_plot=False)
+    ps.render_gantt_matplotlib(solution, render_mode="Resource", show_plot=False)
 
 
 def test_gantt_matplotlib_resource_unavailable() -> None:
@@ -97,7 +99,7 @@ def test_gantt_matplotlib_resource_unavailable() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    solution.render_gantt_matplotlib(show_plot=False)
+    ps.render_gantt_matplotlib(solution, show_plot=False)
 
 
 def test_gantt_matplotlib_zero_duration_task():
@@ -106,7 +108,7 @@ def test_gantt_matplotlib_zero_duration_task():
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    solution.render_gantt_matplotlib(show_plot=False)
+    ps.render_gantt_matplotlib(solution, show_plot=False)
 
 
 def test_gantt_matplotlib_real_date_1():
@@ -122,8 +124,8 @@ def test_gantt_matplotlib_real_date_1():
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    solution.render_gantt_matplotlib(render_mode="Task", show_plot=False)
-    solution.render_gantt_matplotlib(render_mode="Resource", show_plot=False)
+    ps.render_gantt_matplotlib(solution, render_mode="Task", show_plot=False)
+    ps.render_gantt_matplotlib(solution, render_mode="Resource", show_plot=False)
 
 
 def test_gantt_matplotlib_real_date_no_start_time():
@@ -138,8 +140,8 @@ def test_gantt_matplotlib_real_date_no_start_time():
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    solution.render_gantt_matplotlib(render_mode="Task", show_plot=False)
-    solution.render_gantt_matplotlib(render_mode="Resource", show_plot=False)
+    ps.render_gantt_matplotlib(solution, render_mode="Task", show_plot=False)
+    ps.render_gantt_matplotlib(solution, render_mode="Resource", show_plot=False)
 
 
 def test_gantt_matplotlib_wrong_render_mode():
@@ -151,7 +153,7 @@ def test_gantt_matplotlib_wrong_render_mode():
     solution = solver.solve()
     assert solution
     with pytest.raises(ValueError):
-        solution.render_gantt_matplotlib(render_mode="foo", show_plot=False)
+        ps.render_gantt_matplotlib(solution, render_mode="foo", show_plot=False)
 
 
 def test_gantt_plotly_base():
@@ -167,25 +169,29 @@ def test_gantt_plotly_base():
     assert solution
 
     # display solution, using both ascii or matplotlib
-    solution.render_gantt_plotly(
+    ps.render_gantt_plotly(
+        solution,
         render_mode="Resource",
         show_plot=False,
         sort="Resource",
         fig_filename="test_render_resources_plotly.svg",
     )
-    solution.render_gantt_plotly(
+    ps.render_gantt_plotly(
+        solution,
         render_mode="Task",
         show_plot=False,
         sort="Task",
         fig_filename="test_render_tasks_plotly.svg",
     )
-    solution.render_gantt_plotly(
+    ps.render_gantt_plotly(
+        solution,
         render_mode="Resource",
         show_plot=False,
         sort="Start",
         html_filename="test_render_resources_plotly.html",
     )
-    solution.render_gantt_plotly(
+    ps.render_gantt_plotly(
+        solution,
         render_mode="Task",
         show_plot=False,
         sort="Finish",
@@ -211,8 +217,8 @@ def test_gantt_plotly_with_indicators_figsize():
 
     assert solution
     # display solution, using both ascii or matplotlib
-    solution.render_gantt_plotly(
-        render_mode="Resource", show_plot=False, fig_size=(400, 300)
+    ps.render_gantt_plotly(
+        solution, render_mode="Resource", show_plot=False, fig_size=(400, 300)
     )
 
 
@@ -229,4 +235,28 @@ def test_gantt_plotly_raise_wrong_type():
     assert solution
     # display solution, using both ascii or matplotlib
     with pytest.raises(ValueError):
-        solution.render_gantt_plotly(render_mode="foo")
+        ps.render_gantt_plotly(solution, render_mode="foo")
+
+
+def test_load_unload_feed_buffers_1() -> None:
+    # one task that consumes and feed two different buffers
+    pb = ps.SchedulingProblem(name="LoadUnloadBuffer1")
+
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+    buffer_2 = ps.NonConcurrentBuffer(name="Buffer2", initial_state=0)
+
+    ps.TaskStartAt(task=task_1, value=5)
+    ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=3)
+    ps.TaskLoadBuffer(task=task_1, buffer=buffer_2, quantity=2)
+
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    assert solution.buffers[buffer_1.name].state == [10, 7]
+    assert solution.buffers[buffer_1.name].state_change_times == [5]
+    assert solution.buffers[buffer_2.name].state == [0, 2]
+    assert solution.buffers[buffer_2.name].state_change_times == [8]
+
+    # plot buffers
+    ps.render_gantt_matplotlib(solution, show_plot=False)

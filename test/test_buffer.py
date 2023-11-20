@@ -131,9 +131,6 @@ def test_load_unload_feed_buffers_1() -> None:
     assert solution.buffers[buffer_2.name].state == [0, 2]
     assert solution.buffers[buffer_2.name].state_change_times == [8]
 
-    # plot buffers
-    solution.render_gantt_matplotlib(show_plot=False)
-
 
 def test_buffer_bounds_1() -> None:
     # n tasks take 1, n tasks feed one. Bounds 0 to 1
