@@ -723,7 +723,7 @@ class SchedulingSolver(BaseModelWithJson):
 
     def print_statistics(self):
         """A utility method that displays solver statistics"""
-        print("Solver satistics:")
+        print("Solver statistics:")
         for key, value in self._solver.statistics():
             print(f"\t{key}: {value}")
 

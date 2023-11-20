@@ -32,7 +32,12 @@ from processscheduler.task import (
     ZeroDurationTask,
     VariableDurationTask,
 )
-from processscheduler.cost import ConstantCostPerPeriod, PolynomialCostFunction
+from processscheduler.cost import (
+    ConstantCostFunction,
+    LinearCostFunction,
+    PolynomialCostFunction,
+    GeneralCostFunction,
+)
 from processscheduler.objective import (
     Indicator,
     Objective,
@@ -104,7 +109,7 @@ class SchedulingProblem(NamedUIDObject):
         {'name': 'W2', 'type': 'Worker', 'productivity': 1, 'cost': None}
         """
         s = json.loads(json_string)
-        # first find the class to instanciate
+        # first find the class to instantiate
         s_type = s["type"]
         if not s_type in _object_types:
             raise AssertionError(f"{s_type} type not known")
@@ -197,7 +202,7 @@ class SchedulingProblem(NamedUIDObject):
 
             for interv_low, interv_up in res._busy_intervals.values():
                 # Constant cost per period
-                if isinstance(res.cost, ConstantCostPerPeriod):
+                if isinstance(res.cost, ConstantCostFunction):
                     # res.cost(interv_up), res.cost(interv_low)
                     # or res.cost.value give the same result because the function is constant
                     cost_for_this_period = res.cost(interv_up)
@@ -208,10 +213,10 @@ class SchedulingProblem(NamedUIDObject):
                     else:
                         period_cost = res.cost(interv_up) * (interv_up - interv_low)
                     local_constant_costs.append(period_cost)
-                # Polynomial cost. Compute the area of the trapeze
+                # non linear cost. Compute the area of the trapeze
                 # The division by 2 is performed only once, a few lines below,
                 # after the sum is computed.
-                if isinstance(res.cost, PolynomialCostFunction):
+                else:
                     period_cost = (res.cost(interv_low) + res.cost(interv_up)) * (
                         interv_up - interv_low
                     )
@@ -353,7 +358,7 @@ class SchedulingProblem(NamedUIDObject):
     def add_objective_flowtime(
         self, weight: int = 1, list_of_tasks: Union[List[Task], None] = None
     ) -> Union[ArithRef, Indicator]:
-        """the flowtime is the sum of all ends, minimize. Be carful that
+        """the flowtime is the sum of all ends, minimize. Be careful that
         it is contradictory with makespan"""
         if list_of_tasks is None:
             list_of_tasks = self.tasks

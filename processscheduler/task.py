@@ -26,7 +26,7 @@ import processscheduler.base
 
 
 class Task(NamedUIDObject):
-    """The base class for all kind of tasks. Users may instanciate specialized classes that
+    """The base class for all kind of tasks. Users may instantiate specialized classes that
     inherit from the base class."""
 
     optional: StrictBool = Field(default=False)

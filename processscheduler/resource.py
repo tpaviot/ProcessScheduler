@@ -20,7 +20,7 @@ from z3 import ArithRef, Bool, PbEq, PbGe, PbLe
 from pydantic import Field, PositiveInt
 
 from processscheduler.base import NamedUIDObject
-from processscheduler.cost import Cost, ConstantCostPerPeriod
+from processscheduler.cost import Cost, ConstantCostFunction
 
 # import processscheduler.context as ps_context
 import processscheduler.base
@@ -35,7 +35,7 @@ def _distribute_p_over_n(p, n):
         return [None for _ in range(n)]
     if isinstance(p, int):
         int_value = p
-    elif isinstance(p, ConstantCostPerPeriod):
+    elif isinstance(p, ConstantCostFunction):
         int_value = p.value
     else:
         raise AssertionError("wrong type for parameter p")
@@ -111,7 +111,7 @@ class CumulativeWorker(Resource):
             Worker(
                 name=f"{self.name}_CumulativeWorker_{i+1}",
                 productivity=productivities[i],
-                cost=ConstantCostPerPeriod(value=costs_per_period[i])
+                cost=ConstantCostFunction(value=costs_per_period[i])
                 if costs_per_period[i] is not None
                 else None,
             )
