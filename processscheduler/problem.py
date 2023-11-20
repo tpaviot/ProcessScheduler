@@ -18,7 +18,7 @@
 from datetime import timedelta, datetime
 import json
 import uuid
-from typing import List, Union, Any
+from typing import List, Union, Any, Tuple
 
 from pydantic import Field, PositiveInt
 
@@ -93,12 +93,12 @@ class SchedulingProblem(NamedUIDObject):
         if self.horizon is not None:
             self.add_constraint(self._horizon <= self.horizon)
 
-    def add_from_json_file(self, filename):
+    def add_from_json_file(self, filename: str):
         """take filename and returns the object"""
         with open(filename, "r") as f:
             return self.add_from_json(f.read())
 
-    def add_from_json(self, json_string) -> Any:
+    def add_from_json(self, json_string: str) -> Any:
         """takes a json string an returns the object.
         Example of json string:
         {'name': 'W2', 'type': 'Worker', 'productivity': 1, 'cost': None}
@@ -274,7 +274,7 @@ class SchedulingProblem(NamedUIDObject):
         return self._horizon
 
     def add_objective_resource_utilization(
-        self, resource: Resource, weight=1
+        self, resource: Resource, weight: int = 1
     ) -> Union[ArithRef, Indicator]:
         """Maximize resource occupation."""
         resource_utilization_indicator = self.add_indicator_resource_utilization(
@@ -288,7 +288,7 @@ class SchedulingProblem(NamedUIDObject):
         return resource_utilization_indicator
 
     def add_objective_resource_cost(
-        self, list_of_resources: List[Resource], weight=1
+        self, list_of_resources: List[Resource], weight: int = 1
     ) -> Union[ArithRef, Indicator]:
         """minimise the cost of selected resources"""
         cost_indicator = self.add_indicator_resource_cost(list_of_resources)
@@ -297,7 +297,7 @@ class SchedulingProblem(NamedUIDObject):
         )
         return cost_indicator
 
-    def add_objective_priorities(self, weight=1) -> Union[ArithRef, Indicator]:
+    def add_objective_priorities(self, weight: int = 1) -> Union[ArithRef, Indicator]:
         """optimize the solution such that all task with a higher
         priority value are scheduled before other tasks"""
         all_priorities = []
@@ -314,39 +314,51 @@ class SchedulingProblem(NamedUIDObject):
         )
         return priority_indicator
 
-    def add_objective_start_latest(self, weight=1) -> Union[ArithRef, Indicator]:
+    def add_objective_start_latest(
+        self, weight: int = 1, list_of_tasks: Union[List[Task], None] = None
+    ) -> Union[ArithRef, Indicator]:
         """maximize the minimum start time, i.e. all the tasks
         are scheduled as late as possible"""
+        if list_of_tasks is None:
+            list_of_tasks = self.tasks
         mini = Int("SmallestStartTime")
         smallest_start_time = Indicator(name="SmallestStartTime", expression=mini)
         smallest_start_time.append_z3_assertion(
-            Or([mini == task._start for task in self.tasks])
+            Or([mini == task._start for task in list_of_tasks])
         )
-        for tsk in self.tasks:
+        for tsk in list_of_tasks:
             smallest_start_time.append_z3_assertion(mini <= tsk._start)
         MaximizeObjective(name="StartLatest", target=smallest_start_time, weight=weight)
         return smallest_start_time
 
-    def add_objective_start_earliest(self, weight=1) -> Union[ArithRef, Indicator]:
+    def add_objective_start_earliest(
+        self, weight: int = 1, list_of_tasks: Union[List[Task], None] = None
+    ) -> Union[ArithRef, Indicator]:
         """minimize the greatest start time, i.e. tasks are schedules
         as early as possible"""
+        if list_of_tasks is None:
+            list_of_tasks = self.tasks
         maxi = Int("GreatestStartTime")
         greatest_start_time = Indicator(name="GreatestStartTime", expression=maxi)
         greatest_start_time.append_z3_assertion(
-            Or([maxi == task._start for task in self.tasks])
+            Or([maxi == task._start for task in list_of_tasks])
         )
-        for tsk in self.tasks:
+        for tsk in list_of_tasks:
             greatest_start_time.append_z3_assertion(maxi >= tsk._start)
         MinimizeObjective(
             name="StartEarliest", target=greatest_start_time, weight=weight
         )
         return greatest_start_time
 
-    def add_objective_flowtime(self, weight=1) -> Union[ArithRef, Indicator]:
+    def add_objective_flowtime(
+        self, weight: int = 1, list_of_tasks: Union[List[Task], None] = None
+    ) -> Union[ArithRef, Indicator]:
         """the flowtime is the sum of all ends, minimize. Be carful that
         it is contradictory with makespan"""
+        if list_of_tasks is None:
+            list_of_tasks = self.tasks
         task_ends = []
-        for task in self.tasks:
+        for task in list_of_tasks:
             if task.optional:
                 task_ends.append(task._end * task._scheduled)
             else:
@@ -357,7 +369,10 @@ class SchedulingProblem(NamedUIDObject):
         return flow_time
 
     def add_objective_flowtime_single_resource(
-        self, resource, time_interval=None, weight=1
+        self,
+        resource: Union[Worker, CumulativeWorker],
+        time_interval: Union[Tuple[int, int], None] = None,
+        weight: int = 1,
     ) -> Union[ArithRef, Indicator]:
         """Optimize flowtime for a single resource, for all the tasks scheduled in the
         time interval provided. Is ever no time interval is passed to the function, the

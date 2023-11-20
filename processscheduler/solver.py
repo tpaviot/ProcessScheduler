@@ -615,7 +615,7 @@ class SchedulingSolver(BaseModelWithJson):
     def solve_optimize_incremental(
         self,
         variable: ArithRef,
-        max_recursion_depth: Optional[int] = None,
+        max_iter: Optional[int] = None,
         kind: Optional[str] = "min",
     ) -> int:
         """target a min or max for a variable, without the Optimize solver.
@@ -625,7 +625,7 @@ class SchedulingSolver(BaseModelWithJson):
 
         if kind not in ["min", "max"]:
             raise ValueError("choose either 'min' or 'max'")
-        depth = 0
+        num_iter = 0
         solution = False
         total_time = 0
         current_variable_value = None
@@ -641,19 +641,20 @@ class SchedulingSolver(BaseModelWithJson):
                 else self._objective._bounds[1]
             )
 
-        while True:  # infinite loop, break if unsat or max_depth
-            depth += 1
-            if max_recursion_depth is not None and depth > max_recursion_depth:
+        while True:  # infinite loop, break if unsat or max_num_iter
+            num_iter += 1
+            if max_iter is not None and num_iter > max_iter:
                 warnings.warn(
-                    "maximum recursion depth exceeded, stop computation but there might be a better solution."
+                    f"""maximum number of iteration {max_iter} exceeded, stop computation but there might be a
+                    better solution. Increase the max_iter parameter and rerun the incremental optimizer."""
                 )
                 break
 
-            incremantal_solver_is_computing_a_better_value = (
+            incremental_solver_is_computing_a_better_value = (
                 current_variable_value is not None
             )
             is_sat, sat_computation_time = self.check_sat(
-                incremantal_solver_is_computing_a_better_value
+                incremental_solver_is_computing_a_better_value
             )
 
             if is_sat == unsat and current_variable_value is not None:
@@ -682,9 +683,10 @@ class SchedulingSolver(BaseModelWithJson):
                 break
 
             # prevent the solver to start a new round if we expect it to be
-            # very long. The idea is the following: store the laste 3 computation
-            # times, compute and extrapolation. Break the loop if ever the expected
-            # time is too important.
+            # very long. The idea is the following: store the last 3 computation
+            # times, compute and extrapolate a quadratic using a quadratic function.
+            # Break the loop if ever the expected
+            # time is too big.
             if len(three_last_times) < 3:
                 three_last_times.append(total_time)
             else:
@@ -706,7 +708,7 @@ class SchedulingSolver(BaseModelWithJson):
                 self.append_z3_assertion(variable > current_variable_value)
                 print(f"\tChecking better value > {current_variable_value}")
 
-        print(f"\ttotal number of iterations: {depth}")
+        print(f"\ttotal number of iterations: {num_iter}")
         if current_variable_value is not None:
             print(f"\tvalue: {current_variable_value}")
         print(f"\t{self.problem.name} satisfiability checked in {total_time:.2f}s")

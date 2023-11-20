@@ -2,17 +2,17 @@ V2 Roadmap
 ==========
 The V2 branch is a reformating of the codebase that results in backward incompatible changes.
 
-[ ] port to pydantic V2
+[X] port to pydantic V2
 
 [ ] results in a pandas dataframe
 
-[ ] get rid off context, only use problem
+[X] get rid off context, only use problem
 
 [ ] clearly separate plots and code
 
 [ ] define LinearFunction, PolynomialFunction etc. for both costs and productivity
 
-[ ] JSON importer/exporter for a scheduling problem, based on pydantic should be straitforward
+[WIP] JSON importer/exporter for a scheduling problem, based on pydantic should be straitforward
 
 [X] Move to pytest
 
@@ -20,4 +20,6 @@ The V2 branch is a reformating of the codebase that results in backward incompat
 
 [ ] extend tasks constraints (StartSync, EndSync etc.) to a list of n entries rather than 2 entries
 
-[ ] Move first order logic to classes that inhterite from NamedUIDObject
+[ ] Move first order logic to classes that inherit from NamedUIDObject
+
+[ ] Objective start latest should take an optional list of tasks as a parameter

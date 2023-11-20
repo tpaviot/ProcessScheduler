@@ -23,7 +23,7 @@ import pytest
 # the same temp path in all the module
 @pytest.fixture(scope="module", autouse=True)
 def my_tmp_path(tmp_path_factory):
-    return tmp_path_factory.mktemp("mon_dossier_temporaire")
+    return tmp_path_factory.mktemp("my_temp_path")
 
 
 a_problem = ps.SchedulingProblem(name="JSONExportProblem1", horizon=10)
@@ -83,7 +83,7 @@ def test_VariableDurationTask_from_json(my_tmp_path):
     assert t.work_amount == 0
 
 
-# workers
+# resources
 def test_Worker_to_json_file(my_tmp_path):
     ps.SchedulingProblem(name="WorkerToJson")
     ps.Worker(name="W1", productivity=3).to_json_file(my_tmp_path / "worker_W1.json")
@@ -140,6 +140,32 @@ def test_SelectWorkers_from_json(my_tmp_path):
         sw = json.loads(f.read())
     # first create the workers
     l_o_w = [ps.Worker.model_validate(w) for w in sw["list_of_workers"]]
+
+
+# tasks constraints
+def test_TaskPrecedence_to_json(my_tmp_path):
+    ps.SchedulingProblem(name="TaskPrecedenceToJson")
+    t_1 = ps.FixedDurationTask(name="T_bef", duration=2)
+    t_2 = ps.FixedDurationTask(name="T_aft", duration=8)
+    tp = ps.TaskPrecedence(task_before=t_1, task_after=t_2, offset=4)
+    tp.to_json_file(my_tmp_path / "task_precedence.json")
+
+
+def test_TaskPrecedence_from_json(my_tmp_path):
+    ps.SchedulingProblem(name="TaskPrecedenceFromJson")
+    # to build a select workers, first read
+    with open(my_tmp_path / "task_precedence.json", "r") as f:
+        tp = json.loads(f.read())
+    # first create the tasks
+    t_1 = ps.FixedDurationTask.model_validate(tp["task_before"])
+    t_2 = ps.FixedDurationTask.model_validate(tp["task_after"])
+
+    assert t_1.duration == 2
+    assert t_2.duration == 8
+
+    # first create the workers
+    prec = ps.TaskPrecedence(task_before=t_1, task_after=t_2, offset=tp["offset"])
+    assert prec.offset == 4
 
 
 def test_Problem_add_from_json():
