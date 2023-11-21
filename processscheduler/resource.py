@@ -151,7 +151,7 @@ class SelectWorkers(Resource):
 
         problem_function = {"min": z3.PbGe, "max": z3.PbLe, "exact": z3.PbEq}
 
-        # TODO: in the validator
+        # TODO: move to the validator
         if self.nb_workers_to_select > len(self.list_of_workers):
             raise ValueError(
                 "nb_workers must be <= the number of workers provided in list_of_workers."

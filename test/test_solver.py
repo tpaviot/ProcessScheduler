@@ -248,15 +248,14 @@ def test_solve_parallel():
     assert solution
 
 
-# # TODO: failing test on some azure instances
-# # def test_solve_max_time():
-# #     """ a stress test which  """
-# #     problem = build_complex_problem('SolveMaxTime', 1000)
-# #     problem.add_objective_makespan()
-# #     # 1s is not enough to solve this problem
-# #     max_time_solver = ps.SchedulingSolver(problem, max_time=1)
-# #     solution = max_time_solver.solve()
-# #     assert not (solution)
+def test_solve_max_time():
+    """a stress test which"""
+    problem = build_complex_problem("SolveMaxTime", 1000)
+    problem.add_objective_makespan()
+    # 1s is not enough to solve this problem
+    max_time_solver = ps.SchedulingSolver(problem=problem, max_time=1)
+    solution = max_time_solver.solve()
+    assert not solution
 
 
 def test_solve_non_integer_max_time():

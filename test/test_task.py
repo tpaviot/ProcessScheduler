@@ -22,29 +22,6 @@ import pytest
 from pydantic import ValidationError
 
 
-def new_problem_or_clear() -> None:
-    """clear the current context. If no context is defined,
-    create a SchedulingProject object"""
-    # TODO: modify
-    # if processscheduler.base.active_problem is None:
-    ps.SchedulingProblem(name="NewProblem")
-    # else:
-    #    ps_context.main_context.clear()
-
-
-# TODO: change
-# def test_clear_context() -> None:
-#     ps_context.main_context = None
-#     new_problem_or_clear()
-#     assert isinstance(ps_context.main_context, ps.SchedulingContext)
-
-
-# def test_create_task_without_problem() -> None:
-#     ps_context.main_context = None
-#     with pytest.raises(AssertionError):
-#         ps.ZeroDurationTask(name="AZeroDurationTask")
-
-
 def test_create_task_zero_duration() -> None:
     ps.SchedulingProblem(name="ProblemWithoutHorizon")
     task = ps.ZeroDurationTask(name="zdt")
@@ -52,7 +29,7 @@ def test_create_task_zero_duration() -> None:
 
 
 def test_create_task_fixed_duration() -> None:
-    new_problem_or_clear()
+    ps.SchedulingProblem(name="CreateTaskFixedDUration")
     task = ps.FixedDurationTask(name="fdt", duration=1)
     assert isinstance(task, ps.FixedDurationTask)
     ps.FixedDurationTask(name="FloatDuration", duration=1.0)
@@ -97,7 +74,7 @@ def test_create_task_variable_duration_from_list() -> None:
 
 
 def test_task_types() -> None:
-    new_problem_or_clear()
+    ps.SchedulingProblem(name="CreateTasksValidationError")
     with pytest.raises(ValidationError):
         ps.VariableDurationTask(name="vdt5", max_duration=4.5)
     with pytest.raises(ValidationError):
@@ -113,14 +90,14 @@ def test_task_types() -> None:
 
 
 def test_task_same_names() -> None:
-    new_problem_or_clear()
+    ps.SchedulingProblem(name="TaskSameNames")
     ps.VariableDurationTask(name="t1")
     with pytest.raises(ValueError):
         ps.VariableDurationTask(name="t1")
 
 
 def test_eq_overloading() -> None:
-    new_problem_or_clear()
+    ps.SchedulingProblem(name="EqOverloading")
     task_1 = ps.ZeroDurationTask(name="task1")
     task_2 = ps.ZeroDurationTask(name="task2")
     assert task_1, task_1
@@ -157,7 +134,7 @@ def test_resource_requirements() -> None:
 
 
 def test_wrong_assignement() -> None:
-    new_problem_or_clear()
+    ps.SchedulingProblem(name="WrongAssignment")
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     worker_1 = ps.Worker(name="Worker1")
     task_1.add_required_resource(worker_1)
@@ -173,7 +150,7 @@ def test_wrong_assignement() -> None:
 # Single task constraints
 #
 def test_create_task_start_at() -> None:
-    new_problem_or_clear()
+    ps.SchedulingProblem(name="CreateTaskStartAt")
     t_1 = ps.FixedDurationTask(name="task_1", duration=2)
     c = ps.TaskStartAt(task=t_1, value=1)
     assert isinstance(c, ps.TaskStartAt)
@@ -181,7 +158,7 @@ def test_create_task_start_at() -> None:
 
 
 def test_create_task_start_after_strict() -> None:
-    new_problem_or_clear()
+    ps.SchedulingProblem(name="CreateTaskStartAfterStrict")
     t_1 = ps.FixedDurationTask(name="task_1", duration=2)
     c = ps.TaskStartAfter(task=t_1, value=3, kind="strict")
     assert isinstance(c, ps.TaskStartAfter)
@@ -189,7 +166,7 @@ def test_create_task_start_after_strict() -> None:
 
 
 def test_create_task_start_after_lax() -> None:
-    new_problem_or_clear()
+    ps.SchedulingProblem(name="CreateTaskStartAfterLax")
     t_1 = ps.FixedDurationTask(name="task_1", duration=2)
     c = ps.TaskStartAfter(task=t_1, value=3, kind="lax")
     assert isinstance(c, ps.TaskStartAfter)
@@ -197,23 +174,23 @@ def test_create_task_start_after_lax() -> None:
 
 
 def test_create_task_end_at() -> None:
-    new_problem_or_clear()
+    ps.SchedulingProblem(name="CreateTaskEndAt")
     t_1 = ps.FixedDurationTask(name="task", duration=2)
     c = ps.TaskEndAt(task=t_1, value=3)
     assert isinstance(c, ps.TaskEndAt)
     assert c.value == 3
 
 
-def test_create_task_before_strict() -> None:
-    new_problem_or_clear()
+def test_create_task_end_before_strict() -> None:
+    ps.SchedulingProblem(name="CreateTaskEndBeforeStrict")
     t_1 = ps.FixedDurationTask(name="task", duration=2)
     c = ps.TaskEndBefore(task=t_1, value=3, kind="strict")
     assert isinstance(c, ps.TaskEndBefore)
     assert c.value == 3
 
 
-def test_create_task_before_lax() -> None:
-    new_problem_or_clear()
+def test_create_task_end_before_lax() -> None:
+    ps.SchedulingProblem(name="CreateTaskEndBeforeLax")
     t_1 = ps.FixedDurationTask(name="task", duration=2)
     c = ps.TaskEndBefore(task=t_1, value=3, kind="lax")
     assert isinstance(c, ps.TaskEndBefore)
@@ -247,7 +224,7 @@ def test_task_duration_depend_on_start() -> None:
 # Two tasks constraints
 #
 def test_create_task_precedence_lax() -> None:
-    new_problem_or_clear()
+    ps.SchedulingProblem(name="CreateTaskPrecedenceLax")
     t_1 = ps.FixedDurationTask(name="t1", duration=2)
     t_2 = ps.FixedDurationTask(name="t2", duration=3)
     precedence_constraint = ps.TaskPrecedence(
@@ -257,7 +234,7 @@ def test_create_task_precedence_lax() -> None:
 
 
 def test_create_task_precedence_tight() -> None:
-    new_problem_or_clear()
+    ps.SchedulingProblem(name="CreateTaskPrecedenceTight")
     t_1 = ps.FixedDurationTask(name="t1", duration=2)
     t_2 = ps.FixedDurationTask(name="t2", duration=3)
     precedence_constraint = ps.TaskPrecedence(
@@ -279,7 +256,7 @@ def test_create_task_precedence_strict() -> None:
 
 
 def test_create_task_precedence_raise_exception_kind() -> None:
-    new_problem_or_clear()
+    ps.SchedulingProblem(name="CreateTaskPrecedenceKindRaiseException")
     t_1 = ps.FixedDurationTask(name="t1", duration=2)
     t_2 = ps.FixedDurationTask(name="t2", duration=3)
     with pytest.raises(ValidationError):
@@ -287,7 +264,7 @@ def test_create_task_precedence_raise_exception_kind() -> None:
 
 
 def test_create_task_precedence_raise_exception_offset_int() -> None:
-    new_problem_or_clear()
+    ps.SchedulingProblem(name="CreateTaskPrecedenceRaiseOffsetInt")
     t_1 = ps.FixedDurationTask(name="t1", duration=2)
     t_2 = ps.FixedDurationTask(name="t2", duration=3)
     with pytest.raises(ValidationError):
@@ -329,16 +306,6 @@ def test_tasks_end_sync() -> None:
     solution = solver.solve()
     assert solution
     assert solution.tasks[t_1.name].end == solution.tasks[t_2.name].end
-
-
-# def test_schedule_n_task_raise_exception()  -> None:
-#     new_problem_or_clear()
-#     with pytest.raises(TypeError):
-#         ps.ScheduleNTasksInTimeIntervals(
-#             "list_of_tasks", 1, "list_of_time_intervals"
-#         )
-#     with pytest.raises(TypeError):
-#         ps.ScheduleNTasksInTimeIntervals([], 1, "list_of_time_intervals")
 
 
 #

@@ -4,7 +4,7 @@ The V2 branch is a reformating of the codebase that results in backward incompat
 
 [X] port to pydantic V2
 
-[ ] results in a pandas dataframe
+[ ] results to a pandas dataframe
 
 [X] get rid off context, only use problem
 
@@ -24,6 +24,6 @@ The V2 branch is a reformating of the codebase that results in backward incompat
 
 [ ] extend tasks constraints (StartSync, EndSync etc.) to a list of n entries rather than 2 entries
 
-[ ] Move first order logic to classes that inherit from NamedUIDObject
+[X] Move first order logic to classes that inherit from NamedUIDObject
 
 [X] Objective start latest should take an optional list of tasks as a parameter
