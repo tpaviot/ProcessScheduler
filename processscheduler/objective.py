@@ -49,6 +49,7 @@ class Indicator(NamedUIDObject):
 
 class Objective(NamedUIDObject):
     target: Union[z3.ArithRef, Indicator]
+    weight: int = Field(default=1)
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -66,14 +67,8 @@ class Objective(NamedUIDObject):
 
 
 class MaximizeObjective(Objective):
-    weight: int = Field(default=1)
-
-    def __init__(self, **data) -> None:
-        super().__init__(**data)
+    pass
 
 
 class MinimizeObjective(Objective):
-    weight: int = Field(default=1)
-
-    def __init__(self, **data) -> None:
-        super().__init__(**data)
+    pass

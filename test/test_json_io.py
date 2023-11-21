@@ -214,6 +214,14 @@ def test_TaskPrecedence_from_json(my_tmp_path):
     assert prec.offset == 4
 
 
+# first order logic
+def test_not_TaskPrecedence_to_json(my_tmp_path):
+    pb = ps.SchedulingProblem(name="OperatorNot1", horizon=3)
+    t_1 = ps.FixedDurationTask(name="t1", duration=2)
+    ps.Not(constraint=ps.TaskStartAt(task=t_1, value=0))
+    pb.to_json_file(my_tmp_path / "pb_not_taskprecedence.json")
+
+
 def test_Problem_add_from_json():
     pb = ps.SchedulingProblem(name="ProblemAddFromJson")
     pb.add_from_json(
