@@ -20,7 +20,7 @@ from processscheduler.util import (
     sort_bubble,
 )
 
-from z3 import Solver, sat
+import z3
 
 
 def test_calc_parabola_from_three_points():
@@ -33,22 +33,22 @@ def test_calc_parabola_from_three_points():
 def test_sort_no_duplicates():
     lst_to_sort = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2]
     sorted_variables, assertions = sort_no_duplicates(lst_to_sort)
-    s = Solver()
+    s = z3.Solver()
     s.add(assertions)
     result = s.check()
     solution = s.model()
     sorted_integers = [solution[v].as_long() for v in sorted_variables]
-    assert result == sat
+    assert result == z3.sat
     assert sorted_integers == [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 
 def test_sort_duplicates():
     lst_to_sort = [10, 9, 8, 7, 6, 10, 9, 8, 7, 6, 1]
     sorted_variables, assertions = sort_bubble(lst_to_sort)
-    s = Solver()
+    s = z3.Solver()
     s.add(assertions)
     result = s.check()
     solution = s.model()
     sorted_integers = [solution[v].as_long() for v in sorted_variables]
-    assert result == sat
+    assert result == z3.sat
     assert sorted_integers == [1, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]

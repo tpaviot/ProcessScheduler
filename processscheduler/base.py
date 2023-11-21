@@ -21,7 +21,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, PositiveInt, Field, Extra, ConfigDict
 
-from z3 import BoolRef
+import z3
 
 
 class BaseModelWithJson(BaseModel):
@@ -85,7 +85,7 @@ class NamedUIDObject(BaseModelWithJson):
 
         # SMT assertions
         # start and end integer values must be positive
-        self._z3_assertions = []  # type: List[BoolRef]
+        self._z3_assertions = []  # type: List[z3.BoolRef]
         self._z3_assertion_hashes = []
 
     def __repr__(self) -> str:
@@ -96,7 +96,7 @@ class NamedUIDObject(BaseModelWithJson):
         assertions_str = "".join(f"{assertion}" for assertion in self._z3_assertions)
         return str_to_return + assertions_str
 
-    def append_z3_assertion(self, z3_assertion: BoolRef) -> bool:
+    def append_z3_assertion(self, z3_assertion: z3.BoolRef) -> bool:
         """
         Add a z3 assertion to the list of assertions to be satisfied.
 
@@ -112,7 +112,7 @@ class NamedUIDObject(BaseModelWithJson):
         self._z3_assertion_hashes.append(assertion_hash)
         return True
 
-    def get_z3_assertions(self) -> List[BoolRef]:
+    def get_z3_assertions(self) -> List[z3.BoolRef]:
         """Return the assertions list"""
         return self._z3_assertions
 

@@ -17,14 +17,12 @@
 
 from typing import List, Literal
 
-from z3 import Bool, BoolRef, Implies, PbEq, PbGe, PbLe
+import z3
 
 from pydantic import Field, PositiveInt
 
 from processscheduler.base import NamedUIDObject
 import processscheduler.base
-
-# import processscheduler.context as ps_context
 
 
 #
@@ -44,7 +42,7 @@ class Constraint(NamedUIDObject):
 
         # by default, this constraint has to be applied
         if self.optional:
-            self._applied = Bool(f"constraint_{self._uid}_applied")
+            self._applied = z3.Bool(f"constraint_{self._uid}_applied")
         else:
             self._applied = True
 
@@ -59,11 +57,11 @@ class Constraint(NamedUIDObject):
         """
         self._created_from_assertion = True
 
-    def set_z3_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
+    def set_z3_assertions(self, list_of_z3_assertions: List[z3.BoolRef]) -> None:
         """Each constraint comes with a set of z3 assertions
         to satisfy."""
         if self.optional:
-            self.append_z3_assertion(Implies(self._applied, list_of_z3_assertions))
+            self.append_z3_assertion(z3.Implies(self._applied, list_of_z3_assertions))
         else:
             self.append_z3_assertion(list_of_z3_assertions)
 
@@ -91,7 +89,7 @@ class ForceApplyNOptionalConstraints(Constraint):
     def __init__(self, **data) -> None:
         super().__init__(**data)
 
-        problem_function = {"min": PbGe, "max": PbLe, "exact": PbEq}
+        problem_function = {"min": z3.PbGe, "max": z3.PbLe, "exact": z3.PbEq}
 
         # first check that all tasks from the list_of_optional_tasks are
         # actually optional

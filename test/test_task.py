@@ -230,10 +230,10 @@ def test_task_duration_depend_on_start() -> None:
     pb.add_constraint(task_1._duration == task_1._start * 3)
 
     ps.TaskStartAt(task=task_2, value=11)
-    pb.add_constraint(
-        ps.if_then_else(
-            task_2._start < 10, [task_2._duration == 3], [task_2._duration == 1]
-        )
+    ps.IfThenElse(
+        condition=task_2._start < 10,
+        then_list_of_constraints=[task_2._duration == 3],
+        else_list_of_constraints=[task_2._duration == 1],
     )
 
     solver = ps.SchedulingSolver(problem=pb)

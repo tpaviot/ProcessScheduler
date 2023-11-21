@@ -15,7 +15,7 @@
 
 from typing import Dict, List, Tuple, Literal, Union
 
-from z3 import ArithRef, Bool, PbEq, PbGe, PbLe
+import z3
 
 from pydantic import Field, PositiveInt
 
@@ -64,13 +64,15 @@ class Resource(NamedUIDObject):
         # for each resource, we define a dict that stores
         # all tasks and busy intervals of the resource.
         # busy intervals can be for example [(1,3), (5, 7)]
-        self._busy_intervals = {}  # type: Dict[Task, Tuple[ArithRef, ArithRef]]
+        self._busy_intervals = {}  # type: Dict[Task, Tuple[z3.ArithRef, z3.ArithRef]]
 
-    def add_busy_interval(self, task, interval: Tuple[ArithRef, ArithRef]) -> None:
+    def add_busy_interval(
+        self, task, interval: Tuple[z3.ArithRef, z3.ArithRef]
+    ) -> None:
         """add an interval in which the resource is busy"""
         self._busy_intervals[task] = interval
 
-    def get_busy_intervals(self) -> List[Tuple[ArithRef, ArithRef]]:
+    def get_busy_intervals(self) -> List[Tuple[z3.ArithRef, z3.ArithRef]]:
         """returns the list of all busy intervals"""
         return list(self._busy_intervals.values())
 
@@ -147,7 +149,7 @@ class SelectWorkers(Resource):
     def __init__(self, **data) -> None:
         super().__init__(**data)
 
-        problem_function = {"min": PbGe, "max": PbLe, "exact": PbEq}
+        problem_function = {"min": z3.PbGe, "max": z3.PbLe, "exact": z3.PbEq}
 
         # TODO: in the validator
         if self.nb_workers_to_select > len(self.list_of_workers):
@@ -171,7 +173,7 @@ class SelectWorkers(Resource):
 
         # create as many booleans as resources in the list
         for worker in self.list_of_workers:
-            worker_is_selected = Bool(f"Selected_{worker.name}_{self._uid}")
+            worker_is_selected = z3.Bool(f"Selected_{worker.name}_{self._uid}")
             self._selection_dict[worker] = worker_is_selected
         # create the assertion : exactly n boolean flags are allowed to be True,
         # the others must be False

@@ -13,26 +13,12 @@
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 # You should have received a copy of the GNU General Public License along with
-# this program. If not, see <http://www.gnu.org/licenses/>.
+# this program. z3.If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
 from typing import Literal, List, Tuple, Union
 
-from z3 import (
-    And,
-    Bool,
-    BoolRef,
-    If,
-    Implies,
-    Int,
-    Not,
-    Or,
-    PbEq,
-    PbGe,
-    PbLe,
-    Xor,
-    ArithRef,
-)
+import z3
 
 from pydantic import Field, PositiveInt
 
@@ -61,8 +47,8 @@ class TaskGroup(TaskConstraint):
         super().__init__(**data)
 
         u_id = uuid.uuid4().int
-        self._start = Int(f"task_group_start_{u_id}")
-        self._end = Int(f"task_group_end_{u_id}")
+        self._start = z3.Int(f"task_group_start_{u_id}")
+        self._end = z3.Int(f"task_group_end_{u_id}")
 
         if self.time_interval is not None:
             self._scheduled_assertion = [
@@ -87,7 +73,7 @@ class UnorderedTaskGroup(TaskGroup):
     def __init__(self, **data) -> None:
         super().__init__(**data)
 
-        self.set_z3_assertions(And(self._scheduled_assertion))
+        self.set_z3_assertions(z3.And(self._scheduled_assertion))
 
 
 class OrderedTaskGroup(TaskGroup):
@@ -112,7 +98,7 @@ class OrderedTaskGroup(TaskGroup):
                     self.list_of_tasks[i]._end == self.list_of_tasks[i + 1]._start
                 ]
 
-        self.set_z3_assertions(And(self._scheduled_assertion))
+        self.set_z3_assertions(z3.And(self._scheduled_assertion))
 
 
 #
@@ -157,8 +143,8 @@ class TaskPrecedence(TaskConstraint):
         if self.task_before.optional or self.task_after.optional:
             # both tasks must be scheduled so that the precedence constraint applies
             self.set_z3_assertions(
-                Implies(
-                    And(self.task_before._scheduled, self.task_after._scheduled),
+                z3.Implies(
+                    z3.And(self.task_before._scheduled, self.task_after._scheduled),
                     scheduled_assertion,
                 )
             )
@@ -180,8 +166,8 @@ class TasksStartSynced(TaskConstraint):
         if self.task_1.optional or self.task_2.optional:
             # both tasks must be scheduled so that the startsynced constraint applies
             self.set_z3_assertions(
-                Implies(
-                    And(self.task_1._scheduled, self.task_2._scheduled),
+                z3.Implies(
+                    z3.And(self.task_1._scheduled, self.task_2._scheduled),
                     scheduled_assertion,
                 )
             )
@@ -203,8 +189,8 @@ class TasksEndSynced(TaskConstraint):
         if self.task_1.optional or self.task_2.optional:
             # both tasks must be scheduled so that the endsynced constraint applies
             self.set_z3_assertions(
-                Implies(
-                    And(self.task_1._scheduled, self.task_2._scheduled),
+                z3.Implies(
+                    z3.And(self.task_1._scheduled, self.task_2._scheduled),
                     scheduled_assertion,
                 )
             )
@@ -222,7 +208,7 @@ class TasksDontOverlap(TaskConstraint):
     def __init__(self, **data) -> None:
         super().__init__(**data)
 
-        scheduled_assertion = Xor(
+        scheduled_assertion = z3.Xor(
             self.task_2._start >= self.task_1._end,
             self.task_1._start >= self.task_2._end,
         )
@@ -230,8 +216,8 @@ class TasksDontOverlap(TaskConstraint):
         if self.task_1.optional or self.task_2.optional:
             # if one task is not scheduledboth tasks must be scheduled so that the not overlap constraint applies
             self.set_z3_assertions(
-                Implies(
-                    And(self.task_1._scheduled, self.task_2._scheduled),
+                z3.Implies(
+                    z3.And(self.task_1._scheduled, self.task_2._scheduled),
                     scheduled_assertion,
                 )
             )
@@ -262,11 +248,11 @@ class TasksContiguous(TaskConstraint):
         for i in range(1, len(sorted_starts)):
             asst = sorted_starts[i] == sorted_ends[i - 1]
             #  another set of conditions, related to the time periods
-            condition_only_scheduled_tasks = And(
+            condition_only_scheduled_tasks = z3.And(
                 sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0
             )
             # finally create the constraint
-            new_cstr = Implies(Or(condition_only_scheduled_tasks), asst)
+            new_cstr = z3.Implies(z3.Or(condition_only_scheduled_tasks), asst)
             self.set_z3_assertions(new_cstr)
 
 
@@ -277,7 +263,7 @@ class TaskStartAt(TaskConstraint):
     """One task must start at the desired time"""
 
     task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
-    value: Union[int, ArithRef]
+    value: Union[int, z3.ArithRef]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -285,14 +271,16 @@ class TaskStartAt(TaskConstraint):
         scheduled_assertion = self.task._start == self.value
 
         if self.task.optional:
-            self.set_z3_assertions(Implies(self.task._scheduled, scheduled_assertion))
+            self.set_z3_assertions(
+                z3.Implies(self.task._scheduled, scheduled_assertion)
+            )
         else:
             self.set_z3_assertions(scheduled_assertion)
 
 
 class TaskStartAfter(TaskConstraint):
     task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
-    value: Union[int, ArithRef]
+    value: Union[int, z3.ArithRef]
     kind: Literal["lax", "strict"] = Field(default="lax")
 
     def __init__(self, **data) -> None:
@@ -304,7 +292,9 @@ class TaskStartAfter(TaskConstraint):
             scheduled_assertion = self.task._start >= self.value
 
         if self.task.optional:
-            self.set_z3_assertions(Implies(self.task._scheduled, scheduled_assertion))
+            self.set_z3_assertions(
+                z3.Implies(self.task._scheduled, scheduled_assertion)
+            )
         else:
             self.set_z3_assertions(scheduled_assertion)
 
@@ -313,7 +303,7 @@ class TaskEndAt(TaskConstraint):
     """On task must complete at the desired time"""
 
     task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
-    value: Union[int, ArithRef]
+    value: Union[int, z3.ArithRef]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -321,7 +311,9 @@ class TaskEndAt(TaskConstraint):
         scheduled_assertion = self.task._end == self.value
 
         if self.task.optional:
-            self.set_z3_assertions(Implies(self.task._scheduled, scheduled_assertion))
+            self.set_z3_assertions(
+                z3.Implies(self.task._scheduled, scheduled_assertion)
+            )
         else:
             self.set_z3_assertions(scheduled_assertion)
 
@@ -330,7 +322,7 @@ class TaskEndBefore(TaskConstraint):
     """task.end < value"""
 
     task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
-    value: Union[int, ArithRef]
+    value: Union[int, z3.ArithRef]
     kind: Literal["lax", "strict"] = Field(default="lax")
 
     def __init__(self, **data) -> None:
@@ -342,7 +334,9 @@ class TaskEndBefore(TaskConstraint):
             scheduled_assertion = self.task._end <= self.value
 
         if self.task.optional:
-            self.set_z3_assertions(Implies(self.task._scheduled, scheduled_assertion))
+            self.set_z3_assertions(
+                z3.Implies(self.task._scheduled, scheduled_assertion)
+            )
         else:
             self.set_z3_assertions(scheduled_assertion)
 
@@ -354,7 +348,7 @@ class OptionalTaskConditionSchedule(TaskConstraint):
     """An optional task that is scheduled only if a condition is fulfilled."""
 
     task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
-    condition: BoolRef
+    condition: z3.BoolRef
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -363,7 +357,7 @@ class OptionalTaskConditionSchedule(TaskConstraint):
             raise TypeError(f"Task {self.task.name} must be optional.")
 
         self.set_z3_assertions(
-            If(
+            z3.If(
                 self.condition,
                 self.task._scheduled == True,
                 self.task._scheduled == False,
@@ -399,7 +393,7 @@ class ForceScheduleNOptionalTasks(TaskConstraint):
     def __init__(self, **data) -> None:
         super().__init__(**data)
 
-        problem_function = {"min": PbGe, "max": PbLe, "exact": PbEq}
+        problem_function = {"min": z3.PbGe, "max": z3.PbLe, "exact": z3.PbEq}
 
         # first check that all tasks from the list_of_optional_tasks are
         # actually optional
@@ -430,7 +424,7 @@ class ScheduleNTasksInTimeIntervals(TaskConstraint):
     def __init__(self, **data) -> None:
         super().__init__(**data)
 
-        problem_function = {"min": PbGe, "max": PbLe, "exact": PbEq}
+        problem_function = {"min": z3.PbGe, "max": z3.PbLe, "exact": z3.PbEq}
 
         # count the number of tasks that re scheduled in this time interval
         all_bools = []
@@ -439,26 +433,28 @@ class ScheduleNTasksInTimeIntervals(TaskConstraint):
             # between two consecutive intervals
             bools_for_this_task = []
             for time_interval in self.list_of_time_intervals:
-                task_in_time_interval = Bool(
+                task_in_time_interval = z3.Bool(
                     f"InTimeIntervalTask_{task.name}_{uuid.uuid4().int}"
                 )
                 lower_bound, upper_bound = time_interval
                 cstrs = [
                     task._start >= lower_bound,
                     task._end <= upper_bound,
-                    Not(
-                        And(task._start < lower_bound, task._end > lower_bound)
+                    z3.Not(
+                        z3.And(task._start < lower_bound, task._end > lower_bound)
                     ),  # overlap at start
-                    Not(
-                        And(task._start < upper_bound, task._end > upper_bound)
+                    z3.Not(
+                        z3.And(task._start < upper_bound, task._end > upper_bound)
                     ),  # overlap at end
-                    Not(And(task._start < lower_bound, task._end > upper_bound)),
+                    z3.Not(z3.And(task._start < lower_bound, task._end > upper_bound)),
                 ]  # full overlap
-                asst = Implies(task_in_time_interval, And(cstrs))
+                asst = z3.Implies(task_in_time_interval, z3.And(cstrs))
                 self.set_z3_assertions(asst)
                 bools_for_this_task.append(task_in_time_interval)
             # only one maximum bool to True from the previous possibilities
-            asst_tsk = PbLe([(scheduled, True) for scheduled in bools_for_this_task], 1)
+            asst_tsk = z3.PbLe(
+                [(scheduled, True) for scheduled in bools_for_this_task], 1
+            )
             self.set_z3_assertions(asst_tsk)
             all_bools.extend(bools_for_this_task)
 

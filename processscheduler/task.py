@@ -13,12 +13,13 @@
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 # FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 # You should have received a copy of the GNU General Public License along with
-# this program. If not, see <http://www.gnu.org/licenses/>.
+# this program. z3.If not, see <http://www.gnu.org/licenses/>.
 
 from typing import List, Union, Literal
 
 from pydantic import Field, PositiveInt, StrictBool
-from z3 import And, ArithRef, Bool, BoolRef, If, Int, Or
+
+import z3
 
 from processscheduler.base import NamedUIDObject
 from processscheduler.resource import Resource, Worker, CumulativeWorker, SelectWorkers
@@ -40,12 +41,12 @@ class Task(NamedUIDObject):
         self._required_resources = []  # type: List[Resource]
 
         # z3 Int variables
-        self._start = Int(f"{self.name}_start")  # type: ArithRef
-        self._end = Int(f"{self.name}_end")  # type: ArithRef
-        self._duration = Int(f"{self.name}_duration")  # type: ArithRef
+        self._start = z3.Int(f"{self.name}_start")  # type: z3.ArithRef
+        self._end = z3.Int(f"{self.name}_end")  # type: z3.ArithRef
+        self._duration = z3.Int(f"{self.name}_duration")  # type: z3.ArithRef
 
         # by default, the task is mandatory
-        self._scheduled = True  # type: Union[bool, BoolRef]
+        self._scheduled = True  # type: Union[bool, z3.BoolRef]
 
         # add this task to the current context
         if processscheduler.base.active_problem is None:
@@ -73,7 +74,7 @@ class Task(NamedUIDObject):
 
         Args:
             resource: any of one of the Resource derivatives class (Worker, SelectWorkers etc.)
-        If dynamic flag (False by default) is set to True, then the resource is dynamic
+        z3.If dynamic flag (False by default) is set to True, then the resource is dynamic
         and can join the task any time between its start and end times.
         """
         if not isinstance(resource, Resource):
@@ -91,19 +92,19 @@ class Task(NamedUIDObject):
         if isinstance(resource, SelectWorkers):
             # loop over each resource
             for worker in resource.list_of_workers:
-                resource_maybe_busy_start = Int(
+                resource_maybe_busy_start = z3.Int(
                     f"{worker.name}_maybe_busy_{self.name}_start"
                 )
-                resource_maybe_busy_end = Int(
+                resource_maybe_busy_end = z3.Int(
                     f"{worker.name}_maybe_busy_{self.name}_end"
                 )
                 # create the busy interval for the resource
                 worker.add_busy_interval(
                     self, (resource_maybe_busy_start, resource_maybe_busy_end)
                 )
-                # add assertions. If worker is selected then sync the resource with the task
+                # add assertions. z3.If worker is selected then sync the resource with the task
                 selected_variable = resource._selection_dict[worker]
-                schedule_as_usual = And(
+                schedule_as_usual = z3.And(
                     resource_maybe_busy_start == self._start,
                     resource_maybe_busy_end == self._end,
                 )
@@ -114,12 +115,12 @@ class Task(NamedUIDObject):
                 # This single point in time results in a zero duration time: related
                 # task will not be considered when computing resource utilization or cost.
                 single_point_in_past = self._get_unique_negative_integer()
-                move_to_past = And(
+                move_to_past = z3.And(
                     resource_maybe_busy_start == single_point_in_past,  # to past
                     resource_maybe_busy_end == single_point_in_past,
                 )
                 # define the assertion ...
-                assertion = If(selected_variable, schedule_as_usual, move_to_past)
+                assertion = z3.If(selected_variable, schedule_as_usual, move_to_past)
                 # ... and store it into the task assertions list
                 self.append_z3_assertion(assertion)
                 # finally, add each worker to the "required" resource list
@@ -127,8 +128,8 @@ class Task(NamedUIDObject):
             # also, don't forget to add the AlternativeWorker assertion
             self.append_z3_assertion(resource._selection_assertion)
         elif isinstance(resource, Worker):
-            resource_busy_start = Int(f"{resource.name}_busy_{self.name}_start")
-            resource_busy_end = Int(f"{resource.name}_busy_{self.name}_end")
+            resource_busy_start = z3.Int(f"{resource.name}_busy_{self.name}_start")
+            resource_busy_end = z3.Int(f"{resource.name}_busy_{self.name}_end")
             # create the busy interval for the resource
             resource.add_busy_interval(self, (resource_busy_start, resource_busy_end))
             # set the busy resource to keep synced with the task
@@ -157,24 +158,28 @@ class Task(NamedUIDObject):
         for resource in list_of_resources:
             self.add_required_resource(resource, dynamic)
 
-    def set_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
+    def set_assertions(self, list_of_z3_assertions: List[z3.BoolRef]) -> None:
         """Take a list of constraint to satisfy. Create two cases: if the task is scheduled,
         nothing is done; if the task is optional, move task to the past"""
         if self.optional:  # in this case the previous assertions maybe skipped
-            self._scheduled = Bool(f"{self.name}_scheduled")
+            self._scheduled = z3.Bool(f"{self.name}_scheduled")
             # the first task is moved to -1, the second to -2
             # etc.
             point_in_past = -self._task_number
-            not_scheduled_assertion = And(
+            not_scheduled_assertion = z3.And(
                 self._start == point_in_past,  # to past
                 self._end == point_in_past,  # to past
                 self._duration == 0,
             )
             self.append_z3_assertion(
-                If(self._scheduled, And(list_of_z3_assertions), not_scheduled_assertion)
+                z3.If(
+                    self._scheduled,
+                    z3.And(list_of_z3_assertions),
+                    not_scheduled_assertion,
+                )
             )
         else:
-            self.append_z3_assertion(And(list_of_z3_assertions))
+            self.append_z3_assertion(z3.And(list_of_z3_assertions))
 
 
 class ZeroDurationTask(Task):
@@ -242,7 +247,7 @@ class VariableDurationTask(Task):
             all_cstr = [
                 self._duration == duration for duration in self.allowed_durations
             ]
-            assertions.append(Or(all_cstr))
+            assertions.append(z3.Or(all_cstr))
 
         if self.max_duration is not None:
             assertions.append(self._duration <= self.max_duration)

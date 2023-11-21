@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-__VERSION__ = "0.9.3"
+__VERSION__ = "2.x.x"
 
 try:
     import z3
@@ -21,14 +21,7 @@ except ModuleNotFoundError as z3_not_found:
     raise ImportError("z3 not found. It is a mandatory dependency") from z3_not_found
 
 # Expose everything useful
-from processscheduler.first_order_logic import (
-    not_,
-    or_,
-    and_,
-    xor_,
-    if_then_else,
-    implies,
-)
+from processscheduler.first_order_logic import Not, Or, And, Xor, Implies, IfThenElse
 from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective
 from processscheduler.task import (
     ZeroDurationTask,

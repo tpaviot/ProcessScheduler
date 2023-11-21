@@ -20,7 +20,7 @@ from processscheduler.base import NamedUIDObject
 
 from pydantic import Field
 
-from z3 import ArithRef
+import z3
 
 
 class Cost(NamedUIDObject):
@@ -59,8 +59,8 @@ class LinearCostFunction(Cost):
     C(x) = slope * x + intercept
     """
 
-    slope: Union[ArithRef, int, float]
-    intercept: Union[ArithRef, int, float]
+    slope: Union[z3.ArithRef, int, float]
+    intercept: Union[z3.ArithRef, int, float]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -71,7 +71,7 @@ class PolynomialCostFunction(Cost):
     """A cost function under a polynomial form.
     C(x) = a_n * x^n + a_{n-1} * x^(n-1) + ... + a_0"""
 
-    coefficients: List[Union[ArithRef, int, float]]
+    coefficients: List[Union[z3.ArithRef, int, float]]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)

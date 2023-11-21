@@ -18,7 +18,7 @@
 from typing import Literal, Union, Dict, Tuple, List
 import uuid
 
-from z3 import And, Implies, Int, Not, Or, Sum, Xor
+import z3
 
 from pydantic import Field
 
@@ -79,42 +79,42 @@ class WorkLoad(ResourceConstraint):
                     resource_assigned = True
                     # this variable allows to compute the occupation
                     # of the resource during the time interval
-                    dur = Int(
+                    dur = z3.Int(
                         f"Overlap_{time_interval_lower_bound}_{time_interval_upper_bound}_{uuid.uuid4().hex[:8]}"
                     )
                     # prevent solutions where duration would be negative
                     self.set_z3_assertions(dur >= 0)
                     # 4 different cases to take into account
-                    cond1 = And(
+                    cond1 = z3.And(
                         start_task_i >= time_interval_lower_bound,
                         end_task_i <= time_interval_upper_bound,
                     )
-                    asst1 = Implies(cond1, dur == end_task_i - start_task_i)
+                    asst1 = z3.Implies(cond1, dur == end_task_i - start_task_i)
                     self.set_z3_assertions(asst1)
                     # overlap at lower bound
-                    cond2 = And(
+                    cond2 = z3.And(
                         start_task_i < time_interval_lower_bound,
                         end_task_i > time_interval_lower_bound,
                     )
-                    asst2 = Implies(
+                    asst2 = z3.Implies(
                         cond2, dur == end_task_i - time_interval_lower_bound
                     )
                     self.set_z3_assertions(asst2)
                     # overlap at upper bound
-                    cond3 = And(
+                    cond3 = z3.And(
                         start_task_i < time_interval_upper_bound,
                         end_task_i > time_interval_upper_bound,
                     )
-                    asst3 = Implies(
+                    asst3 = z3.Implies(
                         cond3, dur == time_interval_upper_bound - start_task_i
                     )
                     self.set_z3_assertions(asst3)
                     # all overlap
-                    cond4 = And(
+                    cond4 = z3.And(
                         start_task_i < time_interval_lower_bound,
                         end_task_i > time_interval_upper_bound,
                     )
-                    asst4 = Implies(
+                    asst4 = z3.Implies(
                         cond4,
                         dur == time_interval_upper_bound - time_interval_lower_bound,
                     )
@@ -122,7 +122,9 @@ class WorkLoad(ResourceConstraint):
 
                     # make these constraints mutual: no overlap
                     self.set_z3_assertions(
-                        Implies(Not(Or([cond1, cond2, cond3, cond4])), dur == 0)
+                        z3.Implies(
+                            z3.Not(z3.Or([cond1, cond2, cond3, cond4])), dur == 0
+                        )
                     )
 
                     # finally, store this variable in the duratins list
@@ -135,11 +137,11 @@ class WorkLoad(ResourceConstraint):
 
             # workload constraint depends on the kind
             if self.kind == "exact":
-                workload_constraint = Sum(durations) == number_of_time_slots
+                workload_constraint = z3.Sum(durations) == number_of_time_slots
             elif self.kind == "max":
-                workload_constraint = Sum(durations) <= number_of_time_slots
+                workload_constraint = z3.Sum(durations) <= number_of_time_slots
             elif self.kind == "min":
-                workload_constraint = Sum(durations) >= number_of_time_slots
+                workload_constraint = z3.Sum(durations) >= number_of_time_slots
 
             self.set_z3_assertions(workload_constraint)
 
@@ -183,7 +185,7 @@ class ResourceUnavailable(ResourceConstraint):
                 for start_task_i, end_task_i in worker.get_busy_intervals():
                     resource_assigned = True
                     self.set_z3_assertions(
-                        Xor(
+                        z3.Xor(
                             start_task_i >= interval_upper_bound,
                             end_task_i <= interval_lower_bound,
                         )
@@ -246,7 +248,7 @@ class ResourceTasksDistance(ResourceConstraint):
             conditions = []
             if self.list_of_time_intervals is not None:
                 conditions.extend(
-                    And(
+                    z3.And(
                         sorted_starts[i] >= lower_bound,
                         sorted_ends[i - 1] >= lower_bound,
                         sorted_starts[i] <= upper_bound,
@@ -257,12 +259,12 @@ class ResourceTasksDistance(ResourceConstraint):
             else:
                 # add the constraint only if start and ends are positive integers,
                 # that is to say they correspond to a scheduled optional task
-                condition_only_scheduled_tasks = And(
+                condition_only_scheduled_tasks = z3.And(
                     sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0
                 )
                 conditions = [condition_only_scheduled_tasks]
             # finally create the constraint
-            new_cstr = Implies(Or(conditions), asst)
+            new_cstr = z3.Implies(z3.Or(conditions), asst)
             self.set_z3_assertions(new_cstr)
 
 

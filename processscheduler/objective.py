@@ -17,7 +17,7 @@
 
 from typing import Optional, Union, Tuple
 
-from z3 import Int, BoolRef, ArithRef
+import z3
 
 from pydantic import Field
 
@@ -33,12 +33,12 @@ class Indicator(NamedUIDObject):
     # None if not bounded
     # (lower_bound, None), (None, upper_bound) if only one-side bounded
     # (lower_bound, upper_bound) if full bounded
-    expression: Union[int, float, BoolRef, ArithRef]
+    expression: Union[int, float, z3.BoolRef, z3.ArithRef]
     bounds: Optional[Tuple[int, int]] = Field(default=None)
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
-        self._indicator_variable = Int(f"Indicator_{self.name}")
+        self._indicator_variable = z3.Int(f"Indicator_{self.name}")
         # by default the scheduled value is set to None
         # set by the solver
         self._scheduled_value = None
@@ -48,13 +48,13 @@ class Indicator(NamedUIDObject):
 
 
 class Objective(NamedUIDObject):
-    target: Union[ArithRef, Indicator]
+    target: Union[z3.ArithRef, Indicator]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
-        if not isinstance(self.target, (ArithRef, Indicator)):
+        if not isinstance(self.target, (z3.ArithRef, Indicator)):
             raise TypeError(
-                "the indicator expression must be either a BoolRef, ArithRef or Indicator instance."
+                "the indicator expression must be either a z3.BoolRef, z3.ArithRef or Indicator instance."
             )
         if isinstance(self.target, Indicator):
             self._target = self.target._indicator_variable

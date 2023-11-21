@@ -17,7 +17,7 @@
 
 from typing import List
 
-from z3 import And, FreshInt, If, Or
+import z3
 
 
 #
@@ -53,8 +53,8 @@ def sort_bubble(z3_int_list):
             x = arr[i]
             y = arr[i + 1]
             # compare and swap x and y
-            x1, y1 = FreshInt(), FreshInt()
-            c = If(x <= y, And(x1 == x, y1 == y), And(x1 == y, y1 == x))
+            x1, y1 = z3.FreshInt(), z3.FreshInt()
+            c = z3.If(x <= y, z3.And(x1 == x, y1 == y), z3.And(x1 == y, y1 == x))
             # store values
             arr[i] = x1
             arr[i + 1] = y1
@@ -71,8 +71,8 @@ def sort_bubble(z3_int_list):
 def sort_no_duplicates(z3_int_list):
     """Sort a list of integers that have distinct values"""
     n = len(z3_int_list)
-    a = [FreshInt() for _ in range(n)]
-    constraints = [Or([a[i] == z3_int_list[j] for j in range(n)]) for i in range(n)]
-    constraints.append(And([a[i] < a[i + 1] for i in range(n - 1)]))
+    a = [z3.FreshInt() for _ in range(n)]
+    constraints = [z3.Or([a[i] == z3_int_list[j] for j in range(n)]) for i in range(n)]
+    constraints.append(z3.And([a[i] < a[i + 1] for i in range(n - 1)]))
 
     return a, constraints

@@ -23,22 +23,7 @@ import warnings
 
 from typing import Literal
 
-from z3 import (
-    ArithRef,
-    Array,
-    Int,
-    IntSort,
-    Optimize,
-    Or,
-    Solver,
-    SolverFor,
-    Store,
-    Sum,
-    get_param,
-    unsat,
-    unknown,
-    set_option,
-)
+import z3
 
 from pydantic import Field, PositiveFloat, Extra, ConfigDict
 
@@ -109,25 +94,25 @@ class SchedulingSolver(BaseModelWithJson):
         self._initialized = False
 
         if self.debug:
-            set_option("verbose", 2)
-            set_option(unsat_core=True)
+            z3.set_option("verbose", 2)
+            z3.set_option(unsat_core=True)
         else:
-            set_option("verbose", self.verbosity)
-            set_option(unsat_core=False)
+            z3.set_option("verbose", self.verbosity)
+            z3.set_option(unsat_core=False)
 
-        set_option("parallel.enable", self.parallel)
+        z3.set_option("parallel.enable", self.parallel)
         if self.random_values:
-            set_option("sat.random_seed", random.randint(1, 1e3))
-            set_option("smt.random_seed", random.randint(1, 1e3))
-            set_option("smt.arith.random_initial_value", True)
+            z3.set_option("sat.random_seed", random.randint(1, 1e3))
+            z3.set_option("smt.random_seed", random.randint(1, 1e3))
+            z3.set_option("smt.arith.random_initial_value", True)
         else:
-            set_option("sat.random_seed", 0)
-            set_option("smt.random_seed", 0)
-            set_option("smt.arith.random_initial_value", False)
+            z3.set_option("sat.random_seed", 0)
+            z3.set_option("smt.random_seed", 0)
+            z3.set_option("smt.arith.random_initial_value", False)
 
         # set timeout
         if self.max_time != "inf":
-            set_option("timeout", int(self.max_time * 1000))  # in milliseconds
+            z3.set_option("timeout", int(self.max_time * 1000))  # in milliseconds
 
         # some flags that will be used after
         self._is_not_optimization_problem = False
@@ -159,7 +144,7 @@ class SchedulingSolver(BaseModelWithJson):
             param_type = types[descr.get_kind(param_name)]
             param_documentation = descr.get_documentation(param_name)
             try:
-                param_value = get_param(param_name)
+                param_value = z3.get_param(param_name)
             except:
                 param_value = "unknown"
             parameters_description[param_name] = {
@@ -178,16 +163,16 @@ class SchedulingSolver(BaseModelWithJson):
         self._is_not_optimization_problem = len(self.problem.objectives) == 0
         self._is_optimization_problem = len(self.problem.objectives) > 0
         self._is_multi_objective_optimization_problem = len(self.problem.objectives) > 1
-        # use the z3 Optimize solver if requested
+        # use the z3 z3.Optimize solver if requested
         if not self._is_not_optimization_problem and self.optimizer == "optimize":
-            self._solver = Optimize()
+            self._solver = z3.Optimize()
             self._solver.set(priority=self.optimize_priority)
-            print("\t-> Builtin z3 Optimize solver")
+            print("\t-> Builtin z3 z3.Optimize solver")
         elif self.logics is None:
-            self._solver = Solver()
+            self._solver = z3.Solver()
             print("\t-> Standard SAT/SMT solver")
         else:
-            self._solver = SolverFor(self.logics)
+            self._solver = z3.SolverFor(self.logics)
             print("\t-> SMT solver using logics", self.logics)
 
         # add all tasks z3 assertions to the solver
@@ -208,7 +193,7 @@ class SchedulingSolver(BaseModelWithJson):
                 for k in range(i + 1, nb_intervals):
                     start_task_k, end_task_k = busy_intervals[k]
                     self.append_z3_assertion(
-                        Or(start_task_k >= end_task_i, start_task_i >= end_task_k)
+                        z3.Or(start_task_k >= end_task_i, start_task_i >= end_task_k)
                     )
 
         # add z3 assertions for constraints
@@ -236,7 +221,7 @@ class SchedulingSolver(BaseModelWithJson):
                     )
                     work_total_for_all_resources.append(work_contribution)
                 self.append_z3_assertion(
-                    Sum(work_total_for_all_resources) >= task.work_amount
+                    z3.Sum(work_total_for_all_resources) >= task.work_amount
                 )
 
         # process buffers
@@ -245,18 +230,18 @@ class SchedulingSolver(BaseModelWithJson):
             # quantities. For example, if a task T1 starts at 2 and unloads
             # 8, and T3 ends at 6 and loads 5 then the mapping array
             # will look like : A[2]=-8 and A[6]=5
-            buffer_mapping = Array(
-                f"Buffer_{buffer.name}_mapping", IntSort(), IntSort()
+            buffer_mapping = z3.Array(
+                f"Buffer_{buffer.name}_mapping", z3.IntSort(), z3.IntSort()
             )
             for t in buffer._unloading_tasks:
                 self.append_z3_assertion(
                     buffer_mapping
-                    == Store(buffer_mapping, t._start, -buffer._unloading_tasks[t])
+                    == z3.Store(buffer_mapping, t._start, -buffer._unloading_tasks[t])
                 )
             for t in buffer._loading_tasks:
                 self.append_z3_assertion(
                     buffer_mapping
-                    == Store(buffer_mapping, t._end, +buffer._loading_tasks[t])
+                    == z3.Store(buffer_mapping, t._end, +buffer._loading_tasks[t])
                 )
             # sort consume/feed times in asc order
             tasks_start_unload = [t._start for t in buffer._unloading_tasks]
@@ -268,7 +253,7 @@ class SchedulingSolver(BaseModelWithJson):
             self.append_z3_assertion(sort_assertions)
             # create as many buffer state changes as sorted_times
             buffer._state_changes_time = [
-                Int(f"{buffer.name}_sc_time_{k}") for k in range(len(sorted_times))
+                z3.Int(f"{buffer.name}_sc_time_{k}") for k in range(len(sorted_times))
             ]
 
             # add the constraints that give the buffer state change times
@@ -277,7 +262,7 @@ class SchedulingSolver(BaseModelWithJson):
 
             # compute the different buffer states according to state changes
             buffer._buffer_states = [
-                Int(f"{buffer.name}_state_{k}")
+                z3.Int(f"{buffer.name}_state_{k}")
                 for k in range(len(buffer._state_changes_time) + 1)
             ]
             # add constraints for buffer states
@@ -317,7 +302,7 @@ class SchedulingSolver(BaseModelWithJson):
     def append_z3_assertion(self, assts, higher_constraint_name=None) -> bool:
         # set the method to use to add constraints
         # in debug mode this is assert_and_track, to be able to trace
-        # unsat core, in regular mode this is the add function
+        # z3.unsat core, in regular mode this is the add function
         if self.debug:
             if not isinstance(assts, list):
                 assts = [assts]
@@ -336,7 +321,7 @@ class SchedulingSolver(BaseModelWithJson):
     def build_equivalent_weighted_objective(self) -> bool:
         # Replace objectives O_i, O_j, O_k with
         # O = WiOi+WjOj+WkOk etc.
-        equivalent_single_objective = Int("EquivalentSingleObjective")
+        equivalent_single_objective = z3.Int("EquivalentSingleObjective")
         weighted_objectives = []
         for obj in self.problem.objectives:
             variable_to_optimize = obj._target
@@ -346,7 +331,7 @@ class SchedulingSolver(BaseModelWithJson):
             else:
                 weighted_objectives.append(weight * variable_to_optimize)
         self.append_z3_assertion(
-            equivalent_single_objective == Sum(weighted_objectives)
+            equivalent_single_objective == z3.Sum(weighted_objectives)
         )
         # create an indicator
         equivalent_indicator = Indicator(
@@ -388,14 +373,14 @@ class SchedulingSolver(BaseModelWithJson):
         find_beter_value: the check_sat method is called from the incremental solver. Then we
         should not prompt that no solution can be found, but that no better solution can be found.
         Return
-        * result as True (sat) or False (unsat, unknown).
+        * result as True (sat) or False (z3.unsat, z3.unknown).
         * the computation time.
         """
         init_time = time.perf_counter()
         sat_result = self._solver.check()
         check_sat_time = time.perf_counter() - init_time
 
-        if sat_result == unsat:
+        if sat_result == z3.unsat:
             if not find_better_value:
                 print(
                     f"\tNo solution can be found for problem {self.problem.name}.\n\tReason: Unsatisfiable problem: no solution exists"
@@ -405,7 +390,7 @@ class SchedulingSolver(BaseModelWithJson):
                     f"\tCan't find a better solution for problem {self.problem.name}.\n"
                 )
 
-        if sat_result == unknown:
+        if sat_result == z3.unknown:
             reason = self._solver.reason_unknown()
             print(
                 f"\tNo solution can be found for problem {self.problem.name}.\n\tReason: {reason}"
@@ -562,9 +547,9 @@ class SchedulingSolver(BaseModelWithJson):
                 f"\t{self.problem.name} satisfiability checked in {sat_computation_time:.2f}s"
             )
 
-            if sat_result == unsat:
+            if sat_result == z3.unsat:
                 if self.debug:
-                    # extract unsat core
+                    # extract z3.unsat core
                     unsat_core = self._solver.unsat_core()
 
                     conflicting_contraits = []
@@ -591,7 +576,7 @@ class SchedulingSolver(BaseModelWithJson):
                     # look the entry
                 return False
 
-            if sat_result == unknown:
+            if sat_result == z3.unknown:
                 return False
 
             # then get the solution
@@ -614,11 +599,11 @@ class SchedulingSolver(BaseModelWithJson):
 
     def solve_optimize_incremental(
         self,
-        variable: ArithRef,
+        variable: z3.ArithRef,
         max_iter: Optional[int] = None,
         kind: Optional[str] = "min",
     ) -> int:
-        """target a min or max for a variable, without the Optimize solver.
+        """target a min or max for a variable, without the z3.Optimize solver.
         The loop continues ever and ever until the next value is more than 90%"""
         if not self._initialized:
             self.initialize()
@@ -641,7 +626,7 @@ class SchedulingSolver(BaseModelWithJson):
                 else self._objective._bounds[1]
             )
 
-        while True:  # infinite loop, break if unsat or max_num_iter
+        while True:  # infinite loop, break if z3.unsat or max_num_iter
             num_iter += 1
             if max_iter is not None and num_iter > max_iter:
                 warnings.warn(
@@ -657,13 +642,13 @@ class SchedulingSolver(BaseModelWithJson):
                 incremental_solver_is_computing_a_better_value
             )
 
-            if is_sat == unsat and current_variable_value is not None:
+            if is_sat == z3.unsat and current_variable_value is not None:
                 print(f"\tFound optimum {current_variable_value}. Stopping iteration.")
                 break
-            if is_sat == unsat:
+            if is_sat == z3.unsat:
                 print("\tNo solution found. Stopping iteration.")
                 break
-            if is_sat == unknown:
+            if is_sat == z3.unknown:
                 break
             # at this stage, is_sat should be sat
             solution = self._solver.model()
@@ -735,7 +720,7 @@ class SchedulingSolver(BaseModelWithJson):
             var_value = self._current_solution[decl]
             print(f"\t-> {var_name}={var_value}")
 
-    def find_another_solution(self, variable: ArithRef) -> bool:
+    def find_another_solution(self, variable: z3.ArithRef) -> bool:
         """let the solver find another solution for the variable"""
         if self._current_solution is None:
             raise AssertionError("No current solution. First call the solve() method.")

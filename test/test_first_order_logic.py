@@ -17,16 +17,11 @@
 import processscheduler as ps
 
 
-#
-# Boolean operators
-#
 def test_operator_not_1() -> None:
     pb = ps.SchedulingProblem(name="OperatorNot1", horizon=3)
     t_1 = ps.FixedDurationTask(name="t1", duration=2)
-    not_constraint = ps.not_(ps.TaskStartAt(task=t_1, value=0))
-    assert isinstance(not_constraint, ps.BoolRef)
+    ps.Not(constraint=ps.TaskStartAt(task=t_1, value=0))
 
-    pb.add_constraint(not_constraint)
     solution = ps.SchedulingSolver(problem=pb).solve()
 
     assert solution
@@ -38,10 +33,8 @@ def test_operator_not_2():
     # only one task, the solver should schedule a start time at 0
     task_1 = ps.FixedDurationTask(name="task1", duration=2)
 
-    not_constraint_1 = ps.not_(ps.TaskStartAt(task=task_1, value=0))
-    not_constraint_2 = ps.not_(ps.TaskStartAt(task=task_1, value=1))
-    problem.add_constraint(not_constraint_1)
-    problem.add_constraint(not_constraint_2)
+    ps.Not(constraint=ps.TaskStartAt(task=task_1, value=0))
+    ps.Not(constraint=ps.TaskStartAt(task=task_1, value=1))
     solution = ps.SchedulingSolver(problem=problem).solve()
     assert solution
     # check that the task is not scheduled to start at 0 or 1
@@ -49,35 +42,16 @@ def test_operator_not_2():
     assert solution.tasks[task_1.name].start == 2
 
 
-def test_operator_not_and_1():
-    problem = ps.SchedulingProblem(name="OperatorNotAnd1", horizon=6)
-    # only one task, the solver should schedule a start time at 0
-    task_1 = ps.FixedDurationTask(name="task1", duration=2)
-    fol_1 = ps.and_(
-        [
-            ps.not_(ps.TaskStartAt(task=task_1, value=0)),
-            ps.not_(ps.TaskStartAt(task=task_1, value=1)),
-            ps.not_(ps.TaskStartAt(task=task_1, value=2)),
-            ps.not_(ps.TaskStartAt(task=task_1, value=3)),
-        ]
-    )
-    problem.add_constraint(fol_1)
-    solution = ps.SchedulingSolver(problem=problem).solve()
-    assert solution
-    # the only solution is to start at 4
-    assert solution.tasks[task_1.name].start == 4
-
-
 def test_operator_or_1() -> None:
     pb = ps.SchedulingProblem(name="OperatorOr1", horizon=8)
     t_1 = ps.FixedDurationTask(name="t1", duration=2)
 
-    or_constraint = ps.or_(
-        [ps.TaskStartAt(task=t_1, value=3), ps.TaskStartAt(task=t_1, value=6)]
+    ps.Or(
+        list_of_constraints=[
+            ps.TaskStartAt(task=t_1, value=3),
+            ps.TaskStartAt(task=t_1, value=6),
+        ]
     )
-    assert isinstance(or_constraint, ps.BoolRef)
-
-    pb.add_constraint(or_constraint)
     solution = ps.SchedulingSolver(problem=pb).solve()
 
     assert solution
@@ -89,17 +63,50 @@ def test_operator_or_2() -> None:
     t_1 = ps.FixedDurationTask(name="t1", duration=2)
     t_2 = ps.FixedDurationTask(name="t2", duration=2)
 
-    or_constraint = ps.or_(
-        [ps.TaskStartAt(task=t_1, value=0), ps.TaskStartAt(task=t_2, value=0)]
+    ps.Or(
+        list_of_constraints=[
+            ps.TaskStartAt(task=t_1, value=0),
+            ps.TaskStartAt(task=t_2, value=0),
+        ]
     )
-    assert isinstance(or_constraint, ps.BoolRef)
-
-    pb.add_constraint(or_constraint)
     solution = ps.SchedulingSolver(problem=pb).solve()
 
     assert solution
     assert solution.tasks["t1"].start == 0
     assert solution.tasks["t2"].start == 0
+
+
+def test_operator_and_1() -> None:
+    pb = ps.SchedulingProblem(name="OperatorAnd1", horizon=23)
+    t_1 = ps.FixedDurationTask(name="t1", duration=2)
+    ps.And(
+        list_of_constraints=[
+            ps.TaskStartAfter(task=t_1, value=3),
+            ps.TaskEndBefore(task=t_1, value=5),
+        ]
+    )
+    solution = ps.SchedulingSolver(problem=pb).solve()
+
+    assert solution
+    assert solution.tasks["t1"].start == 3
+
+
+def test_operator_not_andd_1():
+    problem = ps.SchedulingProblem(name="OperatorNotAnd1", horizon=6)
+    # only one task, the solver should schedule a start time at 0
+    task_1 = ps.FixedDurationTask(name="task1", duration=2)
+    ps.And(
+        list_of_constraints=[
+            ps.Not(constraint=ps.TaskStartAt(task=task_1, value=0)),
+            ps.Not(constraint=ps.TaskStartAt(task=task_1, value=1)),
+            ps.Not(constraint=ps.TaskStartAt(task=task_1, value=2)),
+            ps.Not(constraint=ps.TaskStartAt(task=task_1, value=3)),
+        ]
+    )
+    solution = ps.SchedulingSolver(problem=problem).solve()
+    assert solution
+    # the only solution is to start at 4
+    assert solution.tasks[task_1.name].start == 4
 
 
 def test_operator_xor_1() -> None:
@@ -109,12 +116,10 @@ def test_operator_xor_1() -> None:
     t_1 = ps.FixedDurationTask(name="t1", duration=2)
     t_2 = ps.FixedDurationTask(name="t2", duration=2)
 
-    xor_constraint = ps.xor_(
-        [ps.TaskStartAt(task=t_1, value=0), ps.TaskStartAt(task=t_2, value=0)]
+    ps.Xor(
+        constraint_1=ps.TaskStartAt(task=t_1, value=0),
+        constraint_2=ps.TaskStartAt(task=t_2, value=0),
     )
-    assert isinstance(xor_constraint, ps.BoolRef)
-
-    pb.add_constraint(xor_constraint)
     solution = ps.SchedulingSolver(problem=pb).solve()
 
     assert not solution
@@ -127,12 +132,10 @@ def test_operator_xor_2() -> None:
     t_1 = ps.FixedDurationTask(name="t1", duration=2)
     t_2 = ps.FixedDurationTask(name="t2", duration=2)
 
-    xor_constraint = ps.xor_(
-        [ps.TaskStartAt(task=t_1, value=0), ps.TaskStartAt(task=t_2, value=0)]
+    ps.Xor(
+        constraint_1=ps.TaskStartAt(task=t_1, value=0),
+        constraint_2=ps.TaskStartAt(task=t_2, value=0),
     )
-    assert isinstance(xor_constraint, ps.BoolRef)
-
-    pb.add_constraint(xor_constraint)
     solution = ps.SchedulingSolver(problem=pb).solve()
 
     assert solution
@@ -140,33 +143,24 @@ def test_operator_xor_2() -> None:
     assert solution.tasks["t1"].start == 0 or solution.tasks["t2"].start == 0
 
 
-def test_operator_and_1() -> None:
-    pb = ps.SchedulingProblem(name="OperatorAnd1", horizon=23)
-    t_1 = ps.FixedDurationTask(name="t1", duration=2)
-    and_constraint = ps.and_(
-        [ps.TaskStartAfter(task=t_1, value=3), ps.TaskEndBefore(task=t_1, value=5)]
-    )
-    assert isinstance(and_constraint, ps.BoolRef)
-    pb.add_constraint(and_constraint)
-    solution = ps.SchedulingSolver(problem=pb).solve()
-
-    assert solution
-    assert solution.tasks["t1"].start == 3
-
-
 def test_nested_boolean_operators_1() -> None:
     pb = ps.SchedulingProblem(name="NestedBooleanOperators1", horizon=37)
     t_1 = ps.FixedDurationTask(name="t1", duration=2)
     t_2 = ps.FixedDurationTask(name="t2", duration=2)
-    or_constraint_1 = ps.or_(
-        [ps.TaskStartAt(task=t_1, value=10), ps.TaskStartAt(task=t_1, value=12)]
+    or_constraint_1 = ps.Or(
+        list_of_constraints=[
+            ps.TaskStartAt(task=t_1, value=10),
+            ps.TaskStartAt(task=t_1, value=12),
+        ]
     )
-    or_constraint_2 = ps.or_(
-        [ps.TaskStartAt(task=t_2, value=14), ps.TaskStartAt(task=t_2, value=15)]
+    or_constraint_2 = ps.Or(
+        list_of_constraints=[
+            ps.TaskStartAt(task=t_2, value=14),
+            ps.TaskStartAt(task=t_2, value=15),
+        ]
     )
-    and_constraint = ps.and_([or_constraint_1, or_constraint_2])
+    ps.And(list_of_constraints=[or_constraint_1, or_constraint_2])
 
-    pb.add_constraint(and_constraint)
     solution = ps.SchedulingSolver(problem=pb).solve()
 
     assert solution
@@ -174,17 +168,16 @@ def test_nested_boolean_operators_1() -> None:
     assert solution.tasks["t2"].start in [14, 15]
 
 
-#
-# Implies
-#
 def test_implies_1():
     problem = ps.SchedulingProblem(name="Implies1", horizon=6)
     # only one task, the solver should schedule a start time at 0
     task_1 = ps.FixedDurationTask(name="task1", duration=2)
     task_2 = ps.FixedDurationTask(name="task2", duration=2)
     ps.TaskStartAt(task=task_1, value=1)
-    fol_1 = ps.implies(task_1._start == 1, [ps.TaskStartAt(task=task_2, value=4)])
-    problem.add_constraint(fol_1)
+    ps.Implies(
+        condition=task_1._start == 1,
+        list_of_constraints=[ps.TaskStartAt(task=task_2, value=4)],
+    )
     solution = ps.SchedulingSolver(problem=problem).solve()
     assert solution
     # the only solution is to start at 2
@@ -200,13 +193,13 @@ def test_implies_2() -> None:
 
     # force task t_1 to start at 1
     ps.TaskStartAt(task=t_1, value=1)
-    implies_constraint = ps.implies(
-        t_1._start == 1,
-        [ps.TaskStartAt(task=t_2, value=3), ps.TaskStartAt(task=t_3, value=17)],
+    ps.Implies(
+        condition=t_1._start == 1,
+        list_of_constraints=[
+            ps.TaskStartAt(task=t_2, value=3),
+            ps.TaskStartAt(task=t_3, value=17),
+        ],
     )
-    assert isinstance(implies_constraint, ps.BoolRef)
-
-    pb.add_constraint(implies_constraint)
     solution = ps.SchedulingSolver(problem=pb).solve()
 
     assert solution
@@ -215,24 +208,19 @@ def test_implies_2() -> None:
     assert solution.tasks["t3"].start == 17
 
 
-#
-# If/Then/Else
-#
 def test_if_then_else_1() -> None:
     pb = ps.SchedulingProblem(name="IfThenElse1", horizon=29)
     t_1 = ps.FixedDurationTask(name="t1", duration=3)
     t_2 = ps.FixedDurationTask(name="t2", duration=3)
-    ite_constraint = ps.if_then_else(
-        t_1._start == 1,  # condition
-        [ps.TaskStartAt(task=t_2, value=3)],  # then
-        [ps.TaskStartAt(task=t_2, value=6)],  # else
+    ps.IfThenElse(
+        condition=t_1._start == 1,
+        then_list_of_constraints=[ps.TaskStartAt(task=t_2, value=3)],
+        else_list_of_constraints=[ps.TaskStartAt(task=t_2, value=6)],
     )
-    assert isinstance(ite_constraint, ps.BoolRef)
 
     # force task t_1 to start at 2
     ps.TaskStartAt(task=t_1, value=2)
 
-    pb.add_constraint(ite_constraint)
     solution = ps.SchedulingSolver(problem=pb).solve()
 
     assert solution
@@ -240,21 +228,19 @@ def test_if_then_else_1() -> None:
     assert solution.tasks["t2"].start == 6
 
 
-#
-# If then else
-#
 def test_if_then_else_2():
     pb = ps.SchedulingProblem(name="IfThenElse2", horizon=6)
     # only one task, the solver should schedule a start time at 0
     task_1 = ps.FixedDurationTask(name="task1", duration=2)
     task_2 = ps.FixedDurationTask(name="task2", duration=2)
     ps.TaskStartAt(task=task_1, value=1)
-    fol_1 = ps.if_then_else(
-        task_1._start == 0,  # this condition is False
-        [ps.TaskStartAt(task=task_2, value=4)],  # assertion not set
-        [ps.TaskStartAt(task=task_2, value=2)],
+    ps.IfThenElse(
+        condition=task_1._start == 0,  # this condition is False
+        then_list_of_constraints=[
+            ps.TaskStartAt(task=task_2, value=4)
+        ],  # assertion not set
+        else_list_of_constraints=[ps.TaskStartAt(task=task_2, value=2)],
     )
-    pb.add_constraint(fol_1)
     solution = ps.SchedulingSolver(problem=pb).solve()
     assert solution
     # the only solution is to start at 2
