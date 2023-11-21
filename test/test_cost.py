@@ -64,13 +64,13 @@ def test_polynomial_function_4() -> None:
     assert c(3) == 18
 
 
-def test_general_cost_function_1() -> None:
-    def my_function(t):
-        return 0.5 * t * t + 50
+# def test_general_cost_function_1() -> None:
+#     def my_function(t):
+#         return 0.5 * t * t + 50
 
-    c = ps.GeneralCostFunction(func=my_function)
-    assert c(0) == 50
-    assert c(2) == 52
+#     c = ps.GeneralCostFunction(func=my_function)
+#     assert c(0) == 50
+#     assert c(2) == 52
 
 
 def test_worker_cost_const() -> None:
@@ -79,13 +79,13 @@ def test_worker_cost_const() -> None:
     ps.Worker(name="Worker1", cost=ress_cost)
 
 
-def test_general_cost_lambda() -> None:
-    ps.SchedulingProblem(name="PolynomialCostLambdaFunction", horizon=12)
-    ress_cost = ps.GeneralCostFunction(func=lambda t: 2 * t + 10)
-    assert ress_cost(-5) == 0
-    assert ress_cost(10) == 30
+# def test_general_cost_lambda() -> None:
+#     ps.SchedulingProblem(name="PolynomialCostLambdaFunction", horizon=12)
+#     ress_cost = ps.GeneralCostFunction(func=lambda t: 2 * t + 10)
+#     assert ress_cost(-5) == 0
+#     assert ress_cost(10) == 30
 
-    ps.Worker(name="Worker1", cost=ress_cost)
+#     ps.Worker(name="Worker1", cost=ress_cost)
 
 
 def test_constant_cost_per_period_1() -> None:

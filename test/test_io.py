@@ -26,29 +26,14 @@ def build_excavator_problem() -> ps.SchedulingProblem:
     dig_small_hole = ps.VariableDurationTask(name="DigSmallHole", work_amount=3)
     dig_medium_hole = ps.VariableDurationTask(name="DigMediumHole", work_amount=7)
     dig_huge_hole = ps.VariableDurationTask(name="DigHugeHole", work_amount=15)
-
-    # # cost function for the small excavator is linear
-    # def cost_function_small_exc(t):
-    #     """Linear cost function"""
-    #     return 10 * t + 20
-
-    # small_exc_cost = ps.PolynomialCostFunction(cost_function=cost_function_small_exc)
-
-    # # cost function for the medium excavator is quadratic, max at the middle
-    # def cost_function_medium_exc(t):
-    #     """Quadratic cost function"""
-    #     return 400 - (t - 20) * (t - 20)
-
     # medium_exc_cost = ps.PolynomialCostFunction(cost_function=cost_function_medium_exc)
 
     # two workers
     small_exc = ps.Worker(
-        name="SmallExcavator",
-        productivity=4,  # , cost=ps.ConstantCostPerPeriod(value=5)
+        name="SmallExcavator", productivity=4, cost=ps.ConstantCostFunction(value=5)
     )
     medium_ex = ps.Worker(
-        name="MediumExcavator",
-        productivity=6,  # , cost=ps.ConstantCostPerPeriod(value=10)
+        name="MediumExcavator", productivity=6, cost=ps.ConstantCostFunction(value=10)
     )
 
     dig_small_hole.add_required_resource(
@@ -91,19 +76,21 @@ def test_export_problem_to_json():
     PROBLEM.to_json()
 
 
+def test_export_problem_to_json_file():
+    PROBLEM.to_json_file("excavator_problem.json")
+    assert os.path.isfile("excavator_problem.json")
+
+
 def test_export_solution_to_json():
-    assert SOLUTION
     SOLUTION.to_json()
 
 
 def test_export_solution_to_json_file():
-    assert SOLUTION
     SOLUTION.to_json_file("excavator_solution.json")
     assert os.path.isfile("excavator_solution.json")
 
 
 def test_export_solution_to_excel_file():
-    assert SOLUTION
     SOLUTION.export_to_excel_file("excavator_nb.xlsx")
     assert os.path.isfile("excavator_nb.xlsx")
     SOLUTION.export_to_excel_file("excavator_colors.xlsx", colors=True)

@@ -12,7 +12,9 @@ The V2 branch is a reformating of the codebase that results in backward incompat
 
 [X] define LinearFunction, PolynomialFunction etc. for costs
 
-[ ] use LinearFuncion, PolynomialFunction etc. for productivity as well
+[X] use LinearFuncion, PolynomialFunction etc.
+
+[ ] use functions for productivity as well
 
 [WIP] JSON importer/exporter for a scheduling problem, based on pydantic should be straitforward
 

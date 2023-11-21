@@ -20,7 +20,11 @@ from z3 import ArithRef, Bool, PbEq, PbGe, PbLe
 from pydantic import Field, PositiveInt
 
 from processscheduler.base import NamedUIDObject
-from processscheduler.cost import Cost, ConstantCostFunction
+from processscheduler.cost import (
+    ConstantCostFunction,
+    LinearCostFunction,
+    PolynomialCostFunction,
+)
 
 # import processscheduler.context as ps_context
 import processscheduler.base
@@ -76,7 +80,9 @@ class Worker(Resource):
     Typical workers are human beings, machines etc."""
 
     productivity: int = Field(default=1, ge=0)  # productivity >= 0
-    cost: Union[Cost, None] = Field(default=None)
+    cost: Union[
+        ConstantCostFunction, LinearCostFunction, PolynomialCostFunction, None
+    ] = Field(default=None)
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -95,7 +101,9 @@ class CumulativeWorker(Resource):
     # size is 2 min, otherwise it should be a single worker
     size: int = Field(gt=1)  # size strictly > 1
     productivity: PositiveInt = Field(default=1)
-    cost: Union[Cost, None] = Field(default=None)
+    cost: Union[
+        ConstantCostFunction, LinearCostFunction, PolynomialCostFunction, None
+    ] = Field(default=None)
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
