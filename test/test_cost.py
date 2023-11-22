@@ -216,15 +216,15 @@ def test_optimize_linear_cost_3() -> None:
 
     t_1 = ps.FixedDurationTask(name="t1", duration=17)
 
-    def real_cost_function(t):
-        return 23.12 * t + 3.4
+    cf = ps.LinearCostFunction(slope=23.12, intercept=3.4)
 
-    worker_1 = ps.Worker(
-        name="Worker1", cost=ps.LinearCostFunction(slope=23.12, intercept=3.4)
-    )
+    worker_1 = ps.Worker(name="Worker1", cost=cf)
     t_1.add_required_resource(worker_1)
 
-    cost_ind = problem.add_indicator_resource_cost([worker_1])
+    # because float parameters, should use ToReal conversion
+    # and a warning emitted
+    with pytest.warns(UserWarning):
+        cost_ind = problem.add_indicator_resource_cost([worker_1])
 
 
 def test_quadratic_cost_1() -> None:

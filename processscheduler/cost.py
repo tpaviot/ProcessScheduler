@@ -41,7 +41,8 @@ class Cost(NamedUIDObject):
         # and this would result in an unexpected computation
         if "ToReal" in f"{to_return}":
             warnings.warn(
-                "Warning: ToReal conversion in the cost function, might result in computation issues."
+                "ToReal conversion in the cost function, might result in computation issues.",
+                UserWarning,
             )
         return to_return
 
