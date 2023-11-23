@@ -120,9 +120,13 @@ def test_worker_same_name() -> None:
 #
 def test_create_indicator() -> None:
     pb = ps.SchedulingProblem(name="CreateIndicator", horizon=3)
-    i_1 = ps.Indicator(name="SquareHorizon", expression=pb._horizon**2)  # ArithRef
+    i_1 = ps.IndicatorFromMathExpression(
+        name="SquareHorizon", expression=pb._horizon**2
+    )  # ArithRef
     assert isinstance(i_1, ps.Indicator)
-    i_2 = ps.Indicator(name="IsLooooong ?", expression=pb._horizon > 1000)  # BoolRef
+    i_2 = ps.IndicatorFromMathExpression(
+        name="IsLooooong ?", expression=pb._horizon > 1000
+    )  # BoolRef
     assert isinstance(i_2, ps.Indicator)
 
 

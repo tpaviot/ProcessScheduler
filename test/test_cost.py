@@ -93,7 +93,7 @@ def test_constant_cost_per_period_1() -> None:
     t_1 = ps.FixedDurationTask(name="t1", duration=11)
     worker_1 = ps.Worker(name="Worker1", cost=ps.ConstantCostFunction(value=7))
     t_1.add_required_resource(worker_1)
-    cost_ind = problem.add_indicator_resource_cost([worker_1])
+    cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
 
     solution = ps.SchedulingSolver(problem=problem).solve()
 
@@ -113,7 +113,8 @@ def test_constant_cost_per_period_2() -> None:
     all_workers = [worker_1, worker_2]
     problem.add_objective_makespan()
     t_1.add_required_resources(all_workers)
-    cost_ind = problem.add_indicator_resource_cost(all_workers)
+
+    cost_ind = ps.IndicatorResourceCost(list_of_resources=all_workers)
 
     solution = ps.SchedulingSolver(problem=problem).solve()
 
@@ -133,7 +134,7 @@ def test_linear_cost_1() -> None:
     t_1.add_required_resource(worker_1)
 
     ps.TaskStartAt(task=t_1, value=13)
-    cost_ind = problem.add_indicator_resource_cost([worker_1])
+    cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
 
     solution = ps.SchedulingSolver(problem=problem).solve()
 
@@ -160,7 +161,7 @@ def test_optimize_linear_cost_1() -> None:
     )
     t_1.add_required_resource(worker_1)
 
-    cost_ind = problem.add_indicator_resource_cost([worker_1])
+    cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
     problem.add_objective_resource_cost([worker_1])
 
     solution = ps.SchedulingSolver(problem=problem).solve()
@@ -191,7 +192,7 @@ def test_optimize_linear_cost_2() -> None:
     )
     t_1.add_required_resource(worker_1)
 
-    cost_ind = problem.add_indicator_resource_cost([worker_1])
+    cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
     problem.add_objective_resource_cost([worker_1])
 
     solution = ps.SchedulingSolver(problem=problem).solve()
@@ -224,7 +225,7 @@ def test_optimize_linear_cost_3() -> None:
     # because float parameters, should use ToReal conversion
     # and a warning emitted
     with pytest.warns(UserWarning):
-        cost_ind = problem.add_indicator_resource_cost([worker_1])
+        cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
 
 
 def test_quadratic_cost_1() -> None:
@@ -239,7 +240,7 @@ def test_quadratic_cost_1() -> None:
     t_1.add_required_resource(worker_1)
 
     ps.TaskStartAt(task=t_1, value=13)
-    cost_ind = problem.add_indicator_resource_cost([worker_1])
+    cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
 
     solution = ps.SchedulingSolver(problem=problem).solve()
 
@@ -270,7 +271,7 @@ def test_optimize_quadratic_cost_2() -> None:
     )
     t_1.add_required_resource(worker_1)
 
-    cost_ind = problem.add_indicator_resource_cost([worker_1])
+    cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
     problem.minimize_indicator(cost_ind)
 
     solution = ps.SchedulingSolver(problem=problem).solve()
@@ -301,7 +302,7 @@ def test_cumulative_cost():
     t_2.add_required_resource(worker_1)
     t_3.add_required_resource(worker_1)
 
-    cost_ind = problem.add_indicator_resource_cost([worker_1])
+    cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
 
     solution = ps.SchedulingSolver(problem=problem).solve()
 
@@ -324,7 +325,7 @@ def test_incremental_optimizer_linear_cost_1() -> None:
     )
     t_1.add_required_resource(worker_1)
 
-    cost_ind = problem.add_indicator_resource_cost([worker_1])
+    cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
     problem.minimize_indicator(cost_ind)
 
     solver = ps.SchedulingSolver(problem=problem, random_values=True)

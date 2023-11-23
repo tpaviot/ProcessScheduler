@@ -28,7 +28,12 @@ import z3
 from pydantic import Field, PositiveFloat, Extra, ConfigDict
 
 from processscheduler.base import BaseModelWithJson
-from processscheduler.objective import MaximizeObjective, MinimizeObjective, Indicator
+from processscheduler.objective import (
+    MaximizeObjective,
+    MinimizeObjective,
+    Indicator,
+    IndicatorFromMathExpression,
+)
 from processscheduler.solution import (
     SchedulingSolution,
     TaskSolution,
@@ -176,16 +181,16 @@ class SchedulingSolver(BaseModelWithJson):
             print("\t-> SMT solver using logics", self.logics)
 
         # add all tasks z3 assertions to the solver
-        for task in self.problem.tasks:
+        for task in self.problem.tasks.values():
             self.append_z3_assertion(task.get_z3_assertions())
             self.append_z3_assertion(task._end <= self.problem._horizon)
 
         # process resources assertions
-        for ress in self.problem.workers:
+        for ress in self.problem.workers.values():
             self.append_z3_assertion(ress.get_z3_assertions())
 
         # process resource intervals
-        for ress in self.problem.workers:
+        for ress in self.problem.workers.values():
             busy_intervals = ress.get_busy_intervals()
             nb_intervals = len(busy_intervals)
             for i in range(nb_intervals):
@@ -205,12 +210,12 @@ class SchedulingSolver(BaseModelWithJson):
             self.append_z3_assertion(constraint.get_z3_assertions(), constraint.name)
 
         # process indicators
-        for indic in self.problem.indicators:
+        for indic in self.problem.indicators.values():
             self.append_z3_assertion(indic.get_z3_assertions())
 
         # work amounts
         # for each task, compute the total work for all required resources"""
-        for task in self.problem.tasks:
+        for task in self.problem.tasks.values():
             if task.work_amount > 0.0:
                 work_total_for_all_resources = []
                 for required_resource in task._required_resources:
@@ -323,7 +328,7 @@ class SchedulingSolver(BaseModelWithJson):
         # O = WiOi+WjOj+WkOk etc.
         equivalent_single_objective = z3.Int("EquivalentSingleObjective")
         weighted_objectives = []
-        for obj in self.problem.objectives:
+        for obj in self.problem.objectives.values():
             variable_to_optimize = obj._target
             weight = obj.weight
             if isinstance(obj, MaximizeObjective):
@@ -334,7 +339,7 @@ class SchedulingSolver(BaseModelWithJson):
             equivalent_single_objective == z3.Sum(weighted_objectives)
         )
         # create an indicator
-        equivalent_indicator = Indicator(
+        equivalent_indicator = IndicatorFromMathExpression(
             name="EquivalentIndicator", expression=equivalent_single_objective
         )
         equivalent_objective = MinimizeObjective(
@@ -353,14 +358,14 @@ class SchedulingSolver(BaseModelWithJson):
                 if self.optimizer == "optimize":
                     self._solver.minimize(eq_obj._target)
             else:
-                for obj in self.problem.objectives:
+                for obj in self.problem.objectives.values():
                     variable_to_optimize = obj._target
                     if isinstance(obj, MaximizeObjective):
                         self._solver.maximize(variable_to_optimize)
                     else:
                         self._solver.minimize(variable_to_optimize)
         else:
-            self._objective = self.problem.objectives[0]
+            self._objective = list(self.problem.objectives.values())[0]
             if self.optimizer == "optimize":
                 variable_to_optimize = self._objective._target
                 if isinstance(self._objective, MaximizeObjective):
@@ -405,7 +410,7 @@ class SchedulingSolver(BaseModelWithJson):
         solution.horizon = z3_sol[self.problem._horizon].as_long()
 
         # process tasks
-        for task in self.problem.tasks:
+        for task in self.problem.tasks.values():
             # for each task, create a TaskSolution instance
             new_task_solution = TaskSolution(name=task.name)
             new_task_solution.type = type(task).__name__
@@ -458,7 +463,7 @@ class SchedulingSolver(BaseModelWithJson):
             solution.add_task_solution(new_task_solution)
 
         # process resources
-        for resource in self.problem.workers:
+        for resource in self.problem.workers.values():
             # for each task, create a TaskSolution instance
             # for cumulative workers, we append the current work
             if "_CumulativeWorker_" in resource.name:
@@ -511,7 +516,7 @@ class SchedulingSolver(BaseModelWithJson):
 
             solution.add_buffer_solution(new_buffer_solution)
         # process indicators
-        for indicator in self.problem.indicators:
+        for indicator in self.problem.indicators.values():
             indicator_name = indicator.name
             indicator_value = z3_sol[indicator._indicator_variable].as_long()
             solution.add_indicator_solution(indicator_name, indicator_value)
@@ -530,8 +535,8 @@ class SchedulingSolver(BaseModelWithJson):
         if self._is_optimization_problem and self.optimizer == "incremental":
             if self._is_multi_objective_optimization_problem:
                 print("\tObjectives:\n\t======")
-                for obj in self.problem.objectives:
-                    print(f"\t{obj.name}")
+                for obj_name in self.problem.objectives:
+                    print(f"\t{obj_name}")
             solution = self.solve_optimize_incremental(
                 self._objective._target,
                 kind="min" if isinstance(self._objective, MinimizeObjective) else "max",
@@ -584,7 +589,7 @@ class SchedulingSolver(BaseModelWithJson):
 
             # print objectives values if optimizer
             if self.optimizer == "optimize":
-                for obj in self.problem.objectives:
+                for obj in self.problem.objectives.values():
                     print(obj.name, "Value : ", solution[obj._target].as_long())
 
         self._current_solution = solution

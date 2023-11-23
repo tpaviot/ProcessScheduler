@@ -27,3 +27,8 @@ The V2 branch is a reformating of the codebase that results in backward incompat
 [X] Move first order logic to classes that inherit from NamedUIDObject
 
 [X] Objective start latest should take an optional list of tasks as a parameter
+
+[ ] Use object (unique) names for object creation
+
+[WIP] Refactor Indicators and Objectives to get be consistent with other objects
+ 

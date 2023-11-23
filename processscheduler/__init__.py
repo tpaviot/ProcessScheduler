@@ -22,7 +22,15 @@ except ModuleNotFoundError as z3_not_found:
 
 # Expose everything useful
 from processscheduler.first_order_logic import Not, Or, And, Xor, Implies, IfThenElse
-from processscheduler.objective import Indicator, MaximizeObjective, MinimizeObjective
+from processscheduler.objective import (
+    Indicator,
+    IndicatorFromMathExpression,
+    IndicatorResourceUtilization,
+    IndicatorNumberTasksAssigned,
+    IndicatorResourceCost,
+    MaximizeObjective,
+    MinimizeObjective,
+)
 from processscheduler.task import (
     ZeroDurationTask,
     FixedDurationTask,

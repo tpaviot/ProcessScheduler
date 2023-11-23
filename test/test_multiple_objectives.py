@@ -31,7 +31,7 @@ def test_multi_two_tasks_1() -> None:
     pb.add_constraint(task_1._end == 20 - task_2._start)
 
     # Maximize only task_1 end
-    ind = ps.Indicator(name="Task1End", expression=task_1._end)
+    ind = ps.IndicatorFromMathExpression(name="Task1End", expression=task_1._end)
     pb.maximize_indicator(ind)
 
     solution = ps.SchedulingSolver(problem=pb).solve()
@@ -50,7 +50,7 @@ def test_multi_two_tasks_lex() -> None:
     pb.add_constraint(task_1._end == 20 - task_2._start)
 
     # Maximize only task_2 end
-    ind = ps.Indicator(name="Task2End", expression=task_2._end)
+    ind = ps.IndicatorFromMathExpression(name="Task2End", expression=task_2._end)
     pb.maximize_indicator(ind)
 
     solution = ps.SchedulingSolver(problem=pb, optimizer="incremental").solve()
@@ -69,7 +69,7 @@ def test_multi_two_tasks_optimize_default() -> None:
     pb.add_constraint(task_1._end == 20 - task_2._start)
 
     # Maximize only task_2 end
-    ind = ps.Indicator(name="Task2End", expression=task_2._end)
+    ind = ps.IndicatorFromMathExpression(name="Task2End", expression=task_2._end)
     pb.maximize_indicator(ind)
 
     solution = ps.SchedulingSolver(

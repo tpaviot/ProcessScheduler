@@ -22,9 +22,11 @@ def test_indicator_flowtime() -> None:
     t_1 = ps.FixedDurationTask(name="t1", duration=2)
     t_2 = ps.FixedDurationTask(name="t2", duration=2)
 
-    i_1 = ps.Indicator(name="FlowTime", expression=t_1._end + t_2._end)
+    i_1 = ps.IndicatorFromMathExpression(
+        name="FlowTime", expression=t_1._end + t_2._end
+    )
 
-    solution = ps.SchedulingSolver(problem=problem).solve()
+    solution = ps.SchedulingSolver(problem=problem, debug=True).solve()
 
     assert solution
     assert solution.indicators[i_1.name] == 4
@@ -35,9 +37,10 @@ def test_resource_utilization_indicator_1() -> None:
     t_1 = ps.FixedDurationTask(name="T1", duration=5)
     worker_1 = ps.Worker(name="Worker1")
     t_1.add_required_resource(worker_1)
-    utilization_ind = problem.add_indicator_resource_utilization(worker_1)
 
-    solution = ps.SchedulingSolver(problem=problem).solve()
+    utilization_ind = ps.IndicatorResourceUtilization(resource=worker_1)
+
+    solution = ps.SchedulingSolver(problem=problem, debug=True).solve()
 
     assert solution
     assert solution.indicators[utilization_ind.name] == 50
@@ -56,8 +59,8 @@ def test_resource_utilization_indicator_2() -> None:
     t_1.add_required_resource(worker_1)
     t_2.add_required_resource(ps.SelectWorkers(list_of_workers=[worker_1, worker_2]))
 
-    utilization_res_1 = problem.add_indicator_resource_utilization(worker_1)
-    utilization_res_2 = problem.add_indicator_resource_utilization(worker_2)
+    utilization_res_1 = ps.IndicatorResourceUtilization(resource=worker_1)
+    utilization_res_2 = ps.IndicatorResourceUtilization(resource=worker_2)
 
     solution = ps.SchedulingSolver(problem=problem).solve()
 
@@ -83,8 +86,8 @@ def test_resource_utilization_indicator_3() -> None:
     t_1.add_required_resource(ps.SelectWorkers(list_of_workers=[worker_1, worker_2]))
     t_2.add_required_resource(ps.SelectWorkers(list_of_workers=[worker_1, worker_2]))
 
-    utilization_res_1 = problem.add_indicator_resource_utilization(worker_1)
-    utilization_res_2 = problem.add_indicator_resource_utilization(worker_2)
+    utilization_res_1 = ps.IndicatorResourceUtilization(resource=worker_1)
+    utilization_res_2 = ps.IndicatorResourceUtilization(resource=worker_2)
 
     ps.MaximizeObjective(name="MaximizeResource1Utilization", target=utilization_res_1)
 
@@ -105,7 +108,7 @@ def test_resource_utilization_indicator_4() -> None:
         t = ps.FixedDurationTask(name=f"T{i+1}", duration=1, optional=True)
         t.add_required_resource(worker)
 
-    utilization_res = problem.add_indicator_resource_utilization(worker)
+    utilization_res = ps.IndicatorResourceUtilization(resource=worker)
     problem.maximize_indicator(utilization_res)
 
     solution = ps.SchedulingSolver(problem=problem).solve()
@@ -126,7 +129,7 @@ def test_resource_utilization_indicator_5() -> None:
         t = ps.FixedDurationTask(name=f"T{i+1}", duration=1, optional=True)
         t.add_required_resource(worker)
 
-    utilization_res = problem.add_indicator_resource_utilization(worker)
+    utilization_res = ps.IndicatorResourceUtilization(resource=worker)
 
     problem.add_constraint(utilization_res._indicator_variable == 100)
 
@@ -159,7 +162,9 @@ def test_incremental_optimizer_1() -> None:
     problem = ps.SchedulingProblem(name="IncrementalOptimizer1", horizon=100)
     task_1 = ps.FixedDurationTask(name="task1", duration=2)
 
-    task_1_start_ind = ps.Indicator(name="Task1Start", expression=task_1._start)
+    task_1_start_ind = ps.IndicatorFromMathExpression(
+        name="Task1Start", expression=task_1._start
+    )
     problem.maximize_indicator(task_1_start_ind)
 
     solver = ps.SchedulingSolver(problem=problem)
@@ -183,8 +188,8 @@ def test_resource_utilization_maximization_incremental_1() -> None:
     t_1.add_required_resource(ps.SelectWorkers(list_of_workers=[worker_1, worker_2]))
     t_2.add_required_resource(ps.SelectWorkers(list_of_workers=[worker_1, worker_2]))
 
-    utilization_res_1 = problem.add_indicator_resource_utilization(worker_1)
-    utilization_res_2 = problem.add_indicator_resource_utilization(worker_2)
+    utilization_res_1 = ps.IndicatorResourceUtilization(resource=worker_1)
+    utilization_res_2 = ps.IndicatorResourceUtilization(resource=worker_2)
 
     problem.maximize_indicator(utilization_res_1)
     solver = ps.SchedulingSolver(problem=problem)
@@ -243,8 +248,9 @@ def test_indicator_flowtime_single_resource_1() -> None:
 
     solution = solver.solve()
     assert solution
+    print(solution)
     # the flowtime should be 0
-    assert solution.indicators["FlowTime(Worker1:40:50)"] == 0
+    assert solution.indicators["FlowTimeSingleResource(Worker1:40:50)"] == 0
 
 
 def test_indicator_flowtime_single_resource_2() -> None:
@@ -257,7 +263,7 @@ def test_indicator_flowtime_single_resource_2() -> None:
 
     solution = solver.solve()
     assert solution
-    assert solution.indicators["FlowTime(Worker1:10:40)"] == sum_durations
+    assert solution.indicators["FlowTimeSingleResource(Worker1:10:40)"] == sum_durations
 
 
 def test_indicator_flowtime_single_resource_3() -> None:
@@ -270,8 +276,7 @@ def test_indicator_flowtime_single_resource_3() -> None:
 
     solution = solver.solve()
     assert solution
-    print(solution)
-    assert solution.indicators["FlowTime(Worker1:5:9)"] == 0
+    assert solution.indicators["FlowTimeSingleResource(Worker1:5:9)"] == 0
 
 
 def test_indicator_flowtime_single_resource_4() -> None:
@@ -285,7 +290,9 @@ def test_indicator_flowtime_single_resource_4() -> None:
     solution = solver.solve()
     print(solution)
     assert solution
-    assert solution.indicators["FlowTime(Worker1:0:horizon)"], sum_durations
+    assert solution.indicators[
+        "FlowTimeSingleResource(Worker1:0:horizon)"
+    ], sum_durations
 
 
 def get_single_resource_utilization_problem_2(time_intervals, tst_name):
@@ -304,7 +311,7 @@ def get_single_resource_utilization_problem_2(time_intervals, tst_name):
     return problem, worker_1, len(tasks)
 
 
-def get_sum_flowtime(solution) -> int:
+def get_solution_sum_flowtime(solution) -> int:
     return sum(
         solution.indicators[indicator_id]
         for indicator_id in solution.indicators
@@ -329,7 +336,7 @@ def test_indicator_flowtime_single_resource_5() -> None:
     solution = solver.solve()
 
     assert solution
-    assert sum_durations == get_sum_flowtime(solution)
+    assert sum_durations == get_solution_sum_flowtime(solution)
 
 
 def test_indicator_flowtime_single_resource_6() -> None:
@@ -356,7 +363,7 @@ def test_indicator_flowtime_single_resource_6() -> None:
     solution = solver.solve()
 
     assert solution
-    assert sum_durations == get_sum_flowtime(solution)
+    assert sum_durations == get_solution_sum_flowtime(solution)
 
 
 # number of tasks assigned to a resource
@@ -369,7 +376,7 @@ def test_indicator_nb_tasks_assigned_to_resource_1() -> None:
         t = ps.FixedDurationTask(name=f"T{i+1}", duration=1)
         t.add_required_resource(worker)
 
-    problem.add_indicator_number_tasks_assigned(worker)
+    ps.IndicatorNumberTasksAssigned(resource=worker)
 
     solver = ps.SchedulingSolver(problem=problem)
     solution = solver.solve()

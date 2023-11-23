@@ -104,16 +104,14 @@ def test_eq_overloading() -> None:
     assert task_1 != task_2
 
 
-def test_redondant_tasks_resources() -> None:
+def test_redundant_tasks_resources() -> None:
     pb = ps.SchedulingProblem(name="SameNameTasks")
     # we should not be able to add twice the same resource or task
     task_1 = ps.ZeroDurationTask(name="task1")
-    assert pb.tasks == [task_1]
-    assert pb.tasks == [task_1]
+    assert list(pb.tasks.values()) == [task_1]
     # do the same for resources
     worker_1 = ps.Worker(name="Worker1")
-    assert pb.workers == [worker_1]
-    assert pb.workers == [worker_1]
+    assert list(pb.workers.values()) == [worker_1]
 
 
 def test_resource_requirements() -> None:

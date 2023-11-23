@@ -13,11 +13,11 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Dict, List, Tuple, Literal, Union
+from typing import Dict, Any, List, Tuple, Literal, Union
 
 import z3
 
-from pydantic import Field, PositiveInt
+from pydantic import Field, PositiveInt, model_serializer
 
 from processscheduler.base import NamedUIDObject
 from processscheduler.cost import (
@@ -83,8 +83,8 @@ class Worker(Resource):
 
     productivity: int = Field(default=1, ge=0)  # productivity >= 0
     cost: Union[
-        ConstantCostFunction, LinearCostFunction, PolynomialCostFunction, None
-    ] = Field(default=None)
+        ConstantCostFunction, LinearCostFunction, PolynomialCostFunction
+    ] = Field(default=ConstantCostFunction(value=0))
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -104,8 +104,8 @@ class CumulativeWorker(Resource):
     size: int = Field(gt=1)  # size strictly > 1
     productivity: PositiveInt = Field(default=1)
     cost: Union[
-        ConstantCostFunction, LinearCostFunction, PolynomialCostFunction, None
-    ] = Field(default=None)
+        ConstantCostFunction, LinearCostFunction, PolynomialCostFunction
+    ] = Field(default=ConstantCostFunction(value=0))
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -184,3 +184,12 @@ class SelectWorkers(Resource):
             [(selected, True) for selected in selection_list], self.nb_workers_to_select
         )
         processscheduler.base.active_problem.add_resource_select_workers(self)
+
+    @model_serializer
+    def ser_model(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "list_of_workers": [w.name for w in self.list_of_workers],
+            "nb_workers_to_select": self.nb_workers_to_select,
+            "kind": self.kind,
+        }

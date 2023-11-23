@@ -18,7 +18,7 @@
 from datetime import timedelta, datetime
 import json
 import uuid
-from typing import List, Union, Any, Tuple
+from typing import Dict, List, Union, Any, Tuple
 
 from pydantic import Field, PositiveInt
 
@@ -40,6 +40,9 @@ from processscheduler.cost import (
 )
 from processscheduler.objective import (
     Indicator,
+    IndicatorFromMathExpression,
+    IndicatorResourceUtilization,
+    IndicatorResourceCost,
     Objective,
     MaximizeObjective,
     MinimizeObjective,
@@ -75,16 +78,22 @@ class SchedulingProblem(NamedUIDObject):
     start_time: datetime = Field(default=None)
     end_time: datetime = Field(default=None)
 
-    tasks: List[
-        Union[FixedDurationTask, VariableDurationTask, ZeroDurationTask]
-    ] = Field(default=[])
-    workers: List[Worker] = Field(default=[])
-    select_workers: List[SelectWorkers] = Field(default=[])
-    cumulative_workers: List[CumulativeWorker] = Field(default=[])
+    tasks: Dict[
+        str, Union[FixedDurationTask, VariableDurationTask, ZeroDurationTask]
+    ] = Field(default={})
+
+    workers: Dict[str, Worker] = Field(default={})
+
+    select_workers: Dict[str, SelectWorkers] = Field(default={})
+
+    cumulative_workers: Dict[str, CumulativeWorker] = Field(default={})
+
     constraints: List[Constraint] = Field(default=[])
-    # z3_assertions: List[z3.BoolRef]=Field(default=[])
-    indicators: List[Indicator] = Field(default=[])
-    objectives: List[Union[Indicator, z3.ArithRef]] = Field(default=[])
+
+    indicators: Dict[str, Indicator] = Field(default={})
+
+    objectives: Dict[str, Union[Indicator, z3.ArithRef]] = Field(default={})
+
     buffers: List[Buffer] = Field(default=[])
 
     def __init__(self, **data) -> None:
@@ -117,37 +126,42 @@ class SchedulingProblem(NamedUIDObject):
         # create and return the object
         return _object_types[s_type].model_validate_json(json_string)
 
-    def add_indicator(self, indicator: Indicator) -> bool:
-        """Add an indicatr to the problem"""
-        if indicator not in self.indicators:
-            self.indicators.append(indicator)
-        else:
-            warnings.warn(f"indicator {indicator} already part of the problem")
-            return False
-        return True
-
     def add_task(self, task: Task) -> int:
         """Add a single task to the problem. There must not be two tasks with the same name"""
-        if task.name in [t.name for t in self.tasks]:
-            raise ValueError(f"a task with the name {task.name} already exists.")
-        self.tasks.append(task)
+        if task.name in self.tasks:
+            raise ValueError(
+                f"a Task instance with the name {task.name} already exists."
+            )
+        self.tasks[task.name] = task
         return len(self.tasks)
 
     def add_resource_worker(self, worker: Worker) -> None:
         """Add a single resource to the problem"""
-        if worker.name in [t.name for t in self.workers]:
-            raise ValueError(f"a worker with the name {worker.name} already exists.")
-        self.workers.append(worker)
+        if worker.name in self.workers:
+            raise ValueError(
+                f"a Worker instance with the name {worker.name} already exists."
+            )
+        self.workers[worker.name] = worker
 
-    def add_resource_select_workers(self, resource: SelectWorkers) -> None:
-        """Add a single resource to the problem"""
-        self.select_workers.append(resource)
+    def add_resource_select_workers(self, select_workers: SelectWorkers) -> None:
+        """Add a Worker to the problem"""
+        if select_workers.name in self.select_workers:
+            raise ValueError(
+                f"a wSelectWorkers instance with the name {select_workers.name} already exists."
+            )
+        self.select_workers[select_workers.name] = select_workers
 
-    def add_resource_cumulative_worker(self, resource: CumulativeWorker) -> None:
-        """Add a single resource to the problem"""
-        self.cumulative_workers.append(resource)
+    def add_resource_cumulative_worker(
+        self, cumulative_worker: CumulativeWorker
+    ) -> None:
+        """Add a CumulativeWorker to the problem"""
+        if cumulative_worker.name in self.cumulative_workers:
+            raise ValueError(
+                f"a CumulativeWorker instance with the name {cumulative_worker.name} already exists."
+            )
+        self.cumulative_workers[cumulative_worker.name] = cumulative_worker
 
-    def add_constraint(self, constraint: Constraint) -> None:
+    def add_constraint(self, constraint: Union[Constraint, z3.BoolRef]) -> None:
         """Add a constraint to the problem. A constraint can be either
         a z3 assertion or a processscheduler Constraint instance."""
         if isinstance(constraint, Constraint):
@@ -164,9 +178,21 @@ class SchedulingProblem(NamedUIDObject):
                 "You must provide either a _Constraint or z3.BoolRef instance."
             )
 
+    def add_indicator(self, indicator: Indicator) -> bool:
+        """Add an indicator to the problem"""
+        if indicator.name in self.indicators:
+            raise ValueError(
+                f"an Indicator instance with the name {indicator.name} already exists."
+            )
+        self.indicators[indicator.name] = indicator
+
     def add_objective(self, objective: Objective) -> None:
         """Add an optimization objective"""
-        self.objectives.append(objective)
+        if objective.name in self.objectives:
+            raise ValueError(
+                f"an Objective instance with the name {objective.name} already exists."
+            )
+        self.objectives[objective.name] = objective
 
     def add_buffer(self, buffer: Buffer) -> None:
         """Add a single task to the problem. There must not be two tasks with the same name"""
@@ -174,93 +200,93 @@ class SchedulingProblem(NamedUIDObject):
             raise ValueError(f"a buffer with the name {buffer.name} already exists.")
         self.buffers.append(buffer)
 
-    def add_indicator_number_tasks_assigned(self, resource: Resource):
-        """compute the number of tasks as resource is assigned"""
-        # this list contains
-        scheduled_tasks = [
-            z3.If(start > -1, 1, 0) for start, end in resource._busy_intervals.values()
-        ]
+    # def add_indicator_number_tasks_assigned(self, resource: Resource):
+    #     """compute the number of tasks as resource is assigned"""
+    #     # this list contains
+    #     scheduled_tasks = [
+    #         z3.If(start > -1, 1, 0) for start, end in resource._busy_intervals.values()
+    #     ]
 
-        nb_tasks_assigned_indicator_variable = z3.Sum(scheduled_tasks)
-        return Indicator(
-            name=f"Nb Tasks Assigned ({resource.name})",
-            expression=nb_tasks_assigned_indicator_variable,
-        )
+    #     nb_tasks_assigned_indicator_variable = z3.Sum(scheduled_tasks)
+    #     return Indicator(
+    #         name=f"Nb Tasks Assigned ({resource.name})",
+    #         expression=nb_tasks_assigned_indicator_variable,
+    #     )
 
-    def add_indicator_resource_cost(
-        self, list_of_resources: List[Resource]
-    ) -> Indicator:
-        """compute the total cost of a set of resources"""
-        constant_costs = []
-        variable_costs = []
+    # def add_indicator_resource_cost(
+    #     self, list_of_resources: List[Resource]
+    # ) -> Indicator:
+    #     """compute the total cost of a set of resources"""
+    #     constant_costs = []
+    #     variable_costs = []
 
-        def get_resource_cost(res):
-            """for the given resource, compute cost from busy intervals
-            For a constant cost"""
-            local_constant_costs = []
-            local_variable_costs = []
+    #     def get_resource_cost(res):
+    #         """for the given resource, compute cost from busy intervals
+    #         For a constant cost"""
+    #         local_constant_costs = []
+    #         local_variable_costs = []
 
-            for interv_low, interv_up in res._busy_intervals.values():
-                # Constant cost per period
-                if isinstance(res.cost, ConstantCostFunction):
-                    # res.cost(interv_up), res.cost(interv_low)
-                    # or res.cost.value give the same result because the function is constant
-                    cost_for_this_period = res.cost(interv_up)
-                    if cost_for_this_period == 0:
-                        continue
-                    if cost_for_this_period == 1:
-                        period_cost = interv_up - interv_low
-                    else:
-                        period_cost = res.cost(interv_up) * (interv_up - interv_low)
-                    local_constant_costs.append(period_cost)
-                # non linear cost. Compute the area of the trapeze
-                # The division by 2 is performed only once, a few lines below,
-                # after the sum is computed.
-                else:
-                    period_cost = (res.cost(interv_low) + res.cost(interv_up)) * (
-                        interv_up - interv_low
-                    )
-                    local_variable_costs.append(period_cost)
-            return local_constant_costs, local_variable_costs
+    #         for interv_low, interv_up in res._busy_intervals.values():
+    #             # Constant cost per period
+    #             if isinstance(res.cost, ConstantCostFunction):
+    #                 # res.cost(interv_up), res.cost(interv_low)
+    #                 # or res.cost.value give the same result because the function is constant
+    #                 cost_for_this_period = res.cost(interv_up)
+    #                 if cost_for_this_period == 0:
+    #                     continue
+    #                 if cost_for_this_period == 1:
+    #                     period_cost = interv_up - interv_low
+    #                 else:
+    #                     period_cost = res.cost(interv_up) * (interv_up - interv_low)
+    #                 local_constant_costs.append(period_cost)
+    #             # non linear cost. Compute the area of the trapeze
+    #             # The division by 2 is performed only once, a few lines below,
+    #             # after the sum is computed.
+    #             else:
+    #                 period_cost = (res.cost(interv_low) + res.cost(interv_up)) * (
+    #                     interv_up - interv_low
+    #                 )
+    #                 local_variable_costs.append(period_cost)
+    #         return local_constant_costs, local_variable_costs
 
-        for resource in list_of_resources:
-            if isinstance(resource, CumulativeWorker):
-                for res in resource._cumulative_workers:
-                    loc_cst_cst, loc_var_cst = get_resource_cost(res)
-                    constant_costs.extend(loc_cst_cst)
-                    variable_costs.extend(loc_var_cst)
-            else:  # for a single worker
-                loc_cst_cst, loc_var_cst = get_resource_cost(resource)
-                constant_costs.extend(loc_cst_cst)
-                variable_costs.extend(loc_var_cst)
+    #     for resource in list_of_resources:
+    #         if isinstance(resource, CumulativeWorker):
+    #             for res in resource._cumulative_workers:
+    #                 loc_cst_cst, loc_var_cst = get_resource_cost(res)
+    #                 constant_costs.extend(loc_cst_cst)
+    #                 variable_costs.extend(loc_var_cst)
+    #         else:  # for a single worker
+    #             loc_cst_cst, loc_var_cst = get_resource_cost(resource)
+    #             constant_costs.extend(loc_cst_cst)
+    #             variable_costs.extend(loc_var_cst)
 
-        resource_names = ",".join([resource.name for resource in list_of_resources])
-        # TODO: what if we multiply the line below by 2? This would remove a division
-        # by 2, and make the cost computation linear if costs are linear
-        cost_indicator_variable = z3.Sum(constant_costs) + z3.Sum(variable_costs) / 2
-        cost_indicator = Indicator(
-            name=f"Total Cost ({resource_names})", expression=cost_indicator_variable
-        )
-        return cost_indicator
+    #     resource_names = ",".join([resource.name for resource in list_of_resources])
+    #     # TODO: what if we multiply the line below by 2? This would remove a division
+    #     # by 2, and make the cost computation linear if costs are linear
+    #     cost_indicator_variable = z3.Sum(constant_costs) + z3.Sum(variable_costs) / 2
+    #     cost_indicator = Indicator(
+    #         name=f"Total Cost ({resource_names})", expression=cost_indicator_variable
+    #     )
+    #     return cost_indicator
 
-    def add_indicator_resource_utilization(self, resource: Resource) -> Indicator:
-        """Compute the total utilization of a single resource.
+    # def add_indicator_resource_utilization(self, resource: Resource) -> Indicator:
+    #     """Compute the total utilization of a single resource.
 
-        The percentage is rounded to an int value.
-        """
-        durations = [
-            interv_up - interv_low
-            for interv_low, interv_up in resource._busy_intervals.values()
-        ]
-        if self.horizon is not None:
-            utilization = z3.Sum(durations) * int(100 / self.horizon)
-        else:
-            utilization = (z3.Sum(durations) * 100) / self._horizon  # in percentage
-        return Indicator(
-            name=f"Utilization ({resource.name})",
-            expression=utilization,
-            bounds=(0, 100),
-        )
+    #     The percentage is rounded to an int value.
+    #     """
+    #     durations = [
+    #         interv_up - interv_low
+    #         for interv_low, interv_up in resource._busy_intervals.values()
+    #     ]
+    #     if self.horizon is not None:
+    #         utilization = z3.Sum(durations) * int(100 / self.horizon)
+    #     else:
+    #         utilization = (z3.Sum(durations) * 100) / self._horizon  # in percentage
+    #     return Indicator(
+    #         name=f"Utilization ({resource.name})",
+    #         expression=utilization,
+    #         bounds=(0, 100),
+    #     )
 
     def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:
         """Maximize indicator"""
@@ -282,9 +308,7 @@ class SchedulingProblem(NamedUIDObject):
         self, resource: Resource, weight: int = 1
     ) -> Union[z3.ArithRef, Indicator]:
         """Maximize resource occupation."""
-        resource_utilization_indicator = self.add_indicator_resource_utilization(
-            resource
-        )
+        resource_utilization_indicator = IndicatorResourceUtilization(resource=resource)
         MaximizeObjective(
             name="MaximizeResourceUtilization",
             target=resource_utilization_indicator,
@@ -293,10 +317,10 @@ class SchedulingProblem(NamedUIDObject):
         return resource_utilization_indicator
 
     def add_objective_resource_cost(
-        self, list_of_resources: List[Resource], weight: int = 1
+        self, list_of_resources: List[Union[Worker, CumulativeWorker]], weight: int = 1
     ) -> Union[z3.ArithRef, Indicator]:
         """minimise the cost of selected resources"""
-        cost_indicator = self.add_indicator_resource_cost(list_of_resources)
+        cost_indicator = IndicatorResourceCost(list_of_resources=list_of_resources)
         MinimizeObjective(
             name="MinimizeResourceCost", target=cost_indicator, weight=weight
         )
@@ -309,13 +333,15 @@ class SchedulingProblem(NamedUIDObject):
         priority value are scheduled before other tasks"""
         all_priorities = []
         # for task in self._context.tasks:
-        for task in self.tasks:
+        for task in self.tasks.values():
             if task.optional:
                 all_priorities.append(task._end * task.priority * task._scheduled)
             else:
                 all_priorities.append(task._end * task.priority)
         priority_sum = z3.Sum(all_priorities)
-        priority_indicator = Indicator(name="TotalPriority", expression=priority_sum)
+        priority_indicator = IndicatorFromMathExpression(
+            name="TotalPriority", expression=priority_sum
+        )
         MinimizeObjective(
             name="MinimizePriority", target=priority_indicator, weight=weight
         )
@@ -327,9 +353,11 @@ class SchedulingProblem(NamedUIDObject):
         """maximize the minimum start time, i.e. all the tasks
         are scheduled as late as possible"""
         if list_of_tasks is None:
-            list_of_tasks = self.tasks
+            list_of_tasks = self.tasks.values()
         mini = z3.Int("SmallestStartTime")
-        smallest_start_time = Indicator(name="SmallestStartTime", expression=mini)
+        smallest_start_time = IndicatorFromMathExpression(
+            name="SmallestStartTime", expression=mini
+        )
         smallest_start_time.append_z3_assertion(
             z3.Or([mini == task._start for task in list_of_tasks])
         )
@@ -344,9 +372,11 @@ class SchedulingProblem(NamedUIDObject):
         """minimize the greatest start time, i.e. tasks are schedules
         as early as possible"""
         if list_of_tasks is None:
-            list_of_tasks = self.tasks
+            list_of_tasks = self.tasks.values()
         maxi = z3.Int("GreatestStartTime")
-        greatest_start_time = Indicator(name="GreatestStartTime", expression=maxi)
+        greatest_start_time = IndicatorFromMathExpression(
+            name="GreatestStartTime", expression=maxi
+        )
         greatest_start_time.append_z3_assertion(
             z3.Or([maxi == task._start for task in list_of_tasks])
         )
@@ -363,7 +393,7 @@ class SchedulingProblem(NamedUIDObject):
         """the flowtime is the sum of all ends, minimize. Be careful that
         it is contradictory with makespan"""
         if list_of_tasks is None:
-            list_of_tasks = self.tasks
+            list_of_tasks = self.tasks.values()
         task_ends = []
         for task in list_of_tasks:
             if task.optional:
@@ -371,7 +401,9 @@ class SchedulingProblem(NamedUIDObject):
             else:
                 task_ends.append(task._end)
         flow_time_expr = z3.Sum(task_ends)
-        flow_time = Indicator(name="Flowtime", expression=flow_time_expr)
+        flow_time = IndicatorFromMathExpression(
+            name="Flowtime", expression=flow_time_expr
+        )
         MinimizeObjective(name="Flowtime", target=flow_time, weight=weight)
         return flow_time
 
@@ -394,8 +426,8 @@ class SchedulingProblem(NamedUIDObject):
         # as well as the maximum
         flowtime = z3.Int(f"FlowtimeSingleResource{resource.name}_{uid}")
 
-        flowtime_single_resource_indicator = Indicator(
-            name=f"FlowTime({resource.name}:{lower_bound}:{upper_bound})",
+        flowtime_single_resource_indicator = IndicatorFromMathExpression(
+            name=f"FlowTimeSingleResource({resource.name}:{lower_bound}:{upper_bound})",
             expression=flowtime,
         )
         # find the max end time in the time_interval
@@ -445,8 +477,9 @@ class SchedulingProblem(NamedUIDObject):
         flowtime_single_resource_indicator.append_z3_assertion(flowtime >= 0)
 
         MinimizeObjective(
-            name="FlowtimeSingleResource",
+            name=f"ObjectiveFlowtimeSingleResource({resource.name}:{lower_bound}:{upper_bound})",
             target=flowtime_single_resource_indicator,
             weight=weight,
         )
+
         return flowtime_single_resource_indicator

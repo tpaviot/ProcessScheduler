@@ -38,7 +38,9 @@ class Task(NamedUIDObject):
         super().__init__(**data)
 
         # workers required to process the task
-        self._required_resources = []  # type: List[Resource]
+        self._required_resources = (
+            []
+        )  # type: List[Union[Worker, CumulativeWorker, SelectWorkers]]
 
         # z3 Int variables
         self._start = z3.Int(f"{self.name}_start")  # type: z3.ArithRef
@@ -144,7 +146,9 @@ class Task(NamedUIDObject):
             self._required_resources.append(resource)
 
     def add_required_resources(
-        self, list_of_resources: List[Resource], dynamic=False
+        self,
+        list_of_resources: List[Union[Worker, CumulativeWorker, SelectWorkers]],
+        dynamic=False,
     ) -> None:
         """
         Add a set of required resources to the current task.
