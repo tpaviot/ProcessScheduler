@@ -246,7 +246,7 @@ def test_create_task_precedence_strict() -> None:
     t_1 = ps.FixedDurationTask(name="t1", duration=2)
     t_2 = ps.FixedDurationTask(name="t2", duration=3)
     ps.TaskPrecedence(task_before=t_1, task_after=t_2, offset=1, kind="strict")
-    pb.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
@@ -276,7 +276,7 @@ def test_tasks_dont_overlap() -> None:
     t_1 = ps.FixedDurationTask(name="t1", duration=7)
     t_2 = ps.FixedDurationTask(name="t2", duration=11)
     ps.TasksDontOverlap(task_1=t_1, task_2=t_2)
-    pb.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
@@ -323,7 +323,7 @@ def test_tasks_contiguous() -> None:
 
     ps.TasksContiguous(list_of_tasks=tasks_w1 + tasks_w2)
 
-    pb.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
 
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()

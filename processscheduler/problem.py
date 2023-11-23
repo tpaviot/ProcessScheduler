@@ -200,94 +200,6 @@ class SchedulingProblem(NamedUIDObject):
             raise ValueError(f"a buffer with the name {buffer.name} already exists.")
         self.buffers.append(buffer)
 
-    # def add_indicator_number_tasks_assigned(self, resource: Resource):
-    #     """compute the number of tasks as resource is assigned"""
-    #     # this list contains
-    #     scheduled_tasks = [
-    #         z3.If(start > -1, 1, 0) for start, end in resource._busy_intervals.values()
-    #     ]
-
-    #     nb_tasks_assigned_indicator_variable = z3.Sum(scheduled_tasks)
-    #     return Indicator(
-    #         name=f"Nb Tasks Assigned ({resource.name})",
-    #         expression=nb_tasks_assigned_indicator_variable,
-    #     )
-
-    # def add_indicator_resource_cost(
-    #     self, list_of_resources: List[Resource]
-    # ) -> Indicator:
-    #     """compute the total cost of a set of resources"""
-    #     constant_costs = []
-    #     variable_costs = []
-
-    #     def get_resource_cost(res):
-    #         """for the given resource, compute cost from busy intervals
-    #         For a constant cost"""
-    #         local_constant_costs = []
-    #         local_variable_costs = []
-
-    #         for interv_low, interv_up in res._busy_intervals.values():
-    #             # Constant cost per period
-    #             if isinstance(res.cost, ConstantCostFunction):
-    #                 # res.cost(interv_up), res.cost(interv_low)
-    #                 # or res.cost.value give the same result because the function is constant
-    #                 cost_for_this_period = res.cost(interv_up)
-    #                 if cost_for_this_period == 0:
-    #                     continue
-    #                 if cost_for_this_period == 1:
-    #                     period_cost = interv_up - interv_low
-    #                 else:
-    #                     period_cost = res.cost(interv_up) * (interv_up - interv_low)
-    #                 local_constant_costs.append(period_cost)
-    #             # non linear cost. Compute the area of the trapeze
-    #             # The division by 2 is performed only once, a few lines below,
-    #             # after the sum is computed.
-    #             else:
-    #                 period_cost = (res.cost(interv_low) + res.cost(interv_up)) * (
-    #                     interv_up - interv_low
-    #                 )
-    #                 local_variable_costs.append(period_cost)
-    #         return local_constant_costs, local_variable_costs
-
-    #     for resource in list_of_resources:
-    #         if isinstance(resource, CumulativeWorker):
-    #             for res in resource._cumulative_workers:
-    #                 loc_cst_cst, loc_var_cst = get_resource_cost(res)
-    #                 constant_costs.extend(loc_cst_cst)
-    #                 variable_costs.extend(loc_var_cst)
-    #         else:  # for a single worker
-    #             loc_cst_cst, loc_var_cst = get_resource_cost(resource)
-    #             constant_costs.extend(loc_cst_cst)
-    #             variable_costs.extend(loc_var_cst)
-
-    #     resource_names = ",".join([resource.name for resource in list_of_resources])
-    #     # TODO: what if we multiply the line below by 2? This would remove a division
-    #     # by 2, and make the cost computation linear if costs are linear
-    #     cost_indicator_variable = z3.Sum(constant_costs) + z3.Sum(variable_costs) / 2
-    #     cost_indicator = Indicator(
-    #         name=f"Total Cost ({resource_names})", expression=cost_indicator_variable
-    #     )
-    #     return cost_indicator
-
-    # def add_indicator_resource_utilization(self, resource: Resource) -> Indicator:
-    #     """Compute the total utilization of a single resource.
-
-    #     The percentage is rounded to an int value.
-    #     """
-    #     durations = [
-    #         interv_up - interv_low
-    #         for interv_low, interv_up in resource._busy_intervals.values()
-    #     ]
-    #     if self.horizon is not None:
-    #         utilization = z3.Sum(durations) * int(100 / self.horizon)
-    #     else:
-    #         utilization = (z3.Sum(durations) * 100) / self._horizon  # in percentage
-    #     return Indicator(
-    #         name=f"Utilization ({resource.name})",
-    #         expression=utilization,
-    #         bounds=(0, 100),
-    #     )
-
     def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:
         """Maximize indicator"""
         return MaximizeObjective(name="CustomizedMaximizeIndicator", target=indicator)
@@ -299,10 +211,10 @@ class SchedulingProblem(NamedUIDObject):
     #
     # Optimization objectives
     #
-    def add_objective_makespan(self, weight=1) -> Union[z3.ArithRef, Indicator]:
-        """makespan objective"""
-        MinimizeObjective(name="MakeSpan", target=self._horizon, weight=weight)
-        return self._horizon
+    # def add_objective_makespan(self, weight=1) -> Union[z3.ArithRef, Indicator]:
+    #     """makespan objective"""
+    #     MinimizeObjective(name="MakeSpan", target=self._horizon, weight=weight)
+    #     return self._horizon
 
     def add_objective_resource_utilization(
         self, resource: Resource, weight: int = 1

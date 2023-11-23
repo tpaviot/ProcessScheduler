@@ -77,7 +77,7 @@ def test_resource_tasks_distance_2() -> None:
     ps.ResourceTasksDistance(resource=worker_1, distance=4, mode="max")
     ps.TaskStartAt(task=task_1, value=1)
 
-    pb.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
 
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
@@ -107,7 +107,7 @@ def test_resource_tasks_distance_3() -> None:
     ps.ResourceTasksDistance(resource=worker_1, distance=0, mode="exact")
     ps.TaskStartAt(task=task_1, value=2)
 
-    pb.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
 
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
@@ -180,7 +180,7 @@ def test_resource_tasks_distance_single_time_period_1() -> None:
     ps.TaskPrecedence(task_before=task_1, task_after=task_2)
     # we add a makespan objective: the two tasks should be scheduled with an horizon of 2
     # because they are outside the time period
-    pb.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
 
     solver = ps.SchedulingSolver(problem=pb)
 
@@ -220,7 +220,7 @@ def test_resource_tasks_distance_single_time_period_2() -> None:
     ps.TaskPrecedence(task_before=task_1, task_after=task_2)
 
     # add a makespan objective, to be sure, to schedule task_2 in the time interal
-    pb.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
 
     # as a consequence, task2 should be scheduled 4 periods after and start at 15
     solver = ps.SchedulingSolver(problem=pb)
@@ -249,7 +249,7 @@ def test_resource_tasks_distance_double_time_period_1() -> None:
     )
 
     # add a makespan objective, all tasks should be scheduled from 0 to 4
-    pb.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
 
     # as a consequence, task2 should be scheduled 4 periods after and start at 15
     solver = ps.SchedulingSolver(problem=pb)

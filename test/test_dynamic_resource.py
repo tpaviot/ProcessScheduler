@@ -33,7 +33,7 @@ def test_dynamic_1() -> None:
     task_2.add_required_resource(worker_1)
     task_3.add_required_resource(worker_2)
 
-    pb.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
 
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
@@ -59,7 +59,7 @@ def test_non_dynamic_1() -> None:
     task_2.add_required_resource(worker_1)
     task_3.add_required_resource(worker_2)
 
-    pb.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
 
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()

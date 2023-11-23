@@ -152,7 +152,7 @@ def test_buffer_bounds_1() -> None:
     for t in loading_tasks:
         ps.TaskLoadBuffer(task=t, buffer=buffer, quantity=1)
 
-    pb.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
 
     solver = ps.SchedulingSolver(
         problem=pb, max_time=300, parallel=True

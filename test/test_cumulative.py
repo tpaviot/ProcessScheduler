@@ -157,7 +157,8 @@ def test_cumulative_productivity():
     worker_1 = ps.CumulativeWorker(name="CumulWorker", size=3, productivity=29)
     t_1.add_required_resource(worker_1)
 
-    problem.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
+
     solution = ps.SchedulingSolver(problem=problem).solve()
     assert solution
     assert solution.horizon == 4

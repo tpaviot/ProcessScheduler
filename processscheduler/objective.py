@@ -172,7 +172,7 @@ class IndicatorResourceCost(Indicator):
 class Objective(NamedUIDObject):
     """Base class for an optimization problem"""
 
-    target: Union[z3.ArithRef, Indicator]
+    target: Union[z3.ArithRef, Indicator] = Field(default=None)
     weight: int = Field(default=1)
 
     def __init__(self, **data) -> None:
@@ -189,8 +189,17 @@ class Objective(NamedUIDObject):
 
 
 class MaximizeObjective(Objective):
-    pass
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
 
 class MinimizeObjective(Objective):
-    pass
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+
+class ObjectiveMinimizeMakespan(MinimizeObjective):
+    def __init__(self, **data) -> None:
+        super().__init__(
+            name="MakeSpan", target=processscheduler.base.active_problem._horizon
+        )

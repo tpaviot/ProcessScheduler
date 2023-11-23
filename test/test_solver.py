@@ -218,7 +218,7 @@ def test_alternative_workers_2() -> None:
     t5.add_required_resource(w6)  # t5 needs at least 3 of w1, w2 or w3
 
     # add a makespan objective
-    pb_alt.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
 
     # solve
     solver1 = ps.SchedulingSolver(problem=pb_alt, debug=False)
@@ -251,7 +251,7 @@ def test_solve_parallel():
 def test_solve_max_time():
     """a stress test which"""
     problem = build_complex_problem("SolveMaxTime", 1000)
-    problem.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
     # 1s is not enough to solve this problem
     max_time_solver = ps.SchedulingSolver(problem=problem, max_time=1)
     solution = max_time_solver.solve()
@@ -261,7 +261,7 @@ def test_solve_max_time():
 def test_solve_non_integer_max_time():
     """a stress test which"""
     problem = build_complex_problem(name="SolveMaxTime", n=1000)
-    problem.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
     # 0.5s is not enough to solve this problem
     max_time_solver = ps.SchedulingSolver(problem=problem, max_time=0.05)
     solution = max_time_solver.solve()
@@ -279,7 +279,7 @@ def test_makespan_objective():
 
     horizon_without_optimization = solution_1.horizon
     # then add the objective and look for another solution
-    problem.add_objective_makespan()
+    ps.ObjectiveMinimizeMakespan()
     # another solution
     solution_2 = solve_problem(problem)
     assert solution_2

@@ -30,6 +30,7 @@ from processscheduler.objective import (
     IndicatorResourceCost,
     MaximizeObjective,
     MinimizeObjective,
+    ObjectiveMinimizeMakespan,
 )
 from processscheduler.task import (
     ZeroDurationTask,

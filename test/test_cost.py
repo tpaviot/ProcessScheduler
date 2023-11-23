@@ -111,10 +111,12 @@ def test_constant_cost_per_period_2() -> None:
         name="Worker2", productivity=7, cost=ps.ConstantCostFunction(value=20)
     )
     all_workers = [worker_1, worker_2]
-    problem.add_objective_makespan()
+
     t_1.add_required_resources(all_workers)
 
     cost_ind = ps.IndicatorResourceCost(list_of_resources=all_workers)
+
+    ps.ObjectiveMinimizeMakespan()
 
     solution = ps.SchedulingSolver(problem=problem).solve()
 
