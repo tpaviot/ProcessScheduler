@@ -291,19 +291,19 @@ def test_makespan_objective():
 
 def test_flowtime_objective_big_problem():
     problem = build_complex_problem("SolveFlowTimeObjective", 5)  # long to compute
-    problem.add_objective_flowtime()
+    ps.ObjectiveMinimizeFlowtime()
     assert solve_problem(problem)
 
 
 def test_start_latest_objective_big_problem():
     problem = build_complex_problem("SolveStartLatestObjective", 10)
-    problem.add_objective_start_latest()
+    ps.ObjectiveTasksStartLatest()
     assert solve_problem(problem)
 
 
 def test_start_earliest_objective_big_problem():
     problem = build_complex_problem("SolveStartEarliestObjective", 10)
-    problem.add_objective_start_earliest()
+    ps.ObjectiveTasksStartEarliest()
     assert solve_problem(problem)
 
 
@@ -315,7 +315,8 @@ def test_start_latest():
 
     ps.TaskPrecedence(task_before=task_1, task_after=task_2)
 
-    problem.add_objective_start_latest()
+    ps.ObjectiveTasksStartLatest()
+
     solution = solve_problem(problem)
     assert solution
     # check that the task is not scheduled to start à 0
@@ -334,7 +335,7 @@ def test_priorities():
     ps.TasksDontOverlap(task_1=task_2, task_2=task_3)
     ps.TasksDontOverlap(task_1=task_1, task_2=task_3)
 
-    problem.add_objective_priorities()
+    ps.ObjectivePriorities()
 
     # set debug to False because assert_and_track
     # does not properly handles optimization

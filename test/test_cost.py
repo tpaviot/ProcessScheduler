@@ -164,7 +164,8 @@ def test_optimize_linear_cost_1() -> None:
     t_1.add_required_resource(worker_1)
 
     cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
-    problem.add_objective_resource_cost([worker_1])
+
+    ps.ObjectiveMinimizeResourceCost(list_of_resources=[worker_1])
 
     solution = ps.SchedulingSolver(problem=problem).solve()
 
@@ -195,7 +196,8 @@ def test_optimize_linear_cost_2() -> None:
     t_1.add_required_resource(worker_1)
 
     cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
-    problem.add_objective_resource_cost([worker_1])
+
+    ps.ObjectiveMinimizeResourceCost(list_of_resources=[worker_1])
 
     solution = ps.SchedulingSolver(problem=problem).solve()
 

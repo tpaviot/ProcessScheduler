@@ -16,6 +16,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 from typing import Optional, Union, Tuple, List
+import uuid
 
 import z3
 
@@ -202,4 +203,209 @@ class ObjectiveMinimizeMakespan(MinimizeObjective):
     def __init__(self, **data) -> None:
         super().__init__(
             name="MakeSpan", target=processscheduler.base.active_problem._horizon
+        )
+
+
+class ObjectiveMaximizeResourceUtilization(MaximizeObjective):
+    """Maximize resource occupation."""
+
+    def __init__(self, **data) -> None:
+        resource_utilization_indicator = IndicatorResourceUtilization(
+            resource=data["resource"]
+        )
+        super().__init__(
+            name="MaximizeResourceUtilization", target=resource_utilization_indicator
+        )
+
+
+class ObjectiveMinimizeResourceCost(MinimizeObjective):
+    """Minimise the total cost of selected resources"""
+
+    # list_of_resources: List[Union[Worker, CumulativeWorker]]
+    # def add_objective_resource_cost(
+    #    self, list_of_resources: List[Union[Worker, CumulativeWorker]], weight: int = 1
+    # ) -> Union[z3.ArithRef, Indicator]:
+    def __init__(self, **data) -> None:
+        cost_indicator = IndicatorResourceCost(
+            list_of_resources=data["list_of_resources"]
+        )
+
+        super().__init__(name="MinimizeResourceCost", target=cost_indicator)
+
+
+class ObjectivePriorities(MinimizeObjective):
+    """optimize the solution such that all tasks with lower
+    priority are scheduled before other tasks"""
+
+    def __init__(self, **data) -> None:
+        all_priorities = []
+        # for task in self._context.tasks:
+        for task in processscheduler.base.active_problem.tasks.values():
+            if task.optional:
+                all_priorities.append(task._end * task.priority * task._scheduled)
+            else:
+                all_priorities.append(task._end * task.priority)
+        priority_sum = z3.Sum(all_priorities)
+        priority_indicator = IndicatorFromMathExpression(
+            name="TotalPriority", expression=priority_sum
+        )
+        super().__init__(name="MinimizePriority", target=priority_indicator)
+
+
+class ObjectiveTasksStartLatest(MaximizeObjective):
+    """maximize the minimum start time, i.e. all the tasks
+    are scheduled as late as possible"""
+
+    def __init__(self, **data) -> None:
+        if "list_of_tasks" in data:
+            list_of_tasks = data["list_of_tasks"]
+        else:
+            list_of_tasks = None
+
+        if list_of_tasks is None:
+            list_of_tasks = processscheduler.base.active_problem.tasks.values()
+        mini = z3.Int("SmallestStartTime")
+
+        smallest_start_time = IndicatorFromMathExpression(
+            name="SmallestStartTime", expression=mini
+        )
+        # z3 find maximum
+        smallest_start_time.append_z3_assertion(
+            z3.Or([mini == task._start for task in list_of_tasks])
+        )
+        for tsk in list_of_tasks:
+            smallest_start_time.append_z3_assertion(mini <= tsk._start)
+
+        super().__init__(name="MaximizeStartLatest", target=smallest_start_time)
+
+
+class ObjectiveTasksStartEarliest(MinimizeObjective):
+    """minimize the greatest start time, i.e. tasks are schedules
+    as early as possible"""
+
+    def __init__(self, **data) -> None:
+        if "list_of_tasks" in data:
+            list_of_tasks = data["list_of_tasks"]
+        else:
+            list_of_tasks = None
+
+        if list_of_tasks is None:
+            list_of_tasks = processscheduler.base.active_problem.tasks.values()
+        maxi = z3.Int("GreatestStartTime")
+        greatest_start_time = IndicatorFromMathExpression(
+            name="GreatestStartTime", expression=maxi
+        )
+
+        # z3 find minimum
+        greatest_start_time.append_z3_assertion(
+            z3.Or([maxi == task._start for task in list_of_tasks])
+        )
+        for tsk in list_of_tasks:
+            greatest_start_time.append_z3_assertion(maxi >= tsk._start)
+
+        super().__init__(name="StartEarliest", target=greatest_start_time)
+
+
+class ObjectiveMinimizeFlowtime(MinimizeObjective):
+    """the flowtime is the sum of all ends, minimize. Be careful that
+    it is contradictory with makespan"""
+
+    def __init__(self, **data) -> None:
+        if "list_of_tasks" in data:
+            list_of_tasks = data["list_of_tasks"]
+        else:
+            list_of_tasks = None
+
+        if list_of_tasks is None:
+            list_of_tasks = processscheduler.base.active_problem.tasks.values()
+        task_ends = []
+        for task in list_of_tasks:
+            if task.optional:
+                task_ends.append(task._end * task._scheduled)
+            else:
+                task_ends.append(task._end)
+        flow_time_expr = z3.Sum(task_ends)
+        flow_time = IndicatorFromMathExpression(
+            name="Flowtime", expression=flow_time_expr
+        )
+        super().__init__(name="Flowtime", target=flow_time)
+
+
+class ObjectiveMinimizeFlowtimeSingleResource(MinimizeObjective):
+    """Optimize flowtime for a single resource, for all the tasks scheduled in the
+    time interval provided. Is ever no time interval is passed to the function, the
+    flowtime is minimized for all the tasks scheduled in the workplan."""
+
+    def __init__(self, **data) -> None:
+        resource = data["resource"]
+
+        if "time_interval" in data:
+            time_interval = data["time_interval"]
+        else:
+            time_interval = None
+
+        if time_interval is not None:
+            lower_bound, upper_bound = time_interval
+        else:
+            lower_bound = 0
+            upper_bound = processscheduler.base.active_problem._horizon
+
+        uid = uuid.uuid4().hex
+        # for this resource, we look for the minimal starting time of scheduled tasks
+        # as well as the maximum
+        flowtime = z3.Int(f"FlowtimeSingleResource{resource.name}_{uid}")
+
+        flowtime_single_resource_indicator = IndicatorFromMathExpression(
+            name=f"FlowTimeSingleResource({resource.name}:{lower_bound}:{upper_bound})",
+            expression=flowtime,
+        )
+        # find the max end time in the time_interval
+        maxi = z3.Int(
+            f"GreatestTaskEndTimeInTimePeriodForResource{resource.name}_{uid}"
+        )
+
+        asst_max = [
+            z3.Implies(
+                z3.And(task._end <= upper_bound, task._start >= lower_bound),
+                maxi == task._end,
+            )
+            for task in resource._busy_intervals
+        ]
+        flowtime_single_resource_indicator.append_z3_assertion(z3.Or(asst_max))
+        for task in resource._busy_intervals:
+            flowtime_single_resource_indicator.append_z3_assertion(
+                z3.Implies(
+                    z3.And(task._end <= upper_bound, task._start >= lower_bound),
+                    maxi >= task._end,
+                )
+            )
+
+        # and the mini
+        mini = z3.Int(
+            f"SmallestTaskEndTimeInTimePeriodForResource{resource.name}_{uid}"
+        )
+
+        asst_min = [
+            z3.Implies(
+                z3.And(task._end <= upper_bound, task._start <= lower_bound),
+                mini == task._start,
+            )
+            for task in resource._busy_intervals
+        ]
+        flowtime_single_resource_indicator.append_z3_assertion(z3.Or(asst_min))
+        for task in resource._busy_intervals:
+            flowtime_single_resource_indicator.append_z3_assertion(
+                z3.Implies(
+                    z3.And(task._end <= upper_bound, task._start >= lower_bound),
+                    mini <= task._start,
+                )
+            )
+
+        # the quantity to optimize
+        flowtime_single_resource_indicator.append_z3_assertion(flowtime == maxi - mini)
+        flowtime_single_resource_indicator.append_z3_assertion(flowtime >= 0)
+
+        super().__init__(
+            name=f"ObjectiveFlowtimeSingleResource({resource.name}:{lower_bound}:{upper_bound})",
+            target=flowtime_single_resource_indicator,
         )

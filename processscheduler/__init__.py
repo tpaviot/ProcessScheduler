@@ -31,6 +31,13 @@ from processscheduler.objective import (
     MaximizeObjective,
     MinimizeObjective,
     ObjectiveMinimizeMakespan,
+    ObjectiveMaximizeResourceUtilization,
+    ObjectiveMinimizeResourceCost,
+    ObjectivePriorities,
+    ObjectiveTasksStartLatest,
+    ObjectiveTasksStartEarliest,
+    ObjectiveMinimizeFlowtime,
+    ObjectiveMinimizeFlowtimeSingleResource,
 )
 from processscheduler.task import (
     ZeroDurationTask,

@@ -150,8 +150,9 @@ def test_optimize_indicator_multi_objective() -> None:
     task_2.add_required_resource(worker)
     task_3.add_required_resource(worker)
 
-    problem.add_objective_resource_utilization(worker)
-    problem.add_objective_priorities()
+    ps.ObjectiveMaximizeResourceUtilization(resource=worker)
+
+    ps.ObjectivePriorities()
 
     solver = ps.SchedulingSolver(problem=problem)
     solution = solver.solve()
@@ -243,12 +244,13 @@ def test_indicator_flowtime_single_resource_1() -> None:
         "IndicatorFlowtimeSingleResource1"
     )
     # there should not be any task scheduled in this time period
-    problem.add_objective_flowtime_single_resource(worker_1, time_interval=[40, 50])
+    ps.ObjectiveMinimizeFlowtimeSingleResource(
+        resource=worker_1, time_interval=[40, 50]
+    )
     solver = ps.SchedulingSolver(problem=problem)
 
     solution = solver.solve()
     assert solution
-    print(solution)
     # the flowtime should be 0
     assert solution.indicators["FlowTimeSingleResource(Worker1:40:50)"] == 0
 
@@ -258,7 +260,10 @@ def test_indicator_flowtime_single_resource_2() -> None:
     problem, worker_1, sum_durations = get_single_resource_utilization_problem(
         "IndicatorFlowtimeSingleResource2"
     )
-    problem.add_objective_flowtime_single_resource(worker_1, time_interval=[10, 40])
+    ps.ObjectiveMinimizeFlowtimeSingleResource(
+        resource=worker_1, time_interval=[10, 40]
+    )
+
     solver = ps.SchedulingSolver(problem=problem)
 
     solution = solver.solve()
@@ -271,7 +276,7 @@ def test_indicator_flowtime_single_resource_3() -> None:
     problem, worker_1, _ = get_single_resource_utilization_problem(
         "IndicatorFlowtimeSingleResource3"
     )
-    problem.add_objective_flowtime_single_resource(worker_1, time_interval=[5, 9])
+    ps.ObjectiveMinimizeFlowtimeSingleResource(resource=worker_1, time_interval=[5, 9])
     solver = ps.SchedulingSolver(problem=problem)
 
     solution = solver.solve()
@@ -284,7 +289,7 @@ def test_indicator_flowtime_single_resource_4() -> None:
     problem, worker_1, sum_durations = get_single_resource_utilization_problem(
         "IndicatorFlowtimeSingleResource4"
     )
-    problem.add_objective_flowtime_single_resource(worker_1)
+    ps.ObjectiveMinimizeFlowtimeSingleResource(resource=worker_1)
     solver = ps.SchedulingSolver(problem=problem)
 
     solution = solver.solve()
@@ -330,7 +335,9 @@ def test_indicator_flowtime_single_resource_5() -> None:
         time_intervals, "IndicatorFlowtimeSingleResource5"
     )
     for interval in time_intervals:
-        problem.add_objective_flowtime_single_resource(worker_1, time_interval=interval)
+        ps.ObjectiveMinimizeFlowtimeSingleResource(
+            resource=worker_1, time_interval=interval
+        )
 
     solver = ps.SchedulingSolver(problem=problem)
     solution = solver.solve()
@@ -356,7 +363,9 @@ def test_indicator_flowtime_single_resource_6() -> None:
         time_intervals, "IndicatorFlowtimeSingleResource6"
     )
     for interval in time_intervals:
-        problem.add_objective_flowtime_single_resource(worker_1, time_interval=interval)
+        ps.ObjectiveMinimizeFlowtimeSingleResource(
+            resource=worker_1, time_interval=interval
+        )
 
     solver = ps.SchedulingSolver(problem=problem, optimizer="optimize")
 
