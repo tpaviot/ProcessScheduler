@@ -127,9 +127,10 @@ def get_problem():
         t_team_migration.add_required_resource(ps.SelectWorkers(list_of_workers=r_a))
         t_team_migration.add_required_resource(ps.SelectWorkers(list_of_workers=r_b))
 
-    # solve
-    digital_transformation.add_objective_priorities()
-    digital_transformation.add_objective_flowtime()
+    # optimization
+    ps.ObjectivePriorities()
+    ps.ObjectiveMinimizeFlowtime()
+
     # digital_transformation.add_objective_makespan(weight=10)
     return digital_transformation
 
