@@ -28,7 +28,7 @@ def test_multi_two_tasks_1() -> None:
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
 
-    pb.add_constraint(task_1._end == 20 - task_2._start)
+    ps.ConstraintFromExpression(expression=task_1._end == 20 - task_2._start)
 
     # Maximize only task_1 end
     ind = ps.IndicatorFromMathExpression(name="Task1End", expression=task_1._end)
@@ -47,7 +47,7 @@ def test_multi_two_tasks_lex() -> None:
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
 
-    pb.add_constraint(task_1._end == 20 - task_2._start)
+    ps.ConstraintFromExpression(expression=task_1._end == 20 - task_2._start)
 
     # Maximize only task_2 end
     ind = ps.IndicatorFromMathExpression(name="Task2End", expression=task_2._end)
@@ -66,7 +66,7 @@ def test_multi_two_tasks_optimize_default() -> None:
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
 
-    pb.add_constraint(task_1._end == 20 - task_2._start)
+    ps.ConstraintFromExpression(expression=task_1._end == 20 - task_2._start)
 
     # Maximize only task_2 end
     ind = ps.IndicatorFromMathExpression(name="Task2End", expression=task_2._end)

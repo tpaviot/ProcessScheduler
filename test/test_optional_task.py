@@ -26,7 +26,7 @@ def test_optional_task_start_at_1() -> None:
     ps.TaskStartAt(task=task_1, value=1)
 
     # Force schedule, otherwise by default it is not scheduled
-    pb.add_constraint(task_1._scheduled == True)
+    ps.ConstraintFromExpression(expression=task_1._scheduled == True)
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
@@ -54,7 +54,7 @@ def test_optional_task_end_at_1() -> None:
     ps.TaskEndAt(task=task_1, value=4)
 
     # Force schedule, otherwise by default it is not scheduled
-    pb.add_constraint(task_1._scheduled == True)
+    ps.ConstraintFromExpression(expression=task_1._scheduled == True)
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
@@ -85,7 +85,7 @@ def test_optional_tasks_start_sync_1() -> None:
     ps.TasksStartSynced(task_1=task_1, task_2=task_2)
 
     # Force schedule, otherwise by default it is not scheduled
-    pb.add_constraint(task_2._scheduled == True)
+    ps.ConstraintFromExpression(expression=task_2._scheduled == True)
 
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
@@ -126,7 +126,7 @@ def test_optional_tasks_end_sync_1() -> None:
     ps.TasksEndSynced(task_1=task_1, task_2=task_2)
 
     # Force schedule, otherwise by default it is not scheduled
-    pb.add_constraint(task_2._scheduled == True)
+    ps.ConstraintFromExpression(expression=task_2._scheduled == True)
 
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
@@ -167,7 +167,7 @@ def test_optional_tasks_dont_overlap_1() -> None:
     ps.TasksDontOverlap(task_1=task_1, task_2=task_2)
 
     # Force schedule, otherwise by default it is not scheduled
-    pb.add_constraint(task_2._scheduled == True)
+    ps.ConstraintFromExpression(expression=task_2._scheduled == True)
 
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
@@ -208,7 +208,7 @@ def test_optional_tasks_precedence_1() -> None:
     ps.TaskPrecedence(task_before=task_1, task_after=task_2, offset=2)
 
     # Force schedule, otherwise by default it is not scheduled
-    pb.add_constraint(task_2._scheduled == True)
+    ps.ConstraintFromExpression(expression=task_2._scheduled == True)
 
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
@@ -245,7 +245,7 @@ def test_optional_tasks_start_after_strict_start_after_lax() -> None:
     task_2 = ps.FixedDurationTask(name="task2", duration=4, optional=True)  # optional
 
     # force task_2 to be scheduled
-    pb.add_constraint(task_2._scheduled == True)
+    ps.ConstraintFromExpression(expression=task_2._scheduled == True)
 
     ps.TaskStartAfter(task=task_2, value=1, kind="strict")
     ps.TaskStartAfter(task=task_2, value=4, kind="lax")
@@ -265,7 +265,7 @@ def test_optional_tasks_end_before_strict_end_before_lax() -> None:
     task_2 = ps.FixedDurationTask(name="task2", duration=4, optional=True)  # optional
 
     # force task_2 to be scheduled
-    pb.add_constraint(task_2._scheduled == True)
+    ps.ConstraintFromExpression(expression=task_2._scheduled == True)
 
     ps.TaskEndBefore(task=task_2, value=7, kind="strict")
     ps.TaskEndBefore(task=task_2, value=4, kind="lax")
@@ -363,7 +363,7 @@ def test_optional_task_single_worker_1() -> None:
     worker_1 = ps.Worker(name="Worker1")
     task_1.add_required_resource(worker_1)
     # Force schedule, otherwise by default it is not scheduled
-    pb.add_constraint(task_1._scheduled == True)
+    ps.ConstraintFromExpression(expression=task_1._scheduled == True)
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
@@ -377,7 +377,7 @@ def test_optional_task_singleworker_2() -> None:
     worker_1 = ps.Worker(name="Worker1")
     task_1.add_required_resource(worker_1)
     # Force schedule to False
-    pb.add_constraint(task_1._scheduled == False)
+    ps.ConstraintFromExpression(expression=task_1._scheduled == False)
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
@@ -392,7 +392,7 @@ def test_optional_task_two_workers_1() -> None:
     worker_2 = ps.Worker(name="Worker2")
     task_1.add_required_resources([worker_1, worker_2])
     # Force schedule, otherwise by default it is not scheduled
-    pb.add_constraint(task_1._scheduled == True)
+    ps.ConstraintFromExpression(expression=task_1._scheduled == True)
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
@@ -407,7 +407,7 @@ def test_optional_task_two_workers_2() -> None:
     worker_2 = ps.Worker(name="Worker2")
     task_1.add_required_resources([worker_1, worker_2])
     # Force schedule, otherwise by default it is not scheduled
-    pb.add_constraint(task_1._scheduled == False)
+    ps.ConstraintFromExpression(expression=task_1._scheduled == False)
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
@@ -424,7 +424,7 @@ def test_optional_task_select_workers_1() -> None:
         ps.SelectWorkers(list_of_workers=[worker_1, worker_2], nb_workers_to_select=1)
     )
     # Force schedule, otherwise by default it is not scheduled
-    pb.add_constraint(task_1._scheduled == True)
+    ps.ConstraintFromExpression(expression=task_1._scheduled == True)
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
@@ -442,7 +442,7 @@ def test_optional_task_select_workers_2() -> None:
         ps.SelectWorkers(list_of_workers=[worker_1, worker_2], nb_workers_to_select=1)
     )
     # Force schedule False
-    pb.add_constraint(task_1._scheduled == False)
+    ps.ConstraintFromExpression(expression=task_1._scheduled == False)
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution

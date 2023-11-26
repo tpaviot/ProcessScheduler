@@ -131,7 +131,7 @@ def test_resource_utilization_indicator_5() -> None:
 
     utilization_res = ps.IndicatorResourceUtilization(resource=worker)
 
-    problem.add_constraint(utilization_res._indicator_variable == 100)
+    ps.ConstraintFromExpression(expression=utilization_res._indicator_variable == 100)
 
     solution = ps.SchedulingSolver(problem=problem).solve()
 

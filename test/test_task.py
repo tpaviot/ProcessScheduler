@@ -202,7 +202,7 @@ def test_task_duration_depend_on_start() -> None:
     task_2 = ps.VariableDurationTask(name="Task2")
 
     ps.TaskStartAt(task=task_1, value=5)
-    pb.add_constraint(task_1._duration == task_1._start * 3)
+    ps.ConstraintFromExpression(expression=task_1._duration == task_1._start * 3)
 
     ps.TaskStartAt(task=task_2, value=11)
     ps.IfThenElse(
@@ -292,7 +292,7 @@ def test_tasks_start_sync() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.tasks[t_1.name].start == solution.tasks[t_2.name].start
+    assert solution.tasks[t_1.name].start == solution.tasks[t_2.name].start == 7
 
 
 def test_tasks_end_sync() -> None:

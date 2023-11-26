@@ -66,6 +66,15 @@ class Constraint(NamedUIDObject):
             self.append_z3_assertion(list_of_z3_assertions)
 
 
+class ConstraintFromExpression(Constraint):
+    expression: z3.BoolRef
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        self.set_z3_assertions(self.expression)
+
+
 class ResourceConstraint(Constraint):
     """Constraint that applies on a Resource (typically a Worker)"""
 
