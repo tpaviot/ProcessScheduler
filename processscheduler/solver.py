@@ -29,10 +29,9 @@ from pydantic import Field, PositiveFloat, Extra, ConfigDict
 
 from processscheduler.base import BaseModelWithJson
 from processscheduler.objective import (
-    MaximizeObjective,
-    MinimizeObjective,
     Indicator,
     IndicatorFromMathExpression,
+    Objective,
 )
 from processscheduler.solution import (
     SchedulingSolution,
@@ -331,9 +330,9 @@ class SchedulingSolver(BaseModelWithJson):
         for obj in self.problem.objectives.values():
             variable_to_optimize = obj._target
             weight = obj.weight
-            if isinstance(obj, MaximizeObjective):
+            if obj.kind == "maximize":
                 weighted_objectives.append(-weight * variable_to_optimize)
-            else:
+            elif obj.kind == "minimize":
                 weighted_objectives.append(weight * variable_to_optimize)
         self.append_z3_assertion(
             equivalent_single_objective == z3.Sum(weighted_objectives)
@@ -342,8 +341,10 @@ class SchedulingSolver(BaseModelWithJson):
         equivalent_indicator = IndicatorFromMathExpression(
             name="EquivalentIndicator", expression=equivalent_single_objective
         )
-        equivalent_objective = MinimizeObjective(
-            name="MinimizeEquivalentObjective", target=equivalent_indicator
+        equivalent_objective = Objective(
+            name="MinimizeEquivalentObjective",
+            target=equivalent_indicator,
+            kind="minimize",
         )
         self._objective = equivalent_objective
         self.append_z3_assertion(equivalent_indicator.get_z3_assertions())
@@ -360,17 +361,17 @@ class SchedulingSolver(BaseModelWithJson):
             else:
                 for obj in self.problem.objectives.values():
                     variable_to_optimize = obj._target
-                    if isinstance(obj, MaximizeObjective):
+                    if obj.kind == "maximize":
                         self._solver.maximize(variable_to_optimize)
-                    else:
+                    elif obj.kind == "minimize":
                         self._solver.minimize(variable_to_optimize)
         else:
             self._objective = list(self.problem.objectives.values())[0]
             if self.optimizer == "optimize":
                 variable_to_optimize = self._objective._target
-                if isinstance(self._objective, MaximizeObjective):
+                if self._objective.kind == "maximize":
                     self._solver.maximize(variable_to_optimize)
-                else:
+                elif self._objective.kind == "minimize":
                     self._solver.minimize(variable_to_optimize)
 
     def check_sat(self, find_better_value: Optional[bool] = False):
@@ -539,7 +540,7 @@ class SchedulingSolver(BaseModelWithJson):
                     print(f"\t{obj_name}")
             solution = self.solve_optimize_incremental(
                 self._objective._target,
-                kind="min" if isinstance(self._objective, MinimizeObjective) else "max",
+                kind="min" if self._objective.kind == "minimize" else "max",
             )
             if not solution:
                 return False

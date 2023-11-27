@@ -89,7 +89,9 @@ def test_resource_utilization_indicator_3() -> None:
     utilization_res_1 = ps.IndicatorResourceUtilization(resource=worker_1)
     utilization_res_2 = ps.IndicatorResourceUtilization(resource=worker_2)
 
-    ps.MaximizeObjective(name="MaximizeResource1Utilization", target=utilization_res_1)
+    ps.Objective(
+        name="MaximizeResource1Utilization", target=utilization_res_1, kind="maximize"
+    )
 
     solution = ps.SchedulingSolver(problem=problem).solve()
 
@@ -109,7 +111,8 @@ def test_resource_utilization_indicator_4() -> None:
         t.add_required_resource(worker)
 
     utilization_res = ps.IndicatorResourceUtilization(resource=worker)
-    problem.maximize_indicator(utilization_res)
+
+    ps.Objective(name="MaximizeUtilRes4", target=utilization_res, kind="maximize")
 
     solution = ps.SchedulingSolver(problem=problem).solve()
 
@@ -166,7 +169,7 @@ def test_incremental_optimizer_1() -> None:
     task_1_start_ind = ps.IndicatorFromMathExpression(
         name="Task1Start", expression=task_1._start
     )
-    problem.maximize_indicator(task_1_start_ind)
+    ps.Objective(target=task_1_start_ind, kind="maximize")
 
     solver = ps.SchedulingSolver(problem=problem)
     solution = solver.solve()
@@ -192,7 +195,7 @@ def test_resource_utilization_maximization_incremental_1() -> None:
     utilization_res_1 = ps.IndicatorResourceUtilization(resource=worker_1)
     utilization_res_2 = ps.IndicatorResourceUtilization(resource=worker_2)
 
-    problem.maximize_indicator(utilization_res_1)
+    ps.Objective(name="MaximizeUtilRes1", target=utilization_res_1, kind="maximize")
     solver = ps.SchedulingSolver(problem=problem)
 
     solution = solver.solve()

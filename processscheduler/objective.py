@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Optional, Union, Tuple, List
+from typing import Optional, Union, Tuple, List, Literal
 import uuid
 
 import z3
@@ -175,6 +175,7 @@ class Objective(NamedUIDObject):
 
     target: Union[z3.ArithRef, Indicator] = Field(default=None)
     weight: int = Field(default=1)
+    kind: Literal["minimize", "maximize"]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -189,24 +190,16 @@ class Objective(NamedUIDObject):
         processscheduler.base.active_problem.add_objective(self)
 
 
-class MaximizeObjective(Objective):
-    def __init__(self, **data) -> None:
-        super().__init__(**data)
-
-
-class MinimizeObjective(Objective):
-    def __init__(self, **data) -> None:
-        super().__init__(**data)
-
-
-class ObjectiveMinimizeMakespan(MinimizeObjective):
+class ObjectiveMinimizeMakespan(Objective):
     def __init__(self, **data) -> None:
         super().__init__(
-            name="MakeSpan", target=processscheduler.base.active_problem._horizon
+            name="MakeSpan",
+            target=processscheduler.base.active_problem._horizon,
+            kind="minimize",
         )
 
 
-class ObjectiveMaximizeResourceUtilization(MaximizeObjective):
+class ObjectiveMaximizeResourceUtilization(Objective):
     """Maximize resource occupation."""
 
     def __init__(self, **data) -> None:
@@ -214,11 +207,13 @@ class ObjectiveMaximizeResourceUtilization(MaximizeObjective):
             resource=data["resource"]
         )
         super().__init__(
-            name="MaximizeResourceUtilization", target=resource_utilization_indicator
+            name="MaximizeResourceUtilization",
+            target=resource_utilization_indicator,
+            kind="maximize",
         )
 
 
-class ObjectiveMinimizeResourceCost(MinimizeObjective):
+class ObjectiveMinimizeResourceCost(Objective):
     """Minimise the total cost of selected resources"""
 
     # list_of_resources: List[Union[Worker, CumulativeWorker]]
@@ -230,10 +225,12 @@ class ObjectiveMinimizeResourceCost(MinimizeObjective):
             list_of_resources=data["list_of_resources"]
         )
 
-        super().__init__(name="MinimizeResourceCost", target=cost_indicator)
+        super().__init__(
+            name="MinimizeResourceCost", target=cost_indicator, kind="minimize"
+        )
 
 
-class ObjectivePriorities(MinimizeObjective):
+class ObjectivePriorities(Objective):
     """optimize the solution such that all tasks with lower
     priority are scheduled before other tasks"""
 
@@ -249,10 +246,12 @@ class ObjectivePriorities(MinimizeObjective):
         priority_indicator = IndicatorFromMathExpression(
             name="TotalPriority", expression=priority_sum
         )
-        super().__init__(name="MinimizePriority", target=priority_indicator)
+        super().__init__(
+            name="MinimizePriority", target=priority_indicator, kind="minimize"
+        )
 
 
-class ObjectiveTasksStartLatest(MaximizeObjective):
+class ObjectiveTasksStartLatest(Objective):
     """maximize the minimum start time, i.e. all the tasks
     are scheduled as late as possible"""
 
@@ -276,10 +275,12 @@ class ObjectiveTasksStartLatest(MaximizeObjective):
         for tsk in list_of_tasks:
             smallest_start_time.append_z3_assertion(mini <= tsk._start)
 
-        super().__init__(name="MaximizeStartLatest", target=smallest_start_time)
+        super().__init__(
+            name="MaximizeStartLatest", target=smallest_start_time, kind="maximize"
+        )
 
 
-class ObjectiveTasksStartEarliest(MinimizeObjective):
+class ObjectiveTasksStartEarliest(Objective):
     """minimize the greatest start time, i.e. tasks are schedules
     as early as possible"""
 
@@ -303,10 +304,12 @@ class ObjectiveTasksStartEarliest(MinimizeObjective):
         for tsk in list_of_tasks:
             greatest_start_time.append_z3_assertion(maxi >= tsk._start)
 
-        super().__init__(name="StartEarliest", target=greatest_start_time)
+        super().__init__(
+            name="StartEarliest", target=greatest_start_time, kind="minimize"
+        )
 
 
-class ObjectiveMinimizeFlowtime(MinimizeObjective):
+class ObjectiveMinimizeFlowtime(Objective):
     """the flowtime is the sum of all ends, minimize. Be careful that
     it is contradictory with makespan"""
 
@@ -328,10 +331,10 @@ class ObjectiveMinimizeFlowtime(MinimizeObjective):
         flow_time = IndicatorFromMathExpression(
             name="Flowtime", expression=flow_time_expr
         )
-        super().__init__(name="Flowtime", target=flow_time)
+        super().__init__(name="Flowtime", target=flow_time, kind="minimize")
 
 
-class ObjectiveMinimizeFlowtimeSingleResource(MinimizeObjective):
+class ObjectiveMinimizeFlowtimeSingleResource(Objective):
     """Optimize flowtime for a single resource, for all the tasks scheduled in the
     time interval provided. Is ever no time interval is passed to the function, the
     flowtime is minimized for all the tasks scheduled in the workplan."""
@@ -408,4 +411,5 @@ class ObjectiveMinimizeFlowtimeSingleResource(MinimizeObjective):
         super().__init__(
             name=f"ObjectiveFlowtimeSingleResource({resource.name}:{lower_bound}:{upper_bound})",
             target=flowtime_single_resource_indicator,
+            kind="minimize",
         )

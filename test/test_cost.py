@@ -278,8 +278,7 @@ def test_optimize_quadratic_cost_2() -> None:
     t_1.add_required_resource(worker_1)
 
     cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
-    problem.minimize_indicator(cost_ind)
-
+    ps.Objective(name="MinimizeQuadraticCost2", target=cost_ind, kind="minimize")
     solution = ps.SchedulingSolver(problem=problem).solve()
 
     assert solution
@@ -332,7 +331,10 @@ def test_incremental_optimizer_linear_cost_1() -> None:
     t_1.add_required_resource(worker_1)
 
     cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
-    problem.minimize_indicator(cost_ind)
+
+    ps.Objective(
+        name="MinimizeIncrementalOptimizerLinearCost1", target=cost_ind, kind="minimize"
+    )
 
     solver = ps.SchedulingSolver(problem=problem, random_values=True)
 

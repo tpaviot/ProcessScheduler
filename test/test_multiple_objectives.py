@@ -32,7 +32,8 @@ def test_multi_two_tasks_1() -> None:
 
     # Maximize only task_1 end
     ind = ps.IndicatorFromMathExpression(name="Task1End", expression=task_1._end)
-    pb.maximize_indicator(ind)
+
+    ps.Objective(name="MaxMultObj1", target=ind, kind="maximize")
 
     solution = ps.SchedulingSolver(problem=pb).solve()
 
@@ -51,7 +52,8 @@ def test_multi_two_tasks_lex() -> None:
 
     # Maximize only task_2 end
     ind = ps.IndicatorFromMathExpression(name="Task2End", expression=task_2._end)
-    pb.maximize_indicator(ind)
+
+    ps.Objective(name="MaxMultiObj2", target=ind, kind="maximize")
 
     solution = ps.SchedulingSolver(problem=pb, optimizer="incremental").solve()
 
@@ -70,7 +72,8 @@ def test_multi_two_tasks_optimize_default() -> None:
 
     # Maximize only task_2 end
     ind = ps.IndicatorFromMathExpression(name="Task2End", expression=task_2._end)
-    pb.maximize_indicator(ind)
+
+    ps.Objective(name="MinInd", target=ind, kind="maximize")
 
     solution = ps.SchedulingSolver(
         problem=pb, verbosity=2, optimizer="optimize"

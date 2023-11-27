@@ -44,8 +44,6 @@ from processscheduler.objective import (
     IndicatorResourceUtilization,
     IndicatorResourceCost,
     Objective,
-    MaximizeObjective,
-    MinimizeObjective,
 )
 from processscheduler.resource import Resource, Worker, CumulativeWorker, SelectWorkers
 from processscheduler.constraint import Constraint
@@ -199,11 +197,3 @@ class SchedulingProblem(NamedUIDObject):
         if buffer.name in [b.name for b in self.buffers]:
             raise ValueError(f"a buffer with the name {buffer.name} already exists.")
         self.buffers.append(buffer)
-
-    def maximize_indicator(self, indicator: Indicator) -> MaximizeObjective:
-        """Maximize indicator"""
-        return MaximizeObjective(name="CustomizedMaximizeIndicator", target=indicator)
-
-    def minimize_indicator(self, indicator: Indicator) -> MinimizeObjective:
-        """Minimize indicator"""
-        return MinimizeObjective(name="CustomizedMinimizeIndicator", target=indicator)
