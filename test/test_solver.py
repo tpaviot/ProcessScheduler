@@ -295,20 +295,56 @@ def test_flowtime_objective_big_problem():
     assert solve_problem(problem)
 
 
-def test_start_latest_objective_big_problem():
+def test_create_start_latest_objective_big_problem():
     problem = build_complex_problem("SolveStartLatestObjective", 10)
     ps.ObjectiveTasksStartLatest()
     assert solve_problem(problem)
 
 
-def test_start_earliest_objective_big_problem():
+def test_create_start_earliest_objective_big_problem():
     problem = build_complex_problem("SolveStartEarliestObjective", 10)
     ps.ObjectiveTasksStartEarliest()
     assert solve_problem(problem)
 
 
-def test_start_latest():
-    problem = ps.SchedulingProblem(name="SolveStartLatest", horizon=51)
+def test_start_earliest_1():
+    problem = ps.SchedulingProblem(name="SolveStartEarliest1", horizon=30)
+
+    task_1 = ps.FixedDurationTask(name="task1", duration=5)
+    task_2 = ps.FixedDurationTask(name="task2", duration=3)
+
+    ps.TaskStartAfter(task=task_1, value=10, kind="lax")
+    ps.TaskPrecedence(task_before=task_1, task_after=task_2)
+
+    ps.ObjectiveTasksStartEarliest()
+
+    solution = solve_problem(problem)
+    assert solution
+    assert solution.tasks[task_1.name].start == 10
+    assert solution.tasks[task_2.name].start == 15
+
+
+def test_start_earliest_2():
+    problem = ps.SchedulingProblem(name="SolveStartEarliest2", horizon=30)
+    # only tasks 2 and 3 are constrained to be earliest
+    task_1 = ps.FixedDurationTask(name="task1", duration=5)
+    task_2 = ps.FixedDurationTask(name="task2", duration=3)
+    task_3 = ps.FixedDurationTask(name="task3", duration=7)
+
+    ps.TaskStartAt(task=task_1, value=8)
+    ps.TaskPrecedence(task_before=task_1, task_after=task_2)
+
+    ps.ObjectiveTasksStartEarliest(list_of_tasks=[task_2, task_3])
+
+    solution = solve_problem(problem)
+    assert solution
+    assert solution.tasks["task1"].start == 8
+    assert solution.tasks["task2"].start == 13
+    assert solution.tasks["task3"].start == 0
+
+
+def test_start_latest_1():
+    problem = ps.SchedulingProblem(name="SolveStartLatest1", horizon=51)
     # only one task, the solver should schedule a start time at 0
     task_1 = ps.FixedDurationTask(name="task1", duration=2)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
