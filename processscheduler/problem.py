@@ -103,7 +103,7 @@ class SchedulingProblem(NamedUIDObject):
         # define the horizon variable
         self._horizon = z3.Int("horizon")
         if self.horizon is not None:
-            self.add_constraint(self._horizon <= self.horizon)
+            self.append_z3_assertion(self._horizon <= self.horizon)
 
     def add_from_json_file(self, filename: str):
         """take filename and returns the object"""
@@ -167,10 +167,6 @@ class SchedulingProblem(NamedUIDObject):
                 self.constraints.append(constraint)
             else:
                 raise AssertionError("constraint already added to the problem.")
-        elif isinstance(constraint, z3.BoolRef):
-            self.append_z3_assertion(
-                constraint
-            )  # self.z3_assertions.append(constraint)
         else:
             raise TypeError(
                 "You must provide either a _Constraint or z3.BoolRef instance."
