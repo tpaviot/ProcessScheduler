@@ -203,7 +203,9 @@ class SchedulingSolver(BaseModelWithJson):
         # add z3 assertions for constraints
         # that are *NOT* defined from an assertion
         constraints_not_from_assertion = [
-            c for c in self.problem.constraints if not c._created_from_assertion
+            c
+            for c in self.problem.constraints.values()
+            if not c._created_from_assertion
         ]
         for constraint in constraints_not_from_assertion:
             self.append_z3_assertion(constraint.get_z3_assertions(), constraint.name)

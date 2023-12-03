@@ -15,12 +15,12 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Optional, Union, Tuple, List, Literal
+from typing import Any, Dict, Optional, Union, Tuple, List, Literal
 import uuid
 
 import z3
 
-from pydantic import Field
+from pydantic import Field, model_serializer
 
 from processscheduler.base import NamedUIDObject
 from processscheduler.resource import Worker, CumulativeWorker
@@ -193,10 +193,16 @@ class Objective(NamedUIDObject):
 class ObjectiveMinimizeMakespan(Objective):
     def __init__(self, **data) -> None:
         super().__init__(
-            name="MakeSpan",
+            name="MinimizeMakeSpan",
             target=processscheduler.base.active_problem._horizon,
             kind="minimize",
         )
+
+    @model_serializer
+    def ser_model(self) -> Dict[str, Any]:
+        return {
+            "type": "ObjectiveMinimizeMakespan",
+        }
 
 
 class ObjectiveMaximizeResourceUtilization(Objective):
@@ -221,13 +227,18 @@ class ObjectiveMinimizeResourceCost(Objective):
     #    self, list_of_resources: List[Union[Worker, CumulativeWorker]], weight: int = 1
     # ) -> Union[z3.ArithRef, Indicator]:
     def __init__(self, **data) -> None:
-        cost_indicator = IndicatorResourceCost(
-            list_of_resources=data["list_of_resources"]
-        )
+        lor = data["list_of_resources"]
+        cost_indicator = IndicatorResourceCost(list_of_resources=lor)
+        instance_name = f"MinimizeResourceCost{''.join([r.name for r in lor])}"
+        super().__init__(name=instance_name, target=cost_indicator, kind="minimize")
+        self._lor = lor
 
-        super().__init__(
-            name="MinimizeResourceCost", target=cost_indicator, kind="minimize"
-        )
+    @model_serializer
+    def ser_model(self) -> Dict[str, Any]:
+        return {
+            "type": "ObjectiveMinimizeResourceCost",
+            "list_of_resources": [r.name for r in self._lor],
+        }
 
 
 class ObjectivePriorities(Objective):
@@ -249,6 +260,12 @@ class ObjectivePriorities(Objective):
         super().__init__(
             name="MinimizePriority", target=priority_indicator, kind="minimize"
         )
+
+    @model_serializer
+    def ser_model(self) -> Dict[str, Any]:
+        return {
+            "type": "ObjectivePriorities",
+        }
 
 
 class ObjectiveTasksStartLatest(Objective):

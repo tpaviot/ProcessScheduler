@@ -250,6 +250,8 @@ def test_Problem_add_from_json_file(my_tmp_path):
 
 
 def test_json_export_problem_solver_1(my_tmp_path):
+    """A wide problem, that includes everything that can be
+    found in ProcessScheduler"""
     pb = ps.SchedulingProblem(name="JSONExportProblem1", horizon=1)
     # tasks
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
@@ -299,6 +301,13 @@ def test_json_export_problem_solver_1(my_tmp_path):
         list_of_time_intervals=[[10, 18]],
     )
 
+    # objectives
+    ps.ObjectiveMinimizeMakespan()
+    # ps.ObjectiveMinimizeFlowtime()
+    ps.ObjectivePriorities()
+    # ps.ObjectiveTasksStartLatest()
+    # ps.ObjectiveTasksStartEarliest()
+    ps.ObjectiveMinimizeResourceCost(list_of_resources=[worker_1, worker_2])
     pb.to_json(compact=True)
     pb.to_json_file(my_tmp_path / "problem.json")
     # export to json

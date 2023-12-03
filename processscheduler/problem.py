@@ -46,7 +46,10 @@ from processscheduler.objective import (
     Objective,
 )
 from processscheduler.resource import Resource, Worker, CumulativeWorker, SelectWorkers
-from processscheduler.constraint import Constraint
+from processscheduler.constraint import *
+from processscheduler.task_constraint import *
+from processscheduler.resource_constraint import *
+from processscheduler.first_order_logic import Not, Or, And, Xor, Implies, IfThenElse
 from processscheduler.buffer import Buffer
 
 _object_types = {
@@ -86,7 +89,46 @@ class SchedulingProblem(NamedUIDObject):
 
     cumulative_workers: Dict[str, CumulativeWorker] = Field(default={})
 
-    constraints: List[Constraint] = Field(default=[])
+    constraints: Dict[
+        str,
+        Union[
+            ConstraintFromExpression,
+            ForceApplyNOptionalConstraints,
+            # resource constraints
+            SameWorkers,
+            DistinctWorkers,
+            WorkLoad,
+            ResourceUnavailable,
+            ResourceTasksDistance,
+            # tasks constraints
+            TaskGroup,
+            UnorderedTaskGroup,
+            OrderedTaskGroup,
+            TaskPrecedence,
+            TasksStartSynced,
+            TasksEndSynced,
+            TasksDontOverlap,
+            TasksContiguous,
+            TaskStartAt,
+            TaskStartAfter,
+            TaskEndAt,
+            TaskEndBefore,
+            OptionalTaskConditionSchedule,
+            OptionalTasksDependency,
+            ForceScheduleNOptionalTasks,
+            ScheduleNTasksInTimeIntervals,
+            # task buffers
+            TaskUnloadBuffer,
+            TaskLoadBuffer,
+            # first order logic constraints
+            Not,
+            Or,
+            And,
+            Xor,
+            Implies,
+            IfThenElse,
+        ],
+    ] = Field(default={})
 
     indicators: Dict[str, Indicator] = Field(default={})
 
@@ -159,18 +201,14 @@ class SchedulingProblem(NamedUIDObject):
             )
         self.cumulative_workers[cumulative_worker.name] = cumulative_worker
 
-    def add_constraint(self, constraint: Union[Constraint, z3.BoolRef]) -> None:
+    def add_constraint(self, constraint: Constraint) -> None:
         """Add a constraint to the problem. A constraint can be either
         a z3 assertion or a processscheduler Constraint instance."""
-        if isinstance(constraint, Constraint):
-            if constraint not in self.constraints:
-                self.constraints.append(constraint)
-            else:
-                raise AssertionError("constraint already added to the problem.")
-        else:
-            raise TypeError(
-                "You must provide either a _Constraint or z3.BoolRef instance."
+        if constraint.name in self.constraints:
+            raise ValueError(
+                f"a Constraint instance with the name {constraint.name} already exists."
             )
+        self.constraints[constraint.name] = constraint
 
     def add_indicator(self, indicator: Indicator) -> bool:
         """Add an indicator to the problem"""
