@@ -329,3 +329,51 @@ def test_tasks_contiguous() -> None:
     solution = solver.solve()
     assert solution
     assert solution.horizon == 56
+
+
+#
+# Release date
+#
+def test_tasks_release_date_1() -> None:
+    pb = ps.SchedulingProblem(name="TaskReleaseDate1")
+    t_1 = ps.FixedDurationTask(name="t1", duration=7, release_date=19)
+    ps.ObjectiveMinimizeMakespan()
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    assert solution.horizon == 26
+
+
+def test_tasks_release_date_2() -> None:
+    """no solution, because release date is too late"""
+    pb = ps.SchedulingProblem(name="TaskReleaseDate2", horizon=12)
+    t_1 = ps.FixedDurationTask(name="t1", duration=10, release_date=19)
+    ps.ObjectiveMinimizeMakespan()
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert not solution
+
+
+#
+# Due date
+#
+def test_tasks_due_date_1() -> None:
+    pb = ps.SchedulingProblem(name="TaskDueDate1")
+    t_1 = ps.FixedDurationTask(name="t1", duration=9, due_date=19)
+    ps.ObjectiveMinimizeMakespan()
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    assert solution.tasks["t1"].end == 9
+
+
+def test_tasks_due_date_2() -> None:
+    """no solution, because due date is too early"""
+    pb = ps.SchedulingProblem(name="TaskDueDate2")
+    t_1 = ps.FixedDurationTask(name="t1", duration=10)
+    t_2 = ps.FixedDurationTask(name="t2", duration=10, due_date=15)
+    ps.TaskPrecedence(task_before=t_1, task_after=t_2)
+    ps.ObjectiveMinimizeMakespan()
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert not solution

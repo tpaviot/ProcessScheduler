@@ -1,5 +1,3 @@
-"""The module that defines the task related classes."""
-
 # Copyright (c) 2020-2021 Thomas Paviot (tpaviot@gmail.com)
 #
 # This file is part of ProcessScheduler.
@@ -27,12 +25,50 @@ import processscheduler.base
 
 
 class Task(NamedUIDObject):
-    """The base class for all kind of tasks. Users may instantiate specialized classes that
-    inherit from the base class."""
+    """
+    Base class representing tasks in an industrial scheduling system.
 
-    optional: StrictBool = Field(default=False)
-    work_amount: int = Field(default=0, ge=0)
-    priority: int = Field(default=0, ge=0)
+    Attributes:
+        optional (StrictBool): Indicates whether the task is optional for scheduling optimization. When set to True, the scheduling algorithm may explore options to skip or reschedule this task. Defaults to False.
+
+        work_amount (int): The amount of work associated with this task. This could represent processing time, workload, or other relevant metrics. Must be a non-negative integer. Defaults to 0.
+
+        release_date (int): The release date of the task. This date signifies the earliest time the task can begin processing. Represented as a timestamp or date. Defaults to None, allowing for immediate processing upon scheduling.
+
+        due_date (int) :
+        priority (int): The priority of the task in the scheduling queue, aligning with concepts discussed by Michael Pinedo. Higher values indicate higher priority, making the task more critical in the scheduling process. Must be a non-negative integer. Defaults to 0.
+
+    Note:
+        - Tasks with higher priority values take precedence in scheduling.
+        - A release date of None implies the task can start processing immediately upon scheduling.
+        - The 'optional' flag, when set to True, allows the scheduling algorithm flexibility in handling the task for optimization purposes.
+    """
+
+    optional: StrictBool = Field(
+        default=False, description="Whether or not the solver must schedule this task."
+    )
+    work_amount: int = Field(
+        default=0,
+        ge=0,
+        description="The quantity of work that has to be done by this job.",
+    )
+    release_date: Union[int, None] = Field(
+        default=None,
+        description="The ready date, i.e. the earliest time the task can start its processing.",
+    )
+    due_date: Union[int, None] = Field(
+        default=None,
+        description="completion date (i.e., the date the job is promised to the customer). Completion of a job after its due date is allowed, but then a penalty is incurred. When a due date must be met it is referred to as a deadline",
+    )
+    due_date_is_deadline: StrictBool = Field(
+        default=True,
+        description="Due date is a deadline by default (scheduling after the deadline is not allowed. If False, a penalty function is used.",
+    )
+    priority: int = Field(
+        default=0,
+        ge=0,
+        description="The priority of the task. The higher this parameter, the most important it is.",
+    )
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -64,6 +100,18 @@ class Task(NamedUIDObject):
         # for such tasks, they are actually scheduled in the past
         # with start_time = end_time is a negative point in the timeline
         self._current_negative_integer = 0  # type: int
+
+        # the release date
+        if self.release_date is not None:
+            self.append_z3_assertion(self._start >= self.release_date)
+
+        # the due date
+        if self.due_date is not None:
+            # two cases, if the dure_date is a deadline (True by default):
+            if self.due_date_is_deadline:
+                self.append_z3_assertion(self._end <= self.due_date)
+            else:
+                raise NotImplementedError("Should implement a penalty function")
 
     def _get_unique_negative_integer(self) -> int:
         """Returns a new negative integer each time this method is called."""
