@@ -32,6 +32,78 @@ def test_indicator_flowtime() -> None:
     assert solution.indicators[i_1.name] == 4
 
 
+#
+# Tardiness
+#
+def test_indicator_tardiness_1() -> None:
+    problem = ps.SchedulingProblem(name="IndicatorTardiness1")
+    t_1 = ps.FixedDurationTask(
+        name="T1", duration=5, due_date=2, due_date_is_deadline=False
+    )
+    ps.TaskStartAt(task=t_1, value=0)
+    tard_1 = ps.IndicatorTardiness()
+    solution = ps.SchedulingSolver(problem=problem).solve()
+    assert solution
+    assert solution.indicators[tard_1.name] == 3
+
+
+def test_indicator_tardiness_2() -> None:
+    problem = ps.SchedulingProblem(name="IndicatorTardiness2")
+    t_1 = ps.FixedDurationTask(
+        name="T1", duration=5, due_date=2, due_date_is_deadline=False
+    )
+    t_2 = ps.FixedDurationTask(
+        name="T2", duration=7, due_date=5, due_date_is_deadline=False
+    )
+    ps.TaskStartAt(task=t_1, value=0)  # tardiness 3
+    ps.TaskStartAt(task=t_2, value=0)  # tardiness 2
+    tard_1 = ps.IndicatorTardiness()
+    solution = ps.SchedulingSolver(problem=problem).solve()
+    assert solution
+    assert solution.indicators[tard_1.name] == 5
+
+
+def test_indicator_tardiness_3() -> None:
+    problem = ps.SchedulingProblem(name="IndicatorTardiness3")
+    t_1 = ps.FixedDurationTask(
+        name="T1", duration=5, due_date=20, due_date_is_deadline=False
+    )
+    t_2 = ps.FixedDurationTask(
+        name="T2", duration=7, due_date=25, due_date_is_deadline=False
+    )
+    ps.TaskStartAt(task=t_1, value=0)  # tardiness 0
+    ps.TaskStartAt(task=t_2, value=0)  # tardiness 0
+    tard_1 = ps.IndicatorTardiness()
+    solution = ps.SchedulingSolver(problem=problem).solve()
+    assert solution
+    assert solution.indicators[tard_1.name] == 0
+
+
+def test_indicator_tardiness_4() -> None:
+    """tardiness for a list of resouces"""
+    problem = ps.SchedulingProblem(name="IndicatorTardiness4")
+    t_1 = ps.FixedDurationTask(
+        name="T1", duration=5, due_date=20, due_date_is_deadline=False
+    )
+    t_2 = ps.FixedDurationTask(
+        name="T2", duration=7, due_date=25, due_date_is_deadline=False
+    )
+    t_3 = ps.FixedDurationTask(
+        name="T3", duration=11, due_date=5, due_date_is_deadline=False
+    )
+
+    ps.TaskStartAt(task=t_1, value=0)  # tardiness 0
+    ps.TaskStartAt(task=t_2, value=0)  # tardiness 0
+    ps.TaskStartAt(task=t_3, value=0)  # tardiness 6
+    tard_1 = ps.IndicatorTardiness(list_of_tasks=[t_2, t_3])
+    solution = ps.SchedulingSolver(problem=problem).solve()
+    assert solution
+    assert solution.indicators[tard_1.name] == 6
+
+
+#
+# Resource utilization
+#
 def test_resource_utilization_indicator_1() -> None:
     problem = ps.SchedulingProblem(name="IndicatorUtilization1", horizon=10)
     t_1 = ps.FixedDurationTask(name="T1", duration=5)

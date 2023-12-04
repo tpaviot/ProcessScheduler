@@ -111,7 +111,7 @@ class Task(NamedUIDObject):
             if self.due_date_is_deadline:
                 self.append_z3_assertion(self._end <= self.due_date)
             else:
-                raise NotImplementedError("Should implement a penalty function")
+                print("TODO: Should implement a penalty function")
 
     def _get_unique_negative_integer(self) -> int:
         """Returns a new negative integer each time this method is called."""

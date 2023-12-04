@@ -25,6 +25,7 @@ from processscheduler.first_order_logic import Not, Or, And, Xor, Implies, IfThe
 from processscheduler.objective import (
     Indicator,
     IndicatorFromMathExpression,
+    IndicatorTardiness,
     IndicatorResourceUtilization,
     IndicatorNumberTasksAssigned,
     IndicatorResourceCost,

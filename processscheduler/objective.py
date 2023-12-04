@@ -23,6 +23,7 @@ import z3
 from pydantic import Field, model_serializer
 
 from processscheduler.base import NamedUIDObject
+from processscheduler.task import Task
 from processscheduler.resource import Worker, CumulativeWorker
 from processscheduler.cost import ConstantCostFunction
 import processscheduler.base
@@ -110,6 +111,27 @@ class IndicatorNumberTasksAssigned(Indicator):
         self.append_z3_assertion(self._indicator_variable == expression)
 
 
+class IndicatorTardiness(Indicator):
+    list_of_tasks: Union[List[Task], None] = Field(default=None)
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        if self.list_of_tasks is None:
+            tasks = processscheduler.base.active_problem.tasks.values()
+            self.name = "Total tardiness"
+        else:
+            tasks = self.list_of_tasks
+            self.name = "Tardiness({','.join(t.name for t in self.list_of_tasks)})"
+        tardiness_v = []
+        for t in tasks:
+            # tardiness in terms of time units
+            tardiness_v.append(z3.If(t.due_date >= t._end, 0, t._end - t.due_date))
+        expression = z3.Sum(tardiness_v)
+        constant_costs = []
+        self.append_z3_assertion(self._indicator_variable == expression)
+
+
 class IndicatorResourceCost(Indicator):
     list_of_resources: List[Union[Worker, CumulativeWorker]]
 
@@ -191,6 +213,10 @@ class Objective(NamedUIDObject):
 
 
 class ObjectiveMinimizeMakespan(Objective):
+    """The makespan, deﬁned as max(C1 , . . . , Cn ), is equivalent
+    to the completion time of the last job to leave the system. A minimum makespan
+    usually implies a good utilization of the machine(s)."""
+
     def __init__(self, **data) -> None:
         super().__init__(
             name="MinimizeMakeSpan",
