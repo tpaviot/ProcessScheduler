@@ -65,9 +65,9 @@ class Task(NamedUIDObject):
         description="Due date is a deadline by default (scheduling after the deadline is not allowed. If False, a penalty function is used.",
     )
     priority: int = Field(
-        default=0,
+        default=1,
         ge=0,
-        description="The priority of the task. The higher this parameter, the most important it is.",
+        description="The priority of the task. The higher this parameter, the sooner the task is scheduled.",
     )
 
     def __init__(self, **data) -> None:

@@ -44,7 +44,7 @@ def test_FixedDurationTask_from_json(my_tmp_path):
     assert t.name == "T_fixed"
     assert not t.optional
     assert t.duration == 3
-    assert t.priority == 0
+    assert t.priority == 1
     assert t.work_amount == 0
 
 
@@ -62,7 +62,7 @@ def test_ZeroDurationTask_from_json(my_tmp_path):
     assert t.name == "T_zero"
     assert not t.optional
     assert t.duration == 0
-    assert t.priority == 0
+    assert t.priority == 1
     assert t.work_amount == 0
 
 
@@ -79,8 +79,14 @@ def test_VariableDurationTask_from_json(my_tmp_path):
         t = ps.VariableDurationTask.model_validate_json(f.read())
     assert t.name == "T_variable"
     assert not t.optional
-    assert t.priority == 0
+    assert t.priority == 1
     assert t.work_amount == 0
+    assert t.release_date is None
+    assert t.due_date is None
+    assert t.due_date_is_deadline
+    assert t.min_duration == 0
+    assert t.max_duration is None
+    assert t.allowed_durations is None
 
 
 # resources

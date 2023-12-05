@@ -35,12 +35,19 @@ class TaskSolution(BaseModelWithJson):
     end: int = Field(default=0)
     duration: int = Field(default=0)
 
+    release_date: int = Field(default=None)
+    due_date: int = Field(default=None)
+    due_date_is_deadline: bool = Field(default=False)
+
     start_time: datetime = Field(default=None)
     end_time: datetime = Field(default=None)
     duration_time: timedelta = Field(default=None)
 
     optional: bool = Field(default=False)
     scheduled: bool = Field(default=False)
+
+    work_amount: int = Field(default=0)
+    priority: int = Field(default=None)
 
     # the name of assigned resources
     assigned_resources: List[str] = Field(default=[])

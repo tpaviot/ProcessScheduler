@@ -422,6 +422,13 @@ class SchedulingSolver(BaseModelWithJson):
             new_task_solution.duration = z3_sol[task._duration].as_long()
             new_task_solution.optional = task.optional
 
+            new_task_solution.release_date = task.release_date
+            new_task_solution.due_date = task.due_date
+            new_task_solution.due_date_is_deadline = task.due_date_is_deadline
+
+            new_task_solution.work_amount = task.work_amount
+            new_task_solution.priority = task.priority
+
             # times, if ever delta_time and start_time are defined
             if self.problem.delta_time is not None:
                 new_task_solution.duration_time = (

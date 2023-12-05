@@ -15,6 +15,7 @@
 
 
 import processscheduler as ps
+import random
 
 
 #
@@ -351,6 +352,70 @@ def test_incremental_optimizer_1() -> None:
 
     assert solution
     assert solution.indicators[task_1_start_ind.name] == 98
+
+
+#
+# Total weighted completion time
+#
+def test_objective_total_weighted_completion_time_1() -> None:
+    problem = ps.SchedulingProblem(name="ObjectiveTotalWeightedCompletionTime1")
+    t_1 = ps.FixedDurationTask(name="T1", duration=8, priority=5)
+    t_2 = ps.FixedDurationTask(name="T2", duration=7, priority=10)
+    w_1 = ps.Worker(name="W1")
+    t_1.add_required_resource(w_1)
+    t_2.add_required_resource(w_1)
+    ps.ObjectivePriorities()
+    solution = ps.SchedulingSolver(problem=problem).solve()
+    assert solution
+    assert solution.tasks[t_1.name].end == 15
+    assert solution.tasks[t_2.name].end == 7
+    assert solution.indicators["TotalPriority"] == 7 * 10 + (7 + 8) * 5
+
+
+def test_objective_total_weighted_completion_time_2() -> None:
+    """use the default priority"""
+    problem = ps.SchedulingProblem(name="ObjectiveTotalWeightedCompletionTime2")
+    t_1 = ps.FixedDurationTask(name="T1", duration=8)
+    t_2 = ps.FixedDurationTask(name="T2", duration=7)
+    w_1 = ps.Worker(name="W1")
+    t_1.add_required_resource(w_1)
+    t_2.add_required_resource(w_1)
+    ps.ObjectivePriorities()
+    solution = ps.SchedulingSolver(problem=problem).solve()
+    assert solution
+    assert solution.tasks["T1"].end == 15
+    assert solution.tasks["T2"].end == 7
+    assert solution.indicators["TotalPriority"] == 7 * 1 + (7 + 8) * 1
+
+
+def test_objective_total_weighted_completion_time_3() -> None:
+    """many different tasks, verify that tasks are scheduled in a decreasing order
+    of wj/pj"""
+    problem = ps.SchedulingProblem(name="ObjectiveTotalWeightedCompletionTime3")
+    n = 10
+    w_1 = ps.Worker(name="W1")
+    for i in range(1, n):
+        t_i = ps.FixedDurationTask(
+            name=f"T{i}",
+            duration=random.randint(10, 100),
+            priority=random.randint(10, 100),
+        )
+        t_i.add_required_resource(w_1)
+    ps.ObjectivePriorities()
+    solution = ps.SchedulingSolver(problem=problem).solve()
+    for i in range(1, n - 1):
+        task_i = solution.tasks[f"T{i}"]
+        task_i_plus_1 = solution.tasks[f"T{i+1}"]
+        if task_i.end <= task_i_plus_1.end:
+            assert (
+                task_i.priority / task_i.duration
+                >= task_i_plus_1.priority / task_i_plus_1.duration
+            )
+        else:
+            assert (
+                task_i.priority / task_i.duration
+                <= task_i_plus_1.priority / task_i_plus_1.duration
+            )
 
 
 def test_resource_utilization_maximization_incremental_1() -> None:

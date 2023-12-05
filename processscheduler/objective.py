@@ -315,33 +315,6 @@ class ObjectiveMinimizeResourceCost(Objective):
         }
 
 
-class ObjectivePriorities(Objective):
-    """optimize the solution such that all tasks with lower
-    priority are scheduled before other tasks"""
-
-    def __init__(self, **data) -> None:
-        all_priorities = []
-        # for task in self._context.tasks:
-        for task in processscheduler.base.active_problem.tasks.values():
-            if task.optional:
-                all_priorities.append(task._end * task.priority * task._scheduled)
-            else:
-                all_priorities.append(task._end * task.priority)
-        priority_sum = z3.Sum(all_priorities)
-        priority_indicator = IndicatorFromMathExpression(
-            name="TotalPriority", expression=priority_sum
-        )
-        super().__init__(
-            name="MinimizePriority", target=priority_indicator, kind="minimize"
-        )
-
-    @model_serializer
-    def ser_model(self) -> Dict[str, Any]:
-        return {
-            "type": "ObjectivePriorities",
-        }
-
-
 class ObjectiveTasksStartLatest(Objective):
     """maximize the minimum start time, i.e. all the tasks
     are scheduled as late as possible"""
@@ -401,8 +374,11 @@ class ObjectiveTasksStartEarliest(Objective):
 
 
 class ObjectiveMinimizeFlowtime(Objective):
-    """the flowtime is the sum of all ends, minimize. Be careful that
-    it is contradictory with makespan"""
+    """This objective is also known as minimizing the 'Total Weighted Completion Time'
+
+    o = Σ C j
+
+    Be careful that it is contradictory with the minimize makespan objective."""
 
     def __init__(self, **data) -> None:
         if "list_of_tasks" in data:
@@ -423,6 +399,37 @@ class ObjectiveMinimizeFlowtime(Objective):
             name="Flowtime", expression=flow_time_expr
         )
         super().__init__(name="Flowtime", target=flow_time, kind="minimize")
+
+
+class ObjectivePriorities(Objective):
+    """This objective is also known as minimizing the 'Total Weighted Completion Time'.
+
+    o = Σ wj C j
+
+    According to this rule, the jobs are ordered in decreasing order of wj/pj ,
+    where wj is the weight for task j, denoted priority in our case, and pj
+    is the"""
+
+    def __init__(self, **data) -> None:
+        all_priorities = []
+        for task in processscheduler.base.active_problem.tasks.values():
+            if task.optional:
+                all_priorities.append(task._end * task.priority * task._scheduled)
+            else:
+                all_priorities.append(task._end * task.priority)
+        priority_sum = z3.Sum(all_priorities)
+        priority_indicator = IndicatorFromMathExpression(
+            name="TotalPriority", expression=priority_sum
+        )
+        super().__init__(
+            name="MinimizePriority", target=priority_indicator, kind="minimize"
+        )
+
+    @model_serializer
+    def ser_model(self) -> Dict[str, Any]:
+        return {
+            "type": "ObjectivePriorities",
+        }
 
 
 class ObjectiveMinimizeFlowtimeSingleResource(Objective):
