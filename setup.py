@@ -31,7 +31,7 @@ setup(
     license="GPLv3",
     platforms="Platform Independent",
     packages=find_packages(),
-    install_requires=["z3-solver==4.11.2.0"],
+    install_requires=["z3-solver==4.12.3.0", "importlib-resources==6.1.1"],
     classifiers=CLASSIFIERS,
     zip_safe=True,
 )
