@@ -122,14 +122,62 @@ class IndicatorTardiness(Indicator):
             self.name = "Total tardiness"
         else:
             tasks = self.list_of_tasks
-            self.name = "Tardiness({','.join(t.name for t in self.list_of_tasks)})"
+            self.name = f"Tardiness({','.join(t.name for t in self.list_of_tasks)})"
         tardiness_v = []
         for t in tasks:
             # tardiness in terms of time units
             tardiness_v.append(z3.If(t.due_date >= t._end, 0, t._end - t.due_date))
         expression = z3.Sum(tardiness_v)
-        constant_costs = []
         self.append_z3_assertion(self._indicator_variable == expression)
+
+
+class IndicatorNumberOfTardyTasks(Indicator):
+    list_of_tasks: Union[List[Task], None] = Field(default=None)
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        if self.list_of_tasks is None:
+            tasks = processscheduler.base.active_problem.tasks.values()
+            self.name = "Total tardiness"
+        else:
+            tasks = self.list_of_tasks
+            self.name = (
+                f"NumberOfTardyTasks({','.join(t.name for t in self.list_of_tasks)})"
+            )
+        tardiness_v = []
+        for t in tasks:
+            task_is_tardy = z3.Bool(f"{t.name}_is_tardy")
+            tardiness_v.append(t._end > t.due_date)
+        expression = z3.Sum(tardiness_v)
+        self.append_z3_assertion(self._indicator_variable == expression)
+
+
+class IndicatorMaximumLateness(Indicator):
+    """The maximum lateness in a group of tasks"""
+
+    list_of_tasks: Union[List[Task], None] = Field(default=None)
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        if self.list_of_tasks is None:
+            tasks = processscheduler.base.active_problem.tasks.values()
+            self.name = "MaximumLateness"
+        else:
+            tasks = self.list_of_tasks
+            self.name = (
+                f"MaximumLateness({','.join(t.name for t in self.list_of_tasks)})"
+            )
+        latenesses = []
+        for t in tasks:
+            latenesses.append(t._end - t.due_date)
+        # find the maximal lateness in the list
+        v = z3.Int(self.name)
+        self.append_z3_assertion(z3.Or([v == lateness for lateness in latenesses]))
+        for lateness in latenesses:
+            self.append_z3_assertion(v >= lateness)
+        self.append_z3_assertion(self._indicator_variable == v)
 
 
 class IndicatorResourceCost(Indicator):

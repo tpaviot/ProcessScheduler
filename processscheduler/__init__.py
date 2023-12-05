@@ -26,6 +26,8 @@ from processscheduler.objective import (
     Indicator,
     IndicatorFromMathExpression,
     IndicatorTardiness,
+    IndicatorNumberOfTardyTasks,
+    IndicatorMaximumLateness,
     IndicatorResourceUtilization,
     IndicatorNumberTasksAssigned,
     IndicatorResourceCost,
