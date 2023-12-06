@@ -13,11 +13,12 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+import random
 
 from processscheduler.util import (
     calc_parabola_from_three_points,
     sort_no_duplicates,
-    sort_bubble,
+    sort_duplicates,
 )
 
 import z3
@@ -31,24 +32,26 @@ def test_calc_parabola_from_three_points():
 
 
 def test_sort_no_duplicates():
-    lst_to_sort = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2]
+    """sort an array of 20 different integers"""
+    lst_to_sort = random.sample(range(-100, 100), 20)
     sorted_variables, assertions = sort_no_duplicates(lst_to_sort)
     s = z3.Solver()
     s.add(assertions)
     result = s.check()
+    assert result == z3.sat
     solution = s.model()
     sorted_integers = [solution[v].as_long() for v in sorted_variables]
-    assert result == z3.sat
-    assert sorted_integers == [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    assert sorted(lst_to_sort) == sorted_integers
 
 
 def test_sort_duplicates():
-    lst_to_sort = [10, 9, 8, 7, 6, 10, 9, 8, 7, 6, 1]
-    sorted_variables, assertions = sort_bubble(lst_to_sort)
+    """sort an array of 20 integers with only 10 differen"""
+    lst_to_sort = random.sample(range(-100, 100), 10) * 2
+    sorted_variables, assertions = sort_duplicates(lst_to_sort)
     s = z3.Solver()
     s.add(assertions)
     result = s.check()
+    assert result == z3.sat
     solution = s.model()
     sorted_integers = [solution[v].as_long() for v in sorted_variables]
-    assert result == z3.sat
-    assert sorted_integers == [1, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]
+    assert sorted(lst_to_sort) == sorted_integers

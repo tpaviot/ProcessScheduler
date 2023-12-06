@@ -40,7 +40,7 @@ def calc_parabola_from_three_points(vector_x, vector_y):
     return a, b, c
 
 
-def sort_bubble(z3_int_list):
+def sort_duplicates(z3_int_list):
     """Take a list of int variables, return the list of new variables
     sorting using the bubble recursive sort"""
     sorted_list = z3_int_list.copy()
