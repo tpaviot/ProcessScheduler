@@ -19,6 +19,7 @@ from processscheduler.util import (
     calc_parabola_from_three_points,
     sort_no_duplicates,
     sort_duplicates,
+    fix_buffer_states,
 )
 
 import z3
@@ -55,3 +56,9 @@ def test_sort_duplicates():
     solution = s.model()
     sorted_integers = [solution[v].as_long() for v in sorted_variables]
     assert sorted(lst_to_sort) == sorted_integers
+
+
+def test_fix_buffer_states():
+    assert fix_buffer_states([10, 7, 4], [5, 5]) == ([10, 4], [5])
+    assert fix_buffer_states([10, 7, 4, 1], [5, 5, 6]) == ([10, 4, 1], [5, 6])
+    assert fix_buffer_states([10, 7, 4, 1, -2], [5, 5, 6, 6]) == ([10, 4, -2], [5, 6])

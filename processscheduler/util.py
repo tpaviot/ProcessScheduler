@@ -76,3 +76,28 @@ def sort_no_duplicates(z3_int_list):
     constraints.append(z3.And([a[i] < a[i + 1] for i in range(n - 1)]))
 
     return a, constraints
+
+
+def fix_buffer_states(buffer_states, buffer_change_times):
+    """for buffers that are loaded or unloaded by many tasks at the same time,
+    the algorithme may return something like:
+    buffer_state: [10, 7, 4, 1]
+    buffer_chages: [5, 5, 6]
+    we need buffer changes without duplicates, and remove the corresponding entry in the buffer
+    state list, that is to say:
+    buffer_state: [10, 4, 1]
+    buffer_chages: [5, 6]
+    """
+    if len(buffer_states) != len(buffer_change_times) + 1:
+        raise AssertionError(
+            "Buffer states list should have exactly one more element than bugger change times."
+        )
+    new_l1 = []  # there always is the initial buffer state
+    new_l2 = []
+    last_state = buffer_states.pop()
+    for a, b in zip(buffer_states, buffer_change_times):
+        if new_l2.count(b) < 1:
+            new_l1.append(a)
+            new_l2.append(b)
+    new_l1.append(last_state)
+    return new_l1, new_l2

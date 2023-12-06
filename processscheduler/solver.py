@@ -41,7 +41,12 @@ from processscheduler.solution import (
 )
 from processscheduler.problem import SchedulingProblem
 
-from processscheduler.util import calc_parabola_from_three_points, sort_no_duplicates
+from processscheduler.util import (
+    calc_parabola_from_three_points,
+    sort_no_duplicates,
+    sort_duplicates,
+    fix_buffer_states,
+)
 
 
 #
@@ -253,7 +258,9 @@ class SchedulingSolver(BaseModelWithJson):
             tasks_start_unload = [t._start for t in buffer._unloading_tasks]
             tasks_end_load = [t._end for t in buffer._loading_tasks]
 
-            sorted_times, sort_assertions = sort_no_duplicates(
+            # TODO: sort_no_duplicates seems to be better in terms of performance
+            # but not suitable for concurrent access to a buffer.
+            sorted_times, sort_assertions = sort_duplicates(
                 tasks_start_unload + tasks_end_load
             )
             self.append_z3_assertion(sort_assertions)
@@ -511,18 +518,21 @@ class SchedulingSolver(BaseModelWithJson):
         for buffer in self.problem.buffers:
             buffer_name = buffer.name
             new_buffer_solution = BufferSolution(name=buffer_name)
+            # buffer state values
+            state_values = [
+                z3_sol[sv_z3_var].as_long() for sv_z3_var in buffer._buffer_states
+            ]
             # change_state_times
-            cst_lst = [
+            change_state_times = [
                 z3_sol[sct_z3_var].as_long()
                 for sct_z3_var in buffer._state_changes_time
             ]
-
-            new_buffer_solution.state_change_times = cst_lst
-            # state values
-            sv_lst = [
-                z3_sol[sv_z3_var].as_long() for sv_z3_var in buffer._buffer_states
-            ]
-            new_buffer_solution.state = sv_lst
+            # need to fix the results if ever the buffer
+            # has been loaded/unloaded by concurrent tasks
+            (
+                new_buffer_solution.state,
+                new_buffer_solution.state_change_times,
+            ) = fix_buffer_states(state_values, change_state_times)
 
             solution.add_buffer_solution(new_buffer_solution)
         # process indicators

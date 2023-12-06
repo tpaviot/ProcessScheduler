@@ -160,3 +160,101 @@ def test_buffer_bounds_1() -> None:
     solution = solver.solve()
     assert solution
     assert solution.horizon == 9
+
+
+#
+# Concurrent access to a buffer
+#
+def test_unload_buffer_multiple_1() -> None:
+    """two tasks which unload a buffer at two different times"""
+    pb = ps.SchedulingProblem(name="TestUnloadBufferMultiple1")
+
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    task_2 = ps.FixedDurationTask(name="task2", duration=3)
+
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+
+    ps.TaskStartAt(task=task_1, value=5)
+    ps.TaskStartAt(task=task_2, value=6)
+    ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=3)
+    ps.TaskUnloadBuffer(task=task_2, buffer=buffer, quantity=4)
+
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    assert solution.buffers[buffer.name].state == [10, 7, 3]
+    assert solution.buffers[buffer.name].state_change_times == [5, 6]
+
+
+def test_unload_buffer_multiple_2() -> None:
+    """two tasks which unload a buffer at the same time but with
+    same quantities"""
+    pb = ps.SchedulingProblem(name="TestUnloadBufferMultiple2")
+
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    task_2 = ps.FixedDurationTask(name="task2", duration=3)
+
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+
+    ps.TaskStartAt(task=task_1, value=7)
+    ps.TaskStartAt(task=task_2, value=7)
+    ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=4)
+    ps.TaskUnloadBuffer(task=task_2, buffer=buffer, quantity=4)
+
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    assert solution.buffers[buffer.name].state == [10, 2]
+    assert solution.buffers[buffer.name].state_change_times == [7]
+
+
+def test_unload_buffer_multiple_3() -> None:
+    """two tasks which unload a buffer at the same time but with
+    same quantities, and another that loads buffer"""
+    pb = ps.SchedulingProblem(name="TestUnloadBufferMultiple3")
+
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    task_2 = ps.FixedDurationTask(name="task2", duration=3)
+    task_3 = ps.FixedDurationTask(name="task3", duration=4)
+
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=13)
+
+    ps.TaskStartAt(task=task_1, value=7)
+    ps.TaskStartAt(task=task_2, value=7)
+    ps.TaskStartAt(task=task_3, value=15)
+    ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=4)
+    ps.TaskUnloadBuffer(task=task_2, buffer=buffer, quantity=4)
+    ps.TaskLoadBuffer(task=task_3, buffer=buffer, quantity=8)
+
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    assert solution.buffers[buffer.name].state == [13, 5, 13]
+    assert solution.buffers[buffer.name].state_change_times == [7, 19]
+
+
+def test_unload_buffer_multiple_4() -> None:
+    # only one buffer and one task
+    pb = ps.SchedulingProblem(name="TestUnloadBufferMultiple4")
+
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    task_2 = ps.FixedDurationTask(name="task2", duration=3)
+    task_3 = ps.FixedDurationTask(name="task3", duration=3)
+    task_4 = ps.FixedDurationTask(name="task4", duration=3)
+
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=20)
+
+    ps.TaskStartAt(task=task_1, value=5)
+    ps.TaskStartAt(task=task_2, value=5)
+    ps.TaskStartAt(task=task_3, value=6)
+    ps.TaskStartAt(task=task_4, value=6)
+    ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=3)
+    ps.TaskUnloadBuffer(task=task_2, buffer=buffer, quantity=3)
+    ps.TaskUnloadBuffer(task=task_3, buffer=buffer, quantity=3)
+    ps.TaskUnloadBuffer(task=task_4, buffer=buffer, quantity=3)
+
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    assert solution.buffers[buffer.name].state == [20, 14, 8]
+    assert solution.buffers[buffer.name].state_change_times == [5, 6]
