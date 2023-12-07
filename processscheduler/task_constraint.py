@@ -29,7 +29,7 @@ from processscheduler.task import (
     ZeroDurationTask,
     VariableDurationTask,
 )
-from processscheduler.buffer import NonConcurrentBuffer
+from processscheduler.buffer import ConcurrentBuffer, NonConcurrentBuffer
 from processscheduler.util import sort_no_duplicates
 
 
@@ -474,7 +474,7 @@ class TaskUnloadBuffer(TaskConstraint):
     quantity units to the buffer."""
 
     task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
-    buffer: NonConcurrentBuffer
+    buffer: Union[NonConcurrentBuffer, ConcurrentBuffer]
     quantity: int
 
     def __init__(self, **data) -> None:
@@ -488,7 +488,7 @@ class TaskLoadBuffer(TaskConstraint):
     quantity unis to the buffer."""
 
     task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
-    buffer: NonConcurrentBuffer
+    buffer: Union[NonConcurrentBuffer, ConcurrentBuffer]
     quantity: int
 
     def __init__(self, **data) -> None:

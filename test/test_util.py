@@ -19,7 +19,7 @@ from processscheduler.util import (
     calc_parabola_from_three_points,
     sort_no_duplicates,
     sort_duplicates,
-    fix_buffer_states,
+    clean_buffer_states,
 )
 
 import z3
@@ -58,7 +58,5 @@ def test_sort_duplicates():
     assert sorted(lst_to_sort) == sorted_integers
 
 
-def test_fix_buffer_states():
-    assert fix_buffer_states([10, 7, 4], [5, 5]) == ([10, 4], [5])
-    assert fix_buffer_states([10, 7, 4, 1], [5, 5, 6]) == ([10, 4, 1], [5, 6])
-    assert fix_buffer_states([10, 7, 4, 1, -2], [5, 5, 6, 6]) == ([10, 4, -2], [5, 6])
+def test_clean_buffer_states():
+    assert clean_buffer_states([100, 21, 21, 21], [7, 7, 7]) == ([100, 21], [7])

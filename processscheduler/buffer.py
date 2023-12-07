@@ -60,4 +60,8 @@ class Buffer(NamedUIDObject):
 
 
 class NonConcurrentBuffer(Buffer):
-    """A buffer that cannot be accessed by different tasks at the same time"""
+    """Only one task can, at one instantA buffer that cannot be accessed by different tasks at the same time"""
+
+
+class ConcurrentBuffer(Buffer):
+    """A buffer that be accessed concurrently by any number of loading/unloading tasks"""

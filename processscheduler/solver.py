@@ -39,13 +39,14 @@ from processscheduler.solution import (
     ResourceSolution,
     BufferSolution,
 )
+from processscheduler.buffer import NonConcurrentBuffer, ConcurrentBuffer
 from processscheduler.problem import SchedulingProblem
 
 from processscheduler.util import (
     calc_parabola_from_three_points,
     sort_no_duplicates,
     sort_duplicates,
-    fix_buffer_states,
+    clean_buffer_states,
 )
 
 
@@ -237,36 +238,28 @@ class SchedulingSolver(BaseModelWithJson):
 
         # process buffers
         for buffer in self.problem.buffers:
-            # create an array that stores the mapping between start times and
-            # quantities. For example, if a task T1 starts at 2 and unloads
-            # 8, and T3 ends at 6 and loads 5 then the mapping array
-            # will look like : A[2]=-8 and A[6]=5
-            buffer_mapping = z3.Array(
-                f"Buffer_{buffer.name}_mapping", z3.IntSort(), z3.IntSort()
-            )
-            for t in buffer._unloading_tasks:
-                self.append_z3_assertion(
-                    buffer_mapping
-                    == z3.Store(buffer_mapping, t._start, -buffer._unloading_tasks[t])
-                )
-            for t in buffer._loading_tasks:
-                self.append_z3_assertion(
-                    buffer_mapping
-                    == z3.Store(buffer_mapping, t._end, +buffer._loading_tasks[t])
-                )
             # sort consume/feed times in asc order
             tasks_start_unload = [t._start for t in buffer._unloading_tasks]
-            tasks_end_load = [t._end for t in buffer._loading_tasks]
+            number_of_unloading_tasks = len(tasks_start_unload)
 
-            # TODO: sort_no_duplicates seems to be better in terms of performance
+            tasks_end_load = [t._end for t in buffer._loading_tasks]
+            number_of_loading_tasks = len(tasks_end_load)
+
+            # sort_no_duplicates seems to be better in terms of performance
             # but not suitable for concurrent access to a buffer.
-            sorted_times, sort_assertions = sort_duplicates(
-                tasks_start_unload + tasks_end_load
-            )
+            if isinstance(buffer, NonConcurrentBuffer):
+                sorted_times, sort_assertions = sort_no_duplicates(
+                    tasks_start_unload + tasks_end_load
+                )
+            else:  # ConcurrentBuffer
+                sorted_times, sort_assertions = sort_duplicates(
+                    tasks_start_unload + tasks_end_load
+                )
             self.append_z3_assertion(sort_assertions)
             # create as many buffer state changes as sorted_times
             buffer._state_changes_time = [
-                z3.Int(f"{buffer.name}_sc_time_{k}") for k in range(len(sorted_times))
+                z3.Int(f"{buffer.name}_sc_time_{k}")
+                for k in range(number_of_unloading_tasks + number_of_loading_tasks)
             ]
 
             # add the constraints that give the buffer state change times
@@ -284,23 +277,104 @@ class SchedulingSolver(BaseModelWithJson):
                 self.append_z3_assertion(
                     buffer._buffer_states[0] == buffer.initial_state
                 )
+            # the final state of the list is constrained by the final_state value
             if buffer.final_state is not None:
                 self.append_z3_assertion(
                     buffer._buffer_states[-1] == buffer.final_state
                 )
+            # lower and upper bounds
             if buffer.lower_bound is not None:
                 for st in buffer._buffer_states:
                     self.append_z3_assertion(st >= buffer.lower_bound)
             if buffer.upper_bound is not None:
                 for st in buffer._buffer_states:
                     self.append_z3_assertion(st <= buffer.upper_bound)
-            # and, for the other, the buffer state i+1 is the buffer state i +/- the buffer change
-            for i in range(len(buffer._buffer_states) - 1):
-                self.append_z3_assertion(
-                    buffer._buffer_states[i + 1]
-                    == buffer._buffer_states[i]
-                    + buffer_mapping[buffer._state_changes_time[i]]
+            #
+            # Concurrent buffers
+            #
+            if isinstance(buffer, ConcurrentBuffer):
+                functions = []
+                x = z3.Int(f"t_{buffer.name}_variable")
+
+                # unloading tasks
+                for t in buffer._unloading_tasks:
+                    f = z3.Function(
+                        f"{buffer.name}_{t.name}_quantity_unloading",
+                        z3.IntSort(),
+                        z3.IntSort(),
+                    )
+                    asst = z3.ForAll(
+                        x,
+                        z3.If(
+                            x == t._start,
+                            f(x) == -buffer._unloading_tasks[t],
+                            f(x) == 0,
+                        ),
+                    )
+                    self.append_z3_assertion(asst)
+                    functions.append(f)
+
+                # loading tasks
+                for t in buffer._loading_tasks:
+                    f = z3.Function(
+                        f"{buffer.name}_{t.name}_quantity_loading",
+                        z3.IntSort(),
+                        z3.IntSort(),
+                    )
+                    asst = z3.ForAll(
+                        x,
+                        z3.If(
+                            x == t._end, f(x) == +buffer._loading_tasks[t], f(x) == 0
+                        ),
+                    )
+                    self.append_z3_assertion(asst)
+                    functions.append(f)
+                for i in range(len(buffer._buffer_states) - 1):
+                    if i == 0:
+                        asst = buffer._buffer_states[1] == buffer._buffer_states[
+                            0
+                        ] + z3.Sum(
+                            [f(buffer._state_changes_time[0]) for f in functions]
+                        )
+                        self.append_z3_assertion(asst)
+                    else:  # if two consecutives state change times are the same, then only count them
+                        asst = z3.If(
+                            buffer._state_changes_time[i]
+                            == buffer._state_changes_time[i - 1],
+                            buffer._buffer_states[i + 1] == buffer._buffer_states[i],
+                            buffer._buffer_states[i + 1]
+                            == buffer._buffer_states[i]
+                            + z3.Sum(
+                                [f(buffer._state_changes_time[i]) for f in functions]
+                            ),
+                        )
+                        self.append_z3_assertion(asst)
+            #
+            # Non concurrent buffers
+            #
+            elif isinstance(buffer, NonConcurrentBuffer):
+                buffer_mapping = z3.Array(
+                    f"Buffer_{buffer.name}_mapping", z3.IntSort(), z3.IntSort()
                 )
+                for t in buffer._unloading_tasks:
+                    self.append_z3_assertion(
+                        buffer_mapping
+                        == z3.Store(
+                            buffer_mapping, t._start, -buffer._unloading_tasks[t]
+                        )
+                    )
+                for t in buffer._loading_tasks:
+                    self.append_z3_assertion(
+                        buffer_mapping
+                        == z3.Store(buffer_mapping, t._end, +buffer._loading_tasks[t])
+                    )
+                # and, for the other, the buffer state i+1 is the buffer state i +/- the buffer change
+                for i in range(len(buffer._buffer_states) - 1):
+                    self.append_z3_assertion(
+                        buffer._buffer_states[i + 1]
+                        == buffer._buffer_states[i]
+                        + buffer_mapping[buffer._state_changes_time[i]]
+                    )
 
         # Finally add other assertions (FOL, user defined)
         for z3_assertion in self.problem.get_z3_assertions():
@@ -532,7 +606,7 @@ class SchedulingSolver(BaseModelWithJson):
             (
                 new_buffer_solution.state,
                 new_buffer_solution.state_change_times,
-            ) = fix_buffer_states(state_values, change_state_times)
+            ) = clean_buffer_states(state_values, change_state_times)
 
             solution.add_buffer_solution(new_buffer_solution)
         # process indicators
