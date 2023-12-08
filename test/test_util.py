@@ -20,6 +20,8 @@ from processscheduler.util import (
     sort_no_duplicates,
     sort_duplicates,
     clean_buffer_states,
+    get_minimum,
+    get_maximum,
 )
 
 import z3
@@ -60,3 +62,39 @@ def test_sort_duplicates():
 
 def test_clean_buffer_states():
     assert clean_buffer_states([100, 21, 21, 21], [7, 7, 7]) == ([100, 21], [7])
+
+
+def test_get_maximum():
+    # 20 integers between 0 and 99
+    lst = random.sample(range(100), k=20)
+    # append 101, which must be the maximum
+    lst.append(101)
+    # build a list of z3 ints
+    z3_lst = z3.Ints(" ".join([f"i{elem}" for elem in lst]))
+    maxi = z3.Int("maxi")
+    # find maximum
+    assertions = get_maximum(maxi, z3_lst)
+    # add assertions
+    s = z3.Solver()
+    s.add(assertions)
+    s.add([a == b for a, b in zip(lst, z3_lst)])
+    s.add(maxi == 101)
+    assert s.check() == z3.sat
+
+
+def test_get_minimum():
+    # 20 integers between 10 and 99
+    lst = random.sample(range(10, 100), k=20)
+    # append 5, which must be the minimum
+    lst.append(5)
+    # build a list of z3 ints
+    z3_lst = z3.Ints(" ".join([f"i{elem}" for elem in lst]))
+    mini = z3.Int("mini")
+    # find maximum
+    assertions = get_minimum(mini, z3_lst)
+    # add assertions
+    s = z3.Solver()
+    s.add(assertions)
+    s.add([a == b for a, b in zip(lst, z3_lst)])
+    s.add(mini == 5)
+    assert s.check() == z3.sat

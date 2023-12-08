@@ -96,6 +96,12 @@ class NamedUIDObject(BaseModelWithJson):
         assertions_str = "".join(f"{assertion}" for assertion in self._z3_assertions)
         return str_to_return + assertions_str
 
+    def append_z3_list_of_assertions(
+        self, list_of_z3_assertions: List[z3.BoolRef]
+    ) -> None:
+        for z3_asst in list_of_z3_assertions:
+            self.append_z3_assertion(z3_asst)
+
     def append_z3_assertion(self, z3_assertion: z3.BoolRef) -> bool:
         """
         Add a z3 assertion to the list of assertions to be satisfied.

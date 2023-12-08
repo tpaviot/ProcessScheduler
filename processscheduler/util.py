@@ -40,6 +40,32 @@ def calc_parabola_from_three_points(vector_x, vector_y):
     return a, b, c
 
 
+#
+# Max and min functions
+#
+def get_maximum(maxi, list_of_values):
+    """given a z3 variable and a list of z3 variables, return
+    the assertions list that must be passed to the solver and
+    give the maimum of the list
+    """
+    assertions = [z3.Or([maxi == elem for elem in list_of_values])]
+    assertions.extend([maxi >= elem for elem in list_of_values])
+    return assertions
+
+
+def get_minimum(mini, list_of_values):
+    """given a z3 variable and a list of z3 variables, return
+    the assertions list that must be passed to the solver and
+    give the maimum of the list
+    """
+    assertions = [z3.Or([mini == elem for elem in list_of_values])]
+    assertions.extend([mini <= elem for elem in list_of_values])
+    return assertions
+
+
+#
+# Sort functions
+#
 def sort_duplicates(z3_int_list):
     """Take a list of int variables, return the list of new variables
     sorting using the bubble recursive sort"""

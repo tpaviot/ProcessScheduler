@@ -49,6 +49,7 @@ def plot_cost(
     interval: Tuple[float, float],
     show_plot=True,
     n_points=100,
+    label="Cost function",
 ) -> None:
     """Plot the cost curve using matplotlib."""
     if not HAVE_MATPLOTLIB:
@@ -64,8 +65,8 @@ def plot_cost(
 
     plt.legend()
     plt.grid(True)
-    plt.xlabel("x")
-    plt.ylabel("y")
+    plt.xlabel("t")
+    plt.ylabel("C(t)")
 
     if show_plot:
         plt.show()

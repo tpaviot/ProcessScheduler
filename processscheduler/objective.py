@@ -26,9 +26,13 @@ from processscheduler.base import NamedUIDObject
 from processscheduler.task import Task
 from processscheduler.resource import Worker, CumulativeWorker
 from processscheduler.cost import ConstantCostFunction
+from processscheduler.util import get_minimum, get_maximum
 import processscheduler.base
 
 
+#
+# Indicators
+#
 class Indicator(NamedUIDObject):
     """A performance indicator, can be evaluated after the solver has finished solving,
     or being optimized (Max or Min) *before* calling the solver."""
@@ -169,15 +173,11 @@ class IndicatorMaximumLateness(Indicator):
             self.name = (
                 f"MaximumLateness({','.join(t.name for t in self.list_of_tasks)})"
             )
-        latenesses = []
-        for t in tasks:
-            latenesses.append(t._end - t.due_date)
-        # find the maximal lateness in the list
-        v = z3.Int(self.name)
-        self.append_z3_assertion(z3.Or([v == lateness for lateness in latenesses]))
-        for lateness in latenesses:
-            self.append_z3_assertion(v >= lateness)
-        self.append_z3_assertion(self._indicator_variable == v)
+        latenesses = [t._end - t.due_date for t in tasks]
+
+        self.append_z3_list_of_assertions(
+            get_maximum(self._indicator_variable, latenesses)
+        )
 
 
 class IndicatorResourceCost(Indicator):
@@ -240,6 +240,9 @@ class IndicatorResourceCost(Indicator):
         self.append_z3_assertion(self._indicator_variable == expression)
 
 
+#
+# Objectives
+#
 class Objective(NamedUIDObject):
     """Base class for an optimization problem"""
 
@@ -327,20 +330,24 @@ class ObjectiveTasksStartLatest(Objective):
 
         if list_of_tasks is None:
             list_of_tasks = processscheduler.base.active_problem.tasks.values()
-        mini = z3.Int("SmallestStartTime")
 
-        smallest_start_time = IndicatorFromMathExpression(
-            name="SmallestStartTime", expression=mini
+        smallest_start_time = z3.Int("SmallestStartTimeVar")
+        # create related indicator
+        mini_start_time_indicator = IndicatorFromMathExpression(
+            name="MinimumStartTime", expression=smallest_start_time
         )
-        # z3 find maximum
-        smallest_start_time.append_z3_assertion(
-            z3.Or([mini == task._start for task in list_of_tasks])
-        )
-        for tsk in list_of_tasks:
-            smallest_start_time.append_z3_assertion(mini <= tsk._start)
 
+        # compute the minimum of start times for all tasks
+        assertions = get_minimum(
+            smallest_start_time, [task._start for task in list_of_tasks]
+        )
+        mini_start_time_indicator.append_z3_list_of_assertions(assertions)
+
+        # and finally maximize this smallest start time
         super().__init__(
-            name="MaximizeStartLatest", target=smallest_start_time, kind="maximize"
+            name="MaximizeStartLatest",
+            target=mini_start_time_indicator,
+            kind="maximize",
         )
 
 
@@ -356,20 +363,20 @@ class ObjectiveTasksStartEarliest(Objective):
 
         if list_of_tasks is None:
             list_of_tasks = processscheduler.base.active_problem.tasks.values()
-        maxi = z3.Int("GreatestStartTime")
-        greatest_start_time = IndicatorFromMathExpression(
-            name="GreatestStartTime", expression=maxi
+
+        greatest_start_time = z3.Int("GreatestStartTime")
+        greatest_start_time_indicator = IndicatorFromMathExpression(
+            name="GreatestStartTime", expression=greatest_start_time
         )
 
-        # z3 find minimum
-        greatest_start_time.append_z3_assertion(
-            z3.Or([maxi == task._start for task in list_of_tasks])
+        # compute the maximum of start times for all tasks
+        assertions = get_maximum(
+            greatest_start_time, [task._start for task in list_of_tasks]
         )
-        for tsk in list_of_tasks:
-            greatest_start_time.append_z3_assertion(maxi >= tsk._start)
+        greatest_start_time_indicator.append_z3_list_of_assertions(assertions)
 
         super().__init__(
-            name="StartEarliest", target=greatest_start_time, kind="minimize"
+            name="StartEarliest", target=greatest_start_time_indicator, kind="minimize"
         )
 
 
