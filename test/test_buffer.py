@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+import random
 
 import processscheduler as ps
 
@@ -153,34 +154,32 @@ def test_load_unload_feed_buffers_1() -> None:
     assert solution.buffers[buffer_2.name].state_change_times == [8]
 
 
-# # def test_buffer_bounds_1() -> None:
-# #     # n tasks take 1, n tasks feed one. Bounds 0 to 1
-# #     pb = ps.SchedulingProblem(name="BufferBounds1")
+def test_buffer_bounds_1() -> None:
+    # n tasks take 1, n tasks feed one. Bounds 0 to 1
+    pb = ps.SchedulingProblem(name="BufferBounds1")
 
-# #     n = 3
-# #     unloading_tasks = [
-# #         ps.FixedDurationTask(name=f"LoadTask_{i}", duration=3) for i in range(n)
-# #     ]
-# #     loading_tasks = [
-# #         ps.FixedDurationTask(name=f"UnloadTask_{i}", duration=3) for i in range(n)
-# #     ]
-# #     # create buffer
-# #     buffer = ps.NonConcurrentBuffer(name="Buffer1", lower_bound=0, upper_bound=1)
+    n = 3
+    unloading_tasks = [
+        ps.FixedDurationTask(name=f"LoadTask_{i}", duration=3) for i in range(n)
+    ]
+    loading_tasks = [
+        ps.FixedDurationTask(name=f"UnloadTask_{i}", duration=3) for i in range(n)
+    ]
+    # create buffer
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", lower_bound=0, upper_bound=1)
 
-# #     for t in unloading_tasks:
-# #         ps.TaskUnloadBuffer(task=t, buffer=buffer, quantity=1)
+    for t in unloading_tasks:
+        ps.TaskUnloadBuffer(task=t, buffer=buffer, quantity=1)
 
-# #     for t in loading_tasks:
-# #         ps.TaskLoadBuffer(task=t, buffer=buffer, quantity=1)
+    for t in loading_tasks:
+        ps.TaskLoadBuffer(task=t, buffer=buffer, quantity=1)
 
-# #     ps.ObjectiveMinimizeMakespan()
+    ps.ObjectiveMinimizeMakespan()
 
-# #     solver = ps.SchedulingSolver(
-# #         problem=pb, max_time=300, parallel=True
-# #     )  # , debug=True)#, logics="QF_UFIDL")
-# #     solution = solver.solve()
-# #     assert solution
-# #     assert solution.horizon == 9
+    solver = ps.SchedulingSolver(problem=pb, max_time=300)
+    solution = solver.solve()
+    assert solution
+    assert solution.horizon == 9
 
 
 def test_unload_buffer_multiple_1() -> None:
@@ -313,3 +312,73 @@ def test_unload_buffer_multiple_4() -> None:
     assert solution
     assert solution.buffers[buffer.name].state == [20, 14, 8]
     assert solution.buffers[buffer.name].state_change_times == [5, 6]
+
+
+def test_load_unload_concurrent_1() -> None:
+    # n loading tasks and n unloading tasks with the same quantity
+    # at the end of the schedule, the buffer level should be
+    # the same than at the initial time
+    pb = ps.SchedulingProblem(name="TestLoadUnloadConcurrent1")
+
+    n = 6
+    load_tasks = []
+    unload_tasks = []
+
+    for i in range(n):
+        load_tasks.append(
+            ps.FixedDurationTask(name=f"load_task_{i}", duration=random.randint(5, 50))
+        )
+        unload_tasks.append(
+            ps.FixedDurationTask(
+                name=f"unload_task_{i}", duration=random.randint(5, 50)
+            )
+        )
+
+    # one buffer
+    buffer = ps.ConcurrentBuffer(name="Buffer1", initial_state=179)
+
+    # as many load tasks
+    for t in load_tasks:
+        ps.TaskLoadBuffer(task=t, buffer=buffer, quantity=3)
+    # than unloadings
+    for t in unload_tasks:
+        ps.TaskUnloadBuffer(task=t, buffer=buffer, quantity=3)
+
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
+    solution = solver.solve()
+    assert solution
+    assert solution.buffers[buffer.name].state[-1] == 179
+
+
+def test_load_unload_non_concurrent_1() -> None:
+    # tha same than the previous one but with a NonConccurent buffer
+    pb = ps.SchedulingProblem(name="TestLoadUnloadNonConcurrent1")
+
+    n = 6
+    load_tasks = []
+    unload_tasks = []
+
+    for i in range(n):
+        load_tasks.append(
+            ps.FixedDurationTask(name=f"load_task_{i}", duration=random.randint(5, 50))
+        )
+        unload_tasks.append(
+            ps.FixedDurationTask(
+                name=f"unload_task_{i}", duration=random.randint(5, 50)
+            )
+        )
+
+    # one buffer
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=179)
+
+    # as many load tasks
+    for t in load_tasks:
+        ps.TaskLoadBuffer(task=t, buffer=buffer, quantity=3)
+    # than unloadings
+    for t in unload_tasks:
+        ps.TaskUnloadBuffer(task=t, buffer=buffer, quantity=3)
+
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
+    solution = solver.solve()
+    assert solution
+    assert solution.buffers[buffer.name].state[-1] == 179
