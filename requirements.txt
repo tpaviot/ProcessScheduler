@@ -1,5 +1,4 @@
-z3-solver==4.12.3.0
-importlib-resources
+z3-solver==4.12.4.0
 matplotlib
 plotly
 kaleido
