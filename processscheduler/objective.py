@@ -249,7 +249,7 @@ class IndicatorMaxBufferLevel(Indicator):
     def __init__(self, **data) -> None:
         super().__init__(**data)
 
-        self.name = f"Maxi {self.buffer.name} level"
+        self.name = f"MaximizeBuffer{self.buffer.name}Level"
 
         self.append_z3_list_of_assertions(
             get_maximum(self._indicator_variable, self.buffer._buffer_states)
@@ -547,5 +547,33 @@ class ObjectiveMinimizeFlowtimeSingleResource(Objective):
         super().__init__(
             name=f"ObjectiveFlowtimeSingleResource({resource.name}:{lower_bound}:{upper_bound})",
             target=flowtime_single_resource_indicator,
+            kind="minimize",
+        )
+
+
+class ObjectiveMaximizeMaxBufferLevel(Objective):
+    def __init__(self, **data) -> None:
+        buffer = data["buffer"]
+        # create related indicator
+        indic_max_buffer_level = IndicatorMaxBufferLevel(buffer=buffer)
+
+        # and finally maximize this smallest start time
+        super().__init__(
+            name="MaximizeBufferLevel",
+            target=indic_max_buffer_level,
+            kind="maximize",
+        )
+
+
+class ObjectiveMinimizeMaxBufferLevel(Objective):
+    def __init__(self, **data) -> None:
+        buffer = data["buffer"]
+        # create related indicator
+        indic_max_buffer_level = IndicatorMaxBufferLevel(buffer=buffer)
+
+        # and finally maximize this smallest start time
+        super().__init__(
+            name="MinimizeBufferLevel",
+            target=indic_max_buffer_level,
             kind="minimize",
         )

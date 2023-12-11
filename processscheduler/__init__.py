@@ -42,6 +42,8 @@ from processscheduler.objective import (
     ObjectiveTasksStartEarliest,
     ObjectiveMinimizeFlowtime,
     ObjectiveMinimizeFlowtimeSingleResource,
+    ObjectiveMaximizeMaxBufferLevel,
+    ObjectiveMinimizeMaxBufferLevel,
 )
 from processscheduler.task import (
     ZeroDurationTask,
