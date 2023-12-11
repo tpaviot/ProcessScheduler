@@ -34,6 +34,8 @@ from processscheduler.objective import (
     IndicatorMaxBufferLevel,
     IndicatorMinBufferLevel,
     Objective,
+    ObjectiveMaximizeIndicator,
+    ObjectiveMinimizeIndicator,
     ObjectiveMinimizeMakespan,
     ObjectiveMaximizeResourceUtilization,
     ObjectiveMinimizeResourceCost,

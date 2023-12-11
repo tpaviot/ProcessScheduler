@@ -489,3 +489,31 @@ def test_objective_minimize_max_buffer_level_1() -> None:
 
     assert solution.tasks["task1"].start < solution.tasks["task2"].end
     assert solution.indicators[oo.target.name] == 10 - 3 + 8
+
+
+def test_objective_minimize_max_buffer_level_1() -> None:
+    """many more tasks"""
+    pb = ps.SchedulingProblem(name="ObjectiveMinimizeMaxBufferLevelNTasks")
+    N = 10
+    # two tasks, one loads one unloads
+    # if we need to minimize the highest buffer level then we need
+    # to first unload (-3) and then load (+8)
+    tasks = []
+    for i in range(N):
+        tasks.append(ps.FixedDurationTask(name=f"task{i}", duration=3))
+
+    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=0)
+
+    for i in range(0, N, 2):
+        ps.TaskUnloadBuffer(task=tasks[i], buffer=buffer_1, quantity=3)
+        ps.TaskLoadBuffer(task=tasks[i + 1], buffer=buffer_1, quantity=3)
+
+    oo = ps.ObjectiveMaximizeMaxBufferLevel(buffer=buffer_1)
+    indic_min = ps.IndicatorMinBufferLevel(buffer=buffer_1)
+
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+
+    assert solution
+    assert solution.indicators[oo.target.name] == 15
+    assert solution.indicators[indic_min.name] == 0

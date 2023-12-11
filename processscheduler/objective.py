@@ -294,6 +294,22 @@ class Objective(NamedUIDObject):
         processscheduler.base.active_problem.add_objective(self)
 
 
+class ObjectiveMaximizeIndicator(Objective):
+    def __init__(self, **data) -> None:
+        target = data["target"]
+        weight = data["weight"]
+        super().__init__(name=f"Maximize{target.name}", weight=weight, kind="maximize")
+
+
+class ObjectiveMinimizeIndicator(Objective):
+    def __init__(self, **data) -> None:
+        target = data["target"]
+        weight = data["weight"]
+        super().__init__(
+            name=f"Minimize{target.name}", weight=weight, kind="minimimize"
+        )
+
+
 class ObjectiveMinimizeMakespan(Objective):
     """The makespan, deﬁned as max(C1 , . . . , Cn ), is equivalent
     to the completion time of the last job to leave the system. A minimum makespan
