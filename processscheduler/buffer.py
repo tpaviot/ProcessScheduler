@@ -22,6 +22,8 @@ from processscheduler.base import NamedUIDObject
 # import processscheduler.context as ps_context
 import processscheduler.base
 
+import z3
+
 from pydantic import Field
 
 
@@ -33,6 +35,15 @@ class Buffer(NamedUIDObject):
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
+
+        if processscheduler.base.active_problem is None:
+            raise AssertionError(
+                "No context available. First create a SchedulingProblem"
+            )
+
+        if self.initial_state is None and self.final_state is None:
+            raise AssertionError("At least initial state or final state must be set")
+
         # a dict that contains all tasks that consume this buffer
         # unloading tasks contribute to decrement the buffer state
         self._unloading_tasks = {}
@@ -43,20 +54,32 @@ class Buffer(NamedUIDObject):
         self._state_changes_time = []
         # a list that stores the buffer state between each state change
         # the first item of this list is always the initial state
-        self._buffer_states = []
+        buffer_initial_state = z3.Int(f"{self.name}_initial_state")
+        self._buffer_states = [buffer_initial_state]
 
+        if self.initial_state is not None:
+            self.append_z3_assertion(buffer_initial_state == self.initial_state)
+
+        # Note: the final state is set in the solver.py script,
         # add this task to the current context
-        if processscheduler.base.active_problem is None:
-            raise AssertionError(
-                "No context available. First create a SchedulingProblem"
-            )
+
         processscheduler.base.active_problem.add_buffer(self)
 
     def add_unloading_task(self, task, quantity) -> None:
+        # store quantity
         self._unloading_tasks[task] = quantity
+        # the buffer is unloaded at the task start time
+        # append a new state level and a new state change time
+        self._state_changes_time.append(z3.Int(f"{self.name}_sc_time_{task.name}"))
+        self._buffer_states.append(z3.Int(f"{self.name}_state_{task.name}"))
 
     def add_loading_task(self, task, quantity) -> None:
+        # store quantity
         self._loading_tasks[task] = quantity
+        # the buffer is loaded at the task completion time
+        # append a new state level and a new state change time
+        self._state_changes_time.append(z3.Int(f"{self.name}_sc_time_{task.name}"))
+        self._buffer_states.append(z3.Int(f"{self.name}_state_{task.name}"))
 
 
 class NonConcurrentBuffer(Buffer):

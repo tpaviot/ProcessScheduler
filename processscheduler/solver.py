@@ -238,6 +238,9 @@ class SchedulingSolver(BaseModelWithJson):
 
         # process buffers
         for buffer in self.problem.buffers:
+            # first add all buffer assertions
+            self.append_z3_assertion(buffer.get_z3_assertions())
+            # and after, additional assertions
             # sort consume/feed times in asc order
             tasks_start_unload = [t._start for t in buffer._unloading_tasks]
             number_of_unloading_tasks = len(tasks_start_unload)
@@ -256,27 +259,11 @@ class SchedulingSolver(BaseModelWithJson):
                     tasks_start_unload + tasks_end_load
                 )
             self.append_z3_assertion(sort_assertions)
-            # create as many buffer state changes as sorted_times
-            buffer._state_changes_time = [
-                z3.Int(f"{buffer.name}_sc_time_{k}")
-                for k in range(number_of_unloading_tasks + number_of_loading_tasks)
-            ]
 
             # add the constraints that give the buffer state change times
             for st, bfst in zip(sorted_times, buffer._state_changes_time):
                 self.append_z3_assertion(st == bfst)
 
-            # compute the different buffer states according to state changes
-            buffer._buffer_states = [
-                z3.Int(f"{buffer.name}_state_{k}")
-                for k in range(len(buffer._state_changes_time) + 1)
-            ]
-            # add constraints for buffer states
-            # the first buffer state is equal to the buffer initial level
-            if buffer.initial_state is not None:
-                self.append_z3_assertion(
-                    buffer._buffer_states[0] == buffer.initial_state
-                )
             # the final state of the list is constrained by the final_state value
             if buffer.final_state is not None:
                 self.append_z3_assertion(

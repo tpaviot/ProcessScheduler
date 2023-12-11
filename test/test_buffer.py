@@ -20,6 +20,13 @@ import processscheduler as ps
 import pytest
 
 
+def test_wrong_instanciation_buffer_1() -> None:
+    """error because no initial and final states"""
+    ps.SchedulingProblem(name="BufferBasic", horizon=12)
+    with pytest.raises(AssertionError):
+        ps.NonConcurrentBuffer(name="Buffer1")
+
+
 def test_instanciate_buffer() -> None:
     ps.SchedulingProblem(name="BufferBasic", horizon=12)
     ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
@@ -32,6 +39,17 @@ def test_instanciate_buffer_error() -> None:
     # one with the same name should raise an ValueError exception
     with pytest.raises(ValueError):
         ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+
+
+# TODO: fix
+# def test_no_load_or_unload_buffer() -> None:
+#      # only one buffer and one task
+#     pb = ps.SchedulingProblem(name="NoLoadUnloadBuffer")
+#     buffer = ps.NonConcurrentBuffer(name="Buffer1", final_state=10)
+#     solver = ps.SchedulingSolver(problem=pb, debug=True)
+#     solution = solver.solve()
+#     assert solution
+#     assert solution.buffers[buffer.name].state == [10]
 
 
 def test_unload_buffer_1() -> None:
@@ -92,6 +110,18 @@ def test_unload_buffer_3() -> None:
     assert solution
     assert solution.buffers[buffer.name].state == [10, 7, 5, 4]
     assert solution.buffers[buffer.name].state_change_times == [5, 10, 15]
+
+
+def test_unload_buffer_4() -> None:
+    """unload a buffer defined from the final state"""
+    pb = ps.SchedulingProblem(name="UnloadBuffer4")
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", final_state=15)
+    ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=3)
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    assert solution.buffers[buffer.name].state == [18, 15]
 
 
 def test_load_buffer_1() -> None:
@@ -166,7 +196,9 @@ def test_buffer_bounds_1() -> None:
         ps.FixedDurationTask(name=f"UnloadTask_{i}", duration=3) for i in range(n)
     ]
     # create buffer
-    buffer = ps.NonConcurrentBuffer(name="Buffer1", lower_bound=0, upper_bound=1)
+    buffer = ps.NonConcurrentBuffer(
+        name="Buffer1", lower_bound=0, upper_bound=1, initial_state=1
+    )
 
     for t in unloading_tasks:
         ps.TaskUnloadBuffer(task=t, buffer=buffer, quantity=1)
@@ -382,3 +414,25 @@ def test_load_unload_non_concurrent_1() -> None:
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer.name].state[-1] == 179
+
+
+#
+# Buffer indicator
+#
+def test_buffer_indicator_1() -> None:
+    # one task that consumes and feed two different buffers
+    pb = ps.SchedulingProblem(name="BufferIndicator1")
+
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+    ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=3)
+    ps.TaskStartAt(task=task_1, value=0)
+    indic_max = ps.IndicatorMaxBufferLevel(buffer=buffer_1)
+    indic_min = ps.IndicatorMinBufferLevel(buffer=buffer_1)
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    assert solution.buffers[buffer_1.name].state == [10, 7]
+    assert solution.buffers[buffer_1.name].state_change_times == [0]
+    assert solution.indicators[indic_max.name] == 10
+    assert solution.indicators[indic_min.name] == 7
