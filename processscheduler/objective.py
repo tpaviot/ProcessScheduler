@@ -26,6 +26,7 @@ from processscheduler.base import NamedUIDObject
 from processscheduler.task import Task
 from processscheduler.resource import Worker, CumulativeWorker
 from processscheduler.cost import ConstantCostFunction
+from processscheduler.buffer import ConcurrentBuffer, NonConcurrentBuffer
 from processscheduler.util import get_minimum, get_maximum
 import processscheduler.base
 
@@ -238,6 +239,36 @@ class IndicatorResourceCost(Indicator):
         # by 2, and make the cost computation linear if costs are linear
         expression = z3.Sum(constant_costs) + z3.Sum(variable_costs) / 2
         self.append_z3_assertion(self._indicator_variable == expression)
+
+
+class IndicatorMaxBufferLevel(Indicator):
+    """The maximum level of a buffer, along the whole schedule lifetime"""
+
+    buffer: Union[ConcurrentBuffer, NonConcurrentBuffer]
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        self.name = f"Maxi {self.buffer.name} level"
+
+        self.append_z3_list_of_assertions(
+            get_maximum(self._indicator_variable, self.buffer._buffer_states)
+        )
+
+
+class IndicatorMinBufferLevel(Indicator):
+    """The maximum level of a buffer, along the whole schedule lifetime"""
+
+    buffer: Union[ConcurrentBuffer, NonConcurrentBuffer]
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        self.name = f"Mini {self.buffer.name} level"
+
+        self.append_z3_list_of_assertions(
+            get_minimum(self._indicator_variable, self.buffer._buffer_states)
+        )
 
 
 #
