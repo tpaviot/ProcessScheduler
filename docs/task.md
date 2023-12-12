@@ -32,11 +32,11 @@ for i in range(2):
     print(i)
 ```
 
-.. warning::
+!!! warning
 
     Each :class:`Task` instance must have a unique name in the scheduling problem. To prevent that two tasks share the same name, ProcessScheduler raises an exception if ever a task with an existing name is already created.
 
-Three :class:`Task` derivative classes can be used to represent a task: :class:`FixedDurationTask`, :class:`ZeroDurationTask`, :class:`VariableDurationTask`.
+Three :class:`Task` derivative classes can be used to represent a task: :class:`FixedDurationTask`, `ZeroDurationTask`, `VariableDurationTask`.
 
 ## FixedDurationTask class
 
