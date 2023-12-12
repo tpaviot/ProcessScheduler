@@ -34,7 +34,7 @@ ProcessScheduler is a Python package for creating optimized scheduling based on 
 Install with pip.
 
 ```bash
-pip install ProcessScheduler==0.9.3
+pip install ProcessScheduler==0.9.4
 ```
 
 This comes with the only required dependency: the Microsoft free and open source licenses [S3 solver](https://github.com/Z3Prover/z3). If you want to take advantage of all the features, you can install optional dependencies:

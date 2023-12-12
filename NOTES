@@ -1,5 +1,9 @@
 RELEASE NOTES
 
+Version 0.9.4
+=============
+Bump z3-solver to release 4.12.4.0
+
 Version 0.9.3
 =============
 Minor bugfix release (notebooks, documentations typos)
