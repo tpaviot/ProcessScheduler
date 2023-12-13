@@ -13,73 +13,86 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from processscheduler.base import _NamedUIDObject
-from processscheduler.util import is_positive_integer
+from typing import Callable, Union, List
+import warnings
+
+from processscheduler.base import NamedUIDObject
+
+from pydantic import Field
+
+import z3
 
 
-class _Cost(_NamedUIDObject):
+class Cost(NamedUIDObject):
     """The base class for cost definition, to be assigned to a resource"""
 
-    def __init__(self):
-        super().__init__("")
-        self.f = lambda x: 0  # by default
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        self._cost_function = lambda x: 0  # default returns 0
 
-    def plot(self, interval, show_plot=False) -> None:
-        """Plot the cost curve using matplotlib."""
-        try:
-            import matplotlib.pyplot as plt
-        except ImportError as exc:
-            raise ModuleNotFoundError("matplotlib is not installed.") from exc
-
-        try:
-            import numpy as np
-        except ImportError as exc:
-            raise ModuleNotFoundError("numpy is not installed.") from exc
-
-        lower_bound, upper_bound = interval
-        x = np.linspace(lower_bound, upper_bound, 1000)
-        y = [self.f(x_) for x_ in x]
-        plt.plot(x, y, label="Cost function")
-
-        plt.legend()
-        plt.grid(True)
-        plt.xlabel("x")
-        plt.ylabel("y")
-
-        if show_plot:
-            plt.show()
-
-
-class ConstantCostPerPeriod(_Cost):
-    def __init__(self, value: int) -> None:
-        super().__init__()
-        if not is_positive_integer(value):
-            raise ValueError("the cost per period must be a positive integer")
-        self.value = value
-        self.f = lambda x: value
+    def set_cost_function(self, f: Callable):
+        self._cost_function = f
 
     def __call__(self, value):
         """compute the value of the cost function for a given value"""
-        return self.f(value)
-
-
-class PolynomialCostFunction(_Cost):
-    """A function of time under a polynomial form."""
-
-    def __init__(self, function: callable) -> None:
-        super().__init__()
-        if not callable(function):
-            raise TypeError("function must be a callable")
-        self.f = function
-
-    def __call__(self, value):
-        """compute the value of the cost function for a given value"""
-        to_return = self.f(value)
+        to_return = self._cost_function(value)
         # check if there is a ToReal conversion in the function
         # this may occur if the cost function is not linear
         # and this would result in an unexpected computation
         if "ToReal" in f"{to_return}":
-            raise AssertionError(
-                "Warning: ToReal conversion, the cost function must be linear."
+            warnings.warn(
+                "ToReal conversion in the cost function, might result in computation issues.",
+                UserWarning,
             )
-        return self.f(value)
+        return to_return
+
+
+class ConstantCostFunction(Cost):
+    value: Union[int, float]
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        self.set_cost_function(lambda x: self.value)
+
+
+class LinearCostFunction(Cost):
+    """A linear cost function:
+    C(x) = slope * x + intercept
+    """
+
+    slope: Union[z3.ArithRef, int, float]
+    intercept: Union[z3.ArithRef, int, float]
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        self.set_cost_function(lambda x: self.slope * x + self.intercept)
+
+
+class PolynomialCostFunction(Cost):
+    """A cost function under a polynomial form.
+    C(x) = a_n * x^n + a_{n-1} * x^(n-1) + ... + a_0"""
+
+    coefficients: List[Union[z3.ArithRef, int, float]]
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        def compute_cost(x):
+            result = self.coefficients[-1]
+            v = x
+            for i in range(len(self.coefficients) - 2, -1, -1):
+                if self.coefficients[i] != 0:
+                    result += self.coefficients[i] * v
+                v = v * x
+            return result
+
+        self.set_cost_function(compute_cost)
+
+
+class GeneralCostFunction(Cost):
+    func: Callable
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        self.set_cost_function(self.func)

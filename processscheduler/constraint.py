@@ -15,36 +15,39 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Optional, List
+from typing import List, Literal
 
-from z3 import Bool, BoolRef, Implies, PbEq, PbGe, PbLe
-from processscheduler.base import _NamedUIDObject
-import processscheduler.context as ps_context
+import z3
+
+from pydantic import Field, PositiveInt
+
+from processscheduler.base import NamedUIDObject
+import processscheduler.base
 
 
 #
 # Base Constraint class
 #
-class Constraint(_NamedUIDObject):
+class Constraint(NamedUIDObject):
     """The base class for all constraints, including Task and Resource constraints."""
 
-    def __init__(self, optional):
-        super().__init__("")
+    optional: bool = Field(default=False)
 
-        self.optional = optional
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
         # by default, we dont know if the constraint is created from
         # an assertion
-        self.created_from_assertion = False
+        self._created_from_assertion = False
 
         # by default, this constraint has to be applied
         if self.optional:
-            self.applied = Bool(f"constraint_{self.uid}_applied")
+            self._applied = z3.Bool(f"constraint_{self._uid}_applied")
         else:
-            self.applied = True
+            self._applied = True
 
         # store this constraint into the current context
-        ps_context.main_context.add_constraint(self)
+        processscheduler.base.active_problem.add_constraint(self)
 
     def set_created_from_assertion(self) -> None:
         """Set the flag created_from_assertion True. This flag must be set to True
@@ -52,15 +55,24 @@ class Constraint(_NamedUIDObject):
         ps.not_(ps.TaskStartAt(task_1, 0))
         thus, the Task task_1 assertions must not be add to the z3 solver.
         """
-        self.created_from_assertion = True
+        self._created_from_assertion = True
 
-    def set_z3_assertions(self, list_of_z3_assertions: List[BoolRef]) -> None:
+    def set_z3_assertions(self, list_of_z3_assertions: List[z3.BoolRef]) -> None:
         """Each constraint comes with a set of z3 assertions
         to satisfy."""
         if self.optional:
-            self.append_z3_assertion(Implies(self.applied, list_of_z3_assertions))
+            self.append_z3_assertion(z3.Implies(self._applied, list_of_z3_assertions))
         else:
             self.append_z3_assertion(list_of_z3_assertions)
+
+
+class ConstraintFromExpression(Constraint):
+    expression: z3.BoolRef
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        self.set_z3_assertions(self.expression)
 
 
 class ResourceConstraint(Constraint):
@@ -79,20 +91,18 @@ class ForceApplyNOptionalConstraints(Constraint):
     at at least/at most/exactly n tasks, with 0 < n <= m. Work for both
     Task and/or Resource constraints."""
 
-    def __init__(
-        self,
-        list_of_optional_constraints,
-        nb_constraints_to_apply: Optional[int] = 1,
-        kind: Optional[str] = "exact",
-        optional: Optional[bool] = False,
-    ) -> None:
-        super().__init__(optional)
+    list_of_optional_constraints: List[Constraint]
+    nb_constraints_to_apply: PositiveInt = Field(default=1)
+    kind: Literal["min", "max", "exact"] = Field(default="exact")
 
-        problem_function = {"min": PbGe, "max": PbLe, "exact": PbEq}
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        problem_function = {"min": z3.PbGe, "max": z3.PbLe, "exact": z3.PbEq}
 
         # first check that all tasks from the list_of_optional_tasks are
         # actually optional
-        for constraint in list_of_optional_constraints:
+        for constraint in self.list_of_optional_constraints:
             if not constraint.optional:
                 raise TypeError(
                     f"The constraint {constraint.name} must explicitly be set as optional."
@@ -100,10 +110,10 @@ class ForceApplyNOptionalConstraints(Constraint):
 
         # all scheduled variables to take into account
         applied_vars = [
-            constraint.applied for constraint in list_of_optional_constraints
+            constraint._applied for constraint in self.list_of_optional_constraints
         ]
 
-        asst = problem_function[kind](
-            [(applied, True) for applied in applied_vars], nb_constraints_to_apply
+        asst = problem_function[self.kind](
+            [(applied, True) for applied in applied_vars], self.nb_constraints_to_apply
         )
         self.set_z3_assertions(asst)

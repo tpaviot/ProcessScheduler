@@ -17,51 +17,74 @@
 
 from typing import Optional
 
-from processscheduler.base import _NamedUIDObject
-import processscheduler.context as ps_context
+from processscheduler.base import NamedUIDObject
+
+# import processscheduler.context as ps_context
+import processscheduler.base
+
+import z3
+
+from pydantic import Field
 
 
-#
-# Buffer class definition
-#
-class NonConcurrentBuffer(_NamedUIDObject):
-    """A buffer that cannot be accessed by different tasks at the same time"""
+class Buffer(NamedUIDObject):
+    initial_state: int = Field(default=None)
+    final_state: int = Field(default=None)
+    lower_bound: int = Field(default=None)
+    upper_bound: int = Field(default=None)
 
-    def __init__(
-        self,
-        name: str,
-        initial_state: Optional[int] = None,
-        final_state: Optional[int] = None,
-        lower_bound: Optional[int] = None,
-        upper_bound: Optional[int] = None,
-    ) -> None:
-        super().__init__(name)
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
-        self.initial_state = initial_state
-        self.final_state = final_state
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
-        # a dict that contains all tasks that consume this buffer
-        # unloading tasks contribute to decrement the buffer state
-        self.unloading_tasks = {}
-        # a dict that contains all tasks that feed this buffer
-        # loading tasks contribute to increment the buffer state
-        self.loading_tasks = {}
-        # a list that contains the instants where the buffer state changes
-        self.state_changes_time = []
-        # a list that stores the buffer state between each state change
-        # the first item of this list is always the initial state
-        self.buffer_states = []
-
-        # add this task to the current context
-        if ps_context.main_context is None:
+        if processscheduler.base.active_problem is None:
             raise AssertionError(
                 "No context available. First create a SchedulingProblem"
             )
-        ps_context.main_context.add_buffer(self)
+
+        if self.initial_state is None and self.final_state is None:
+            raise AssertionError("At least initial state or final state must be set")
+
+        # a dict that contains all tasks that consume this buffer
+        # unloading tasks contribute to decrement the buffer state
+        self._unloading_tasks = {}
+        # a dict that contains all tasks that feed this buffer
+        # loading tasks contribute to increment the buffer state
+        self._loading_tasks = {}
+        # a list that contains the instants where the buffer state changes
+        self._state_changes_time = []
+        # a list that stores the buffer state between each state change
+        # the first item of this list is always the initial state
+        buffer_initial_state = z3.Int(f"{self.name}_initial_state")
+        self._buffer_states = [buffer_initial_state]
+
+        if self.initial_state is not None:
+            self.append_z3_assertion(buffer_initial_state == self.initial_state)
+
+        # Note: the final state is set in the solver.py script,
+        # add this task to the current context
+
+        processscheduler.base.active_problem.add_buffer(self)
 
     def add_unloading_task(self, task, quantity) -> None:
-        self.unloading_tasks[task] = quantity
+        # store quantity
+        self._unloading_tasks[task] = quantity
+        # the buffer is unloaded at the task start time
+        # append a new state level and a new state change time
+        self._state_changes_time.append(z3.Int(f"{self.name}_sc_time_{task.name}"))
+        self._buffer_states.append(z3.Int(f"{self.name}_state_{task.name}"))
 
     def add_loading_task(self, task, quantity) -> None:
-        self.loading_tasks[task] = quantity
+        # store quantity
+        self._loading_tasks[task] = quantity
+        # the buffer is loaded at the task completion time
+        # append a new state level and a new state change time
+        self._state_changes_time.append(z3.Int(f"{self.name}_sc_time_{task.name}"))
+        self._buffer_states.append(z3.Int(f"{self.name}_state_{task.name}"))
+
+
+class NonConcurrentBuffer(Buffer):
+    """Only one task can, at one instantA buffer that cannot be accessed by different tasks at the same time"""
+
+
+class ConcurrentBuffer(Buffer):
+    """A buffer that be accessed concurrently by any number of loading/unloading tasks"""

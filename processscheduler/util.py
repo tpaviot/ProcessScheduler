@@ -17,39 +17,22 @@
 
 from typing import List
 
-from z3 import And, FreshInt, If, Or
+import z3
 
 
-#
-# Functions over python types (ints, strings, etc.)
-#
-def is_strict_positive_integer(value: int) -> bool:
-    """Return True if the parameter value is an integer > 0"""
-    return isinstance(value, int) and value > 0
+import z3
 
 
-def is_positive_integer(value: int) -> bool:
-    """Return True if the parameter value is an integer >= 0"""
-    return isinstance(value, int) and value >= 0
-
-
-def is_list_of_positive_integers(value: List[int]) -> bool:
-    return False if not value else all(is_positive_integer(n) for n in value)
-
-
-#
-# Functions over python and z3 types
-#
-
-
-#
-# Functions over z3 types only (ArithRef, BoolRef, etc.)
-#
 def calc_parabola_from_three_points(vector_x, vector_y):
-    """Compute the parabola that fits 3 points A, B and C. (x,y) coordinates
-    for these points are stored in two vectors.
-    Return a, b, c such as points 1, 2, 3 satisfies
-    y = ax**2+bx+c
+    """
+    Compute the coefficients a, b, c of the parabola that fits three points A, B, and C.
+
+    Args:
+        vector_x (list): List of x-coordinates for points A, B, and C.
+        vector_y (list): List of y-coordinates for points A, B, and C.
+
+    Returns:
+        tuple: Coefficients a, b, c for the parabola equation y = ax^2 + bx + c.
     """
     x1, x2, x3 = vector_x
     y1, y2, y3 = vector_y
@@ -62,9 +45,52 @@ def calc_parabola_from_three_points(vector_x, vector_y):
     return a, b, c
 
 
-def sort_bubble(z3_int_list):
-    """Take a list of int variables, return the list of new variables
-    sorting using the bubble recursive sort"""
+def get_maximum(maxi, list_of_values):
+    """
+    Given a z3 variable and a list of z3 variables, return assertions and the maximum value.
+
+    Args:
+        maxi (z3.ArithRef): Z3 variable to represent the maximum value.
+        list_of_values (list): List of z3 variables.
+
+    Returns:
+        list: Assertions to be passed to the solver.
+    """
+    if not list_of_values:
+        raise AssertionError("Empty list")
+    assertions = [z3.Or([maxi == elem for elem in list_of_values])]
+    assertions.extend([maxi >= elem for elem in list_of_values])
+    return assertions
+
+
+def get_minimum(mini, list_of_values):
+    """
+    Given a z3 variable and a list of z3 variables, return assertions and the minimum value.
+
+    Args:
+        mini (z3.ArithRef): Z3 variable to represent the minimum value.
+        list_of_values (list): List of z3 variables.
+
+    Returns:
+        list: Assertions to be passed to the solver.
+    """
+    if not list_of_values:
+        raise AssertionError("Empty list")
+    assertions = [z3.Or([mini == elem for elem in list_of_values])]
+    assertions.extend([mini <= elem for elem in list_of_values])
+    return assertions
+
+
+def sort_duplicates(z3_int_list):
+    """
+    Sort a list of int variables using bubble sort and return the sorted list and associated assertions.
+
+    Args:
+        z3_int_list (list): List of z3 integer variables.
+
+    Returns:
+        tuple: Sorted list of z3 integer variables, and associated assertions.
+    """
     sorted_list = z3_int_list.copy()
     glob_asst = []
 
@@ -74,10 +100,8 @@ def sort_bubble(z3_int_list):
         for i in range(len(arr) - 1):
             x = arr[i]
             y = arr[i + 1]
-            # compare and swap x and y
-            x1, y1 = FreshInt(), FreshInt()
-            c = If(x <= y, And(x1 == x, y1 == y), And(x1 == y, y1 == x))
-            # store values
+            x1, y1 = z3.FreshInt(), z3.FreshInt()
+            c = z3.If(x <= y, z3.And(x1 == x, y1 == y), z3.And(x1 == y, y1 == x))
             arr[i] = x1
             arr[i + 1] = y1
             local_asst.append(c)
@@ -91,10 +115,43 @@ def sort_bubble(z3_int_list):
 
 
 def sort_no_duplicates(z3_int_list):
-    """Sort a list of integers that have distinct values"""
-    n = len(z3_int_list)
-    a = [FreshInt() for _ in range(n)]
-    constraints = [Or([a[i] == z3_int_list[j] for j in range(n)]) for i in range(n)]
-    constraints.append(And([a[i] < a[i + 1] for i in range(n - 1)]))
+    """
+    Sort a list of integers with distinct values and return the sorted list and constraints.
 
+    Args:
+        z3_int_list (list): List of z3 integer variables.
+
+    Returns:
+        tuple: Sorted list of z3 integer variables, and constraints for distinct values and ordering.
+    """
+    n = len(z3_int_list)
+    a = [z3.FreshInt() for _ in range(n)]
+    constraints = [z3.Or([a[i] == z3_int_list[j] for j in range(n)]) for i in range(n)]
+    constraints.append(z3.And([a[i] < a[i + 1] for i in range(n - 1)]))
     return a, constraints
+
+
+def clean_buffer_states(buffer_states, buffer_change_times):
+    """
+    Clean buffer states and corresponding change times by removing duplicates.
+
+    Args:
+        buffer_states (list): List of buffer states.
+        buffer_change_times (list): List of buffer change times.
+
+    Returns:
+        tuple: Cleaned buffer states and corresponding change times.
+    """
+    if len(buffer_states) != len(buffer_change_times) + 1:
+        raise AssertionError(
+            "Buffer states list should have exactly one more element than buffer change times."
+        )
+    new_l1 = []  # Initial buffer state is always present
+    new_l2 = []
+    first_state = buffer_states.pop(0)
+    for a, b in zip(buffer_states, buffer_change_times):
+        if new_l2.count(b) < 1:
+            new_l1.append(a)
+            new_l2.append(b)
+    new_l1 = [first_state] + new_l1
+    return new_l1, new_l2

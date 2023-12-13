@@ -13,72 +13,88 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-import unittest
+import random
 
 from processscheduler.util import (
     calc_parabola_from_three_points,
-    is_positive_integer,
-    is_strict_positive_integer,
-    is_list_of_positive_integers,
     sort_no_duplicates,
-    sort_bubble,
+    sort_duplicates,
+    clean_buffer_states,
+    get_minimum,
+    get_maximum,
 )
 
-from z3 import Solver, sat
+import z3
 
 
-class TestUtil(unittest.TestCase):
-    def test_is_positive_integer(self):
-        self.assertTrue(is_positive_integer(1))
-        self.assertTrue(is_positive_integer(0))
-        self.assertTrue(is_positive_integer(7))
-        self.assertFalse(is_positive_integer(7.5))
-        self.assertFalse(is_positive_integer(-1))
-        self.assertFalse(is_positive_integer(-0.3))
-
-    def test_is_strict_positive_integer(self):
-        self.assertTrue(is_strict_positive_integer(1))
-        self.assertFalse(is_strict_positive_integer(0))  # strict
-        self.assertTrue(is_strict_positive_integer(7))
-        self.assertFalse(is_strict_positive_integer(7.5))
-        self.assertFalse(is_strict_positive_integer(-1))
-        self.assertFalse(is_strict_positive_integer(-0.3))
-
-    def test_is_list_of_positive_integers(self):
-        self.assertTrue(is_list_of_positive_integers([1, 2, 3]))
-        self.assertFalse(is_list_of_positive_integers([-1, 2, 3]))
-        self.assertFalse(is_list_of_positive_integers([1, 2.5, 3]))
-        self.assertFalse(is_list_of_positive_integers([1, 2, "3"]))
-        self.assertFalse(is_list_of_positive_integers([]))
-
-    def test_calc_parabola_from_three_points(self):
-        a, b, c = calc_parabola_from_three_points([0, 1, 2], [0, 2, 4])
-        self.assertEqual([a, b, c], [0, 2, 0])
-        d, e, f = calc_parabola_from_three_points([0, 1, 2], [0, 1, 4])
-        self.assertEqual([d, e, f], [1, 0, 0])
-
-    def test_sort_no_duplicates(self):
-        lst_to_sort = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2]
-        sorted_variables, assertions = sort_no_duplicates(lst_to_sort)
-        s = Solver()
-        s.add(assertions)
-        result = s.check()
-        solution = s.model()
-        sorted_integers = [solution[v].as_long() for v in sorted_variables]
-        self.assertEqual(result, sat)
-        self.assertEqual(sorted_integers, [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-
-    def test_sort_duplicates(self):
-        lst_to_sort = [10, 9, 8, 7, 6, 10, 9, 8, 7, 6, 1]
-        sorted_variables, assertions = sort_bubble(lst_to_sort)
-        s = Solver()
-        s.add(assertions)
-        result = s.check()
-        solution = s.model()
-        sorted_integers = [solution[v].as_long() for v in sorted_variables]
-        self.assertEqual(result, sat)
-        self.assertEqual(sorted_integers, [1, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10])
+def test_calc_parabola_from_three_points():
+    a, b, c = calc_parabola_from_three_points([0, 1, 2], [0, 2, 4])
+    assert [a, b, c] == [0, 2, 0]
+    d, e, f = calc_parabola_from_three_points([0, 1, 2], [0, 1, 4])
+    assert [d, e, f] == [1, 0, 0]
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_sort_no_duplicates():
+    """sort an array of 20 different integers"""
+    lst_to_sort = random.sample(range(-100, 100), 20)
+    sorted_variables, assertions = sort_no_duplicates(lst_to_sort)
+    s = z3.Solver()
+    s.add(assertions)
+    result = s.check()
+    assert result == z3.sat
+    solution = s.model()
+    sorted_integers = [solution[v].as_long() for v in sorted_variables]
+    assert sorted(lst_to_sort) == sorted_integers
+
+
+def test_sort_duplicates():
+    """sort an array of 20 integers with only 10 differen"""
+    lst_to_sort = random.sample(range(-100, 100), 10) * 2
+    sorted_variables, assertions = sort_duplicates(lst_to_sort)
+    s = z3.Solver()
+    s.add(assertions)
+    result = s.check()
+    assert result == z3.sat
+    solution = s.model()
+    sorted_integers = [solution[v].as_long() for v in sorted_variables]
+    assert sorted(lst_to_sort) == sorted_integers
+
+
+def test_clean_buffer_states():
+    assert clean_buffer_states([100, 21, 21, 21], [7, 7, 7]) == ([100, 21], [7])
+
+
+def test_get_maximum():
+    # 20 integers between 0 and 99
+    lst = random.sample(range(100), k=20)
+    # append 101, which must be the maximum
+    lst.append(101)
+    # build a list of z3 ints
+    z3_lst = z3.Ints(" ".join([f"i{elem}" for elem in lst]))
+    maxi = z3.Int("maxi")
+    # find maximum
+    assertions = get_maximum(maxi, z3_lst)
+    # add assertions
+    s = z3.Solver()
+    s.add(assertions)
+    s.add([a == b for a, b in zip(lst, z3_lst)])
+    s.add(maxi == 101)
+    assert s.check() == z3.sat
+
+
+def test_get_minimum():
+    # 20 integers between 10 and 99
+    lst = random.sample(range(10, 100), k=20)
+    # append 5, which must be the minimum
+    lst.append(5)
+    # build a list of z3 ints
+    z3_lst = z3.Ints(" ".join([f"i{elem}" for elem in lst]))
+    mini = z3.Int("mini")
+    # find maximum
+    assertions = get_minimum(mini, z3_lst)
+    # add assertions
+    s = z3.Solver()
+    s.add(assertions)
+    s.add([a == b for a, b in zip(lst, z3_lst)])
+    s.add(mini == 5)
+    assert s.check() == z3.sat

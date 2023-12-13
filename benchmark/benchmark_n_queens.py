@@ -23,13 +23,14 @@ parser.add_argument("-s", "--step", default=5, help="step")
 parser.add_argument(
     "-mt", "--max_time", default=60, help="Maximum time in seconds to find a solution"
 )
-parser.add_argument("-l", "--logics", default=None, help="SMT logics")
+parser.add_argument("-l", "--logics", default="QF_IDL", help="SMT logics")
 
 args = parser.parse_args()
 
 n = int(args.nmax)  # max number of dev teams
 mt = int(args.max_time)  # max time in seconds
 step = int(args.step)
+
 
 #
 # Display machine identification
@@ -91,24 +92,24 @@ for problem_size in N:
 
     init_time = time.perf_counter()
 
-    pb = ps.SchedulingProblem("n_queens_type_scheduling", horizon=problem_size)
-    R = {i: ps.Worker("W-%i" % i) for i in range(problem_size)}
+    pb = ps.SchedulingProblem(name="n_queens_type_scheduling", horizon=problem_size)
+    R = {i: ps.Worker(name="W-%i" % i) for i in range(problem_size)}
     T = {
-        (i, j): ps.FixedDurationTask("T-%i-%i" % (i, j), duration=1)
+        (i, j): ps.FixedDurationTask(name="T-%i-%i" % (i, j), duration=1)
         for i in range(n)
         for j in range(problem_size)
     }
     # precedence constrains
     for i in range(problem_size):
         for j in range(1, problem_size):
-            ps.TaskPrecedence(T[i, j - 1], T[i, j], offset=0)
+            ps.TaskPrecedence(task_before=T[i, j - 1], task_after=T[i, j], offset=0)
     # resource assignment modulo n
     for j in range(problem_size):
         for i in range(problem_size):
             T[(i + j) % problem_size, j].add_required_resource(R[i])
 
     # create the solver and solve
-    solver = ps.SchedulingSolver(pb, max_time=mt, logics=args.logics)
+    solver = ps.SchedulingSolver(problem=pb, max_time=mt, logics=args.logics)
     solution = solver.solve()
 
     if not solution:

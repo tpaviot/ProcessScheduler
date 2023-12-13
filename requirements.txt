@@ -1,4 +1,6 @@
 z3-solver==4.12.4.0
+rich
+pydantic
 matplotlib
 plotly
 kaleido
@@ -7,3 +9,4 @@ isodate
 ipympl
 psutil
 XlsxWriter
+pytest

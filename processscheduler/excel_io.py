@@ -27,8 +27,7 @@ def _get_color_from_string(a_string: str, colors: bool):
     if colors:
         hash_str = f"{crc32(a_string.encode('utf-8'))}"
         return f"#{hash_str[2:8]}"
-    else:
-        return "#F0F0F0"
+    return "#F0F0F0"
 
 
 def export_solution_to_excel_file(solution, excel_filename, colors: bool):

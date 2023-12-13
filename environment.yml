@@ -15,4 +15,7 @@ dependencies:
     - psutil
     - XlsxWriter
     - coverage
+    - pydantic
+    - rich
+    - pytest
     - -e .

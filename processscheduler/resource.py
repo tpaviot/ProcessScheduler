@@ -13,14 +13,21 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Any, List, Tuple, Literal, Union
 
-from z3 import ArithRef, Bool, PbEq, PbGe, PbLe
+import z3
 
-from processscheduler.base import _NamedUIDObject
-from processscheduler.util import is_strict_positive_integer, is_positive_integer
-from processscheduler.cost import _Cost, ConstantCostPerPeriod
-import processscheduler.context as ps_context
+from pydantic import Field, PositiveInt, model_serializer
+
+from processscheduler.base import NamedUIDObject
+from processscheduler.cost import (
+    ConstantCostFunction,
+    LinearCostFunction,
+    PolynomialCostFunction,
+)
+
+# import processscheduler.context as ps_context
+import processscheduler.base
 
 
 #
@@ -29,175 +36,160 @@ import processscheduler.context as ps_context
 def _distribute_p_over_n(p, n):
     """Returns a list of integer p distributed over n values."""
     if p is None:
-        return [p for _ in range(n)]
+        return [None for _ in range(n)]
     if isinstance(p, int):
-        int_div = p // n
-        to_return = [int_div + p % n]
-        to_return.extend(int_div for _ in range(n - 1))
-        return to_return
-    if isinstance(p, ConstantCostPerPeriod):
-        int_div = p.value // n
-        to_return = [ConstantCostPerPeriod(int_div + p.value % n)]
-        to_return.extend(ConstantCostPerPeriod(int_div) for _ in range(n - 1))
-        return to_return
-    raise AssertionError("wrong type for parameter p")
+        int_value = p
+    elif isinstance(p, ConstantCostFunction):
+        int_value = p.value
+    else:
+        raise AssertionError("wrong type for parameter p")
+    to_return = [int_value // n + int_value % n]
+    to_return.extend(int_value // n for _ in range(n - 1))
+    # check that the list to return has the good length
+    if len(to_return) != n:
+        raise AssertionError("wrong length")
+    if sum(to_return) != int_value:
+        raise AssertionError("wrong sum")
+    return to_return
 
 
 #
 # Resources class definition
 #
-class Resource(_NamedUIDObject):
+class Resource(NamedUIDObject):
     """base class for the representation of a resource"""
 
-    def __init__(self, name: str) -> None:
-        super().__init__(name)
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
         # for each resource, we define a dict that stores
         # all tasks and busy intervals of the resource.
         # busy intervals can be for example [(1,3), (5, 7)]
-        self.busy_intervals = {}  # type: Dict[Task, Tuple[ArithRef, ArithRef]]
+        self._busy_intervals = {}  # type: Dict[Task, Tuple[z3.ArithRef, z3.ArithRef]]
 
-    def add_busy_interval(self, task, interval: Tuple[ArithRef, ArithRef]) -> None:
+    def add_busy_interval(
+        self, task, interval: Tuple[z3.ArithRef, z3.ArithRef]
+    ) -> None:
         """add an interval in which the resource is busy"""
-        self.busy_intervals[task] = interval
+        self._busy_intervals[task] = interval
 
-    def get_busy_intervals(self) -> List[Tuple[ArithRef, ArithRef]]:
+    def get_busy_intervals(self) -> List[Tuple[z3.ArithRef, z3.ArithRef]]:
         """returns the list of all busy intervals"""
-        return list(self.busy_intervals.values())
+        return list(self._busy_intervals.values())
 
 
 class Worker(Resource):
     """A worker is an atomic resource that cannot be split into smaller parts.
     Typical workers are human beings, machines etc."""
 
-    def __init__(
-        self, name: str, productivity: Optional[int] = 1, cost: Optional[int] = None
-    ) -> None:
-        super().__init__(name)
-        if not is_positive_integer(productivity):
-            raise TypeError("productivity must be an integer >= 0")
-        if cost is None:
-            self.cost = None
-        elif not isinstance(cost, _Cost):
-            raise TypeError("cost must be a _Cost instance")
-        self.productivity = productivity
-        self.cost = cost
+    productivity: int = Field(default=1, ge=0)  # productivity >= 0
+    cost: Union[
+        ConstantCostFunction, LinearCostFunction, PolynomialCostFunction
+    ] = Field(default=ConstantCostFunction(value=0))
 
-        # only worker are add to the main context, not SelectWorkers
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        # only worker are added to the main context, not SelectWorkers
         # add this resource to the current context
-        if ps_context.main_context is None:
+        if processscheduler.base.active_problem is None:
             raise AssertionError(
                 "No context available. First create a SchedulingProblem"
             )
-        ps_context.main_context.add_resource(self)
+        processscheduler.base.active_problem.add_resource_worker(self)
+
+
+class CumulativeWorker(Resource):
+    """A cumulative worker can process multiple tasks in parallel."""
+
+    # size is 2 min, otherwise it should be a single worker
+    size: int = Field(gt=1)  # size strictly > 1
+    productivity: PositiveInt = Field(default=1)
+    cost: Union[
+        ConstantCostFunction, LinearCostFunction, PolynomialCostFunction
+    ] = Field(default=ConstantCostFunction(value=0))
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        # productivity and cost_per_period are distributed over
+        # individual workers
+        # for example, a productivty of 7 for a size of 3 will be distributed
+        # as 3 on worker 1, 2 on worker 2 and 2 on worker 3. Same for cost_per_periods
+        productivities = _distribute_p_over_n(self.productivity, self.size)
+
+        costs_per_period = _distribute_p_over_n(self.cost, self.size)
+        # we create as much elementary workers as the cumulative size
+        self._cumulative_workers = [
+            Worker(
+                name=f"{self.name}_CumulativeWorker_{i+1}",
+                productivity=productivities[i],
+                cost=ConstantCostFunction(value=costs_per_period[i])
+                if costs_per_period[i] is not None
+                else None,
+            )
+            for i in range(self.size)
+        ]
+
+        processscheduler.base.active_problem.add_resource_cumulative_worker(self)
+
+    def get_select_workers(self):
+        """Each time the cumulative resource is assigned to a task, a SelectWorker
+        instance is assigned to the task."""
+        return SelectWorkers(
+            list_of_workers=self._cumulative_workers, nb_workers_to_select=1, kind="min"
+        )
 
 
 class SelectWorkers(Resource):
     """Class representing the selection of n workers chosen among a list
     of possible workers"""
 
-    def __init__(
-        self,
-        list_of_workers: List[Resource],
-        nb_workers_to_select: Optional[int] = 1,
-        kind: Optional[str] = "exact",
-    ):
-        """create an instance of the SelectWorkers class."""
-        super().__init__("")
+    list_of_workers: List[Union[Worker, CumulativeWorker]] = Field(min_length=2)
+    nb_workers_to_select: PositiveInt = Field(default=1)
+    kind: Literal["exact", "min", "max"] = Field(default="exact")
 
-        problem_function = {"min": PbGe, "max": PbLe, "exact": PbEq}
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
 
-        if kind not in problem_function:
-            raise ValueError("kind must be either 'exact', 'min' or 'max'")
-        self.kind = kind
+        problem_function = {"min": z3.PbGe, "max": z3.PbLe, "exact": z3.PbEq}
 
-        if not is_strict_positive_integer(nb_workers_to_select):
-            raise TypeError("nb_workers must be an integer > 0")
-        if nb_workers_to_select > len(list_of_workers):
+        # TODO: move to the validator
+        if self.nb_workers_to_select > len(self.list_of_workers):
             raise ValueError(
                 "nb_workers must be <= the number of workers provided in list_of_workers."
             )
-        self.nb_workers_to_select = nb_workers_to_select
 
         # build the list of workers that will be the base of the selection
         # instances from this list mght either be Workers or CumulativeWorkers. If
         # this is a cumulative, then we add the list of all workers from the cumulative
         # into this list.
-        self.list_of_workers = []
-        for worker in list_of_workers:
+        self._list_of_workers = []
+        for worker in self.list_of_workers:
             if isinstance(worker, CumulativeWorker):
-                self.list_of_workers.extend(worker.cumulative_workers)
+                self._list_of_workers.extend(worker._cumulative_workers)
             else:
-                self.list_of_workers.append(worker)
+                self._list_of_workers.append(worker)
 
         # a dict that maps workers and selected boolean
-        self.selection_dict = {}
+        self._selection_dict = {}
 
         # create as many booleans as resources in the list
         for worker in self.list_of_workers:
-            worker_is_selected = Bool(f"Selected_{worker.name}_{self.uid}")
-            self.selection_dict[worker] = worker_is_selected
-
+            worker_is_selected = z3.Bool(f"Selected_{worker.name}_{self._uid}")
+            self._selection_dict[worker] = worker_is_selected
         # create the assertion : exactly n boolean flags are allowed to be True,
         # the others must be False
         # see https://github.com/Z3Prover/z3/issues/694
         # and https://stackoverflow.com/questions/43081929/k-out-of-n-constraint-in-z3py
-        selection_list = list(self.selection_dict.values())
-        self.selection_assertion = problem_function[kind](
-            [(selected, True) for selected in selection_list], nb_workers_to_select
+        selection_list = list(self._selection_dict.values())
+        self._selection_assertion = problem_function[self.kind](
+            [(selected, True) for selected in selection_list], self.nb_workers_to_select
         )
-        ps_context.main_context.add_resource_select_workers(self)
+        processscheduler.base.active_problem.add_resource_select_workers(self)
 
-
-class CumulativeWorker(Resource):
-    """A cumulative worker can process multiple tasks in parallel."""
-
-    def __init__(
-        self,
-        name: str,
-        size: int,
-        productivity: Optional[int] = 1,
-        cost: Optional[int] = None,
-    ) -> None:
-        super().__init__(name)
-
-        if not (isinstance(size, int) and size >= 2):
-            raise ValueError("CumulativeWorker 'size' attribute must be >=2.")
-        self.size = size
-
-        if not is_positive_integer(productivity):
-            raise TypeError("productivity must be an integer >= 0")
-        self.productivity = productivity
-
-        if cost is None:
-            self.cost = None
-
-        elif not isinstance(cost, _Cost):
-            raise TypeError("cost must be a _Cost instance")
-        self.cost_defined_value = cost
-
-        # productivity and cost_per_period are distributed over
-        # individual workers
-        # for example, a productivty of 7 for a size of 3 will be distributed
-        # as 3 on worker 1, 2 on worker 2 and 2 on worker 3. Same for cost_per_periods
-        productivities = _distribute_p_over_n(productivity, size)
-
-        costs_per_period = _distribute_p_over_n(cost, size)
-
-        # we create as much elementary workers as the cumulative size
-        self.cumulative_workers = [
-            Worker(
-                f"{name}_CumulativeWorker_{i+1}",
-                productivity=productivities[i],
-                cost=costs_per_period[i],
-            )
-            for i in range(size)
-        ]
-
-        ps_context.main_context.add_resource_cumulative_worker(self)
-
-    def get_select_workers(self):
-        """Each time the cumulative resource is assigned to a task, a SelectWorker
-        instance is assigned to the task."""
-        return SelectWorkers(
-            self.cumulative_workers, nb_workers_to_select=1, kind="min"
-        )
+    @model_serializer
+    def ser_model(self) -> Dict[str, Any]:
+        return {
+            "name": self.name,
+            "list_of_workers": [w.name for w in self.list_of_workers],
+            "nb_workers_to_select": self.nb_workers_to_select,
+            "kind": self.kind,
+        }

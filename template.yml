@@ -43,8 +43,8 @@ jobs:
 
   - bash: |
       source activate psenv && \
-      python -m unittest
-    displayName: 'Run unittest suite'
+      pytest .
+    displayName: 'Run unittest suite using pytest'
 
   - ${{ if startsWith(parameters.name, 'Ubuntu') }}:
     - bash: |
