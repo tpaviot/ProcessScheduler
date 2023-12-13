@@ -2,34 +2,83 @@ site_name: ProcessScheduler
 site_description: A Python framework for project and team management. Automatic and optimized resource scheduling.
 strict: true
 site_url: https://processscheduler.github.io/
+site_author: Thomas Paviot
 
+# Repository
+repo_name: tpaviot/processscheduler
+repo_url: https://github.com/tpaviot/processscheduler
+
+# Copyright
+copyright: |
+  &copy; 2023 <a href="https://github.com/tpaviot" target="_blank" rel="noopener">Thomas Paviot</a>
+
+# Configuration
 theme:
   name: material
   features:
-    - navigation.tabs
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    - content.code.select
+    - content.tooltips
+    - navigation.footer
+    - navigation.indexes
     - navigation.sections
-    - toc.integrate
+    - navigation.tabs
     - navigation.top
-    - search.suggest
+    - navigation.tracking
     - search.highlight
     - search.share
-    - content.tabs.link
-    - content.code.annotation
-    - content.code.copy
+    - search.suggest
+    - toc.follow
   language: en
   palette:
-    - scheme: default
+    - media: "(prefers-color-scheme)"
       toggle:
-        icon: material/toggle-switch-off-outline
+        icon: material/link
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch
         name: Switch to dark mode
-      primary: teal 
-      accent: purple
-    - scheme: slate
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
       toggle:
-          icon: material/toggle-switch
-          name: Switch to light mode
-      primary: teal 
-      accent: lime
+        icon: material/toggle-switch-off
+        name: Switch to system preference
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+watch:
+- processscheduler
+
+nav:
+- Get Started:
+  - Welcome to ProcessScheduler: introduction.md
+- Concepts:
+  - Scheduling Problem: scheduling_problem.md
+  - Tasks: task.md
+  - Resource: resource.md
+  - Resource Assignmnent: resource_assignment.md
+  - Resource Constraints: resource_constraints.md
+  - Buffer: buffer.md
+  - FOL: first_order_logic_constraints.md
+  - Indicator: indicator.md
+  - Objectives: objectives.md
+  - Solver: solving.md
+- Use cases:
+  - Formula One: use-case-formula-one-change-tires.ipynb
+  - FlowShop: use-case-flow-shop.ipynb
+  - Team Managament: use-case-software-development.ipynb
+
 extra:
   social:
     - icon: fontawesome/brands/github-alt
@@ -37,22 +86,67 @@ extra:
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/thomaspaviot/
 
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+# Extensions
 markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.tilde
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
   - pymdownx.highlight:
       anchor_linenums: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - admonition
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.magiclink:
+      normalize_issue_symbols: true
+      repo_url_shorthand: true
+      user: squidfunk
+      repo: mkdocs-material
+  - pymdownx.snippets:
+      auto_append:
+        - includes/mkdocs.md
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - tables
+  - toc:
+      permalink: true
+      title: Page contents
+  - pymdownx.highlight:
+      anchor_linenums: true
   - pymdownx.arithmatex:
       generic: true
   - footnotes
-  - pymdownx.details
-  - pymdownx.superfences
-  - pymdownx.mark
-  - attr_list
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
-
-copyright: |
-  &copy; 2023 <a href="https://github.com/tpaviot" target="_blank" rel="noopener">Thomas Paviot</a>

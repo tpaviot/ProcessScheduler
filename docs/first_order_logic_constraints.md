@@ -10,7 +10,7 @@ Logical operators and (:math:`\wedge`), or (:math:`\lor`), xor (:math:`\oplus`),
 .. note::
 	Take care of the trailing underscore character at the end of the function names. They are necessary because :const:`and`, :const:`or`, and :const:`not` are python keywords that cannot be overloaded. This naming convention may conflict with functions from the :mod:`operator` standard module.
 
-Using builtin task constraints in combination with logical operators enables a rich expressivity. Imagine that you need a task :math:`t_1` to NOT start at time 3. At a first glance, you can expect a :class:`TaskDontStartAt` to fit your needs, but it is not available from the builtin constraints library. The solution is to express this constraint in terms of first order logic, and state that you need the rule:
+Using builtin task constraints in combination with logical operators enables a rich expressivity. Imagine that you need a task :math:`t_1` to NOT start at time 3. At a first glance, you can expect a `TaskDontStartAt` to fit your needs, but it is not available from the builtin constraints library. The solution is to express this constraint in terms of first order logic, and state that you need the rule:
 
 .. math::
 	\lnot TaskStartAt(t_1, 3)

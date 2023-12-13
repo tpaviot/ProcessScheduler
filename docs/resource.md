@@ -1,85 +1,96 @@
-********
-Resource
-********
-
 According to the APICS dictionary, a resource is anything that adds value to a product or service in its creation, production, or delivery.
 
 In the context of ProcessScheduler, a resource is anything that is needed by a task to be successfully processed. In a scheduling problem, resources can be human beings, machines, inventories, rooms or beds in an hotel or an hospital, elevator etc.
 
 ProcessScheduler provides the following classes to deal with resources: `Worker`, `CumulativeWorker` 
 
-Worker
-======
-A Worker is an atomic, countable resource. Being atomic implies that it cannot be further divided into smaller parts, and being countable means it exists in a finite number, available during specific time intervals. The :class:`Worker` class is ideal for representing entities like machines or humans. A :class:`Worker` possesses the capacity to process tasks either individually or in collaboration with other workers or resources.
+## Worker
+
+A Worker is an atomic, countable resource. Being atomic implies that it cannot be further divided into smaller parts, and being countable means it exists in a finite number, available during specific time intervals. The `Worker` class is ideal for representing entities like machines or humans. A `Worker` possesses the capacity to process tasks either individually or in collaboration with other workers or resources.
 
 To create a Worker, you can use the following syntax:
 
-.. code-block:: python
+``` py
+john = Worker(name='JohnBenis')
+```
 
-    john = Worker('JohnBenis')
+## CumulativeWorker
 
-CumulativeWorker
-================
-On the other hand, a :class:`CumulativeWorker` can simultaneously handle multiple tasks in parallel. The maximum number of tasks that a :class:`CumulativeWorker` can process concurrently is determined by the :attr:`size` parameter.
+On the other hand, a `CumulativeWorker` can simultaneously handle multiple tasks in parallel. The maximum number of tasks that a `CumulativeWorker` can process concurrently is determined by the `size` parameter.
 
 For example, you can define a CumulativeWorker like this:
 
-.. code-block:: python
+``` py
+# the machine A can process up to 4 tasks at the same time
+machine_A = CumulativeWorker(name='MachineA',
+                             size=4)
+```
 
-    # the machine A can process up to 4 tasks at the same time
-    machine_A = CumulativeWorker('MachineA', size=4)
+## Resource productivity
 
-Advanced parameters
-===================
-Productivity
-------------
-The :attr:`productivity` attribute of a worker represents the amount of work the worker can complete per period. By default, a worker's :attr:`productivity` is set to 0.
+The `productivity` attribute of a worker represents the amount of work the worker can complete per period. By default, a worker's `productivity` is set to 0.
 
 For instance, if you have two drillers, with the first one capable of drilling 3 holes per period and the second one drilling 9 holes per period, you can define them as follows:
 
-.. code-block:: python
+``` py
+driller_1 = Worker(name='Driller1',
+                   productivity=3)
+driller_2 = Worker(namme='Driller1',
+                   productivity=9)
+```
 
-    driller_1 = Worker('Driller1', productivity=3)
-    driller_2 = Worker('Driller1', productivity=9)
+!!! note
 
-.. note::
+  The workers :const:`productivity` is used by the solver to satisfy the targeted task `work_amount` parameter value.
 
-  The workers :const:`productivity` is used by the solver to satisfy the targeted task :attr:`work_amount` parameter value.
+## Resource cost
 
-Cost
-----
 You can associate cost information with any resource, enabling ProcessScheduler to compute the total cost of a schedule, the cost per resource, or optimize the schedule to minimize costs (see the Objective section for details). There are two ways to define resource costs:
 
-1. Constant Cost Per Period: In this approach, the resource's cost remains constant over time.
+### Constant Cost Per Period
 
-.. code-block:: python
+In this approach, the resource's cost remains constant over time.
 
-    dev_1 = Worker('SeniorDeveloper', cost=ConstantCostPerPeriod(750))
+``` py
+dev_1 = Worker(name='SeniorDeveloper',
+               cost=ConstantCostFunction(750))
+```
 
-2. Polynomial Cost Function: This method allows you to represent resource costs as a polynomial function of time. It's particularly useful for modeling costs that are volatile (e.g., oil prices) or time-dependent (e.g., electricity costs). The cost parameter accepts any Python callable object.
+$$C(t) = k, k \in \mathbb{N}$$
 
-.. code-block:: python
+### Linear Cost Function :
 
-    def quadratic_time_function(t):
-        return (t-20)**2 + 154
+$$C(t)=slope * t + intercept, (slope, intercept) \in \mathbb{N} \times \mathbb{N}$$
 
-    cost_function = PolynomialCostFunction(quadratic_time_function)
-    dev_1 = Worker('AWorker', cost=cost_function)
+ml
 
-The worker :attr:`cost` is set to :const:`None` by default.
+### Polynomial Cost Function
+
+$$C(t)={a_n}t^n + {a_{n-1}}t^{n-1} + ... + {a_i}t^i + ... + {a_1}t+{a_0}$$
+
+This method allows you to represent resource costs as a polynomial function of time. It's particularly useful for modeling costs that are volatile (e.g., oil prices) or time-dependent (e.g., electricity costs). The cost parameter accepts any Python callable object.
+
+``` py
+def quadratic_time_function(t):
+    return (t-20)**2 + 154
+cost_function = PolynomialCostFunction(quadratic_time_function)
+dev_1 = Worker(name='AWorker',
+               cost=cost_function)
+```
+
+The worker `cost` is set to :const:`None` by default.
 
 You can visualize the cost function using Matplotlib, which provides insights into how the cost evolves over time:
 
-.. code-block:: python
+``` py
+cost_function.plot([0, 200])
+```
+![QuadraticCostFunction](img/CostQuadraticFunction.svg)
 
-    cost_function.plot([0, 200])
-
-.. image:: img/CostQuadraticFunction.svg
-
-.. warning::
+!!! warning
 
     Currently, ProcessScheduler can handle integer numbers only. Then, all the coefficients of the polynomial must be integer numbers. If ever there are floating point numbers, no exception will be raised, but you might face strange results in the cost computation.
 
-.. note::
+!!! note
 
-  The worker :attr:`cost_per_period` is useful to measure the total cost of a resource/a set of resources/a schedule, or to find the schedule that minimizes the total cost of a resource/a set of resources/ a schedule.
+  The worker `cost_per_period` is useful to measure the total cost of a resource/a set of resources/a schedule, or to find the schedule that minimizes the total cost of a resource/a set of resources/ a schedule.

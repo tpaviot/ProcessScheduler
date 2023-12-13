@@ -1,12 +1,12 @@
 Indicator
 =========
 
-:class:`Indicator` class
+`Indicator` class
 ------------------------
 
-The :class:`Indicator` class allows to define a criterion that quantifies the schedule so that it can be compared with other schedules. An :class:`Indicator` instance results in a conclusion such a 'the schedule A is better than schedule B because the indicator XXX is greater/lower'.
+The `Indicator` class allows to define a criterion that quantifies the schedule so that it can be compared with other schedules. An `Indicator` instance results in a conclusion such a 'the schedule A is better than schedule B because the indicator XXX is greater/lower'.
 
-An :class:`Indicator` instance is created by passing the indicator name as well as the mathematical expression to compute. For example:
+An `Indicator` instance is created by passing the indicator name as well as the mathematical expression to compute. For example:
 
 .. code-block:: python
 
