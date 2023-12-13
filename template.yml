@@ -12,43 +12,23 @@ jobs:
     
   steps: 
   
-  - ${{ if or(contains(parameters.vmImage, 'macOS'),contains(parameters.vmImage, 'Ubuntu')) }}:
-    - bash: echo "##vso[task.prependpath]$CONDA/bin"
-      displayName: 'Add conda to PATH'
-
-  - ${{ if contains(parameters.vmImage, 'win') }}:
-    - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
-      displayName: 'Add conda to PATH'
-
-  - ${{ if contains(parameters.vmImage, 'macOS') }}:
-    - bash: |
-        sudo chown -R $USER $CONDA
-      displayName: 'MacOS ownership workaround'
- 
   - bash: |
-        conda config --set always_yes yes --set changeps1 no && \
-        conda update -q conda && \
-        conda info -a && \
-        conda config --add channels https://conda.anaconda.org/conda-forge
-    displayName: 'Conda config and info'
+      pip install --upgrade pip && \
+      pip install -r requirements.txt && \
+      pip install pytest coverage && \
+      pip install -e .
+    displayName: Install
 
   - bash: |
-        conda env create -n psenv -f environment.yml
-    displayName: Install ProcessScheduler to a dedicated environment
-
-  - bash: |
-      source activate psenv && \
       python -c 'from processscheduler import *'
     displayName: 'Test import'
 
   - bash: |
-      source activate psenv && \
       pytest .
     displayName: 'Run unittest suite using pytest'
 
   - ${{ if startsWith(parameters.name, 'Ubuntu') }}:
     - bash: |
-        source activate psenv && \
         cd benchmark &&\
         mkdir output &&\
         python benchmark_dev_team.py --plot=False --logics=QF_IDL --max_time=30 > benchmark_dev_team_result.txt &&\
@@ -57,7 +37,6 @@ jobs:
 
   - ${{ if startsWith(parameters.name, 'Ubuntu') }}:
     - bash: |
-        source activate psenv && \
         cd benchmark &&\
         python benchmark_logics.py &&\
         cd ..
@@ -72,7 +51,6 @@ jobs:
 
   - ${{ if startsWith(parameters.name, 'Ubuntu') }}:
     - bash: |
-        source activate psenv && \
         coverage run -m unittest && \
         coverage report -m && \
         coverage html && \

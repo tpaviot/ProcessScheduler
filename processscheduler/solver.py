@@ -112,8 +112,8 @@ class SchedulingSolver(BaseModelWithJson):
 
         z3.set_option("parallel.enable", self.parallel)
         if self.random_values:
-            z3.set_option("sat.random_seed", random.randint(1, 1e3))
-            z3.set_option("smt.random_seed", random.randint(1, 1e3))
+            z3.set_option("sat.random_seed", random.randint(1, 1000))
+            z3.set_option("smt.random_seed", random.randint(1, 1000))
             z3.set_option("smt.arith.random_initial_value", True)
         else:
             z3.set_option("sat.random_seed", 0)
