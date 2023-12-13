@@ -128,10 +128,9 @@ class IndicatorTardiness(Indicator):
         else:
             tasks = self.list_of_tasks
             self.name = f"Tardiness({','.join(t.name for t in self.list_of_tasks)})"
-        tardiness_v = []
-        for t in tasks:
-            # tardiness in terms of time units
-            tardiness_v.append(z3.If(t.due_date >= t._end, 0, t._end - t.due_date))
+        tardiness_v = [
+            z3.If(t.due_date >= t._end, 0, t._end - t.due_date) for t in tasks
+        ]
         expression = z3.Sum(tardiness_v)
         self.append_z3_assertion(self._indicator_variable == expression)
 
@@ -370,11 +369,7 @@ class ObjectiveTasksStartLatest(Objective):
     are scheduled as late as possible"""
 
     def __init__(self, **data) -> None:
-        if "list_of_tasks" in data:
-            list_of_tasks = data["list_of_tasks"]
-        else:
-            list_of_tasks = None
-
+        list_of_tasks = data.get("list_of_tasks", None)
         if list_of_tasks is None:
             list_of_tasks = processscheduler.base.active_problem.tasks.values()
 
@@ -403,11 +398,7 @@ class ObjectiveTasksStartEarliest(Objective):
     as early as possible"""
 
     def __init__(self, **data) -> None:
-        if "list_of_tasks" in data:
-            list_of_tasks = data["list_of_tasks"]
-        else:
-            list_of_tasks = None
-
+        list_of_tasks = data.get("list_of_tasks", None)
         if list_of_tasks is None:
             list_of_tasks = processscheduler.base.active_problem.tasks.values()
 
@@ -435,11 +426,7 @@ class ObjectiveMinimizeFlowtime(Objective):
     Be careful that it is contradictory with the minimize makespan objective."""
 
     def __init__(self, **data) -> None:
-        if "list_of_tasks" in data:
-            list_of_tasks = data["list_of_tasks"]
-        else:
-            list_of_tasks = None
-
+        list_of_tasks = data.get("list_of_tasks", None)
         if list_of_tasks is None:
             list_of_tasks = processscheduler.base.active_problem.tasks.values()
         task_ends = []
@@ -494,11 +481,7 @@ class ObjectiveMinimizeFlowtimeSingleResource(Objective):
     def __init__(self, **data) -> None:
         resource = data["resource"]
 
-        if "time_interval" in data:
-            time_interval = data["time_interval"]
-        else:
-            time_interval = None
-
+        time_interval = data.get("time_interval", None)
         if time_interval is not None:
             lower_bound, upper_bound = time_interval
         else:

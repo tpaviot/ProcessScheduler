@@ -323,7 +323,6 @@ class SchedulingSolver(BaseModelWithJson):
                         ] + z3.Sum(
                             [f(buffer._state_changes_time[0]) for f in functions]
                         )
-                        self.append_z3_assertion(asst)
                     else:  # if two consecutives state change times are the same, then only count them
                         asst = z3.If(
                             buffer._state_changes_time[i]
@@ -335,10 +334,7 @@ class SchedulingSolver(BaseModelWithJson):
                                 [f(buffer._state_changes_time[i]) for f in functions]
                             ),
                         )
-                        self.append_z3_assertion(asst)
-            #
-            # Non concurrent buffers
-            #
+                    self.append_z3_assertion(asst)
             elif isinstance(buffer, NonConcurrentBuffer):
                 buffer_mapping = z3.Array(
                     f"Buffer_{buffer.name}_mapping", z3.IntSort(), z3.IntSort()

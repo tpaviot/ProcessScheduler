@@ -160,7 +160,7 @@ class SchedulingProblem(NamedUIDObject):
         s = json.loads(json_string)
         # first find the class to instantiate
         s_type = s["type"]
-        if not s_type in _object_types:
+        if s_type not in _object_types:
             raise AssertionError(f"{s_type} type not known")
 
         # create and return the object

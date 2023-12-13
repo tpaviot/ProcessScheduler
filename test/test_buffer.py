@@ -495,13 +495,7 @@ def test_objective_minimize_max_buffer_level_1() -> None:
     """many more tasks"""
     pb = ps.SchedulingProblem(name="ObjectiveMinimizeMaxBufferLevelNTasks")
     N = 10
-    # two tasks, one loads one unloads
-    # if we need to minimize the highest buffer level then we need
-    # to first unload (-3) and then load (+8)
-    tasks = []
-    for i in range(N):
-        tasks.append(ps.FixedDurationTask(name=f"task{i}", duration=3))
-
+    tasks = [ps.FixedDurationTask(name=f"task{i}", duration=3) for i in range(N)]
     buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=0)
 
     for i in range(0, N, 2):
