@@ -66,18 +66,19 @@ nav:
 - Concepts:
   - Scheduling Problem: scheduling_problem.md
   - Tasks: task.md
-  - Resource: resource.md
+  - Task constraints: task_constraints.md
+  - Resources: resource.md
   - Resource Assignmnent: resource_assignment.md
   - Resource Constraints: resource_constraints.md
-  - Buffer: buffer.md
+  - Buffers: buffer.md
   - FOL: first_order_logic_constraints.md
-  - Indicator: indicator.md
+  - Indicators: indicator.md
   - Objectives: objectives.md
   - Solver: solving.md
 - Use cases:
-  - Formula One: use-case-formula-one-change-tires.ipynb
-  - FlowShop: use-case-flow-shop.ipynb
-  - Team Managament: use-case-software-development.ipynb
+  - Formula One: use-case-formula-one-change-tires.md
+  - FlowShop: use-case-flow-shop.md
+  - Team Managament: use-case-software-development.md
 
 extra:
   social:
