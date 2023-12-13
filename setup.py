@@ -21,7 +21,7 @@ CLASSIFIERS = [
 
 setup(
     name="ProcessScheduler",
-    version="0.9.4",
+    version="2.0.0.dev",
     description=DESCRIPTION,
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
@@ -31,7 +31,7 @@ setup(
     license="GPLv3",
     platforms="Platform Independent",
     packages=find_packages(),
-    install_requires=["z3-solver==4.11.4.0", "pydantic=>2"],
+    install_requires=["z3-solver==4.12.4.0", "pydantic>=2"],
     classifiers=CLASSIFIERS,
     zip_safe=True,
 )
