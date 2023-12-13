@@ -48,14 +48,16 @@ For any problem, the following builtin objectives are available:
 The default optimization solver is `incremental`. After a solution is found, the solver will run again and again to find a better solution untill the maximum allowed time is reached. If you provide a small max_time value, the solver will exit to the last found value, but there may be a better value. In that case, just increase the max_time and run again the solver.
 
 ``` py
-solver = ps.SchedulingSolver(pb, max_time=300)  # 300s is 5 minutes
+solver = ps.SchedulingSolver(problem=pb,
+                             max_time=300)  # 300s is 5 minutes
 solution = solver.solve()
 ```
 
 The other available solver is called `optimize`, which use the builtin optsmt z3-solver. The computation cannot be interrupted, so be careful if the problem to solve involves many tasks/resources. However, the :func`optimize` is guaranteed to return the optimal value.
 
 ``` py
-solver = ps.SchedulingSolver(pb, optimizer="optimize")  # 300s is 5 minutes
+solver = ps.SchedulingSolver(problem=pb,
+                             optimizer="optimize")  # 300s is 5 minutes
 solution = solver.solve()
 ```
 
@@ -64,10 +66,10 @@ solution = solver.solve()
 Imagine you need to schedule one specific task `task_1` the later. After you defined the task as usual, then create the objective and set the optimization target:
 
 ``` py
-pb = ps.SchedulingProblem('SingleObjective1', horizon=20)
-task_1 = ps.FixedDurationTask('task1', duration = 3)
-indicator_1 = ps.Indicator('Task1End', task_1.end)
-ps.MaximizeObjective('MaximizeTask1End', indicator_1)
+pb = ps.SchedulingProblem(name='SingleObjective1', horizon=20)
+task_1 = ps.FixedDurationTask(name='task1', duration = 3)
+indicator_1 = ps.Indicator(name='Task1End', task_1.end)
+ps.MaximizeObjective(name='MaximizeTask1End', indicator_1)
 ps.SchedulingSolver(pb).solve()
 ```
 

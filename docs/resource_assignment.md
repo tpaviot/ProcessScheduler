@@ -50,6 +50,6 @@ sw = SelectWorkers(list_of_workers=[driller_1, driller_2, driller_3],
 drilling_hole.add_required_resource(sw)
 ```
 
-In this case, the solver is instructed to assign exactly one resource from the list of three workers capable of performing the task. The ``kind`` parameter can be set to `'exact'` (default), `'min'`, or `'max'`, depending on your requirements. Additionally, you can specify the number of workers to select with ``nb_workers_to_select``, which can be any integer between 1 (default) and the total number of eligible workers in the list.
+In this case, the solver is instructed to assign exactly one resource from the list of three workers capable of performing the task. The `kind` parameter can be set to `'exact'` (default), `'min'`, or `'max'`, depending on your requirements. Additionally, you can specify the number of workers to select with `nb_workers_to_select`, which can be any integer between 1 (default value) and the total number of eligible workers in the list.
 
 These resource assignment options provide flexibility and control over how tasks are allocated to available resources, ensuring efficient scheduling in various use cases.

@@ -21,11 +21,11 @@ The interval's duration is subdivided into discrete units called *periods*, each
 
 A period represents the finest granularity level for defining the timeline, task durations, and the schedule itself. This timeline is dimensionless, allowing you to map a period to your desired duration, be it in seconds, minutes, hours, or any other unit. For instance:
 
-- If you aim to schedule tasks within a single day, say from 8 am to 6 pm (office hours), resulting in a 10-hour time interval, and you plan to schedule tasks in 1-hour intervals, then the horizon value should be set to 10 to achieve the desired number of periods:
+* If you aim to schedule tasks within a single day, say from 8 am to 6 pm (office hours), resulting in a 10-hour time interval, and you plan to schedule tasks in 1-hour intervals, then the horizon value should be set to 10 to achieve the desired number of periods:
 
 $$horizon = \frac{18-8}{1}=10$$
 
-- If your task scheduling occurs in the morning, from 8 am to 12 pm, resulting in a 4-hour time interval, and you intend to schedule tasks in 1-minute intervals, then the horizon value must be 240:
+* If your task scheduling occurs in the morning, from 8 am to 12 pm, resulting in a 4-hour time interval, and you intend to schedule tasks in 1-minute intervals, then the horizon value must be 240:
 
 $$horizon = \frac{12-8}{1/60}=240$$
 

@@ -8,6 +8,13 @@ According to the [APICS dictionary](https://www.ascm.org/), a task may either be
 
 In the context of this software library, the concept of a task aligns with the first definition. ProcessScheduler's primary objective is to compute a chronological sequence, or temporal order, for a collection of tasks while adhering to a specific set of constraints.
 
+The inheritance class diagram is the following:
+``` mermaid
+classDiagram
+  Task <|-- ZeroDurationTask
+  Task <|-- FixedDurationTask
+  Task <|-- VariableDurationTask
+```
 ## Common base Task model
 
 The `Task` class and its derivatives represent any task. A `Task` instance is defined by the three following parameters:

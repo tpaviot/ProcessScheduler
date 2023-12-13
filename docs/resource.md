@@ -1,8 +1,18 @@
+# Resource
+
 According to the APICS dictionary, a resource is anything that adds value to a product or service in its creation, production, or delivery.
 
 In the context of ProcessScheduler, a resource is anything that is needed by a task to be successfully processed. In a scheduling problem, resources can be human beings, machines, inventories, rooms or beds in an hotel or an hospital, elevator etc.
 
 ProcessScheduler provides the following classes to deal with resources: `Worker`, `CumulativeWorker` 
+
+
+The inheritance class diagram is the following:
+``` mermaid
+classDiagram
+  Resource <|-- Worker
+  Resource <|-- CumulativeWorker
+```
 
 ## Worker
 
@@ -78,7 +88,7 @@ dev_1 = Worker(name='AWorker',
                cost=cost_function)
 ```
 
-The worker `cost` is set to :const:`None` by default.
+The worker `cost` is set to `None` by default.
 
 You can visualize the cost function using Matplotlib, which provides insights into how the cost evolves over time:
 
