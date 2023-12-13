@@ -1,5 +1,6 @@
 z3-solver==4.12.2.0
 importlib-resources
+setuptools
 rich
 pydantic
 matplotlib
