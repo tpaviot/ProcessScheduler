@@ -64,6 +64,7 @@ nav:
 - Get Started:
   - Welcome to ProcessScheduler: introduction.md
 - Concepts:
+  - index.md
   - Scheduling Problem: scheduling_problem.md
   - Tasks: task.md
   - Task constraints: task_constraints.md

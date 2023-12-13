@@ -4,26 +4,28 @@ The `SchedulingProblem` class is the container for all modeling objects, such as
 
 ## Time slots as integers
 
-A `SchedulingProblem` instance holds a *time* interval: the lower bound of this interval (the *initial time*) is always 0, the upper bound (the *final time*) can be set by passing the `horizon` attribute to the `__init__` method:
+A `SchedulingProblem` instance holds a *time* interval: the lower bound of this interval (the *initial time*) is always 0, the upper bound (the *final time*) can be set by passing the `horizon` attribute to the `__init__` method, for example:
 
 ``` py
 my_problem = SchedulingProblem(name='MySchedulingProblem',
                                horizon=20)
 ```
 
-The interval's duration is subdivided into discrete units called *periods*, each with a fixed duration of 1. If $horizon$ is set to a value, then the number of periods is equal to $horizon$, and the number of points within the interval $[0;horizon]$ is $horizon+1$.
+The interval's duration is subdivided into discrete units called *periods*, each with a fixed duration of 1. The number of periods is equal to $horizon$, and the number of points within the interval $[0;horizon]$ is $horizon+1$.
 
 ![TimeLineHorizon](img/TimeLineHorizon.svg){ width="90%" }
 
 !!! warning
 
-    ProcessScheduler handles variables using **integer** values.
+    ProcessScheduler handles only variables using **dimensionless integer values**.
 
 A period represents the finest granularity level for defining the timeline, task durations, and the schedule itself. This timeline is dimensionless, allowing you to map a period to your desired duration, be it in seconds, minutes, hours, or any other unit. For instance:
 
-* If you aim to schedule tasks within a single day, say from 8 am to 6 pm (office hours), resulting in a 10-hour time interval, and you plan to schedule tasks in 1-hour intervals, then the horizon value should be set to 10 to achieve the desired number of periods:
+* If your goal is to plan tasks within a single day, such as from 8 am to 6 pm (office hours), resulting in a 10-hour time span, and you intend to schedule tasks in 1-hour increments, then the horizon value should be set to 10 to achieve the desired number of periods:
 
 $$horizon = \frac{18-8}{1}=10$$
+
+This implies that you can schedule tasks with durations measured in whole hours, making it impractical to schedule tasks with durations of half an hour or 45 minutes.
 
 * If your task scheduling occurs in the morning, from 8 am to 12 pm, resulting in a 4-hour time interval, and you intend to schedule tasks in 1-minute intervals, then the horizon value must be 240:
 

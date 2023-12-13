@@ -1,10 +1,17 @@
 # Task Constraints
 
-ProcessScheduler offers a comprehensive set of predefined temporal task constraints to help you express common scheduling rules efficiently. These constraints allow you to define task-related rules such as "Task A must start exactly at time 4," "Task B must end simultaneously with Task C," "Task C should be scheduled precisely 3 periods after Task D," and more.
+The ProcessScheduler framework provides a powerful set of predefined temporal task constraints to facilitate the expression of common scheduling rules efficiently. These constraints empower you to articulate task-related regulations, such as fixed start times, synchronized endings, precedence relationships, and more.
+
+The `TaskConstraint` class is a specialized extension of the generic `Constraint` class, forming the foundation for expressing task-related scheduling rules.
+
+``` mermaid
+classDiagram
+  Constraint <|-- TaskConstraint
+```
 
 !!! note
 
-    Constraints that start with ``Task*`` apply to a single task, while those starting with ``Task**s***`` apply to two or more task instances.
+    Constraints that start with ``Task*`` apply to a single task, while those starting with ``Tasks***`` apply to two or more task instances.
 
 !!! note
 
@@ -18,11 +25,36 @@ ProcessScheduler offers a comprehensive set of predefined temporal task constrai
 
 These constraints apply to individual tasks.
 
+``` mermaid
+classDiagram
+  TaskConstraint <|-- TaskStartAt
+  TaskConstraint <|-- TaskStartAfter
+  TaskConstraint <|-- TaskEndAt
+  TaskConstraint <|-- TaskEndBefore
+class TaskStartAt{
+    +Task task
+    +int value
+  }
+class TaskStartAfter{
+    +Task task
+    +int value    
+}
+class TaskEndAt{
+    +Task task
+    +int value
+}
+class TaskEndBefore{
+    +Task task
+    +int value
+}
+```
+
 ### TaskStartAt
 
 Ensures that a tasks starts precisely at a specified time instant.
 
 `TaskStartAt`: takes two parameters `task` and `value` such as the task starts exactly at the instant
+
 $$task.start = value$$
 
 ### TaskStartAfter
@@ -31,21 +63,44 @@ Enforces that a task must start after a given time instant.
 
 `TaskStartAfterStrict` can be strict lor lax.
 
+$$task.start >= value$$
+
 ### TaskEndAt
 
 Ensures that a task ends precisely at a specified time instant.
 
-`TaskEndAt`: takes two parameters `task` and `value` such as the task ends exactly at the instant *value* :math:`task.end = value`
+$$task.end = value$$
+
+`TaskEndAt`: takes two parameters `task` and `value` such as the task ends exactly at the instant *value*.
 
 ### TaskEndBefore
 
 Requires that a task ends before or at a given time instant.
 
-`TaskEndBeforeStrict` can be strict or lax.
+$$task.end <= value$$
+
+`TaskEndBefore` can be strict or lax.
+
 
 ## Two tasks temporal constraints
 
 These constraints apply to sets of two tasks.
+
+
+``` mermaid
+classDiagram
+  TaskConstraint <|-- TaskPrecedence
+  TaskConstraint <|-- TasksStartSynced
+  TaskConstraint <|-- TasksEndSynced
+  TaskConstraint <|-- TasksDontOverlap
+class TaskPrecedence{
+    +Task task_before
+    +Task task_after
+    +str kind
+    +int offset
+}
+  
+```
 
 ### TaskPrecedence
 
