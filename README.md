@@ -9,6 +9,11 @@
 # ProcessScheduler
 ProcessScheduler is a Python package for creating optimized scheduling based on identified resources and tasks to be carried out. It offers a set of classes and methods for finely modeling a wide range of use cases with rich semantics. Complex mathematical calculations necessary for problem resolution are transparently handled for the user, allowing them to focus on problem modeling. ProcessScheduler is aimed at project managers, business organization consultants, or industrial logistics experts looking to optimize the achievement of time or cost objectives.
 
+## Updates
+
+- [2023/12/13]: Huge on-going refactoring [#133](https://github.com/tpaviot/ProcessScheduler/issues/133)
+- [2023/12/12]: Release 0.9.4
+
 ## Features
 
 * Tasks: Creation of tasks defined by their duration, priority, and required effort.
