@@ -2,6 +2,22 @@
 
 In the context of scheduling, resource assignment is the process of determining which resource or resources should be assigned to a task for its successful processing. ProcessScheduler provides flexible ways to specify resource assignments for tasks, depending on your scheduling needs. A `Worker` instance can process only one task per time period whereas a `CumulativeWorker` can process multiple tasks at the same time.
 
+!!! note
+
+    To assign a resource to a task, use the **add_required_resources** method of the `Task` class.
+
+The semantics of the resource assignment is the creation of the relationship between any instance of the `Task` class and a `Resource`.
+
+``` mermaid
+classDiagram
+    Task "0..n" -- "1..n" Resource
+```
+
+The most common case is that a finite number $n$ of workers are required to perform a set of $m$ tasks.
+
+There are three ways to assign resource(s) to perform a task : single resource assignment, multiple resource assignement and alternative resource assignement.
+
+
 ## Single resource assignment
 
 For assigning a single resource to a task, you can use the following syntax:
@@ -30,9 +46,22 @@ alice = Worker(name='AliceParker')
 paint_engine.add_required_resources([john, alice])
 ```
 
+All of the workers in the list are mandatory to perform the task. If ever one of the worker is not available, then the task cannot be scheduled.
+
 ## Alternative resource assignment
 
-ProcessScheduler introduces the `SelectWorkers` class, which allows the solver to decide which resource or resources to assign to a task from a collection of capable workers. You can specify whether the solver should assign exactly $n$ resources, at most $n$ resources, or at least $n$ resources. Let's consider the following example: 3 drillers are available, a drilling task can be processed by any of one of these 3 drillers. This can be represented as:
+ProcessScheduler introduces the `SelectWorkers` class, which allows the solver to decide which resource(s) to assign to a task from a collection of capable workers. You can specify whether the solver should assign exactly $n$ resources, at most $n$ resources, or at least $n$ resources.
+
+``` mermaid
+classDiagram
+  SelectWorkers
+class SelectWorkers{
+    +List[Resource] list_of_workers
+    +int nb_workers_to_select
+    +str kind
+  }
+```
+Let's consider the following example: 3 drillers are available, a drilling task can be processed by any of one of these 3 drillers. This can be represented as:
 
 ``` py
 drilling_hole = FixedDurationTask(name='DrillHolePhi10mm',

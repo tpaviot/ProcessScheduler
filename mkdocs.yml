@@ -61,36 +61,57 @@ watch:
 - processscheduler
 
 nav:
-- Get Started:
-  - Welcome to ProcessScheduler: introduction.md
+- Introduction:
+  - About: introduction.md
+  - Download/Install: download_install.md
+  - Run: run.md
 - Concepts:
-  - index.md
   - Scheduling Problem: scheduling_problem.md
-  - Tasks: task.md
-  - Task constraints: task_constraints.md
-  - Resources: resource.md
-  - Resource Assignmnent: resource_assignment.md
-  - Resource Constraints: resource_constraints.md
-  - Buffers: buffer.md
-  - FOL: first_order_logic_constraints.md
-  - Indicators: indicator.md
-  - Objectives: objectives.md
-  - Solver: solving.md
+  - Represent:
+    - Tasks: task.md
+    - Resources: resource.md
+    - Resource Assignmnent: resource_assignment.md
+    - Buffers: buffer.md
+  - Constraint:
+    - Task constraints: task_constraints.md
+    - Resource Constraints: resource_constraints.md
+    - Customized Constraints: customized_constraints.md
+    - First Order Logics: first_order_logic_constraints.md
+  - Measure:
+    - Indicators: indicator.md
+  - Optimize:
+    - Objectives: objectives.md
+  - Solve: solving.md
+  - Render:
+    - Gantt Chart: gantt_chart.md
+    - Data exchange: data_exchange.md
 - Use cases:
-  - Formula One: use-case-formula-one-change-tires.md
   - FlowShop: use-case-flow-shop.md
+  - Formula One: use-case-formula-one-change-tires.md
   - Team Managament: use-case-software-development.md
+- Blog:
+  - blog/index.md
 
 extra:
   social:
     - icon: fontawesome/brands/github-alt
       link: https://github.com/tpaviot/ProcessScheduler
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/processscheduler/
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/thomaspaviot/
 
 extra_javascript:
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+# Plugins
+plugins:
+  - blog
+  - search:
+      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+#  - minify:
+#      minify_html: true
 
 # Extensions
 markdown_extensions:

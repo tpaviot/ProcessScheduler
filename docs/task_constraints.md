@@ -11,7 +11,7 @@ classDiagram
 
 !!! note
 
-    Constraints that start with ``Task*`` apply to a single task, while those starting with ``Tasks***`` apply to two or more task instances.
+    Constraint names that start with ``Task*`` apply to a single task, while those starting with ``Tasks***`` apply to two or more task instances.
 
 !!! note
 
@@ -20,6 +20,12 @@ classDiagram
     ``` py
     pb.add_constraint([task.applied == True])
     ```
+
+## Groups
+
+### Ordered task group
+
+### Unordered task group
 
 ## Single task temporal constraints
 
@@ -37,7 +43,8 @@ class TaskStartAt{
   }
 class TaskStartAfter{
     +Task task
-    +int value    
+    +int value
+    +str kind    
 }
 class TaskEndAt{
     +Task task
@@ -46,46 +53,29 @@ class TaskEndAt{
 class TaskEndBefore{
     +Task task
     +int value
+    +str kind
 }
 ```
 
-### TaskStartAt
+| Type      | Math | Description                          |
+| ----------- | -----| ------------------------------------ |
+| TaskStartAt |$task.start = value$      | starts exactly at the instant `value`  |
+| TaskStartAfter |$task.start >= value$       | task must start after a given time instant |
+| TaskEndAt | $task.end = value$    | task ends exactly at the specified time instant. |
+| TaskEndBefore  |$task.end <= value$  | task ends before or at a given time instant |
 
-Ensures that a tasks starts precisely at a specified time instant.
 
-`TaskStartAt`: takes two parameters `task` and `value` such as the task starts exactly at the instant
+`TaskStart/End/After/Before` constraint can be strict ($>$,$<$) or lax ($>=$,$<=$) whether the `kind` argument is set to `'lax'` or `'strict'`. The default value is `'lax'`.
 
-$$task.start = value$$
-
-### TaskStartAfter
-
-Enforces that a task must start after a given time instant.
-
-`TaskStartAfterStrict` can be strict lor lax.
-
-$$task.start >= value$$
-
-### TaskEndAt
-
-Ensures that a task ends precisely at a specified time instant.
-
-$$task.end = value$$
-
-`TaskEndAt`: takes two parameters `task` and `value` such as the task ends exactly at the instant *value*.
-
-### TaskEndBefore
-
-Requires that a task ends before or at a given time instant.
-
-$$task.end <= value$$
-
-`TaskEndBefore` can be strict or lax.
-
+Example:
+``` py
+task1 = FixedDurationTask(name="Task1", duration=10)
+TaskStarAfter(task= task1, value=7, kind="strict")
+```
 
 ## Two tasks temporal constraints
 
 These constraints apply to sets of two tasks.
-
 
 ``` mermaid
 classDiagram
@@ -142,7 +132,7 @@ Ensures that two tasks should not overlap in time.
 
 ![TaskDontOverlap](img/TasksDontOverlap.svg){ width=90% }
 
-## $n$ tasks temporal constraints
+## Multiple tasks temporal constraints
 
 ### TasksContiguous
 
