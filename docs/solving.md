@@ -53,7 +53,7 @@ It is obvious that these constraints cannot be both satisfied.
 
    If the solver fails to give a solution, increase the `max_time` (case 3) or remove some constraints (cases 1 and 2).
 
-## Find another solution
+## Find another solution
 
 The solver may schedule:
 
@@ -99,30 +99,132 @@ Solution for task_1.start: 1
 
 You can recursively call `find_another_solution` to find all possible solutions, until the solver fails to return a new one.
 
+## Optimization solver, incremental solver
+
+ProcessScheduler can deal with multiple objectives optimization. There is no limitation regarding the number of objectives.
+
+Imagine you need to schedule two tasks `task_1` and `task_2` the later. After you defined the task as usual, then create the objective and set the optimization target:
+
+``` py
+pb = ps.SchedulingProblem('MultiObjective1', horizon=20)
+task_1 = ps.FixedDurationTask('task1', duration = 3)
+task_2 = ps.FixedDurationTask('task2', duration = 3)
+indicator_1 = ps.Indicator('Task1End', task_1.end)
+indicator_2 = ps.Indicator('Task2End', task_2.end)
+ps.MaximizeObjective('MaximizeTask1End', indicator_1)
+ps.MaximizeObjective('MaximizeTask2End', indicator_2)
+solution = ps.SchedulingSolver(pb).solve()
+print(solution)
+```
+
+After running the script, you may get the following output:
+
+``` bash
+[...]
+{
+"horizon": 20,
+"indicators": {
+    "EquivalentIndicator": -40,
+    "Task1End": 20,
+    "Task2End": 20
+},
+[...]
+```
+
+The solver gives the expected result. Note that an EquivalentIndicator is built from both indicators. A maximization problem is always turned into a minimization problem (the equivalent indicator is negative).
+
+## Multiple objective optimization using the optimize solver (default)
+
+### Lexicon priority (`'lex'`, default)
+
+The solver optimizes the first objective, then the second one while keeping the first value, then the third one keeping both previous values etc.
+
+In the previous example, the first objective to be optimized will be the end of task_1, obviously 20. Then, this value being fixed, there's no other solution than start of the second task is 0, then task_2 end will be 3.
+
+``` py
+ps.SchedulingSolver(pb, optimizer=optimize, optimize_priority='lex').solve()
+```
+
+And the output
+
+``` bash
+Optimization results:
+=====================
+    ->Objective priority specification: lex
+    ->Objective values:
+        ->Indicator_Task1End(max objective): 20
+        ->Indicator_Task2End(max objective): 3
+```
+
+### Box priority (`'box'`)
+
+The optimization solver breaks the dependency between objectives and look for the maximum (resp. minimum) value that can be achieved for each objective.
+
+In the previous example, the maximum of task_1end can be 20, and the maximum of task_2.end can also be 20, but not at the same time. The `box` priority then gives an information about the values that can be reached.
+
+``` py
+ps.SchedulingSolver(pb, optimizer=optimize, optimize_priority='box').solve()
+```
+
+And the output
+
+``` bash
+Optimization results:
+=====================
+    ->Objective priority specification: lex
+    ->Objective values:
+        ->Indicator_Task1End(max objective): 20
+        ->Indicator_Task2End(max objective): 20
+```
+
+!!! note
+
+    In `box` mode, both objectives may not be reached simultaneously, the solver will give anyway a solution that satisfies **all** constraints (by default the solution obtained from the lexicon mode).
+
+### Pareto priority (`'pareto'`)
+
+The optimization solver suggests a new solution each time the `solve()` method is called. This allows traversing all solutions. Indeed we can have the task_1 end to 20 and task_2 end 3, but also the task_1 end to 19 and task_2 end to 4 etc. These all are solutions for the optimization problem.
+
+The python code has to be slightly modified:
+
+``` py
+solver = ps.SchedulingSolver(pb, optimizer=optimize, optimize_priority='pareto')
+while solver.solve():
+    pass
+```
+
+And the output will be:
+
+``` bash
+Optimization results:
+=====================
+    ->Objective priority specification: pareto
+    ->Objective values:
+        ->Indicator_Task1End(max objective): 20
+        ->Indicator_Task2End(max objective): 3
+SAT computation time:
+=====================
+    MultiObjective2 satisfiability checked in 0.00s
+Optimization results:
+=====================
+    ->Objective priority specification: pareto
+    ->Objective values:
+        ->Indicator_Task1End(max objective): 19
+        ->Indicator_Task2End(max objective): 4
+SAT computation time:
+=====================
+    MultiObjective2 satisfiability checked in 0.00s
+Optimization results:
+=====================
+    ->Objective priority specification: pareto
+    ->Objective values:
+        ->Indicator_Task1End(max objective): 18
+        ->Indicator_Task2End(max objective): 5
+[...]
+```
+
+Here you have 18 different solutions. You can add a test to the loop to stop the iteration as soon as you're ok with the solution.
+
 ## Run in debug mode
 
 If the `debug` attribute is set to True, the z3 solver is run with the unsat_core option. This will result in a much longer computation time, but this will help identifying the constraints that conflict. Because of this higher consumption of resources, the `debug` flag should be used only if the solver fails to find a solution.
-
-## Render to a Gantt chart
-
-Call the :func:`render_gantt_matplotlib` to render the solution as a Gantt chart. The time line is from 0 to `horizon` value, you can choose to render either `Task` or `Resource` (default).
-
-``` py
-solution = solver.solve()
-if solution is not None:
-    solution.render_gantt_matplotlib()  # default render_mode is 'Resource'
-    # a second gantt chart, in 'Task' mode
-    solution.render_gantt_matplotlib(render_mode='Task')
-```
-
-Call the `ps.render_gantt_plotly` to render the solution as a Gantt chart using **plotly**.
-Take care that plotly rendering needs **real timepoints** (set at least `delta_time` at the problem creation).
-
-``` py
-solution = solver.solve()
-if solution is not None:
-    # default render_mode is 'Resource'
-    solution.render_gantt_plotly(sort="Start", html_filename="index.html")
-    # a second gantt chart, in 'Task' mode
-    solution.render_gantt_plotly(render_mode='Task')
-```

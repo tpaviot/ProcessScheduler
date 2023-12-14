@@ -40,7 +40,7 @@ classDiagram
 class TaskStartAt{
     +Task task
     +int value
-  }
+}
 class TaskStartAfter{
     +Task task
     +int value

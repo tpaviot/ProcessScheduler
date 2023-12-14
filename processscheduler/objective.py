@@ -111,10 +111,6 @@ class ObjectiveMaximizeResourceUtilization(Objective):
 class ObjectiveMinimizeResourceCost(Objective):
     """Minimise the total cost of selected resources"""
 
-    # list_of_resources: List[Union[Worker, CumulativeWorker]]
-    # def add_objective_resource_cost(
-    #    self, list_of_resources: List[Union[Worker, CumulativeWorker]], weight: int = 1
-    # ) -> Union[z3.ArithRef, Indicator]:
     def __init__(self, **data) -> None:
         lor = data["list_of_resources"]
         cost_indicator = IndicatorResourceCost(list_of_resources=lor)

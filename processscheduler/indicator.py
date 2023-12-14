@@ -114,6 +114,8 @@ class IndicatorNumberTasksAssigned(Indicator):
 
 
 class IndicatorTardiness(Indicator):
+    """The weighted sum of total tardiness for the selected tasks"""
+
     list_of_tasks: Union[List[Task], None] = Field(default=None)
 
     def __init__(self, **data) -> None:
@@ -179,6 +181,8 @@ class IndicatorMaximumLateness(Indicator):
 
 
 class IndicatorResourceCost(Indicator):
+    """compute the total cost of a set of resources"""
+
     list_of_resources: List[Union[Worker, CumulativeWorker]]
 
     def __init__(self, **data) -> None:
@@ -187,7 +191,6 @@ class IndicatorResourceCost(Indicator):
         self.name = (
             f"Total Cost ({','.join(res.name for res in self.list_of_resources)})"
         )
-        """compute the total cost of a set of resources"""
 
         constant_costs = []
         variable_costs = []

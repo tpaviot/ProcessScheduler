@@ -1,48 +1,66 @@
 # Indicator
 
-## Create an Indicator instance
+The `Indicator` class allows to define a criterion that quantifies the schedule so that it can be compared with other schedules. An `Indicator` measures a specific behaviour you need to trace, evaluate or optimize.
 
-The `Indicator` class allows to define a criterion that quantifies the schedule so that it can be compared with other schedules. An `Indicator` instance results in a conclusion such a 'the schedule A is better than schedule B because the indicator XXX is greater/lower'.
-
-An `Indicator` instance is created by passing the indicator name as well as the mathematical expression to compute. For example:
-
-``` py
-flow_time = Indicator('FlowTime', task1.end + task2.end)
-duration_square = Indicator('MinTaskDuration', task1.duration ** 2 + task2.duration ** 2)
+All builtin indicators inherit from the base class `Indicator`:
+``` mermaid
+classDiagram
+  Indicator
+class Indicator{
+    +List[int, int] bounds
+  }
 ```
 
-Indicator values are computed by the solver, and are part of the solution. If the solution is rendered as a matplotlib Gantt chart, the indicator values are displayed on the upper right corner of the chart.
-
-Indicators can also be bounded, although it is an optional feature. It is useful if the indicator is further be maximized (or minimized) by an optimization solver, in order to reduce the computation time. For example,
-
-``` py
-indicator1 = Indicator('Example1', task2.start - task1.end, bounds = (0,100)) # If lower and upper bounded
-indicator2 = Indicator('Example2', task3.start - task2.end, bounds = (None,100)) # If only upper bounded
-indicator3 = Indicator('Example3', task4.start - task3.end, bounds = (0,None)) # If only lower bounded
-```
+Indicator values are computed by the solver, and are part of the solution. If the solution is rendered as a matplotlib Gantt chart, the indicator value is displayed on the upper right corner of the chart.
 
 !!! note
 
     There is no limit to the number of Indicators defined in the problem. The mathematical expression must be expressed in a polynomial form and using the `Sqrt` function. Any other advanced mathematical functions such as `exp`, `sin`, etc. is not allowed because not supported by the solver.
 
-## Builtin indicators : Resource cost, utilization, number of tasks assigned
+## Builtin indicators
 
-Two usual indicators are available : the utilization and cost of a resource (or a list of resources).
+Available builtin indicators are listed below:
 
-Use the `add_indicator_resource_utilization` method to insert a cost computation to your schedule. This method takes a list of resources and compute the total cost (sum of productivity * duration for all resources). The result is a percentage: an utilization of 100% means that the resource is assigned 100% of the schedule timeline. In the following example, the indicator reports the utilization percentage of the `worker_1`.
+
+| Type      | Apply to | Description                          |
+| ----------- | -----| ------------------------------------ |
+| IndicatorTardiness | List of tasks | Unweighted total tardiness of the selected tasks |
+| IndicatorNumberOfTardyTasks | List of tasks | Number of tardy tasks from the selected tasks |
+| IndicatorMaximumLateness | List of tasks | Maximum lateness of selected tasks |
+| IndicatorResourceUtilization  | Single resource | Resource utilization, from 0% to 100% of the schedule horizon, of the selected resource |
+| IndicatorNumberTasksAssigned  | Single resource | Number of tasks assigned to the selected resource |
+| IndicatorResourceCost  | List of resources| Total cost of selected resources |
+| IndicatorMaxBufferLevel  |Buffer | Maximum level of the selected buffer |
+| IndicatorMinBufferLevel  | Buffer | Minimum level of the selected buffer |
+
+## Customized indicators
+
+Use the `IndicatorFromMathExpression` class to define an indicator that may not be available from the previous list.
 
 ``` py
-utilization_res_1 = problem.add_indicator_resource_utilization(worker_1)
+ind = ps.IndicatorFromMathExpression(name="Task1End",
+                                     expression=task_1._end)
 ```
 
-The `add_indicator_resource_cost` method returns the total cost of a resource (or a list of resource). It is computed using each cost function defined for each resource. In the following example, the indicator `cost_ind` is the total cost for both ressources `worker_1` and `worker_2`.
+or
 
 ``` py
-cost_ind = problem.add_indicator_resource_cost([worker_1, worker_2])
+ind = ps.IndicatorFromMathExpression(name="SquareDistanceBetweenTasks",
+                                     expression=(task_1._start - task_2._end) ** 2)
 ```
 
-At last, the `add_indicator_number_tasks_assigned` method returns the number of tasks assigned to a resource after the schedule is completed.
+Customized indicators can also be bounded, although it is an optional feature. Bounds are constraints over an indicator value. It is useful if the indicator is further be maximized (or minimized) by an optimization solver, in order to reduce the computation time. For example,
 
 ``` py
-problem.add_indicator_number_tasks_assigned(worker)
+indicator1 = Indicator(name='Example1',
+                       expression=task2.start - task1.end,
+                       bounds = (0,100)) # If lower and upper bounded
+indicator2 = Indicator(name='Example2',
+                       expression=task3.start - task2.end,
+                       bounds = (None,100)) # If only upper bounded
+indicator3 = Indicator(name='Example3',
+                       expression=task4.start - task3.end,
+                       bounds = (0,None)) # If only lower bounded
 ```
+
+Bounds are set to `None` by default.
