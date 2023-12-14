@@ -334,13 +334,13 @@ def test_start_earliest_2():
     ps.TaskStartAt(task=task_1, value=8)
     ps.TaskPrecedence(task_before=task_1, task_after=task_2)
 
-    ps.ObjectiveTasksStartEarliest(list_of_tasks=[task_2, task_3])
+    ob = ps.ObjectiveTasksStartEarliest(list_of_tasks=[task_2, task_3])
 
     solution = solve_problem(problem)
     assert solution
-    assert solution.tasks["task1"].start == 8
-    assert solution.tasks["task2"].start == 13
-    assert solution.tasks["task3"].start == 0
+    # the weighted start time should be:
+    # 0 * 1 + 8 * 1 + 13 * 1
+    assert solution.indicators[ob.target.name] == 21
 
 
 def test_start_latest_1():

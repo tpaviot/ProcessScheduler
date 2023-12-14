@@ -399,6 +399,28 @@ class ObjectiveTasksStartLatest(Objective):
 
 
 class ObjectiveTasksStartEarliest(Objective):
+    """This is the dual of the completion weighted times
+    but for task starts."""
+
+    def __init__(self, **data) -> None:
+        all_priorities = []
+        for task in processscheduler.base.active_problem.tasks.values():
+            if task.optional:
+                all_priorities.append(task._start * task.priority * task._scheduled)
+            else:
+                all_priorities.append(task._start * task.priority)
+        priority_sum = z3.Sum(all_priorities)
+        priority_indicator = IndicatorFromMathExpression(
+            name="WeightedStartTimes", expression=priority_sum
+        )
+        super().__init__(
+            name="MinimizeWeightedStartTimes",
+            target=priority_indicator,
+            kind="minimize",
+        )
+
+
+class ObjectiveMinimizeGreatestStartTime(Objective):
     """minimize the greatest start time, i.e. tasks are schedules
     as early as possible"""
 
