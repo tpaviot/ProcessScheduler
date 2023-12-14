@@ -38,13 +38,13 @@ from processscheduler.cost import (
     PolynomialCostFunction,
     GeneralCostFunction,
 )
-from processscheduler.objective import (
+from processscheduler.indicator import (
     Indicator,
     IndicatorFromMathExpression,
     IndicatorResourceUtilization,
     IndicatorResourceCost,
-    Objective,
 )
+from processscheduler.objective import Objective
 from processscheduler.resource import Resource, Worker, CumulativeWorker, SelectWorkers
 from processscheduler.constraint import *
 from processscheduler.task_constraint import *

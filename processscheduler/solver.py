@@ -28,11 +28,8 @@ import z3
 from pydantic import Field, PositiveFloat, Extra, ConfigDict
 
 from processscheduler.base import BaseModelWithJson
-from processscheduler.objective import (
-    Indicator,
-    IndicatorFromMathExpression,
-    Objective,
-)
+from processscheduler.indicator import Indicator, IndicatorFromMathExpression
+from processscheduler.objective import Objective
 from processscheduler.solution import (
     SchedulingSolution,
     TaskSolution,
