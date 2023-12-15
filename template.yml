@@ -51,7 +51,7 @@ jobs:
 
   - ${{ if startsWith(parameters.name, 'Ubuntu') }}:
     - bash: |
-        coverage run -m unittest && \
+        coverage run -m pytest && \
         coverage report -m && \
         coverage html && \
         bash <(curl -s https://codecov.io/bash)
