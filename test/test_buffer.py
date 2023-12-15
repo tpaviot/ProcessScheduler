@@ -466,34 +466,9 @@ def test_objective_maximize_max_buffer_level_1() -> None:
     assert solution.indicators[oo.target.name] == 10 + 8
 
 
-def test_objective_minimize_max_buffer_level_1() -> None:
-    """the same use case as previously, but choose minimize max level"""
-    pb = ps.SchedulingProblem(name="ObjectiveMinimizeMaxBufferLevel")
-
-    # two tasks, one loads one unloads
-    # if we need to minimize the highest buffer level then we need
-    # to first unload (-3) and then load (+8)
-    task_1 = ps.FixedDurationTask(name="task1", duration=3)
-    task_2 = ps.FixedDurationTask(name="task2", duration=3)
-
-    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
-
-    ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=3)
-    ps.TaskLoadBuffer(task=task_2, buffer=buffer_1, quantity=8)
-
-    oo = ps.ObjectiveMinimizeMaxBufferLevel(buffer=buffer_1)
-
-    solver = ps.SchedulingSolver(problem=pb)
-    solution = solver.solve()
-    assert solution
-
-    assert solution.tasks["task1"].start < solution.tasks["task2"].end
-    assert solution.indicators[oo.target.name] == 10 - 3 + 8
-
-
-def test_objective_minimize_max_buffer_level_1() -> None:
+def test_objective_maximize_max_buffer_level_2() -> None:
     """many more tasks"""
-    pb = ps.SchedulingProblem(name="ObjectiveMinimizeMaxBufferLevelNTasks")
+    pb = ps.SchedulingProblem(name="ObjectiveMaximizeMaxBufferLevelNTasks")
     N = 10
     # two tasks, one loads one unloads
     # if we need to minimize the highest buffer level then we need
@@ -517,3 +492,28 @@ def test_objective_minimize_max_buffer_level_1() -> None:
     assert solution
     assert solution.indicators[oo.target.name] == 15
     assert solution.indicators[indic_min.name] == 0
+
+
+def test_objective_minimize_max_buffer_level_1() -> None:
+    """the same use case as previously, but choose minimize max level"""
+    pb = ps.SchedulingProblem(name="ObjectiveMinimizeMaxBufferLevel1")
+
+    # two tasks, one loads one unloads
+    # if we need to minimize the highest buffer level then we need
+    # to first unload (-3) and then load (+8)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    task_2 = ps.FixedDurationTask(name="task2", duration=3)
+
+    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+
+    ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=3)
+    ps.TaskLoadBuffer(task=task_2, buffer=buffer_1, quantity=8)
+
+    oo = ps.ObjectiveMinimizeMaxBufferLevel(buffer=buffer_1)
+
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+
+    assert solution.tasks["task1"].start < solution.tasks["task2"].end
+    assert solution.indicators[oo.target.name] == 10 - 3 + 8

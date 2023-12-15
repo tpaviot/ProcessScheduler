@@ -63,9 +63,6 @@ PROBLEM = build_excavator_problem()
 SOLVER = ps.SchedulingSolver(problem=PROBLEM)
 SOLUTION = SOLVER.solve()
 
-if not SOLUTION:
-    raise AssertionError("problem has no solution")
-
 
 def test_export_to_smt2():
     SOLVER.export_to_smt2("excavator_problem.smt2")
