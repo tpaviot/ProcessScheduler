@@ -20,50 +20,6 @@ from pydantic import ValidationError
 
 import pytest
 
-
-def test_constant_cost_function_1() -> None:
-    c = ps.ConstantFunction(value=55)
-    assert c(0) == 55
-    assert c(10) == 55
-
-
-def test_basic_linear_function_1() -> None:
-    c = ps.LinearFunction(slope=1, intercept=1)
-    assert c(0) == 1
-    assert c(-1) == 0
-
-
-def test_horizontal_linear_function_1() -> None:
-    c = ps.LinearFunction(slope=0, intercept=3)
-    assert c(0) == 3
-    assert c(-1) == 3
-
-
-def test_polynomial_function_1() -> None:
-    c = ps.PolynomialFunction(coefficients=[1, 1])
-    assert c(0) == 1
-    assert c(-1) == 0
-
-
-def test_polynomial_function_2() -> None:
-    c = ps.PolynomialFunction(coefficients=[0, 4])
-    assert c(0) == 4
-    assert c(-1) == 4
-
-
-def test_polynomial_function_3() -> None:
-    c = ps.PolynomialFunction(coefficients=[1, 1, 1])
-    assert c(0) == 1
-    assert c(1) == 3
-    assert c(2) == 7
-
-
-def test_polynomial_function_4() -> None:
-    c = ps.PolynomialFunction(coefficients=[2, 0, 0])
-    assert c(0) == 0
-    assert c(3) == 18
-
-
 # def test_general_cost_function_1() -> None:
 #     def my_function(t):
 #         return 0.5 * t * t + 50

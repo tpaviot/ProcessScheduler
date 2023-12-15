@@ -15,7 +15,7 @@
 
 from pathlib import Path
 import random
-from typing import Tuple, Optional
+from typing import Optional, Tuple, Union
 
 try:
     import numpy as np
@@ -40,16 +40,20 @@ try:
 except ImportError as exc:
     HAVE_PLOTLY = False
 
-from processscheduler.function import Function
+from processscheduler.function import (
+    ConstantFunction,
+    LinearFunction,
+    PolynomialFunction,
+)
 from processscheduler.solution import SchedulingSolution
 
 
 def plot_function(
-    function: Function,
+    function: Union[ConstantFunction, LinearFunction, PolynomialFunction],
     interval: Tuple[float, float],
     show_plot=True,
     n_points=100,
-    label="Function",
+    title="Function",
 ) -> None:
     """Plot the function curve using matplotlib."""
     if not HAVE_MATPLOTLIB:
@@ -61,8 +65,26 @@ def plot_function(
     lower_bound, upper_bound = interval
     x = np.linspace(lower_bound, upper_bound, n_points)
     y = [function(x_) for x_ in x]
-    plt.plot(x, y, label="Function")
+    if isinstance(function, ConstantFunction):
+        label_function = f"$f(t)={function.value}$"
+    elif isinstance(function, LinearFunction):
+        label_function = f"$f(t)={function.slope} t + {function.intercept}$"
+    elif isinstance(function, PolynomialFunction):
+        degree = len(function.coefficients) - 1
+        label_function = "$"
+        first_coeff = function.coefficients[0]
+        if first_coeff != 0:
+            label_function += f"{first_coeff}t^{degree}"
+        for i, coefficient in enumerate(function.coefficients[1:-1]):
+            if coefficient != 0:
+                label_function += f"+{coefficient}t^{degree-i}"
+        last_coeff = function.coefficients[-1]
+        if last_coeff != 0:
+            label_function += f"+{last_coeff}"
+        label_function += "$"
+    plt.plot(x, y, label=label_function)
     plt.legend()
+    plt.title(title)
     plt.grid(True)
     plt.xlabel("t")
     plt.ylabel("F(t)")

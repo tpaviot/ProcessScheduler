@@ -80,9 +80,9 @@ nav:
     - First Order Logics: first_order_logic_constraints.md
   - Measure:
     - Indicators: indicator.md
-  - Optimize:
-    - Objectives: objectives.md
-  - Solve: solving.md
+  - Solve:
+    - Solver: solving.md
+    - Optimize objectives: objectives.md
   - Render:
     - Gantt Chart: gantt_chart.md
     - Data exchange: data_exchange.md

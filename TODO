@@ -28,7 +28,7 @@ The V2 branch is a reformating of the codebase that results in backward incompat
 
 [X] Objective start latest should take an optional list of tasks as a parameter
 
-[ ] Use object (unique) names for object creation
+[X] Use object (unique) names for object creation
 
 [WIP] Refactor Indicators and Objectives to get be consistent with other objects
 
@@ -39,3 +39,5 @@ The V2 branch is a reformating of the codebase that results in backward incompat
 [X] in problem, change add_objectve_minimal
 
 [ ] in solver, change parameter "min" and "max" of incremental_solver to "minimize" and "maximize" and match the objective 'kind' parameter
+
+[ ] use the new plotly api to render gantt chart
