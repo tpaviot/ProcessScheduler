@@ -90,9 +90,11 @@ class PolynomialFunction(Function):
 
 
 class GeneralFunction(Function):
-    func: Callable
+    """A function defined from a python function"""
+
+    function: Callable
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
 
-        self.set_cost_function(self.func)
+        self.set_function(self.function)

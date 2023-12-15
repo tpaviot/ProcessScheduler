@@ -29,12 +29,11 @@ def _get_assertions(constraint: Union[z3.BoolRef, Constraint]) -> z3.BoolRef:
     """Take a z3.BoolRef or any Constraint and returns the assertions for this object."""
     if isinstance(constraint, z3.BoolRef):
         assertion = constraint
-    elif isinstance(constraint, Constraint):
+    else:  # Constraint
         # tag this constraint as defined from an expression
         constraint.set_created_from_assertion()
         assertion = constraint.get_z3_assertions()
-    else:
-        raise TypeError("constraint must either be a Constraint or z3.BoolRef instance")
+
     return assertion
 
 

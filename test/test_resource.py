@@ -15,8 +15,6 @@
 
 import processscheduler as ps
 
-# import processscheduler.context as ps_context
-
 from pydantic import ValidationError
 import pytest
 
@@ -48,6 +46,13 @@ def test_create_problem_without_horizon() -> None:
 #
 # Workers
 #
+def test_create_worker_without_problem() -> None:
+    ps.base.active_problem = None
+    # no active problem defined, no way to create a resource
+    with pytest.raises(AssertionError):
+        ps.Worker(name="Bob")
+
+
 def test_create_worker() -> None:
     new_problem_or_clear()
     worker = ps.Worker(name="wkr")

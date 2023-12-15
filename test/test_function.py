@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+import math
 
 import processscheduler as ps
 
@@ -67,6 +68,18 @@ def test_polynomial_function_4() -> None:
     c = ps.PolynomialFunction(coefficients=[2, 0, 0])
     assert c(0) == 0
     assert c(3) == 18
+
+
+#
+# General function
+#
+def test_general_function() -> None:
+    def f(x):
+        return math.sin(x)
+
+    gen_sin = ps.GeneralFunction(function=f)
+    assert gen_sin(0) == 0
+    assert gen_sin(math.pi / 2) == 1
 
 
 #
