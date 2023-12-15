@@ -6,18 +6,40 @@ According to the [APICS dictionary](https://www.ascm.org/), a task may either be
 
 2. In activity-based cost accounting, a task, a subdivision of an activity, is the least amount of work. Tasks are used to describe activities.
 
-In the context of this software library, the concept of a task aligns with the first definition. ProcessScheduler's primary objective is to compute a chronological sequence, or temporal order, for a collection of tasks while adhering to a specific set of constraints.
+In the context of this software library, the concept of a task aligns with the first definition : the **lowest level to which work can be divided on a project**. ProcessScheduler's primary objective is to compute a chronological sequence, or temporal order, for a collection of tasks while adhering to a specific set of constraints. Three types of `Task` may be used to represent a scheduling problem : **ZeroDurationTask**, **FixedDurationTask** and **VariableDurationTask**. They follow the inheritance class diagram represented below.
 
-The inheritance class diagram is the following:
 ``` mermaid
 classDiagram
   Task <|-- ZeroDurationTask
   Task <|-- FixedDurationTask
   Task <|-- VariableDurationTask
+class Task{
+    +str name
+    +bool optional
+    +int release_date
+    +int due_date
+    +bool due_date_is_deadline
+    +int priority
+    +int work_amount
+}
+
 ```
 ## Common base Task model
 
-The `Task` class and its derivatives represent any task. A `Task` instance is defined by the three following parameters:
+The `Task` class and its derivatives represent any activity. The parameters for the creation of a `Task` are the following:
+
+| Parameter name | Type | Default Value |Description |
+| ----------- | -----| ---|--------------------------------- |
+| name | str | unique string | The name of the task **must be unique** among all other tasks |
+|optional | bool | False | If the task is optional || optional | bool | False | If the task is optional |
+| release_date | int | None | Also be referred to as the ready date. It is the time the job arrives at the system, i.e., the earliest time at which the task can start its processing |
+| due_date | int | None | the committed shipping or completion date (i.e., the date the job is promised to the customer)|
+| due_date_is_deadline | bool | False | if `False`, completion of the task after its due date is allowed, but then a penalty is incurred. If `True` the task cannot be scheduled *after* its due_date |
+| priority | int | 1 | A number denoting the importance of the task relative to the other tasks in the system. A task with a priority of 10 should be considered as 10 times more important than a task with a priority of 1 |
+| work_amount | int | 0 | the quantity of work necessary to be completed by all the resources assigned |
+
+
+A `Task` instance is defined by the three following parameters:
 
 - `start`: a point in the $[0, horizon]$ integer interval. If the task is scheduled, then $start>=0$
 
@@ -80,7 +102,7 @@ english_lesson = VariableDurationTask(name='EnglishLesson',
 
 ### Work amount
 
-The `work_amount` is the total amount of work that the `Task` must provide. It is set to :const:`0` by default. The `work_amount` is a dimensionless positive integer value, it can be mapped to any unit according to the physical meaning of the work amount. For example, if the task target is to move small pieces of wood from one point to another, then the work_amount maybe 166000 if 166000 pieces of woods are to be moved. In a maintenance task, if there are 8 screws to unscrew, the UnScrew work_amount will be set to 8.
+The `work_amount` is the total amount of work that the `Task` must provide. It is set to `0` by default. The `work_amount` is a dimensionless positive integer value, it can be mapped to any unit according to the physical meaning of the work amount. For example, if the task target is to move small pieces of wood from one point to another, then the work_amount maybe 166000 if 166000 pieces of woods are to be moved. In a maintenance task, if there are 8 screws to unscrew, the UnScrew work_amount will be set to 8.
 
 ### Temporal priority
 
