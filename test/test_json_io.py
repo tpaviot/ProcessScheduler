@@ -159,42 +159,42 @@ def test_SelectWorkers_from_json(my_tmp_path):
 
 # costs
 def test_constant_cost_function_to_json(my_tmp_path):
-    constant_cost_function = ps.ConstantCostFunction(value=2)
+    constant_cost_function = ps.ConstantFunction(value=2)
     constant_cost_function.to_json_file(my_tmp_path / "constant_cost_function.json")
 
 
 def test_constant_cost_function_from_json(my_tmp_path):
     # to build a select workers, first read
     with open(my_tmp_path / "constant_cost_function.json", "r") as f:
-        ccf = ps.ConstantCostFunction.model_validate_json(f.read())
+        ccf = ps.ConstantFunction.model_validate_json(f.read())
 
     assert ccf(0) == 2
     assert ccf(8) == 2
 
 
 def test_linear_cost_function_to_json(my_tmp_path):
-    linear_cost_function = ps.LinearCostFunction(slope=-1, intercept=2)
+    linear_cost_function = ps.LinearFunction(slope=-1, intercept=2)
     linear_cost_function.to_json_file(my_tmp_path / "linear_cost_function.json")
 
 
 def test_linear_cost_function_from_json(my_tmp_path):
     # to build a select workers, first read
     with open(my_tmp_path / "linear_cost_function.json", "r") as f:
-        lcf = ps.LinearCostFunction.model_validate_json(f.read())
+        lcf = ps.LinearFunction.model_validate_json(f.read())
 
     assert lcf(0) == 2
     assert lcf(7) == -5
 
 
 def test_polynomial_cost_function_to_json(my_tmp_path):
-    polynomial_cost_function = ps.PolynomialCostFunction(coefficients=[1, 2, 3, 4])
+    polynomial_cost_function = ps.PolynomialFunction(coefficients=[1, 2, 3, 4])
     polynomial_cost_function.to_json_file(my_tmp_path / "polynomial_cost_function.json")
 
 
 def test_polynomial_cost_function_from_json(my_tmp_path):
     # to build a select workers, first read
     with open(my_tmp_path / "polynomial_cost_function.json", "r") as f:
-        pcf = ps.PolynomialCostFunction.model_validate_json(f.read())
+        pcf = ps.PolynomialFunction.model_validate_json(f.read())
 
     def p(x):
         return x**3 + 2 * x**2 + 3 * x + 4

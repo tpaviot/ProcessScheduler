@@ -25,7 +25,7 @@ from pydantic import Field, model_serializer
 from processscheduler.base import NamedUIDObject
 from processscheduler.task import Task
 from processscheduler.resource import Worker, CumulativeWorker
-from processscheduler.cost import ConstantCostFunction
+from processscheduler.function import ConstantFunction
 from processscheduler.buffer import ConcurrentBuffer, NonConcurrentBuffer
 from processscheduler.util import get_minimum, get_maximum
 from processscheduler.indicator import (

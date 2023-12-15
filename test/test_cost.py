@@ -22,44 +22,44 @@ import pytest
 
 
 def test_constant_cost_function_1() -> None:
-    c = ps.ConstantCostFunction(value=55)
+    c = ps.ConstantFunction(value=55)
     assert c(0) == 55
     assert c(10) == 55
 
 
 def test_basic_linear_function_1() -> None:
-    c = ps.LinearCostFunction(slope=1, intercept=1)
+    c = ps.LinearFunction(slope=1, intercept=1)
     assert c(0) == 1
     assert c(-1) == 0
 
 
 def test_horizontal_linear_function_1() -> None:
-    c = ps.LinearCostFunction(slope=0, intercept=3)
+    c = ps.LinearFunction(slope=0, intercept=3)
     assert c(0) == 3
     assert c(-1) == 3
 
 
 def test_polynomial_function_1() -> None:
-    c = ps.PolynomialCostFunction(coefficients=[1, 1])
+    c = ps.PolynomialFunction(coefficients=[1, 1])
     assert c(0) == 1
     assert c(-1) == 0
 
 
 def test_polynomial_function_2() -> None:
-    c = ps.PolynomialCostFunction(coefficients=[0, 4])
+    c = ps.PolynomialFunction(coefficients=[0, 4])
     assert c(0) == 4
     assert c(-1) == 4
 
 
 def test_polynomial_function_3() -> None:
-    c = ps.PolynomialCostFunction(coefficients=[1, 1, 1])
+    c = ps.PolynomialFunction(coefficients=[1, 1, 1])
     assert c(0) == 1
     assert c(1) == 3
     assert c(2) == 7
 
 
 def test_polynomial_function_4() -> None:
-    c = ps.PolynomialCostFunction(coefficients=[2, 0, 0])
+    c = ps.PolynomialFunction(coefficients=[2, 0, 0])
     assert c(0) == 0
     assert c(3) == 18
 
@@ -75,7 +75,7 @@ def test_polynomial_function_4() -> None:
 
 def test_worker_cost_const() -> None:
     ps.SchedulingProblem(name="CostBasic", horizon=12)
-    ress_cost = ps.ConstantCostFunction(value=5)
+    ress_cost = ps.ConstantFunction(value=5)
     ps.Worker(name="Worker1", cost=ress_cost)
 
 
@@ -91,7 +91,7 @@ def test_worker_cost_const() -> None:
 def test_constant_cost_per_period_1() -> None:
     problem = ps.SchedulingProblem(name="IndicatorResourceConstantCostPerPeriod1")
     t_1 = ps.FixedDurationTask(name="t1", duration=11)
-    worker_1 = ps.Worker(name="Worker1", cost=ps.ConstantCostFunction(value=7))
+    worker_1 = ps.Worker(name="Worker1", cost=ps.ConstantFunction(value=7))
     t_1.add_required_resource(worker_1)
     cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
 
@@ -105,10 +105,10 @@ def test_constant_cost_per_period_2() -> None:
     problem = ps.SchedulingProblem(name="IndicatorResourceConstantCostPerPeriod2")
     t_1 = ps.VariableDurationTask(name="t1", work_amount=100)
     worker_1 = ps.Worker(
-        name="Worker1", productivity=4, cost=ps.ConstantCostFunction(value=10)
+        name="Worker1", productivity=4, cost=ps.ConstantFunction(value=10)
     )
     worker_2 = ps.Worker(
-        name="Worker2", productivity=7, cost=ps.ConstantCostFunction(value=20)
+        name="Worker2", productivity=7, cost=ps.ConstantFunction(value=20)
     )
     all_workers = [worker_1, worker_2]
 
@@ -131,7 +131,7 @@ def test_linear_cost_1() -> None:
 
     worker_1 = ps.Worker(
         name="Worker1",
-        cost=ps.LinearCostFunction(slope=23, intercept=3),
+        cost=ps.LinearFunction(slope=23, intercept=3),
     )
     t_1.add_required_resource(worker_1)
 
@@ -159,7 +159,7 @@ def test_optimize_linear_cost_1() -> None:
 
     worker_1 = ps.Worker(
         name="Worker1",
-        cost=ps.LinearCostFunction(slope=23, intercept=3),
+        cost=ps.LinearFunction(slope=23, intercept=3),
     )
     t_1.add_required_resource(worker_1)
 
@@ -191,7 +191,7 @@ def test_optimize_linear_cost_2() -> None:
 
     worker_1 = ps.Worker(
         name="Worker1",
-        cost=ps.LinearCostFunction(slope=-5, intercept=711),
+        cost=ps.LinearFunction(slope=-5, intercept=711),
     )
     t_1.add_required_resource(worker_1)
 
@@ -221,7 +221,7 @@ def test_optimize_linear_cost_3() -> None:
 
     t_1 = ps.FixedDurationTask(name="t1", duration=17)
 
-    cf = ps.LinearCostFunction(slope=23.12, intercept=3.4)
+    cf = ps.LinearFunction(slope=23.12, intercept=3.4)
 
     worker_1 = ps.Worker(name="Worker1", cost=cf)
     t_1.add_required_resource(worker_1)
@@ -241,7 +241,7 @@ def test_quadratic_cost_1() -> None:
 
     worker_1 = ps.Worker(
         name="Worker1",
-        cost=ps.PolynomialCostFunction(coefficients=[23, 13, 513]),
+        cost=ps.PolynomialFunction(coefficients=[23, 13, 513]),
     )
     t_1.add_required_resource(worker_1)
 
@@ -273,7 +273,7 @@ def test_optimize_quadratic_cost_2() -> None:
     # cost_function(t)= (t - 8) * (t - 8) + 100
 
     worker_1 = ps.Worker(
-        name="Worker1", cost=ps.PolynomialCostFunction(coefficients=[1, -16, 164])
+        name="Worker1", cost=ps.PolynomialFunction(coefficients=[1, -16, 164])
     )
     t_1.add_required_resource(worker_1)
 
@@ -290,7 +290,7 @@ def test_optimize_quadratic_cost_2() -> None:
 #     def int_cost_function(t):
 #         return (t - 8) * (t - 8) + 513
 
-#     cost = ps.PolynomialCostFunction(cost_function=int_cost_function)
+#     cost = ps.PolynomialFunction(cost_function=int_cost_function)
 
 #     cost.plot([0, 40], show_plot=False)
 
@@ -301,7 +301,7 @@ def test_cumulative_cost():
     t_2 = ps.FixedDurationTask(name="t2", duration=5)
     t_3 = ps.FixedDurationTask(name="t3", duration=5)
     worker_1 = ps.CumulativeWorker(
-        name="CumulWorker", size=3, cost=ps.ConstantCostFunction(value=5)
+        name="CumulWorker", size=3, cost=ps.ConstantFunction(value=5)
     )
     t_1.add_required_resource(worker_1)
     t_2.add_required_resource(worker_1)
@@ -326,7 +326,7 @@ def test_incremental_optimizer_linear_cost_1() -> None:
 
     worker_1 = ps.Worker(
         name="Worker1",
-        cost=ps.LinearCostFunction(slope=-23, intercept=321),
+        cost=ps.LinearFunction(slope=-23, intercept=321),
     )
     t_1.add_required_resource(worker_1)
 

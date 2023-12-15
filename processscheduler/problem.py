@@ -32,11 +32,11 @@ from processscheduler.task import (
     ZeroDurationTask,
     VariableDurationTask,
 )
-from processscheduler.cost import (
-    ConstantCostFunction,
-    LinearCostFunction,
-    PolynomialCostFunction,
-    GeneralCostFunction,
+from processscheduler.function import (
+    ConstantFunction,
+    LinearFunction,
+    PolynomialFunction,
+    GeneralFunction,
 )
 from processscheduler.indicator import (
     Indicator,

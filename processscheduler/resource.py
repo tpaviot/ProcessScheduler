@@ -20,10 +20,10 @@ import z3
 from pydantic import Field, PositiveInt, model_serializer
 
 from processscheduler.base import NamedUIDObject
-from processscheduler.cost import (
-    ConstantCostFunction,
-    LinearCostFunction,
-    PolynomialCostFunction,
+from processscheduler.function import (
+    ConstantFunction,
+    LinearFunction,
+    PolynomialFunction,
 )
 
 # import processscheduler.context as ps_context
@@ -39,7 +39,7 @@ def _distribute_p_over_n(p, n):
         return [None for _ in range(n)]
     if isinstance(p, int):
         int_value = p
-    elif isinstance(p, ConstantCostFunction):
+    elif isinstance(p, ConstantFunction):
         int_value = p.value
     else:
         raise AssertionError("wrong type for parameter p")
@@ -82,9 +82,9 @@ class Worker(Resource):
     Typical workers are human beings, machines etc."""
 
     productivity: int = Field(default=1, ge=0)  # productivity >= 0
-    cost: Union[
-        ConstantCostFunction, LinearCostFunction, PolynomialCostFunction
-    ] = Field(default=ConstantCostFunction(value=0))
+    cost: Union[ConstantFunction, LinearFunction, PolynomialFunction] = Field(
+        default=ConstantFunction(value=0)
+    )
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -103,9 +103,9 @@ class CumulativeWorker(Resource):
     # size is 2 min, otherwise it should be a single worker
     size: int = Field(gt=1)  # size strictly > 1
     productivity: PositiveInt = Field(default=1)
-    cost: Union[
-        ConstantCostFunction, LinearCostFunction, PolynomialCostFunction
-    ] = Field(default=ConstantCostFunction(value=0))
+    cost: Union[ConstantFunction, LinearFunction, PolynomialFunction] = Field(
+        default=ConstantFunction(value=0)
+    )
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -121,7 +121,7 @@ class CumulativeWorker(Resource):
             Worker(
                 name=f"{self.name}_CumulativeWorker_{i+1}",
                 productivity=productivities[i],
-                cost=ConstantCostFunction(value=costs_per_period[i])
+                cost=ConstantFunction(value=costs_per_period[i])
                 if costs_per_period[i] is not None
                 else None,
             )

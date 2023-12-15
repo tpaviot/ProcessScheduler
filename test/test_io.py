@@ -26,14 +26,14 @@ def build_excavator_problem() -> ps.SchedulingProblem:
     dig_small_hole = ps.VariableDurationTask(name="DigSmallHole", work_amount=3)
     dig_medium_hole = ps.VariableDurationTask(name="DigMediumHole", work_amount=7)
     dig_huge_hole = ps.VariableDurationTask(name="DigHugeHole", work_amount=15)
-    # medium_exc_cost = ps.PolynomialCostFunction(cost_function=cost_function_medium_exc)
+    # medium_exc_cost = ps.PolynomialFunction(cost_function=cost_function_medium_exc)
 
     # two workers
     small_exc = ps.Worker(
-        name="SmallExcavator", productivity=4, cost=ps.ConstantCostFunction(value=5)
+        name="SmallExcavator", productivity=4, cost=ps.ConstantFunction(value=5)
     )
     medium_ex = ps.Worker(
-        name="MediumExcavator", productivity=6, cost=ps.ConstantCostFunction(value=10)
+        name="MediumExcavator", productivity=6, cost=ps.ConstantFunction(value=10)
     )
 
     dig_small_hole.add_required_resource(

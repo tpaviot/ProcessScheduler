@@ -55,7 +55,9 @@ driller_2 = Worker(namme='Driller1',
 
 ## Resource cost
 
-You can associate cost information with any resource, enabling ProcessScheduler to compute the total cost of a schedule, the cost per resource, or optimize the schedule to minimize costs (see the Objective section for details). There are two ways to define resource costs:
+You can associate cost information with any resource, enabling ProcessScheduler to compute the total cost of a schedule, the cost per resource, or optimize the schedule to minimize costs (see the Objective section for details).
+
+The resource cost can be defined as a **time dependant [Function](function.md)**.
 
 ### Constant Cost Per Period
 
@@ -63,7 +65,7 @@ In this approach, the resource's cost remains constant over time.
 
 ``` py
 dev_1 = Worker(name='SeniorDeveloper',
-               cost=ConstantCostFunction(750))
+               cost=ConstantFunction(750))
 ```
 
 $$C(t) = k, k \in \mathbb{N}$$
@@ -72,7 +74,10 @@ $$C(t) = k, k \in \mathbb{N}$$
 
 $$C(t)=slope * t + intercept, (slope, intercept) \in \mathbb{N} \times \mathbb{N}$$
 
-ml
+``` py
+dev_1 = Worker(name='SeniorDeveloper',
+               cost=LinearFunction(slope=2, intercept=23))
+```
 
 ### Polynomial Cost Function
 
@@ -83,9 +88,8 @@ This method allows you to represent resource costs as a polynomial function of t
 ``` py
 def quadratic_time_function(t):
     return (t-20)**2 + 154
-cost_function = PolynomialCostFunction(quadratic_time_function)
 dev_1 = Worker(name='AWorker',
-               cost=cost_function)
+               cost=PolynomialFunction(coefficients = [400, 0, 20]))
 ```
 
 The worker `cost` is set to `None` by default.
@@ -103,4 +107,4 @@ cost_function.plot([0, 200])
 
 !!! note
 
-  The worker `cost_per_period` is useful to measure the total cost of a resource/a set of resources/a schedule, or to find the schedule that minimizes the total cost of a resource/a set of resources/ a schedule.
+  The worker `cost` is useful to measure the total cost of a resource/a set of resources/a schedule, or to find the schedule that minimizes the total cost of a resource/a set of resources/ a schedule.

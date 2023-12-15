@@ -72,6 +72,7 @@ nav:
     - Resources: resource.md
     - Resource Assignmnent: resource_assignment.md
     - Buffers: buffer.md
+    - Functions: function.md
   - Constraint:
     - Task constraints: task_constraints.md
     - Resource Constraints: resource_constraints.md

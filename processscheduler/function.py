@@ -23,19 +23,19 @@ from pydantic import Field
 import z3
 
 
-class Cost(NamedUIDObject):
-    """The base class for cost definition, to be assigned to a resource"""
+class Function(NamedUIDObject):
+    """The base class for function definition, to be used for cost or penalties"""
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
-        self._cost_function = lambda x: 0  # default returns 0
+        self._function = lambda x: 0  # default returns 0
 
-    def set_cost_function(self, f: Callable):
-        self._cost_function = f
+    def set_function(self, f: Callable):
+        self._function = f
 
     def __call__(self, value):
         """compute the value of the cost function for a given value"""
-        to_return = self._cost_function(value)
+        to_return = self._function(value)
         # check if there is a ToReal conversion in the function
         # this may occur if the cost function is not linear
         # and this would result in an unexpected computation
@@ -47,17 +47,17 @@ class Cost(NamedUIDObject):
         return to_return
 
 
-class ConstantCostFunction(Cost):
+class ConstantFunction(Function):
     value: Union[int, float]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
-        self.set_cost_function(lambda x: self.value)
+        self.set_function(lambda x: self.value)
 
 
-class LinearCostFunction(Cost):
-    """A linear cost function:
-    C(x) = slope * x + intercept
+class LinearFunction(Function):
+    """A linear function:
+    F(x) = slope * x + intercept
     """
 
     slope: Union[z3.ArithRef, int, float]
@@ -65,10 +65,10 @@ class LinearCostFunction(Cost):
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
-        self.set_cost_function(lambda x: self.slope * x + self.intercept)
+        self.set_function(lambda x: self.slope * x + self.intercept)
 
 
-class PolynomialCostFunction(Cost):
+class PolynomialFunction(Function):
     """A cost function under a polynomial form.
     C(x) = a_n * x^n + a_{n-1} * x^(n-1) + ... + a_0"""
 
@@ -77,7 +77,7 @@ class PolynomialCostFunction(Cost):
     def __init__(self, **data) -> None:
         super().__init__(**data)
 
-        def compute_cost(x):
+        def _compute(x):
             result = self.coefficients[-1]
             v = x
             for i in range(len(self.coefficients) - 2, -1, -1):
@@ -86,10 +86,10 @@ class PolynomialCostFunction(Cost):
                 v = v * x
             return result
 
-        self.set_cost_function(compute_cost)
+        self.set_function(_compute)
 
 
-class GeneralCostFunction(Cost):
+class GeneralFunction(Function):
     func: Callable
 
     def __init__(self, **data) -> None:

@@ -40,18 +40,18 @@ try:
 except ImportError as exc:
     HAVE_PLOTLY = False
 
-from processscheduler.cost import Cost
+from processscheduler.function import Function
 from processscheduler.solution import SchedulingSolution
 
 
-def plot_cost(
-    cost_function: Cost,
+def plot_function(
+    function: Function,
     interval: Tuple[float, float],
     show_plot=True,
     n_points=100,
-    label="Cost function",
+    label="Function",
 ) -> None:
-    """Plot the cost curve using matplotlib."""
+    """Plot the function curve using matplotlib."""
     if not HAVE_MATPLOTLIB:
         raise ModuleNotFoundError("matplotlib is not installed.") from exc
 
@@ -60,13 +60,12 @@ def plot_cost(
 
     lower_bound, upper_bound = interval
     x = np.linspace(lower_bound, upper_bound, n_points)
-    y = [cost_function(x_) for x_ in x]
-    plt.plot(x, y, label="Cost function")
-
+    y = [function(x_) for x_ in x]
+    plt.plot(x, y, label="Function")
     plt.legend()
     plt.grid(True)
     plt.xlabel("t")
-    plt.ylabel("C(t)")
+    plt.ylabel("F(t)")
 
     if show_plot:
         plt.show()

@@ -55,9 +55,7 @@ def test_gantt_matplotlib_indicator():
 
     t_1 = ps.FixedDurationTask(name="T1", duration=5)
     ps.FixedDurationTask(name="T2", duration=5)  # task with no resource
-    worker_1 = ps.Worker(
-        name="Worker1", cost=ps.LinearCostFunction(slope=23, intercept=3)
-    )
+    worker_1 = ps.Worker(name="Worker1", cost=ps.LinearFunction(slope=23, intercept=3))
     t_1.add_required_resource(worker_1)
 
     ff = ps.IndicatorResourceCost(list_of_resources=[worker_1])
@@ -210,7 +208,7 @@ def test_gantt_plotly_with_indicators_figsize():
 
     t_1 = ps.FixedDurationTask(name="T1", duration=5)
     ps.FixedDurationTask(name="T2", duration=5)  # task with no resource
-    worker_1 = ps.Worker(name="Worker1", cost=ps.ConstantCostFunction(value=74))
+    worker_1 = ps.Worker(name="Worker1", cost=ps.ConstantFunction(value=74))
     t_1.add_required_resource(worker_1)
 
     ps.IndicatorResourceCost(list_of_resources=[worker_1])

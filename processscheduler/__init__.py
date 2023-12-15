@@ -64,17 +64,17 @@ from processscheduler.resource_constraint import (
     ResourceTasksDistance,
 )
 from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
-from processscheduler.cost import (
-    ConstantCostFunction,
-    LinearCostFunction,
-    PolynomialCostFunction,
-    GeneralCostFunction,
+from processscheduler.function import (
+    ConstantFunction,
+    LinearFunction,
+    PolynomialFunction,
+    GeneralFunction,
 )
 from processscheduler.problem import SchedulingProblem
 from processscheduler.solver import SchedulingSolver
 from processscheduler.buffer import NonConcurrentBuffer, ConcurrentBuffer
 from processscheduler.plotter import (
-    plot_cost,
+    plot_function,
     render_gantt_matplotlib,
     render_gantt_plotly,
 )

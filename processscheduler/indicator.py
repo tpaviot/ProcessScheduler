@@ -25,7 +25,7 @@ from pydantic import Field, model_serializer
 from processscheduler.base import NamedUIDObject
 from processscheduler.task import Task
 from processscheduler.resource import Worker, CumulativeWorker
-from processscheduler.cost import ConstantCostFunction
+from processscheduler.function import ConstantFunction
 from processscheduler.buffer import ConcurrentBuffer, NonConcurrentBuffer
 from processscheduler.util import get_minimum, get_maximum
 import processscheduler.base
@@ -203,7 +203,7 @@ class IndicatorResourceCost(Indicator):
 
             for interv_low, interv_up in res._busy_intervals.values():
                 # Constant cost per period
-                if isinstance(res.cost, ConstantCostFunction):
+                if isinstance(res.cost, ConstantFunction):
                     # res.cost(interv_up), res.cost(interv_low)
                     # or res.cost.value give the same result because the function is constant
                     cost_for_this_period = res.cost(interv_up)
