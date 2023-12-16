@@ -444,6 +444,57 @@ def test_work_amount_2():
 
 
 #
+# Multiple objectives
+#
+def test_multiple_objective_lateness_tardiness() -> None:
+    """Example 4.1.5 of the Pinedo book. In the book, the heuristics leads to
+    1,3,6,5,4,2"""
+    problem = ps.SchedulingProblem(name="MultipleObjectiveLatenessTardiness")
+
+    task_1 = ps.FixedDurationTask(
+        name="task1", duration=106, due_date=180, due_date_is_deadline=False
+    )
+    task_2 = ps.FixedDurationTask(
+        name="task2", duration=100, due_date=180, due_date_is_deadline=False
+    )
+    task_3 = ps.FixedDurationTask(
+        name="task3", duration=96, due_date=180, due_date_is_deadline=False
+    )
+    task_4 = ps.FixedDurationTask(
+        name="task4", duration=22, due_date=180, due_date_is_deadline=False
+    )
+    task_5 = ps.FixedDurationTask(
+        name="task5", duration=20, due_date=180, due_date_is_deadline=False
+    )
+    task_6 = ps.FixedDurationTask(
+        name="task6", duration=2, due_date=180, due_date_is_deadline=False
+    )
+
+    single_machine = ps.Worker(name="Worker1")
+
+    all_tasks = [task_1, task_2, task_3, task_4, task_5, task_6]
+
+    for t in all_tasks:  # all the tasks are processed on the same machine
+        t.add_required_resource(single_machine)
+
+    total_tardiness = ps.IndicatorTardiness(list_of_tasks=all_tasks)
+    total_earliness = ps.IndicatorEarliness(list_of_tasks=all_tasks)
+
+    ob1 = ps.ObjectiveMinimizeIndicator(target=total_tardiness, weight=1)
+    ob2 = ps.ObjectiveMinimizeIndicator(target=total_earliness, weight=1)
+
+    solution = solve_problem(problem)
+    assert solution
+    # here, the solution is a bit different: 1, 4, 5, 6, 3, 2
+    # the optimial sum is 360
+    assert (
+        solution.indicators[total_tardiness.name]
+        + solution.indicators[total_earliness.name]
+        == 360
+    )
+
+
+#
 # Resource constraints
 #
 def test_all_same_distinct_workers():

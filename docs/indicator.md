@@ -25,6 +25,7 @@ Available builtin indicators are listed below:
 | Type      | Apply to | Description                          |
 | ----------- | -----| ------------------------------------ |
 | IndicatorTardiness | List of tasks | Unweighted total tardiness of the selected tasks |
+| IndicatorEarliness | List of tasks | Unweighted total earliness of the selected tasks |
 | IndicatorNumberOfTardyTasks | List of tasks | Number of tardy tasks from the selected tasks |
 | IndicatorMaximumLateness | List of tasks | Maximum lateness of selected tasks |
 | IndicatorResourceUtilization  | Single resource | Resource utilization, from 0% to 100% of the schedule horizon, of the selected resource |

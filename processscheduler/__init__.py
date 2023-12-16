@@ -26,6 +26,7 @@ from processscheduler.indicator import (
     Indicator,
     IndicatorFromMathExpression,
     IndicatorTardiness,
+    IndicatorEarliness,
     IndicatorNumberOfTardyTasks,
     IndicatorMaximumLateness,
     IndicatorResourceUtilization,

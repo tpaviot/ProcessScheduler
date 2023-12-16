@@ -135,6 +135,29 @@ class IndicatorTardiness(Indicator):
         self.append_z3_assertion(self._indicator_variable == expression)
 
 
+class IndicatorEarliness(Indicator):
+    """In practice, it may occur that if job j is completed before its due date dj an earliness
+    penalty is incurred. The earliness of job j is deﬁned as
+    Ej = max(dj − Cj , 0)."""
+
+    list_of_tasks: Union[List[Task], None] = Field(default=None)
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        if self.list_of_tasks is None:
+            tasks = processscheduler.base.active_problem.tasks.values()
+            self.name = "Total earliness"
+        else:
+            tasks = self.list_of_tasks
+            self.name = f"Earliness({','.join(t.name for t in self.list_of_tasks)})"
+        earliness_v = []
+        for t in tasks:
+            earliness_v.append(z3.If(t.due_date - t._end >= 0, t.due_date - t._end, 0))
+        expression = z3.Sum(earliness_v)
+        self.append_z3_assertion(self._indicator_variable == expression)
+
+
 class IndicatorNumberOfTardyTasks(Indicator):
     list_of_tasks: Union[List[Task], None] = Field(default=None)
 

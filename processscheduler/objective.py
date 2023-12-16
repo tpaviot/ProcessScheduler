@@ -63,7 +63,9 @@ class ObjectiveMaximizeIndicator(Objective):
     def __init__(self, **data) -> None:
         target = data["target"]
         weight = data["weight"]
-        super().__init__(name=f"Maximize{target.name}", weight=weight, kind="maximize")
+        super().__init__(
+            name=f"Maximize{target.name}", target=target, weight=weight, kind="maximize"
+        )
 
 
 class ObjectiveMinimizeIndicator(Objective):
@@ -71,7 +73,10 @@ class ObjectiveMinimizeIndicator(Objective):
         target = data["target"]
         weight = data["weight"]
         super().__init__(
-            name=f"Minimize{target.name}", weight=weight, kind="minimimize"
+            name=f"Minimize{target.name}",
+            target=target,
+            weight=weight,
+            kind="minimize",
         )
 
 
