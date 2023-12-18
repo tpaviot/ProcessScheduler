@@ -265,8 +265,8 @@ def test_json_export_problem_solver_1(my_tmp_path):
     task_3 = ps.ZeroDurationTask(name="task3")
 
     # buffers
-    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
-    buffer_2 = ps.NonConcurrentBuffer(name="Buffer2", initial_state=0)
+    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
+    buffer_2 = ps.NonConcurrentBuffer(name="Buffer2", initial_level=0)
 
     # resources
     worker_1 = ps.Worker(name="Worker1")

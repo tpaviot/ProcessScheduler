@@ -243,8 +243,8 @@ def test_load_unload_feed_buffers_1() -> None:
     pb = ps.SchedulingProblem(name="LoadUnloadBuffer1")
 
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
-    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
-    buffer_2 = ps.NonConcurrentBuffer(name="Buffer2", initial_state=0)
+    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
+    buffer_2 = ps.NonConcurrentBuffer(name="Buffer2", initial_level=0)
 
     ps.TaskStartAt(task=task_1, value=5)
     ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=3)

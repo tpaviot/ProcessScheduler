@@ -474,8 +474,11 @@ class SchedulingSolver(BaseModelWithJson):
     def build_solution(self, z3_sol):
         """create and return a SchedulingSolution instance"""
         solution = SchedulingSolution(problem=self.problem)
-        # set the horizon solution
-        solution.horizon = z3_sol[self.problem._horizon].as_long()
+        # horizon
+        if self.problem.horizon is not None:
+            solution.horizon = self.problem.horizon
+        else:
+            solution.horizon = z3_sol[self.problem._horizon].as_long()
 
         # process tasks
         for task in self.problem.tasks.values():

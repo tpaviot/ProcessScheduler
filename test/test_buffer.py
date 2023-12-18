@@ -29,16 +29,16 @@ def test_wrong_instanciation_buffer_1() -> None:
 
 def test_instanciate_buffer() -> None:
     ps.SchedulingProblem(name="BufferBasic", horizon=12)
-    ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+    ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
 
 
 def test_instanciate_buffer_error() -> None:
     ps.SchedulingProblem(name="BufferError", horizon=12)
-    ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+    ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
     # a buffer with that name already exist, adding a new
     # one with the same name should raise an ValueError exception
     with pytest.raises(ValueError):
-        ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+        ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
 
 
 # TODO: fix
@@ -57,7 +57,7 @@ def test_unload_buffer_1() -> None:
     pb = ps.SchedulingProblem(name="UnloadBuffer1")
 
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
-    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
 
     ps.TaskStartAt(task=task_1, value=5)
     ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=3)
@@ -76,7 +76,7 @@ def test_unload_buffer_2() -> None:
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
     task_3 = ps.FixedDurationTask(name="task3", duration=3)
-    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
 
     ps.TaskStartAt(task=task_1, value=5)
     ps.TaskStartAt(task=task_2, value=10)
@@ -96,7 +96,7 @@ def test_unload_buffer_3() -> None:
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
     task_3 = ps.FixedDurationTask(name="task3", duration=3)
-    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
 
     ps.TaskStartAt(task=task_1, value=5)
     ps.TaskStartAt(task=task_2, value=10)
@@ -129,7 +129,7 @@ def test_load_buffer_1() -> None:
     pb = ps.SchedulingProblem(name="LoadBuffer1")
 
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
-    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
 
     ps.TaskStartAt(task=task_1, value=5)
     ps.TaskLoadBuffer(task=task_1, buffer=buffer, quantity=3)
@@ -147,7 +147,7 @@ def test_load_buffer_2() -> None:
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
     task_3 = ps.FixedDurationTask(name="task3", duration=3)
-    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
 
     ps.TaskStartAt(task=task_1, value=5)
     ps.TaskStartAt(task=task_2, value=10)
@@ -168,8 +168,8 @@ def test_load_unload_feed_buffers_1() -> None:
     pb = ps.SchedulingProblem(name="LoadUnloadBuffer1")
 
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
-    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
-    buffer_2 = ps.NonConcurrentBuffer(name="Buffer2", initial_state=0)
+    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
+    buffer_2 = ps.NonConcurrentBuffer(name="Buffer2", initial_level=0)
 
     ps.TaskStartAt(task=task_1, value=5)
     ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=3)
@@ -197,7 +197,7 @@ def test_buffer_bounds_1() -> None:
     ]
     # create buffer
     buffer = ps.NonConcurrentBuffer(
-        name="Buffer1", lower_bound=0, upper_bound=1, initial_state=1
+        name="Buffer1", lower_bound=0, upper_bound=1, initial_level=1
     )
 
     for t in unloading_tasks:
@@ -221,7 +221,7 @@ def test_unload_buffer_multiple_1() -> None:
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
 
-    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
 
     ps.TaskStartAt(task=task_1, value=5)
     ps.TaskStartAt(task=task_2, value=6)
@@ -244,7 +244,7 @@ def test_unload_buffer_multiple_3() -> None:
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
     task_3 = ps.FixedDurationTask(name="task3", duration=4)
 
-    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=13)
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_level=13)
 
     ps.TaskStartAt(task=task_1, value=7)
     ps.TaskStartAt(task=task_2, value=8)
@@ -272,7 +272,7 @@ def test_unload_buffer_concurrent_1() -> None:
     task_2 = ps.FixedDurationTask(name="task2", duration=4)
     task_3 = ps.FixedDurationTask(name="task3", duration=5)
 
-    buffer = ps.ConcurrentBuffer(name="Buffer1", initial_state=100)
+    buffer = ps.ConcurrentBuffer(name="Buffer1", initial_level=100)
 
     ps.TaskStartAt(task=task_1, value=7)
     ps.TaskStartAt(task=task_2, value=7)
@@ -298,7 +298,7 @@ def test_unload_buffer_concurrent_2() -> None:
     task_2 = ps.FixedDurationTask(name="task2", duration=4)
     task_3 = ps.FixedDurationTask(name="task3", duration=5)
 
-    buffer = ps.ConcurrentBuffer(name="Buffer1", initial_state=100)
+    buffer = ps.ConcurrentBuffer(name="Buffer1", initial_level=100)
 
     ps.TaskStartAt(task=task_1, value=7)
     ps.TaskStartAt(task=task_2, value=7)
@@ -328,7 +328,7 @@ def test_unload_buffer_multiple_4() -> None:
     task_3 = ps.FixedDurationTask(name="task3", duration=3)
     task_4 = ps.FixedDurationTask(name="task4", duration=3)
 
-    buffer = ps.ConcurrentBuffer(name="Buffer1", initial_state=20)
+    buffer = ps.ConcurrentBuffer(name="Buffer1", initial_level=20)
 
     ps.TaskStartAt(task=task_1, value=5)
     ps.TaskStartAt(task=task_2, value=5)
@@ -367,7 +367,7 @@ def test_load_unload_concurrent_1() -> None:
         )
 
     # one buffer
-    buffer = ps.ConcurrentBuffer(name="Buffer1", initial_state=179)
+    buffer = ps.ConcurrentBuffer(name="Buffer1", initial_level=179)
 
     # as many load tasks
     for t in load_tasks:
@@ -401,7 +401,7 @@ def test_load_unload_non_concurrent_1() -> None:
         )
 
     # one buffer
-    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_state=179)
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_level=179)
 
     # as many load tasks
     for t in load_tasks:
@@ -424,7 +424,7 @@ def test_buffer_indicator_1() -> None:
     pb = ps.SchedulingProblem(name="BufferIndicator1")
 
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
-    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
     ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=3)
     ps.TaskStartAt(task=task_1, value=0)
     indic_max = ps.IndicatorMaxBufferLevel(buffer=buffer_1)
@@ -451,7 +451,7 @@ def test_objective_maximize_max_buffer_level_1() -> None:
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
 
-    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
 
     ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=3)
     ps.TaskLoadBuffer(task=task_2, buffer=buffer_1, quantity=8)
@@ -477,7 +477,7 @@ def test_objective_maximize_max_buffer_level_2() -> None:
     for i in range(N):
         tasks.append(ps.FixedDurationTask(name=f"task{i}", duration=3))
 
-    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=0)
+    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_level=0)
 
     for i in range(0, N, 2):
         ps.TaskUnloadBuffer(task=tasks[i], buffer=buffer_1, quantity=3)
@@ -504,7 +504,7 @@ def test_objective_minimize_max_buffer_level_1() -> None:
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
 
-    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_state=10)
+    buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
 
     ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=3)
     ps.TaskLoadBuffer(task=task_2, buffer=buffer_1, quantity=8)

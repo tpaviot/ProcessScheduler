@@ -28,7 +28,7 @@ from pydantic import Field
 
 
 class Buffer(NamedUIDObject):
-    initial_state: int = Field(default=None)
+    initial_level: int = Field(default=None)
     final_state: int = Field(default=None)
     lower_bound: int = Field(default=None)
     upper_bound: int = Field(default=None)
@@ -41,7 +41,7 @@ class Buffer(NamedUIDObject):
                 "No context available. First create a SchedulingProblem"
             )
 
-        if self.initial_state is None and self.final_state is None:
+        if self.initial_level is None and self.final_state is None:
             raise AssertionError("At least initial state or final state must be set")
 
         # a dict that contains all tasks that consume this buffer
@@ -54,11 +54,11 @@ class Buffer(NamedUIDObject):
         self._state_changes_time = []
         # a list that stores the buffer state between each state change
         # the first item of this list is always the initial state
-        buffer_initial_state = z3.Int(f"{self.name}_initial_state")
-        self._buffer_states = [buffer_initial_state]
+        buffer_initial_level = z3.Int(f"{self.name}_initial_level")
+        self._buffer_states = [buffer_initial_level]
 
-        if self.initial_state is not None:
-            self.append_z3_assertion(buffer_initial_state == self.initial_state)
+        if self.initial_level is not None:
+            self.append_z3_assertion(buffer_initial_level == self.initial_level)
 
         # Note: the final state is set in the solver.py script,
         # add this task to the current context
