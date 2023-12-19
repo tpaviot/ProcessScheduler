@@ -444,54 +444,8 @@ def test_work_amount_2():
 
 
 #
-# Multiple objectives
+# Pinedo
 #
-def test_multiple_objective_lateness_tardiness() -> None:
-    """Example 4.1.5 of the Pinedo book. In the book, the heuristics leads to
-    1,3,6,5,4,2"""
-    problem = ps.SchedulingProblem(name="Pinedo4.1.5")
-
-    task_1 = ps.FixedDurationTask(
-        name="task1", duration=106, due_date=180, due_date_is_deadline=False
-    )
-    task_2 = ps.FixedDurationTask(
-        name="task2", duration=100, due_date=180, due_date_is_deadline=False
-    )
-    task_3 = ps.FixedDurationTask(
-        name="task3", duration=96, due_date=180, due_date_is_deadline=False
-    )
-    task_4 = ps.FixedDurationTask(
-        name="task4", duration=22, due_date=180, due_date_is_deadline=False
-    )
-    task_5 = ps.FixedDurationTask(
-        name="task5", duration=20, due_date=180, due_date_is_deadline=False
-    )
-    task_6 = ps.FixedDurationTask(
-        name="task6", duration=2, due_date=180, due_date_is_deadline=False
-    )
-
-    single_machine = ps.Worker(name="Worker1")
-
-    all_tasks = [task_1, task_2, task_3, task_4, task_5, task_6]
-
-    for t in all_tasks:  # all the tasks are processed on the same machine
-        t.add_required_resource(single_machine)
-
-    total_tardiness = ps.IndicatorTardiness(list_of_tasks=all_tasks)
-    total_earliness = ps.IndicatorEarliness(list_of_tasks=all_tasks)
-
-    ob1 = ps.ObjectiveMinimizeIndicator(target=total_tardiness, weight=1)
-    ob2 = ps.ObjectiveMinimizeIndicator(target=total_earliness, weight=1)
-
-    solution = solve_problem(problem)
-    assert solution
-    # here, the solution is a bit different: 1, 4, 5, 6, 3, 2
-    # the optimial sum is 360
-    assert (
-        solution.indicators[total_tardiness.name]
-        + solution.indicators[total_earliness.name]
-        == 360
-    )
 
 
 def test_pinedo_2_3_2() -> None:
@@ -615,6 +569,118 @@ def test_pinedo_3_3_3() -> None:
 
     assert solution
     assert solution.indicators[ind.name] == 2
+
+
+def test_pinedo_3_4_5() -> None:
+    problem = ps.SchedulingProblem(name="PinedoExample3.4.5")
+
+    J1 = ps.FixedDurationTask(
+        name="J1", duration=121, due_date=260, due_date_is_deadline=False
+    )
+    J2 = ps.FixedDurationTask(
+        name="J2", duration=79, due_date=266, due_date_is_deadline=False
+    )
+    J3 = ps.FixedDurationTask(
+        name="J3", duration=147, due_date=266, due_date_is_deadline=False
+    )
+    J4 = ps.FixedDurationTask(
+        name="J4", duration=83, due_date=336, due_date_is_deadline=False
+    )
+    J5 = ps.FixedDurationTask(
+        name="J5", duration=130, due_date=337, due_date_is_deadline=False
+    )
+
+    M1 = ps.Worker(name="M1")
+
+    for j in [J1, J2, J3, J4, J5]:
+        j.add_required_resource(M1)
+
+    ind = ps.IndicatorTardiness()
+    ps.ObjectiveMinimizeIndicator(target=ind, weight=1)
+
+    solver = ps.SchedulingSolver(problem=problem, debug=False)
+    solution = solver.solve()
+
+    assert solution
+    assert solution.indicators[ind.name] == 370
+
+
+def test_pinedo_3_6_3() -> None:
+    problem = ps.SchedulingProblem(name="PinedoExample3.6.3")
+    J1 = ps.FixedDurationTask(
+        name="J1", priority=4, duration=12, due_date=16, due_date_is_deadline=False
+    )
+    J2 = ps.FixedDurationTask(
+        name="J2", priority=5, duration=8, due_date=26, due_date_is_deadline=False
+    )
+    J3 = ps.FixedDurationTask(
+        name="J3", priority=3, duration=15, due_date=25, due_date_is_deadline=False
+    )
+    J4 = ps.FixedDurationTask(
+        name="J4", priority=5, duration=9, due_date=27, due_date_is_deadline=False
+    )
+
+    M1 = ps.Worker(name="M1")
+
+    for j in [J1, J2, J3, J4]:
+        j.add_required_resource(M1)
+
+    ind = ps.IndicatorTardiness()
+    ps.ObjectiveMinimizeIndicator(target=ind, weight=1)
+
+    solver = ps.SchedulingSolver(problem=problem)
+    solution = solver.solve()
+
+    assert solution
+    assert solution.indicators[ind.name] == 67
+
+
+def test_pinedo_4_1_5() -> None:
+    """Example 4.1.5 of the Pinedo book. In the book, the heuristics leads to
+    1,3,6,5,4,2"""
+    problem = ps.SchedulingProblem(name="PinedoExample4.1.5")
+
+    task_1 = ps.FixedDurationTask(
+        name="task1", duration=106, due_date=180, due_date_is_deadline=False
+    )
+    task_2 = ps.FixedDurationTask(
+        name="task2", duration=100, due_date=180, due_date_is_deadline=False
+    )
+    task_3 = ps.FixedDurationTask(
+        name="task3", duration=96, due_date=180, due_date_is_deadline=False
+    )
+    task_4 = ps.FixedDurationTask(
+        name="task4", duration=22, due_date=180, due_date_is_deadline=False
+    )
+    task_5 = ps.FixedDurationTask(
+        name="task5", duration=20, due_date=180, due_date_is_deadline=False
+    )
+    task_6 = ps.FixedDurationTask(
+        name="task6", duration=2, due_date=180, due_date_is_deadline=False
+    )
+
+    single_machine = ps.Worker(name="Worker1")
+
+    all_tasks = [task_1, task_2, task_3, task_4, task_5, task_6]
+
+    for t in all_tasks:  # all the tasks are processed on the same machine
+        t.add_required_resource(single_machine)
+
+    total_tardiness = ps.IndicatorTardiness(list_of_tasks=all_tasks)
+    total_earliness = ps.IndicatorEarliness(list_of_tasks=all_tasks)
+
+    ob1 = ps.ObjectiveMinimizeIndicator(target=total_tardiness, weight=1)
+    ob2 = ps.ObjectiveMinimizeIndicator(target=total_earliness, weight=1)
+
+    solution = solve_problem(problem)
+    assert solution
+    # here, the solution is a bit different: 1, 4, 5, 6, 3, 2
+    # the optimial sum is 360
+    assert (
+        solution.indicators[total_tardiness.name]
+        + solution.indicators[total_earliness.name]
+        == 360
+    )
 
 
 #
