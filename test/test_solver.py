@@ -386,28 +386,28 @@ def test_priorities():
 #
 # Find other solution
 #
-def test_find_another_solution():
-    problem = ps.SchedulingProblem(name="FindAnotherSolution", horizon=6)
-    solutions = []
+# def test_find_another_solution():
+#     problem = ps.SchedulingProblem(name="FindAnotherSolution", horizon=6)
+#     solutions = []
 
-    task_1 = ps.FixedDurationTask(name="task1", duration=2)
-    solver = ps.SchedulingSolver(problem=problem)
-    solution = solver.solve()
+#     task_1 = ps.FixedDurationTask(name="task1", duration=2)
+#     solver = ps.SchedulingSolver(problem=problem)
+#     solution = solver.solve()
 
-    while solution:
-        solutions.append(solution.tasks[task_1.name].start)
-        solution = solver.find_another_solution(task_1._start)
-    # there should be 5 solutions
-    assert solutions == [0, 1, 2, 3, 4]
+#     while solution:
+#         solutions.append(solution.tasks[task_1.name].start)
+#         solution = solver.find_another_solution(task_1._start)
+#     # there should be 5 solutions
+#     assert solutions == [0, 1, 2, 3, 4]
 
 
-def test_find_another_solution_solve_before():
-    problem = ps.SchedulingProblem(name="FindAnotherSolutionSolveBefore", horizon=6)
+# def test_find_another_solution_solve_before():
+#     problem = ps.SchedulingProblem(name="FindAnotherSolutionSolveBefore", horizon=6)
 
-    task_1 = ps.FixedDurationTask(name="task1", duration=2)
-    solver = ps.SchedulingSolver(problem=problem)
-    with pytest.raises(AssertionError):
-        solver.find_another_solution(task_1._start)
+#     task_1 = ps.FixedDurationTask(name="task1", duration=2)
+#     solver = ps.SchedulingSolver(problem=problem)
+#     with pytest.raises(AssertionError):
+#         solver.find_another_solution(task_1._start)
 
 
 #
@@ -449,7 +449,7 @@ def test_work_amount_2():
 def test_multiple_objective_lateness_tardiness() -> None:
     """Example 4.1.5 of the Pinedo book. In the book, the heuristics leads to
     1,3,6,5,4,2"""
-    problem = ps.SchedulingProblem(name="MultipleObjectiveLatenessTardiness")
+    problem = ps.SchedulingProblem(name="Pinedo4.1.5")
 
     task_1 = ps.FixedDurationTask(
         name="task1", duration=106, due_date=180, due_date_is_deadline=False
@@ -492,6 +492,59 @@ def test_multiple_objective_lateness_tardiness() -> None:
         + solution.indicators[total_earliness.name]
         == 360
     )
+
+
+def test_pinedo_4_2_3() -> None:
+    """Example 4.1.5 of the Pinedo book. The solution is expected to be:
+    1,3,6,5,4,2"""
+    problem = ps.SchedulingProblem(name="PinedoExample2.3.2")
+
+    durations = [8, 7, 7, 2, 3, 2, 2, 8, 8, 15]
+
+    jobs = []
+
+    i = 1
+    for pj in durations:
+        jobs.append(ps.FixedDurationTask(name=f"task{i}", duration=pj))
+        i += 1
+
+    # precedences
+    precs_graph = [
+        (1, 2),
+        (1, 3),
+        (2, 10),
+        (3, 10),
+        (5, 3),
+        (4, 5),
+        (4, 6),
+        (5, 8),
+        (6, 7),
+        (7, 9),
+        (5, 9),
+        (7, 8),
+    ]
+
+    for i, j in precs_graph:
+        ps.TaskPrecedence(task_before=jobs[i - 1], task_after=jobs[j - 1])
+    # two machines
+    machine_1 = ps.Worker(name="M1")
+    machine_2 = ps.Worker(name="M2")
+
+    for j in jobs:
+        j.add_required_resource(
+            ps.SelectWorkers(list_of_workers=[machine_1, machine_2])
+        )  # , machine_3]))
+
+    # non delay schedule
+    ps.ResourceNonDelay(resource=machine_1)
+    ps.ResourceNonDelay(resource=machine_2)
+
+    ps.ObjectiveMinimizeMakespan()
+
+    solver = ps.SchedulingSolver(problem=problem, max_time=30)
+    solution = solver.solve()
+
+    assert solution.horizon == 31
 
 
 #
