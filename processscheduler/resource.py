@@ -158,7 +158,7 @@ class SelectWorkers(Resource):
             )
 
         # build the list of workers that will be the base of the selection
-        # instances from this list mght either be Workers or CumulativeWorkers. If
+        # instances from this list might either be Workers or CumulativeWorkers. If
         # this is a cumulative, then we add the list of all workers from the cumulative
         # into this list.
         self._list_of_workers = []
