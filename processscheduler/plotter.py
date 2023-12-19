@@ -109,6 +109,9 @@ def render_gantt_plotly(
     """Use plotly.create_gantt method, see
     https://plotly.github.io/plotly.py-docs/generated/plotly.figure_factory.create_gantt.html
     """
+    if not solution:
+        raise AssertionError("no solution.")
+
     if not HAVE_PLOTLY:
         raise AssertionError("plotly is not installed.")
 
@@ -214,6 +217,9 @@ def render_gantt_matplotlib(
     Inspired by
     https://www.geeksforgeeks.org/python-basic-gantt-chart-using-matplotlib/
     """
+    if not solution:
+        raise AssertionError("no solution.")
+
     if not solution.resources:
         render_mode = "Task"
 
