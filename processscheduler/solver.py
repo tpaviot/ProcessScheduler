@@ -171,10 +171,12 @@ class SchedulingSolver(BaseModelWithJson):
         self._is_optimization_problem = len(self.problem.objectives) > 0
         self._is_multi_objective_optimization_problem = len(self.problem.objectives) > 1
         # use the z3 z3.Optimize solver if requested
-        if not self._is_not_optimization_problem and self.optimizer == "optimize":
+        if self._is_optimization_problem and self.optimizer == "optimize":
             self._solver = z3.Optimize()
             self._solver.set(priority=self.optimize_priority)
-            print("\t-> Builtin z3 z3.Optimize solver")
+            print(
+                f"\t-> Builtin z3 z3.Optimize solver - '{self.optimize_priority}' mode."
+            )
         elif self.logics is None:
             self._solver = z3.Solver()
             print("\t-> Standard SAT/SMT solver")
@@ -397,11 +399,7 @@ class SchedulingSolver(BaseModelWithJson):
         weighted_objectives = []
         for obj in self.problem.objectives.values():
             variable_to_optimize = obj._target
-            weight = obj.weight
-            if obj.kind == "maximize":
-                weighted_objectives.append(-weight * variable_to_optimize)
-            elif obj.kind == "minimize":
-                weighted_objectives.append(weight * variable_to_optimize)
+            weighted_objectives.append(obj.weight * variable_to_optimize)
         self.append_z3_assertion(
             equivalent_single_objective == z3.Sum(weighted_objectives)
         )
@@ -412,7 +410,7 @@ class SchedulingSolver(BaseModelWithJson):
         equivalent_objective = Objective(
             name="MinimizeEquivalentObjective",
             target=equivalent_indicator,
-            kind="minimize",
+            kind=obj.kind,
         )
         self._objective = equivalent_objective
         self.append_z3_assertion(equivalent_indicator.get_z3_assertions())
