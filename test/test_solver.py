@@ -768,3 +768,150 @@ def test_export_parameters():
     solver = ps.SchedulingSolver(problem=pb)
     solver.initialize()
     solver.get_parameters_description()
+
+
+def test_single_math_indicator_1():
+    pb = ps.SchedulingProblem(name="SingleObjectiveMath", horizon=20)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    indicator_1 = ps.IndicatorFromMathExpression(
+        name="Task1End", expression=task_1._end
+    )
+    ps.ObjectiveMaximizeIndicator(name="MaximizeTask1End", target=indicator_1)
+    solution = ps.SchedulingSolver(problem=pb).solve()
+    assert solution
+    assert solution.tasks[task_1.name].end == 20
+
+
+#
+# Muti optimizer
+#
+
+
+def test_multi_weighted_1():
+    pb = ps.SchedulingProblem(name="MultiObjective1Weigthed", horizon=20)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    task_2 = ps.FixedDurationTask(name="task2", duration=3)
+    ps.ConstraintFromExpression(expression=task_1._end == 20 - task_2._start)
+    indicator_1 = ps.IndicatorFromMathExpression(
+        name="Task1End", expression=task_1._end
+    )
+    indicator_2 = ps.IndicatorFromMathExpression(
+        name="Task2Start", expression=task_2._start
+    )
+    ps.ObjectiveMaximizeIndicator(name="MaximizeTask1End", target=indicator_1, weight=1)
+    ps.ObjectiveMaximizeIndicator(
+        name="MaximizeTask2Start", target=indicator_2, weight=1
+    )
+    solution = ps.SchedulingSolver(problem=pb).solve()
+    assert solution
+    assert (
+        solution.indicators[indicator_1.name] + solution.indicators[indicator_2.name]
+        == 20
+    )
+
+
+def test_multi_weighted_2():
+    pb = ps.SchedulingProblem(name="MultiObjectiveWeighted2", horizon=20)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    task_2 = ps.FixedDurationTask(name="task2", duration=3)
+    ps.ConstraintFromExpression(expression=task_1._end == 20 - task_2._start)
+    indicator_1 = ps.IndicatorFromMathExpression(
+        name="Task1End", expression=task_1._end
+    )
+    indicator_2 = ps.IndicatorFromMathExpression(
+        name="Task2Start", expression=task_2._start
+    )
+    ps.ObjectiveMaximizeIndicator(name="MaximizeTask1End", target=indicator_1, weight=1)
+    ps.ObjectiveMaximizeIndicator(
+        name="MaximizeTask2Start", target=indicator_2, weight=2
+    )
+    solution = ps.SchedulingSolver(problem=pb).solve()
+
+    assert solution
+    assert (
+        solution.indicators[indicator_1.name]
+        + 2 * solution.indicators[indicator_2.name]
+        == 37
+    )
+
+
+def test_multi_weighted_lex():
+    # lex
+    pb = ps.SchedulingProblem(name="MultiObjective2", horizon=20)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    task_2 = ps.FixedDurationTask(name="task2", duration=3)
+    ps.ConstraintFromExpression(expression=task_1._end == 20 - task_2._start)
+    indicator_1 = ps.IndicatorFromMathExpression(
+        name="Task1End", expression=task_1._end
+    )
+    indicator_2 = ps.IndicatorFromMathExpression(
+        name="Task2Start", expression=task_2._start
+    )
+    ps.ObjectiveMaximizeIndicator(name="MaximizeTask1End", target=indicator_1)
+    ps.ObjectiveMaximizeIndicator(name="MaximizeTask2Start", target=indicator_2)
+
+    solver = ps.SchedulingSolver(
+        problem=pb, optimizer="optimize", optimize_priority="lex"
+    )
+    solution = solver.solve()
+    assert solution
+    assert (
+        solution.indicators[indicator_1.name] + solution.indicators[indicator_2.name]
+        == 20
+    )
+
+
+def test_multi_weighted_box():
+    # box
+    pb = ps.SchedulingProblem(name="MultiObjective2", horizon=20)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    task_2 = ps.FixedDurationTask(name="task2", duration=3)
+    ps.ConstraintFromExpression(expression=task_1._end == 20 - task_2._start)
+    indicator_1 = ps.IndicatorFromMathExpression(
+        name="Task1End", expression=task_1._end
+    )
+    indicator_2 = ps.IndicatorFromMathExpression(
+        name="Task2Start", expression=task_2._start
+    )
+    ps.ObjectiveMaximizeIndicator(name="MaximizeTask1End", target=indicator_1)
+    ps.ObjectiveMaximizeIndicator(name="MaximizeTask2Start", target=indicator_2)
+
+    solver = ps.SchedulingSolver(
+        problem=pb, optimizer="optimize", optimize_priority="box"
+    )
+    solution = solver.solve()
+    assert solution
+    assert (
+        solution.indicators[indicator_1.name] + solution.indicators[indicator_2.name]
+        == 20
+    )
+
+
+def opt6():
+    # Pareto
+    pb = ps.SchedulingProblem(name="MultiObjective2", horizon=20)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    task_2 = ps.FixedDurationTask(name="task2", duration=3)
+    ps.ConstraintFromExpression(expression=task_1._end == 20 - task_2._start)
+    indicator_1 = ps.IndicatorFromMathExpression(
+        name="Task1End", expression=task_1._end
+    )
+    indicator_2 = ps.IndicatorFromMathExpression(
+        name="Task2Start", expression=task_2._start
+    )
+    ps.ObjectiveMaximizeIndicator(name="MaximizeTask1End", target=indicator_1)
+    ps.ObjectiveMaximizeIndicator(name="MaximizeTask2Start", target=indicator_2)
+
+    solver = ps.SchedulingSolver(
+        problem=pb, optimizer="optimize", optimize_priority="pareto"
+    )
+    solution = solver.solve()
+    nb_solution = 1
+    while solution:
+        print("Found solution:")
+        print("\t task_1.end: f{solution.tasks[task_1.end]}")
+        print("\t task_2.start: f{solution.tasks[task_2.start]}")
+        solution = solver.solve()
+        nb_solution += 1
+
+    assert nb_solution == 18
