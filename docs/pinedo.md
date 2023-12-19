@@ -198,3 +198,196 @@ returns the following result:
 
 
 Confirms that "The optimal schedule is 3, 4, 5, 1, 2 with $\sum{U_j = 2}$" and "Note also that there may be many optimal schedules".
+
+## Example 3.4.5 (Minimizing Total Tardiness)
+
+Consider the following 5 jobs.
+
+| jobs | $p_j$ | $d_j$ |
+| ---- | -- | -- |
+| 1    |121  | 260  |
+| 2    | 79  | 266 |
+| 3    | 147  | 266 |
+| 4    | 83  | 336 |
+| 5    | 130  | 337 |
+
+According to Pinedo, the optimal is "370. Two optimal sequences are 1, 2, 4, 5, 3 and 2, 1, 4, 5, 3", confirmed by the following simulation.
+
+``` py
+problem = ps.SchedulingProblem(name="PinedoExample3.4.5")
+
+J1 = ps.FixedDurationTask(name="J1", duration=121, due_date=260, due_date_is_deadline=False)
+J2 = ps.FixedDurationTask(
+    name="J2", duration=79, due_date=266, due_date_is_deadline=False
+)
+J3 = ps.FixedDurationTask(
+    name="J3", duration=147, due_date=266, due_date_is_deadline=False
+)
+J4 = ps.FixedDurationTask(
+    name="J4", duration=83, due_date=336, due_date_is_deadline=False
+)
+J5 = ps.FixedDurationTask(
+    name="J5", duration=130, due_date=337, due_date_is_deadline=False
+)
+
+M1 = ps.Worker(name="M1")
+
+for j in [J1, J2, J3, J4, J5]:
+    j.add_required_resource(M1)
+
+ind = ps.IndicatorTardiness()
+ps.ObjectiveMinimizeIndicator(target=ind, weight=1)
+
+solver = ps.SchedulingSolver(problem=problem, debug=False)
+solution = solver.solve()
+ps.render_gantt_matplotlib(solution)
+```
+
+![Pinedo345PSGanttSol](img/pinedo_example_3_4_5_gantt_solution.svg){ width="100%" }
+
+## Example 3.6.3 (Minimizing Total Weighted Tardiness)
+
+Consider the following 4 jobs.
+
+| jobs | $w_j$ | $p_j$ | $d_j$ |
+| ---- | -- | -- |---
+| 1    |4 | 12  | 16  |
+| 2    | 5  | 8 | 26 |
+| 3    | 3  | 15 | 25 |
+| 4    | 5  | 9 | 27 |
+
+Pinedo states that "It turns out that the best schedule reachable from this node is 1, 2, 4, 3 with an objective value of 64."
+
+This is not confirmed by the following example, which gives 67 as the lowest weighted tardiness:
+``` py
+problem = ps.SchedulingProblem(name="PinedoExample3.6.3")
+J1 = ps.FixedDurationTask(
+    name="J1", priority=4, duration=12, due_date=16, due_date_is_deadline=False)
+J2 = ps.FixedDurationTask(
+    name="J2", priority=5, duration=8, due_date=26, due_date_is_deadline=False
+)
+J3 = ps.FixedDurationTask(
+    name="J3", priority=3, duration=15, due_date=25, due_date_is_deadline=False
+)
+J4 = ps.FixedDurationTask(
+    name="J4", priority=5, duration=9, due_date=27, due_date_is_deadline=False
+)
+
+M1 = ps.Worker(name="M1")
+
+for j in [J1, J2, J3, J4]:
+    j.add_required_resource(M1)
+
+ind = ps.IndicatorTardiness()
+ps.ObjectiveMinimizeIndicator(target=ind, weight=1)
+
+solver = ps.SchedulingSolver(problem=problem)
+solution = solver.solve()
+ps.render_gantt_matplotlib(solution)
+
+```
+
+![Pinedo363PSGanttSol](img/pinedo_example_3_6_3_gantt_solution.svg){ width="100%" }
+
+## Example 4.1.5 (Minimizing Total Earliness and Tardiness with Tight Due Date)
+
+Consider the following example with 6 jobs and d = 180.
+
+| jobs | $p_j$ |
+| ---- | -- |
+| 1    |106 |
+| 2    | 100 |
+| 3    |96  | 
+| 4    | 22  | 
+| 5    | 20  |
+| 6    | 2  |
+
+The following script:
+
+``` py
+problem = ps.SchedulingProblem(name="PinedoExample4.1.5")
+
+J1 = ps.FixedDurationTask(
+    name="J1", duration=106, due_date=180, due_date_is_deadline=False
+)
+J2 = ps.FixedDurationTask(
+    name="J2", duration=100, due_date=180, due_date_is_deadline=False
+)
+J3 = ps.FixedDurationTask(
+    name="J3", duration=96, due_date=180, due_date_is_deadline=False
+)
+J4 = ps.FixedDurationTask(
+    name="J4", duration=22, due_date=180, due_date_is_deadline=False
+)
+J5 = ps.FixedDurationTask(
+    name="J5", duration=20, due_date=180, due_date_is_deadline=False
+)
+J6 = ps.FixedDurationTask(
+    name="J6", duration=2, due_date=180, due_date_is_deadline=False
+)
+
+M1 = ps.Worker(name="M1")
+
+for j in [J1, J2, J3, J4, J5, J6]:
+    j.add_required_resource(M1)
+
+total_tardiness = ps.IndicatorTardiness()
+total_earliness = ps.IndicatorEarliness()
+
+ob1 = ps.ObjectiveMinimizeIndicator(target=total_tardiness, weight=1)
+ob2 = ps.ObjectiveMinimizeIndicator(target=total_earliness, weight=1)
+
+solver = ps.SchedulingSolver(problem=problem)
+solution = solver.solve()
+print(solution)
+ps.render_gantt_matplotlib(solution)
+```
+
+gives the optimal sequence 1,4,5,6,3,2:
+
+![Pinedo415PSGanttSol](img/pinedo_example_4_1_5_gantt_solution.svg){ width="100%" }
+
+
+## Example 4.2.3 (Minimizing the Total Completion Time with Deadlines)
+Consider the following instance with 5 jobs.
+
+
+| jobs | $p_j$ | $d_j$ |
+| ---- | -- | -- |
+| 1    |4  | 10  |
+| 2    | 6  | 12 |
+| 3    | 2  | 14 |
+| 4    | 4  | 18 |
+| 5    | 2  | 18 |
+
+Minimizing the total completion time is achieved using this script:
+``` py
+import processscheduler as ps
+
+"""Example 4.1.5 of the Pinedo book. The solution is expected to be:
+1,3,6,5,4,2"""
+problem = ps.SchedulingProblem(name="MultipleObjectiveLatenessTardiness")
+
+J1 = ps.FixedDurationTask(name="J1", duration=4, due_date=10)
+J2 = ps.FixedDurationTask(name="J2", duration=6, due_date=12, due_date_is_deadline=True)
+J3 = ps.FixedDurationTask(name="J3", duration=2, due_date=14, due_date_is_deadline=True)
+J4 = ps.FixedDurationTask(name="J4", duration=4, due_date=18, due_date_is_deadline=True)
+J5 = ps.FixedDurationTask(name="J5", duration=2, due_date=18, due_date_is_deadline=True)
+
+M1 = ps.Worker(name="M1")
+
+for j in [J1, J2, J3, J4, J5]:
+    j.add_required_resource(M1)
+
+ps.ObjectiveMinimizeFlowtime()
+
+solver = ps.SchedulingSolver(problem=problem)
+solution_1 = solver.solve()
+ps.render_gantt_matplotlib(solution_1)
+```
+
+
+![Pinedo415PSGanttSol](img/pinedo_example_4_2_3_gantt_solution.svg){ width="100%" }
+
+The statement "Proceeding in this manner yields two optimal schedules, namely schedules 5, 1, 2, 3, 4 and 3, 1, 2, 5, 4." is confirmed.
+
