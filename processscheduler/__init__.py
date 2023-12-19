@@ -63,6 +63,7 @@ from processscheduler.resource_constraint import (
     ResourceUnavailable,
     WorkLoad,
     ResourceTasksDistance,
+    ResourceNonDelay,
 )
 from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
 from processscheduler.function import (

@@ -197,6 +197,37 @@ class ResourceUnavailable(ResourceConstraint):
             )
 
 
+class ResourceNonDelay(ResourceConstraint):
+    """All tasks processed by the resource are contiguous, there's no idle while an operation
+    if waiting for processing"""
+
+    resource: Union[Worker, CumulativeWorker]
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        starts = []
+        ends = []
+        for start_var, end_var in self.resource._busy_intervals.values():
+            starts.append(start_var)
+            ends.append(end_var)
+        # sort both lists
+        sorted_starts, c1 = sort_no_duplicates(starts)
+        sorted_ends, c2 = sort_no_duplicates(ends)
+        for c in c1 + c2:
+            self.set_z3_assertions(c)
+        # from now, starts and ends are sorted in asc order
+        # the space between two consecutive tasks is the sorted_start[i+1]-sorted_end[i]
+        # we just have to constraint this variable
+        for i in range(1, len(sorted_starts)):
+            asst = sorted_starts[i] == sorted_ends[i - 1]
+            condition_only_scheduled_tasks = z3.And(
+                sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0
+            )
+            # finally create the constraint
+            new_cstr = z3.Implies(condition_only_scheduled_tasks, asst)
+            self.set_z3_assertions(new_cstr)
+
+
 class ResourceTasksDistance(ResourceConstraint):
     """
     This constraint enforces a specific number of time unitary periods between tasks for a single resource.
