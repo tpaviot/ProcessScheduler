@@ -683,6 +683,41 @@ def test_pinedo_4_1_5() -> None:
     )
 
 
+def test_pinedo_4_2_3() -> None:
+    problem = ps.SchedulingProblem(name="PinedoExample4.2.3")
+
+    task_1 = ps.FixedDurationTask(
+        name="task1", duration=4, due_date=10, due_date_is_deadline=True
+    )
+    task_2 = ps.FixedDurationTask(
+        name="task2", duration=6, due_date=12, due_date_is_deadline=True
+    )
+    task_3 = ps.FixedDurationTask(
+        name="task3", duration=2, due_date=14, due_date_is_deadline=True
+    )
+    task_4 = ps.FixedDurationTask(
+        name="task4", duration=4, due_date=18, due_date_is_deadline=True
+    )
+    task_5 = ps.FixedDurationTask(
+        name="task5", duration=2, due_date=18, due_date_is_deadline=True
+    )
+
+    single_machine = ps.Worker(name="Worker1")
+
+    all_tasks = [task_1, task_2, task_3, task_4, task_5]
+
+    for t in all_tasks:  # all the tasks are processed on the same machine
+        t.add_required_resource(single_machine)
+
+    ob1 = ps.ObjectiveMinimizeFlowtime()
+
+    solver = ps.SchedulingSolver(problem=problem)
+    solution_1 = solver.solve()
+
+    assert solution_1
+    assert solution_1.indicators[ob1.target.name] == 52
+
+
 #
 # Resource constraints
 #
