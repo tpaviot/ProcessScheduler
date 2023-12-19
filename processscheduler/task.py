@@ -95,12 +95,6 @@ class Task(NamedUIDObject):
             self
         )  # type: int
 
-        # the counter used for negative integers
-        # negative integers are used to schedule optional tasks
-        # for such tasks, they are actually scheduled in the past
-        # with start_time = end_time is a negative point in the timeline
-        self._current_negative_integer = 0  # type: int
-
         # the release date
         if self.release_date is not None:
             self.append_z3_assertion(self._start >= self.release_date)
@@ -112,11 +106,6 @@ class Task(NamedUIDObject):
                 self.append_z3_assertion(self._end <= self.due_date)
             else:
                 print("TODO: Should implement a penalty function")
-
-    def _get_unique_negative_integer(self) -> int:
-        """Returns a new negative integer each time this method is called."""
-        self._current_negative_integer -= 1  # decrement the current counter
-        return self._current_negative_integer
 
     def add_required_resource(self, resource: Resource, dynamic=False) -> None:
         """
@@ -161,10 +150,12 @@ class Task(NamedUIDObject):
                 # in the case the worker is selected
                 # move the busy interval to a single point in time, in the
                 # past. This way, it does not conflict with tasks to be
-                # actuallt scheduled.
+                # actually scheduled.
                 # This single point in time results in a zero duration time: related
                 # task will not be considered when computing resource utilization or cost.
-                single_point_in_past = self._get_unique_negative_integer()
+                single_point_in_past = (
+                    processscheduler.base.active_problem.get_unique_negative_integer()
+                )
                 move_to_past = z3.And(
                     resource_maybe_busy_start == single_point_in_past,  # to past
                     resource_maybe_busy_end == single_point_in_past,
@@ -187,7 +178,6 @@ class Task(NamedUIDObject):
                 self.append_z3_assertion(resource_busy_end <= self._end)
                 self.append_z3_assertion(resource_busy_start >= self._start)
             else:
-                # self.append_z3_assertion(resource_busy_start + self.duration == resource_busy_end)
                 self.append_z3_assertion(resource_busy_end == self._end)
                 self.append_z3_assertion(resource_busy_start == self._start)
             # finally, store this resource into the resource list

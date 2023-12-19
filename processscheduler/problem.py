@@ -147,6 +147,20 @@ class SchedulingProblem(NamedUIDObject):
         if self.horizon is not None:
             self.append_z3_assertion(self._horizon <= self.horizon)
 
+        # the counter to be decremented in the get_unique_negative_integer method
+        self._unique_integer = -1
+
+    def get_unique_negative_integer(self) -> int:
+        """this function returns a negative integer for which we
+        are certain it is unique in the problem context.
+
+        This unique negative integer is used by the SelectWorkers to
+        move tasks from/to past. Each time this method is called,
+        the self._unique_integer counter is decremented
+        """
+        self._unique_integer += -1
+        return self._unique_integer
+
     def add_from_json_file(self, filename: str):
         """take filename and returns the object"""
         with open(filename, "r") as f:
