@@ -62,7 +62,10 @@ class Objective(NamedUIDObject):
 class ObjectiveMaximizeIndicator(Objective):
     def __init__(self, **data) -> None:
         target = data["target"]
-        weight = data["weight"]
+        if "weight" in data:
+            weight = data["weight"]
+        else:
+            weight = 1
         super().__init__(
             name=f"Maximize{target.name}", target=target, weight=weight, kind="maximize"
         )
