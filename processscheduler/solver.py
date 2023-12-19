@@ -220,18 +220,19 @@ class SchedulingSolver(BaseModelWithJson):
         # work amounts
         # for each task, compute the total work for all required resources"""
         for task in self.problem.tasks.values():
-            if task.work_amount > 0.0:
-                work_total_for_all_resources = []
+            if task.work_amount > 0:
+                total_work_for_all_resources = []
                 for required_resource in task._required_resources:
                     # work contribution for the resource
                     interv_low, interv_up = required_resource._busy_intervals[task]
                     work_contribution = required_resource.productivity * (
                         interv_up - interv_low
                     )
-                    work_total_for_all_resources.append(work_contribution)
-                self.append_z3_assertion(
-                    z3.Sum(work_total_for_all_resources) >= task.work_amount
-                )
+                    total_work_for_all_resources.append(work_contribution)
+                if total_work_for_all_resources:
+                    self.append_z3_assertion(
+                        z3.Sum(total_work_for_all_resources) >= task.work_amount
+                    )
 
         # process buffers
         for buffer in self.problem.buffers:
@@ -423,8 +424,6 @@ class SchedulingSolver(BaseModelWithJson):
         if self._is_multi_objective_optimization_problem:
             if self.optimizer == "incremental" or self.optimize_priority == "weight":
                 eq_obj, _ = self.build_equivalent_weighted_objective()
-                if self.optimizer == "optimize":
-                    self._solver.minimize(eq_obj._target)
             else:
                 for obj in self.problem.objectives.values():
                     variable_to_optimize = obj._target
@@ -806,7 +805,23 @@ class SchedulingSolver(BaseModelWithJson):
             var_value = self._current_solution[decl]
             print(f"\t-> {var_name}={var_value}")
 
-    def find_another_solution(self, variable: z3.ArithRef) -> bool:
+    def find_another_solution(self) -> Union[bool, SchedulingSolution]:
+        """compute the solver and find any other solution for the schedule"""
+        if self._current_solution is None:
+            raise AssertionError("No current solution. First call the solve() method.")
+        different_assertions = []
+        for variable in self._current_solution:
+            print(variable)
+            value = self._current_solution[variable].as_long()
+            print(value)
+            different_assertions.append(variable != value)
+        # any of the assertions is meet
+        self.append_z3_assertion(z3.Or(different_assertions))
+        return self.solve()
+
+    def find_another_solution_for_variable(
+        self, variable: z3.ArithRef
+    ) -> Union[bool, SchedulingSolution]:
         """let the solver find another solution for the variable"""
         if self._current_solution is None:
             raise AssertionError("No current solution. First call the solve() method.")
