@@ -494,7 +494,7 @@ def test_multiple_objective_lateness_tardiness() -> None:
     )
 
 
-def test_pinedo_4_2_3() -> None:
+def test_pinedo_2_3_2() -> None:
     """Example 4.1.5 of the Pinedo book. The solution is expected to be:
     1,3,6,5,4,2"""
     problem = ps.SchedulingProblem(name="PinedoExample2.3.2")
@@ -545,6 +545,76 @@ def test_pinedo_4_2_3() -> None:
     solution = solver.solve()
 
     assert solution.horizon == 31
+
+
+def test_pinedo_3_2_5() -> None:
+    """Example 3.2.5 of the Pinedo book. The solution is expected to be:
+    1,3,6,5,4,2"""
+    problem = ps.SchedulingProblem(name="PinedoExample3.2.5")
+
+    J1 = ps.FixedDurationTask(
+        name="J1", duration=4, release_date=0, due_date=8, due_date_is_deadline=False
+    )
+    J2 = ps.FixedDurationTask(
+        name="J2", duration=2, release_date=1, due_date=12, due_date_is_deadline=False
+    )
+    J3 = ps.FixedDurationTask(
+        name="J3", duration=6, release_date=3, due_date=11, due_date_is_deadline=False
+    )
+    J4 = ps.FixedDurationTask(
+        name="J4", duration=5, release_date=5, due_date=10, due_date_is_deadline=False
+    )
+
+    M1 = ps.Worker(name="M1")
+    J1.add_required_resource(M1)
+    J2.add_required_resource(M1)
+    J3.add_required_resource(M1)
+    J4.add_required_resource(M1)
+
+    ind = ps.IndicatorMaximumLateness()
+    ps.ObjectiveMinimizeIndicator(target=ind, weight=1)
+
+    solver = ps.SchedulingSolver(problem=problem)
+    solution = solver.solve()
+    assert solution
+    assert solution.tasks["J1"].start == 0
+    assert solution.tasks["J3"].start == 4
+    assert solution.tasks["J4"].start == 10
+    assert solution.tasks["J2"].start == 15
+
+
+def test_pinedo_3_3_3() -> None:
+    problem = ps.SchedulingProblem(name="PinedoExample3.3.3")
+
+    J1 = ps.FixedDurationTask(
+        name="J1", duration=7, due_date=9, due_date_is_deadline=False
+    )
+    J2 = ps.FixedDurationTask(
+        name="J2", duration=8, due_date=17, due_date_is_deadline=False
+    )
+    J3 = ps.FixedDurationTask(
+        name="J3", duration=4, due_date=18, due_date_is_deadline=False
+    )
+    J4 = ps.FixedDurationTask(
+        name="J4", duration=6, due_date=19, due_date_is_deadline=False
+    )
+    J5 = ps.FixedDurationTask(
+        name="J5", duration=6, due_date=21, due_date_is_deadline=False
+    )
+
+    M1 = ps.Worker(name="M1")
+
+    for j in [J1, J2, J3, J4, J5]:
+        j.add_required_resource(M1)
+
+    ind = ps.IndicatorNumberOfTardyTasks()
+    ps.ObjectiveMinimizeIndicator(target=ind, weight=1)
+
+    solver = ps.SchedulingSolver(problem=problem, debug=True)
+    solution = solver.solve()
+
+    assert solution
+    assert solution.indicators[ind.name] == 2
 
 
 #

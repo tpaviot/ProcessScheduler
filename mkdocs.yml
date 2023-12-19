@@ -89,7 +89,8 @@ nav:
 - Use cases:
   - FlowShop: use-case-flow-shop.md
   - Formula One: use-case-formula-one-change-tires.md
-  - Team Managament: use-case-software-development.md
+  - Team Management: use-case-software-development.md
+  - Scheduling - Theory, Algorithms, and Systems: pinedo.md
 - Blog:
   - blog/index.md
 
