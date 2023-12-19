@@ -127,11 +127,17 @@ class IndicatorTardiness(Indicator):
         else:
             tasks = self.list_of_tasks
             self.name = f"Tardiness({','.join(t.name for t in self.list_of_tasks)})"
-        tardiness_v = []
+        weighted_tardiness_v = []
         for t in tasks:
             # tardiness in terms of time units
-            tardiness_v.append(z3.If(t.due_date >= t._end, 0, t._end - t.due_date))
-        expression = z3.Sum(tardiness_v)
+            weighted_tardiness_v.append(
+                z3.If(
+                    z3.And(t.due_date >= t._end, t._scheduled),
+                    0,
+                    (t._end - t.due_date) * t.priority,
+                )
+            )
+        expression = z3.Sum(weighted_tardiness_v)
         self.append_z3_assertion(self._indicator_variable == expression)
 
 
