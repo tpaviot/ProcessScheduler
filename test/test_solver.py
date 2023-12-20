@@ -718,6 +718,42 @@ def test_pinedo_4_2_3() -> None:
     assert solution_1.indicators[ob1.target.name] == 52
 
 
+def test_pinedo_6_1_6() -> None:
+    pb = ps.SchedulingProblem(name="Pinedo6.1.6")
+    durations = [[5, 4, 4, 3], [5, 4, 4, 6], [3, 2, 3, 3], [6, 4, 4, 2], [3, 4, 1, 5]]
+
+    # create machines
+    M1 = ps.Worker(name="M1")
+    M2 = ps.Worker(name="M2")
+    M3 = ps.Worker(name="M3")
+    M4 = ps.Worker(name="M4")
+
+    machines = [M1, M2, M3, M4]
+
+    # create tasks
+    job_number = 1
+    for job_number in range(5):
+        j = 0
+        tasks_for_this_job = []
+        for d in durations[job_number]:
+            t = ps.FixedDurationTask(name=f"{d}(T{job_number+1},{j+1})", duration=d)
+            t.add_required_resource(machines[j])
+            tasks_for_this_job.append(t)
+            j += 1
+        # and precedence
+        for i in range(len(tasks_for_this_job) - 1):
+            ps.TaskPrecedence(
+                task_before=tasks_for_this_job[i], task_after=tasks_for_this_job[i + 1]
+            )
+
+    ps.ObjectiveMinimizeMakespan()
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+
+    assert solution
+    assert solution.horizon == 32
+
+
 #
 # Resource constraints
 #
