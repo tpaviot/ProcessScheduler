@@ -7,11 +7,7 @@
 [![PyPI version](https://badge.fury.io/py/ProcessScheduler.svg)](https://badge.fury.io/py/ProcessScheduler)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4480745.svg)](https://doi.org/10.5281/zenodo.4480745)
 
-ProcessScheduler is a Python package for creating optimized scheduling based on identified resources and tasks to be carried out. It offers a set of classes and methods for finely modeling a wide range of use cases with rich semantics. Complex mathematical calculations necessary for problem resolution are transparently handled for the user, allowing them to focus on problem modeling. ProcessScheduler is aimed at project managers, business organization consultants, or industrial logistics experts looking to optimize the achievement of time or cost objectives.
-
-# Features
-
-ProcessScheduler is a versatile tool designed to streamline operations in various industrial domains, including manufacturing, construction, healthcare, and more. It serves as a solution for tackling intricate scheduling challenges that defy straightforward resolutions.
+ProcessScheduler is a versatile Python package designed for creating optimized scheduling in various industrial domains, including manufacturing, construction, healthcare, and more. This tool, aimed at project managers, business organization consultants, or industrial logistics experts, focuses on optimizing time or cost objectives. It offers a robust set of classes and methods to model a wide range of use cases with rich semantics, making it ideal for tackling intricate scheduling challenges. The package simplifies complex mathematical calculations necessary for problem resolution, thereby allowing users to concentrate on problem modeling rather than the computational intricacies, streamlining operations and offering solutions for scenarios that defy straightforward resolutions.
 
 Within this toolkit, you'll find a rich array of features, including:
 
