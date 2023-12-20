@@ -1,6 +1,6 @@
 # Scheduling. Theory, Algorithms, and Systems
 
-This section is a collection of examples from the [Michael Pinedo](https://wp.nyu.edu/michaelpinedo/)'s famous book:
+This section presents examples from [Michael Pinedo](https://wp.nyu.edu/michaelpinedo/)'s renowned book:
 
 Pinedo, Michael. L. (2012) "Scheduling. Theory, Algorithms, and Systems". 4th edition. Springer New York, NY. ISBN  doi: [10.1007/978-1-4614-2361-4](https://doi.org/10.1007/978-1-4614-2361-4)
 
@@ -23,7 +23,7 @@ processing times.
 | 9 | 8 |
 | 10 | 15 |
 
-The python code to represent jobs and durations is:
+The Python code to represent jobs and durations is as follows:
 
 ``` py
 problem = ps.SchedulingProblem(name="PinedoExample2.3.2")
@@ -37,7 +37,7 @@ for pj in durations:
     i +=1
 ```
 
-All tasks can be handled by two machines:
+All tasks can be processed by two machines:
 
 ``` py
 
@@ -51,11 +51,11 @@ for j in jobs:
     j.add_required_resource(ps.SelectWorkers(list_of_workers=[machine_1, machine_2]))
 ```
 
-The precedences are given by the graph:
+The precedence relationships are defined by the following graph:
 
 ![Pinedo232PrecGraph](img/pinedo_2_3_2_precedence_graph.png){ width="300" }
 
-In python,
+In python, we define these precedences as follows:
 
 ``` py
 # precedences
@@ -67,7 +67,7 @@ for i, j in precs_graph:
     ps.TaskPrecedence(task_before=jobs[i-1], task_after=jobs[j-1])
 ```
 
-The nondelay schedule requires that no machine is kept idle while an operation is waiting for processing. In other words, all tasks assigned to any resource must be contigous.
+The non-delay schedule ensures that no machine is kept idle while an operation is waiting for processing. In other words, all tasks assigned to any resource must be contiguous.
 
 ``` py
 # non delay schedule
@@ -75,7 +75,7 @@ ps.ResourceNonDelay(resource=machine_1)
 ps.ResourceNonDelay(resource=machine_2)
 ```
 
-Finally, solve by optimizing the total completion time and render:
+Finally, we solve for optimizing the total completion time and render the Gantt chart:
 
 ``` py
 ps.ObjectiveMinimizeMakespan()
@@ -84,30 +84,30 @@ solution = solver.solve()
 ps.render_gantt_matplotlib(solution)
 ```
 
-We obtain:
+The obtained schedule is shown below:
 
 ![Pinedo232PSGanttSol1](img/pinedo_example_232_solution_1.svg){ width="100%" }
 
-Wich is similar to the solution of the book with a makespan of 31:
+This result is similar to the solution presented in the book, with a makespan of 31.
 
 ![Pinedo232PSGanttFromBook](img/gantta_pinedo_232.png){ width="100%" }
 
-Now, each one of the ten processing times is reduced by one time unit, that is to say:
+Now, let's reduce each of the ten processing times by one time unit:
 
 ``` py
 durations = [7, 6, 6, 1, 2, 1, 1, 7, 7, 14]
 ```
 
-We solve the problem in the same way and obtain:
+We solve the problem in the same way and obtain the following schedule:
 ![Pinedo232PSGanttSol2](img/pinedo_example_232_solution_2.svg){ width="100%" }
 
-Here the conclusion is sligthly different from the one from Pinedo's book, where "one would expect that, if each one of the ten processing times is reduced by one time unit, the makespan would be less than 31. However, requiring the schedule to be non-delay results in the schedule depicted in [..] with a makespan of 32". Our solution has a makespan of 27.
+Here the conclusion is sligthly different from the one from Pinedo's book, where "one would expect that, if each one of the ten processing times is reduced by one time unit, the makespan would be less than 31. However, requiring the schedule to be non-delay results in the schedule depicted in [..] with a makespan of 32". Our solution, however, has a makespan of 27.
 
-With 3 machines and the original settings, we get:
+With 3 machines and the original settings, we get the following schedule:
 
 ![Pinedo232PSGanttSol3](img/pinedo_example_232_solution_3.svg){ width="100%" }
 
-which also conflicts with Pinedo's conclusion claiming that the makespan is now 36 whereas ours is only 30.
+This also conflicts with Pinedo's conclusion, as he claims the makespan is now 36, whereas our solution results in a makespan of only 30.
 
 ## Example 3.2.5 (Minimizing Maximum Lateness)
 
@@ -120,7 +120,8 @@ Consider the following 4 jobs.
 | 3    | 6  | 3  | 11 |
 | 4    | 5  | 5  | 10 |
 
-This can be represented by the following python code:
+This can be represented by the following Python code:
+
 ```py
 problem = ps.SchedulingProblem(name="PinedoExample3.2.5")
 
@@ -145,12 +146,14 @@ J4.add_required_resource(M1)
 ```
 
 The maximum lateness optimization is achievd using:
+
 ``` py
 lateness_indicator = ps.IndicatorMaximumLateness()
 ps.ObjectiveMinimizeIndicator(target=ind, weight=1)
 ```
 
-After solving, this gives the following Gantt chart, that confirms "that schedule 1, 3, 4, 2 has to be optimal".
+After solving, this gives the following Gantt chart, confirming "that schedule 1, 3, 4, 2 has to be optimal".
+
 ![Pinedo325PSGanttSol](img/pinedo_3_2_5_gantt_solution.svg){ width="100%" }
 
 ## Example 3.3.3 (Minimizing Number of Tardy Jobs)
@@ -165,7 +168,7 @@ Consider the following 5 jobs.
 | 4    | 6  | 19 |
 | 5    | 6  | 21 |
 
-The implementation in python:
+The implementation in Python is as follows:
 
 ```py
 problem = ps.SchedulingProblem(name="PinedoExample3.3.3")
@@ -193,11 +196,12 @@ ind = ps.IndicatorNumberOfTardyTasks()
 ps.ObjectiveMinimizeIndicator(target=ind, weight=1)
 ```
 
-returns the following result:
+The resulting schedule
+
 ![Pinedo333PSGanttSol](img/pinedo_example_3_3_3_gantt_solution.svg){ width="100%" }
 
 
-Confirms that "The optimal schedule is 3, 4, 5, 1, 2 with $\sum{U_j = 2}$" and "Note also that there may be many optimal schedules".
+confirms that "The optimal schedule is 3, 4, 5, 1, 2 with $\sum{U_j = 2}$" and "Note also that there may be many optimal schedules".
 
 ## Example 3.4.5 (Minimizing Total Tardiness)
 
@@ -211,7 +215,7 @@ Consider the following 5 jobs.
 | 4    | 83  | 336 |
 | 5    | 130  | 337 |
 
-According to Pinedo, the optimal is "370. Two optimal sequences are 1, 2, 4, 5, 3 and 2, 1, 4, 5, 3", confirmed by the following simulation.
+According to Pinedo, the optimal is "370. Two optimal sequences are 1, 2, 4, 5, 3 and 2, 1, 4, 5, 3", confirmed by the following simulation:
 
 ``` py
 problem = ps.SchedulingProblem(name="PinedoExample3.4.5")
@@ -258,7 +262,7 @@ Consider the following 4 jobs.
 
 Pinedo states that "It turns out that the best schedule reachable from this node is 1, 2, 4, 3 with an objective value of 64."
 
-This is not confirmed by the following example, which gives 67 as the lowest weighted tardiness:
+However, our simulation gives a different result (the total weighted tardiness is 67):
 ``` py
 problem = ps.SchedulingProblem(name="PinedoExample3.6.3")
 J1 = ps.FixedDurationTask(
@@ -291,7 +295,7 @@ ps.render_gantt_matplotlib(solution)
 
 ## Example 4.1.5 (Minimizing Total Earliness and Tardiness with Tight Due Date)
 
-Consider the following example with 6 jobs and d = 180.
+Consider the following example with 6 jobs and due date $d = 180$.
 
 | jobs | $p_j$ |
 | ---- | -- |
@@ -302,7 +306,7 @@ Consider the following example with 6 jobs and d = 180.
 | 5    | 20  |
 | 6    | 2  |
 
-The following script:
+The following script optimized minimizing both total earliness and tardiness:
 
 ``` py
 problem = ps.SchedulingProblem(name="PinedoExample4.1.5")
@@ -349,8 +353,8 @@ gives the optimal sequence 1,4,5,6,3,2:
 
 
 ## Example 4.2.3 (Minimizing the Total Completion Time with Deadlines)
-Consider the following instance with 5 jobs.
 
+In this example, we have a set of 5 jobs with their respective processing times and due dates:
 
 | jobs | $p_j$ | $d_j$ |
 | ---- | -- | -- |
@@ -360,7 +364,8 @@ Consider the following instance with 5 jobs.
 | 4    | 4  | 18 |
 | 5    | 2  | 18 |
 
-Minimizing the total completion time is achieved using this script:
+To minimize the total completion time, we can use the following Python script:
+
 ``` py
 import processscheduler as ps
 
@@ -391,3 +396,59 @@ ps.render_gantt_matplotlib(solution_1)
 
 The statement "Proceeding in this manner yields two optimal schedules, namely schedules 5, 1, 2, 3, 4 and 3, 1, 2, 5, 4." is confirmed.
 
+## Example 6.1.1 (Flow Shops with Unlimited Intermediate Storage)
+
+Consider 5 jobs on 4 machines with the processing times presented in the table below.
+
+| jobs | $j_1$ | $j_2$ |$j_3$ |$j_4$ |$j_5$ |
+| ---- | -- | -- | -- | -- | -- |
+| $p_{1,j_k}$ | 5  | 5 | 3 | 6 | 3 |
+| $p_{2,j_k}$ | 4  | 4 | 2 | 4 | 4 |
+| $p_{3,j_k}$ | 4  | 4 | 3 | 4 | 1 |
+| $p_{4,j_k}$ | 3  | 6 | 3 | 2 | 5 |
+
+We solve this problem using the following Python script:
+
+``` py
+pb = ps.SchedulingProblem(name="Pinedo6.1.1")
+durations = [[5,4,4,3],
+             [5,4,4,6],
+             [3,2,3,3],
+             [6,4,4,2],
+             [3,4,1,5]]
+
+
+# create machines
+M1 = ps.Worker(name="M1")
+M2 = ps.Worker(name="M2")
+M3 = ps.Worker(name="M3")
+M4 = ps.Worker(name="M4")
+
+machines = [M1, M2, M3, M4]
+
+# create tasks
+job_number = 1
+for job_number in range(5):
+    j = 0
+    tasks_for_this_job = []
+    for d in durations[job_number]:
+        t = ps.FixedDurationTask(name=f"{d}(T{job_number+1},{j+1})", duration=d)
+        t.add_required_resource(machines[j])
+        tasks_for_this_job.append(t)
+        j += 1
+    # and precedence
+    for i in range(len(tasks_for_this_job)-1):
+        ps.TaskPrecedence(task_before=tasks_for_this_job[i],
+                          task_after=tasks_for_this_job[i+1])
+
+ps.ObjectiveMinimizeMakespan()
+solver = ps.SchedulingSolver(problem=pb)
+solution = solver.solve()
+ps.render_gantt_matplotlib(solution)
+```
+
+The resulting Gantt chart displays the optimal sequence, which is 5, 3, 1, 2, 4, with a makespan of 32:
+
+![Pinedo611PSGanttSol](img/pinedo_6_1_1_gantt_solution.svg){ width="100%" }
+
+This has to be be compared to the statement from Pinedo, p.161, where "the two sequences suggested by the heuristic are therefore 2, 5, 3, 1, 4 and 5, 2, 3, 1, 4. The makespan under both these sequences is 32. Complete enumeration veriﬁes that both sequences are optimal." We should verify that the Pinedo's sequence is actually a solution found by ProcessScheduler. This can be achived by adding a constraint to ensure that job 2 is prior to job 1.
