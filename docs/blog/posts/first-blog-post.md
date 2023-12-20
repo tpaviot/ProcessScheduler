@@ -9,28 +9,21 @@ categories:
   - General
 ---
 
-# Adding a simple blog post
+# Major changes are on the way
 
-__You enjoy working with Material for MkDocs? Share the love! You can now add
-a badge to your project's README, showing that your project is built with
-Material for MkDocs.__
-
-Material for MkDocs' logo was just added to [Simple Icons], which is used by
-[Shields.io] to include logos in badges. We generated a badge for you, which
-you can add to your project's README:
-
-[![Material for MkDocs][badge]](#usage)
+The development of ProcessScheduler began in the fall of 2021. The past two years have laid the foundation for a free and open-source framework dedicated to planning and scheduling for industrial applications. The experience gained during this initial phase allows for medium-term projections.
 
 <!-- more -->
+The current work is a complete overhaul of the code that aims to achieve the following objectives:
 
-## Usage
+## Improve the quality and robustness of the code
+This involves expanding the test base, the code coverage. The pydantic library has been chosen to establish the definition of all classes.
 
-Just copy the following snippet and paste it into your project's `README.md`:
+## Give coherence to the codebase
+The project now needs a cleanup that ensures a consistency of the API, which has developed over time according to needs.
 
-``` markdown
-[![Built with Material for MkDocs](https://img.shields.io/badge/Material_for_MkDocs-526CFE?style=for-the-badge&logo=MaterialForMkDocs&logoColor=white)](https://squidfunk.github.io/mkdocs-material/)
-```
+## Increase functional coverage
+To be able to model and simulate an increasing number of industrial situations and real use cases, new classes and functionalities must be added.
 
-  [Simple Icons]: https://simpleicons.org/
-  [Shields.io]: https://shields.io/
-  [badge]: https://img.shields.io/badge/Material_for_MkDocs-526CFE?style=for-the-badge&logo=MaterialForMkDocs&logoColor=white
+## Rewrite the documentation
+The documentation hosted by the readthedocs service does not provide the required quality.

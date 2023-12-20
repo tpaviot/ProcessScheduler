@@ -66,6 +66,7 @@ nav:
   - Download/Install: download_install.md
   - Run: run.md
 - Concepts:
+  - Workflow: workflow.md
   - Scheduling Problem: scheduling_problem.md
   - Represent:
     - Tasks: task.md
@@ -73,13 +74,12 @@ nav:
     - Resource Assignmnent: resource_assignment.md
     - Buffers: buffer.md
     - Functions: function.md
+    - Indicators: indicator.md
   - Constraint:
     - Task constraints: task_constraints.md
     - Resource Constraints: resource_constraints.md
     - Customized Constraints: customized_constraints.md
     - First Order Logics: first_order_logic_constraints.md
-  - Measure:
-    - Indicators: indicator.md
   - Solve:
     - Solver: solving.md
     - Optimize objectives: objectives.md

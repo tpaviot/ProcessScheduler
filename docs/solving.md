@@ -14,19 +14,23 @@ It takes the following optional arguments:
 
 * `debug`: False by default, if set to True will output many useful information.
 
-* `max_time`: in seconds, the maximal time allowed to find a solution. Default is 60s.
+* `max_time`: in seconds, the maximal time allowed to find a solution. Default is 10s.
 
-* `parallel`: boolean False by default, if True force the solver to be executed in multithreaded mode. It *might* be quicker. It might not.
+* `parallel`: boolean False by default, if True force the solver to be executed in multithreaded mode. It *might* be quicker. Or not.
 
-* `random_values`: a boolean, default to :const:`False`. If set to :const:`True`, enable a builtin generator to set random initial values. By setting this attribute to :const:`True`, one expects the solver to give a different solution each time it is called.
+* `random_values`: a boolean, default to `False`. If set to `True`, enable a builtin generator to set random initial values. By setting this attribute to `True`, one expects the solver to give a different solution each time it is called.
 
 * `logics`: a string, None by default. Can be set to any of the supported z3 logics, "QF_IDL", "QF_LIA", etc. see https://smtlib.cs.uiowa.edu/logics.shtml. By default (logics set to None), the solver tries to find the best logics, but there can be significant improvements by setting a specific logics ("QF_IDL" or "QF_UFIDL" seems to give the best performances).
 
 * `verbosity`: an integer, 0 by default. 1 or 2 increases the solver verbosity. TO be used in a debugging or inspection purpose.
 
+* `optimizer`: a string, "incremental" by default, can be also set to "optimize". 1 or 2 increases the solver verbosity. TO be used in a debugging or inspection purpose.
+
+* `optimize_priority`: a string among "pareto", "lex", "box", "weight".
+
 ## Solve
 
-Just call the :func:`solve` method. This method returns a `Solution` instance.
+Just call the `solve` method. This method returns a `Solution` instance.
 
 ``` py
 solution = solver.solve()
@@ -34,7 +38,7 @@ solution = solver.solve()
 
 Running the `solve` method returns can either fail or succeed, according to the 4 following cases:
 
-1. The problem cannot be solved because some constraints are contradictory. It is called "Unsatisfiable". The :func:`solve` method returns False. For example:
+1. The problem cannot be solved because some constraints are contradictory. It is called "Unsatisfiable". The `solve` method returns False. For example:
 
 ``` py
 TaskStartAt(task=cook_the_chicken, value=2)
@@ -47,11 +51,11 @@ It is obvious that these constraints cannot be both satisfied.
 
 3. The solver takes too long to complete and exceeds the allowed `max_time`. The `solve` method returns False.
 
-4. The solver successes in finding a schedule that satisfies all the constraints. The `solve` method returns the solution as a JSON dictionary.
+4. The solver successes in finding a schedule that satisfies all the constraints. The `solve` method returns the solution, which can be rendered as a Gantt chart or a JSON string.
 
 !!! note
 
-   If the solver fails to give a solution, increase the `max_time` (case 3) or remove some constraints (cases 1 and 2).
+    If the solver fails to give a solution, increase the `max_time` (case 2) or remove some constraints (case 1).
 
 ## Find another solution
 
@@ -61,7 +65,7 @@ The solver may schedule:
 
 * the best possible schedule in case of an optimization issue.
 
-In both cases, you may need to check a different schedule that fits all the constraints. Use the :func:`find_another_solution` method and pass the variable you would want the solver to look for another solution.
+In both cases, you may need to check a different schedule that fits all the constraints. Use the `find_another_solution` method and pass the variable you would want the solver to look for another solution.
 
 !!! note
 
@@ -72,16 +76,15 @@ You can pass any variable to the `find_another_solution` method: a task start, a
 For example, there are 5 different ways to schedule a FixedDurationTask with a duration=2 in an horizon of 6. The default solution returned by the solver is:
 
 ``` py
-problem = ps.SchedulingProblem('FindAnotherSolution', horizon=6)
-solutions =[]
-task_1 = ps.FixedDurationTask('task1', duration=2)
+problem = ps.SchedulingProblem(name='FindAnotherSolution', horizon=6)
+task_1 = ps.FixedDurationTask(name='task1', duration=2)
 problem.add_task(task_1)
-solver = ps.SchedulingSolver(problem)
+solver = ps.SchedulingSolver(problem=problem)
 solution = solver.solve()
-print("Solution for task_1.start:", task_1.scheduled_start)
+print("Solution for task_1.start:", solution.tasks['task1'])
 ```
 
-``` console
+``` bash
 Solution for task_1.start: 0
 ```
 
@@ -90,7 +93,7 @@ Then, we can request for another solution:
 ``` py
 solution = solver.find_another_solution(task_1.start)
 if solution is not None:
-    print("New solution for task_1.start:", solution.tasks[task_1.name].start)
+    print("New solution for task_1.start:", solution.tasks['task1'])
 ```
 
 ``` bash
@@ -102,3 +105,11 @@ You can recursively call `find_another_solution` to find all possible solutions,
 ## Run in debug mode
 
 If the `debug` attribute is set to True, the z3 solver is run with the unsat_core option. This will result in a much longer computation time, but this will help identifying the constraints that conflict. Because of this higher consumption of resources, the `debug` flag should be used only if the solver fails to find a solution.
+
+## Optimization
+
+Please refer to the [Objectives](objectives.md) page for further details.
+
+## Gantt chart
+
+Please refer to the [Gantt chart](gantt_chart.md) page for further details.
