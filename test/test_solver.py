@@ -818,6 +818,16 @@ def test_single_math_indicator_1():
     assert solution.tasks[task_1.name].end == 20
 
 
+def test_work_amount_1() -> None:
+    pb = ps.SchedulingProblem(name="WorkAMount1", horizon=20)
+    task_1 = ps.VariableDurationTask(name="task1", work_amount=15)
+    machine_1 = ps.Worker(name="M1", productivity=5)
+    task_1.add_required_resource(machine_1)
+    solution = ps.SchedulingSolver(problem=pb).solve()
+    assert solution
+    assert solution.tasks[task_1.name].duration == 3
+
+
 #
 # Muti optimizer
 #
@@ -871,9 +881,9 @@ def test_multi_weighted_2():
     )
 
 
-def test_multi_weighted_lex():
+def test_multi_optimize_lex():
     # lex
-    pb = ps.SchedulingProblem(name="MultiObjective2", horizon=20)
+    pb = ps.SchedulingProblem(name="MultiObjectiveOptimizeLex", horizon=20)
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
     ps.ConstraintFromExpression(expression=task_1._end == 20 - task_2._start)
@@ -897,9 +907,9 @@ def test_multi_weighted_lex():
     )
 
 
-def test_multi_weighted_box():
+def test_multi_optimize_box():
     # box
-    pb = ps.SchedulingProblem(name="MultiObjective2", horizon=20)
+    pb = ps.SchedulingProblem(name="MultiObjectiveOptimizeBox", horizon=20)
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
     ps.ConstraintFromExpression(expression=task_1._end == 20 - task_2._start)
@@ -923,9 +933,9 @@ def test_multi_weighted_box():
     )
 
 
-def opt6():
+def test_multi_optimize_pareto():
     # Pareto
-    pb = ps.SchedulingProblem(name="MultiObjective2", horizon=20)
+    pb = ps.SchedulingProblem(name="MultiObjectiveOptimizePareto", horizon=20)
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
     ps.ConstraintFromExpression(expression=task_1._end == 20 - task_2._start)
@@ -942,7 +952,7 @@ def opt6():
         problem=pb, optimizer="optimize", optimize_priority="pareto"
     )
     solution = solver.solve()
-    nb_solution = 1
+    nb_solution = 0
     while solution:
         print("Found solution:")
         print("\t task_1.end: f{solution.tasks[task_1.end]}")
@@ -951,3 +961,69 @@ def opt6():
         nb_solution += 1
 
     assert nb_solution == 18
+
+
+#
+# Dynamic resource assignment
+#
+def test_dynamic_resource_assignment():
+    pb = ps.SchedulingProblem(name="DynamicAssignment")
+
+    T_1 = ps.VariableDurationTask(name="T_1", work_amount=150)
+
+    M_1 = ps.Worker(name="M_1", productivity=5)
+    M_2 = ps.Worker(name="M_2", productivity=20)
+
+    # not dynamic
+    # T_1.add_required_resources([M_1, M_2])
+
+    # dynamic
+    T_1.add_required_resource(M_1)
+    T_1.add_required_resource(M_2, dynamic=True)
+
+    ps.ResourceUnavailable(resource=M_2, list_of_time_intervals=[(0, 10)])
+
+    ps.ObjectiveMinimizeMakespan()
+
+    solver = ps.SchedulingSolver(problem=pb)
+
+    solution = solver.solve()
+    assert solution
+    assert solution.horizon == 14
+
+
+#
+# Find another solution
+#
+def test_find_another_solution_variable_1() -> None:
+    pb = ps.SchedulingProblem(name="FindAnotherSolution", horizon=4)
+    t = ps.FixedDurationTask(name="T1", duration=2)
+    # three are three possible schedules : start=0, start=1 or start=2
+    s = ps.SchedulingSolver(problem=pb)
+    solution = s.solve()
+    assert solution
+    s.find_another_solution_for_variable(t._start)
+    solution2 = s.solve()
+    assert solution2
+    s.find_another_solution_for_variable(t._start)
+    solution3 = s.solve()
+    assert solution2
+    s.find_another_solution_for_variable(t._start)
+    solution = s.solve()
+    assert not solution
+
+
+def test_find_another_solution_global_1() -> None:
+    pb = ps.SchedulingProblem(name="FindAnotherSolution", horizon=4)
+    t1 = ps.FixedDurationTask(name="T1", duration=2)
+    t2 = ps.FixedDurationTask(name="T2", duration=2)
+    t3 = ps.FixedDurationTask(name="T3", duration=2)
+    # three are 3 ** 3 = 27 different schedules
+    s = ps.SchedulingSolver(problem=pb)
+    nb_sol = 0
+    solution = s.solve()
+    while solution:
+        s.find_another_solution()
+        solution = s.solve()
+        nb_sol += 1
+    assert nb_sol == 27
