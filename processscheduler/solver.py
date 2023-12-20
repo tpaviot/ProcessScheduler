@@ -808,11 +808,17 @@ class SchedulingSolver(BaseModelWithJson):
         if self._current_solution is None:
             raise AssertionError("No current solution. First call the solve() method.")
         different_assertions = []
-        for variable in self._current_solution:
-            print(variable)
-            value = self._current_solution[variable].as_long()
-            print(value)
-            different_assertions.append(variable != value)
+        for t in self.problem.tasks.values():
+            different_assertions.append(
+                t._start != self._current_solution[t._start].as_long()
+            )
+            different_assertions.append(
+                t._end != self._current_solution[t._end].as_long()
+            )
+            if t.optional:
+                different_assertions.append(
+                    t._scheduled != f"{z3_sol[t._scheduled]}" == "True"
+                )
         # any of the assertions is meet
         self.append_z3_assertion(z3.Or(different_assertions))
         return self.solve()
