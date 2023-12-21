@@ -214,7 +214,9 @@ class ObjectiveMinimizeGreatestStartTime(Objective):
         greatest_start_time_indicator.append_z3_list_of_assertions(assertions)
 
         super().__init__(
-            name="StartEarliest", target=greatest_start_time_indicator, kind="minimize"
+            name="MinimizeGreatestStartTime",
+            target=greatest_start_time_indicator,
+            kind="minimize",
         )
 
 
@@ -243,7 +245,7 @@ class ObjectiveMinimizeFlowtime(Objective):
         flow_time = IndicatorFromMathExpression(
             name="Flowtime", expression=flow_time_expr
         )
-        super().__init__(name="Flowtime", target=flow_time, kind="minimize")
+        super().__init__(name="MinimizeFlowtime", target=flow_time, kind="minimize")
 
 
 class ObjectivePriorities(Objective):

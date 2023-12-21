@@ -361,6 +361,21 @@ def test_start_latest_1():
     assert solution.tasks[task_2.name].start == 51 - 3
 
 
+def test_minimize_greatest_start_time():
+    problem = ps.SchedulingProblem(name="MinimizeGreatestStartTime")
+    # only one task, the solver should schedule a start time at 0
+    task_1 = ps.FixedDurationTask(name="task1", duration=2)
+    task_2 = ps.FixedDurationTask(name="task2", duration=3)
+    ps.TaskPrecedence(task_before=task_2, task_after=task_1)
+    ps.TaskStartAt(task=task_2, value=8)
+    ob = ps.ObjectiveMinimizeGreatestStartTime()
+    solution = solve_problem(problem)
+    assert solution
+    assert solution.indicators[ob.target.name] == 11
+    assert solution.tasks[task_1.name].start == 11
+    assert solution.tasks[task_2.name].start == 8
+
+
 def test_priorities():
     problem = ps.SchedulingProblem(name="SolvePriorities")
     task_1 = ps.FixedDurationTask(name="task1", duration=2, priority=1)
@@ -384,37 +399,20 @@ def test_priorities():
 
 
 #
-# Find other solution
-#
-# def test_find_another_solution():
-#     problem = ps.SchedulingProblem(name="FindAnotherSolution", horizon=6)
-#     solutions = []
-
-#     task_1 = ps.FixedDurationTask(name="task1", duration=2)
-#     solver = ps.SchedulingSolver(problem=problem)
-#     solution = solver.solve()
-
-#     while solution:
-#         solutions.append(solution.tasks[task_1.name].start)
-#         solution = solver.find_another_solution(task_1._start)
-#     # there should be 5 solutions
-#     assert solutions == [0, 1, 2, 3, 4]
-
-
-# def test_find_another_solution_solve_before():
-#     problem = ps.SchedulingProblem(name="FindAnotherSolutionSolveBefore", horizon=6)
-
-#     task_1 = ps.FixedDurationTask(name="task1", duration=2)
-#     solver = ps.SchedulingSolver(problem=problem)
-#     with pytest.raises(AssertionError):
-#         solver.find_another_solution(task_1._start)
-
-
-#
 # Total work_amount, resource productivity
 #
-def test_work_amount_1():
-    problem = ps.SchedulingProblem(name="WorkAmount")
+def test_work_amount_1() -> None:
+    pb = ps.SchedulingProblem(name="WorkAmount1", horizon=20)
+    task_1 = ps.VariableDurationTask(name="task1", work_amount=15)
+    machine_1 = ps.Worker(name="M1", productivity=5)
+    task_1.add_required_resource(machine_1)
+    solution = ps.SchedulingSolver(problem=pb).solve()
+    assert solution
+    assert solution.tasks[task_1.name].duration == 3
+
+
+def test_work_amount_2():
+    problem = ps.SchedulingProblem(name="WorkAmount2")
 
     task_1 = ps.VariableDurationTask(name="task1", work_amount=11)
     # create one worker with a productivity of 2
@@ -427,10 +425,10 @@ def test_work_amount_1():
     assert solution.tasks[task_1.name].duration == 6
 
 
-def test_work_amount_2():
+def test_work_amount_3():
     # try the same problem than above, but with one more resource
     # check that the task duration is lower
-    problem = ps.SchedulingProblem(name="WorkAmount", horizon=4)
+    problem = ps.SchedulingProblem(name="WorkAmount3", horizon=4)
 
     task_1 = ps.VariableDurationTask(name="task1", work_amount=11)
     # create two workers
@@ -446,8 +444,6 @@ def test_work_amount_2():
 #
 # Pinedo
 #
-
-
 def test_pinedo_2_3_2() -> None:
     """Example 4.1.5 of the Pinedo book. The solution is expected to be:
     1,3,6,5,4,2"""
@@ -818,21 +814,9 @@ def test_single_math_indicator_1():
     assert solution.tasks[task_1.name].end == 20
 
 
-def test_work_amount_1() -> None:
-    pb = ps.SchedulingProblem(name="WorkAMount1", horizon=20)
-    task_1 = ps.VariableDurationTask(name="task1", work_amount=15)
-    machine_1 = ps.Worker(name="M1", productivity=5)
-    task_1.add_required_resource(machine_1)
-    solution = ps.SchedulingSolver(problem=pb).solve()
-    assert solution
-    assert solution.tasks[task_1.name].duration == 3
-
-
 #
 # Muti optimizer
 #
-
-
 def test_multi_weighted_1():
     pb = ps.SchedulingProblem(name="MultiObjective1Weigthed", horizon=20)
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
@@ -995,8 +979,31 @@ def test_dynamic_resource_assignment():
 #
 # Find another solution
 #
-def test_find_another_solution_variable_1() -> None:
-    pb = ps.SchedulingProblem(name="FindAnotherSolution", horizon=4)
+def test_find_another_solution_solve_before():
+    problem = ps.SchedulingProblem(name="FindAnotherSolutionSolveBefore", horizon=6)
+    task_1 = ps.FixedDurationTask(name="task1", duration=2)
+    solver = ps.SchedulingSolver(problem=problem)
+    with pytest.raises(AssertionError):
+        solver.find_another_solution_for_variable(task_1._start)
+
+
+def test_find_another_solution_variable_1():
+    problem = ps.SchedulingProblem(name="FindAnotherSolutionSingleVariable1", horizon=6)
+    solutions = []
+
+    task_1 = ps.FixedDurationTask(name="task1", duration=2)
+    solver = ps.SchedulingSolver(problem=problem)
+    solution = solver.solve()
+
+    while solution:
+        solutions.append(solution.tasks[task_1.name].start)
+        solution = solver.find_another_solution_for_variable(task_1._start)
+    # there should be 5 solutions
+    assert solutions == [0, 1, 2, 3, 4]
+
+
+def test_find_another_solution_variable_2() -> None:
+    pb = ps.SchedulingProblem(name="FindAnotherSolutionSingleVariable2", horizon=4)
     t = ps.FixedDurationTask(name="T1", duration=2)
     # three are three possible schedules : start=0, start=1 or start=2
     s = ps.SchedulingSolver(problem=pb)

@@ -45,6 +45,7 @@ from processscheduler.objective import (
     ObjectivePriorities,
     ObjectiveTasksStartLatest,
     ObjectiveTasksStartEarliest,
+    ObjectiveMinimizeGreatestStartTime,
     ObjectiveMinimizeFlowtime,
     ObjectiveMinimizeFlowtimeSingleResource,
     ObjectiveMaximizeMaxBufferLevel,
