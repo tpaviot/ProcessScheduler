@@ -66,7 +66,8 @@ class BaseModelWithJson(BaseModel):
 
     def to_json(self, compact=False):
         """return a json string"""
-        return self.model_dump_json(indent=None if compact else 4)
+        # exclude the 'problem' field to avoid the problem to be exported into the solution
+        return self.model_dump_json(indent=None if compact else 4, exclude="problem")
 
     def to_json_file(self, filename, compact=False):
         with open(filename, "w") as f:
