@@ -7,6 +7,7 @@ classDiagram
   Constraint <|-- ResourceConstraint
   ResourceConstraint <|-- WorkLoad
   ResourceConstraint <|-- ResourceUnavailable
+  ResourceConstraint <|-- ResourceNonDelay
   ResourceConstraint <|-- ResourceTasksDistance
   ResourceConstraint <|-- SameWorkers
   ResourceConstraint <|-- DistinctWorkers
@@ -56,6 +57,39 @@ The `ca` instance constraints the resource to be unavailable for 1 period betwee
 
     This constraint is a special case for the `WorkLoad` where the `number_of_time_slots` is set to `0`.
 
+
+## ResourceTasksDistance
+
+This constraint enforces a specific number of time unitary periods between tasks for a single resource. It can be applied within specified time intervals.
+
+| attribute | type | default | description |
+| --------- | ---- | ------- | ----------- |
+| resource  | Union[Worker, CumulativeWorker] | x | The resource to which the constraint applies.|
+| distance  | int  |   X     | The desired number of time unitary periods between tasks.|
+| list_of_time_intervals | list | None | A list of time intervals within which the constraint is restricted.|
+| mode | Literal["min", "max", "exact"] | "exact" | The mode for enforcing the constraint |
+
+``` py
+worker_1 = ps.Worker(name="Worker1")
+
+ps.ResourceTasksDistance(
+    resource=worker_1,
+    distance=4,
+    mode="exact",
+    list_of_time_intervals=[[10, 20], [30, 40]])
+```
+
+## ResourceNonDelay
+
+A non-delay schedule is a type of feasible schedule where no machine is kept idle while there is an operation waiting for processing. Essentially, this approach prohibits unforced idleness.
+
+`ResourceNonDelay` class is designed to prevent idle time for a resource when a task is ready for processing bu forcing idle time to 0. That means that all tasks processed by this resource will be contiguous in the schedule, if ever a solution exists.
+
+``` py
+machine_1 = ps.Worker('Machine1')
+ps.ResourceNonDelay(resource=worker_1)
+```
+
 ## DistinctWorkers
 
 A `AllDifferentWorkers` constraint applies to two `SelectWorkers` instances, used to assign alternative resources to a task. It constraints the solver to select different workers for each `SelectWorkers`. For instance:
@@ -91,15 +125,3 @@ cs = ps.SameWorkers(select_workers_1=s1,
 ```
 
 ensures either worker_1 is selected by both s1 and s2, or worker_2 is selected by both s1 and s2.
-
-## ResourceTasksDistance
-
-``` py
-worker_1 = ps.Worker(name="Worker1")
-
-ps.ResourceTasksDistance(
-    resource=worker_1,
-    distance=4,
-    mode="exact",
-    list_of_time_intervals=[[10, 20], [30, 40]])
-```
