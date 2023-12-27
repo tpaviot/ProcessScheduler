@@ -30,6 +30,7 @@ from processscheduler.indicator import (
     IndicatorNumberOfTardyTasks,
     IndicatorMaximumLateness,
     IndicatorResourceUtilization,
+    IndicatorResourceIdle,
     IndicatorNumberTasksAssigned,
     IndicatorResourceCost,
     IndicatorMaxBufferLevel,

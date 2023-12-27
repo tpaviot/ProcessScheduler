@@ -28,6 +28,8 @@ from processscheduler.resource import Worker, CumulativeWorker
 from processscheduler.function import ConstantFunction
 from processscheduler.buffer import ConcurrentBuffer, NonConcurrentBuffer
 from processscheduler.util import get_minimum, get_maximum
+from processscheduler.util import sort_no_duplicates
+
 import processscheduler.base
 
 
@@ -268,6 +270,39 @@ class IndicatorResourceCost(Indicator):
         # by 2, and make the cost computation linear if costs are linear
         expression = z3.Sum(constant_costs) + z3.Sum(variable_costs) / 2
         self.append_z3_assertion(self._indicator_variable == expression)
+
+
+class IndicatorResourceIdle(Indicator):
+    resource: Union[Worker, CumulativeWorker]
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        self.name = f"ResourceIdle{self.resource.name}"
+
+        starts = []
+        ends = []
+        for start_var, end_var in self.resource._busy_intervals.values():
+            starts.append(start_var)
+            ends.append(end_var)
+        # sort both lists
+        sorted_starts, c1 = sort_no_duplicates(starts)
+        sorted_ends, c2 = sort_no_duplicates(ends)
+        self.append_z3_list_of_assertions(c1 + c2)
+        # from now, starts and ends are sorted in asc order
+        # the space between two consecutive tasks is the sorted_start[i+1]-sorted_end[i]
+        # we just have to constraint this variable
+        diffs = []
+        for i in range(1, len(sorted_starts)):
+            condition_only_scheduled_tasks = z3.And(
+                sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0
+            )
+            new_diff = z3.If(
+                condition_only_scheduled_tasks, sorted_starts[i] - sorted_ends[i - 1], 0
+            )
+            diffs.append(new_diff)
+
+        self.append_z3_assertion(self._indicator_variable == z3.Sum(diffs))
 
 
 class IndicatorMaxBufferLevel(Indicator):

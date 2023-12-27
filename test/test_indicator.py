@@ -318,6 +318,28 @@ def test_resource_utilization_indicator_5() -> None:
     assert solution.indicators[utilization_res.name] == 100
 
 
+#
+# Resource idle
+#
+def test_indicator_resource_idle_1() -> None:
+    problem = ps.SchedulingProblem(name="IndicatorResourceIdle1")
+    task_1 = ps.FixedDurationTask(name="task1", duration=2)
+    task_2 = ps.FixedDurationTask(name="task2", duration=5)
+    task_3 = ps.FixedDurationTask(name="task3", duration=8)
+    ps.TaskStartAt(task=task_1, value=3)
+    ps.TaskStartAt(task=task_2, value=10)
+    ps.TaskStartAt(task=task_3, value=30)
+    worker = ps.Worker(name="AWorker")
+    task_1.add_required_resource(worker)
+    task_2.add_required_resource(worker)
+    task_3.add_required_resource(worker)
+    ind = ps.IndicatorResourceIdle(resource=worker)
+    solver = ps.SchedulingSolver(problem=problem)
+    solution = solver.solve()
+    assert solution
+    assert solution.indicators[ind.name] == 20
+
+
 def test_optimize_indicator_multi_objective() -> None:
     problem = ps.SchedulingProblem(name="OptimizeIndicatorMultiObjective", horizon=10)
     task_1 = ps.FixedDurationTask(name="task1", duration=2, priority=1)

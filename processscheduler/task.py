@@ -257,18 +257,6 @@ class FixedDurationTask(Task):
         self.set_assertions(assertions)
 
 
-class UnavailabilityTask(FixedDurationTask):
-    """A task that tells that a resource is unavailable during this period. This
-    task is not publicly exposed, it is used by the resource constraint
-    ResourceUnavailability.
-    """
-
-    def __init__(self, **data) -> None:
-        super().__init__(**data)
-        self.work_amount = 0
-        self.priority = 0
-
-
 class VariableDurationTask(Task):
     """The duration can take any value, computed by the solver."""
 
