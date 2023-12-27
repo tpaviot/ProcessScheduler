@@ -29,6 +29,7 @@ Available builtin indicators are listed below:
 | IndicatorNumberOfTardyTasks | List of tasks | Number of tardy tasks from the selected tasks |
 | IndicatorMaximumLateness | List of tasks | Maximum lateness of selected tasks |
 | IndicatorResourceUtilization  | Single resource | Resource utilization, from 0% to 100% of the schedule horizon, of the selected resource |
+| IndicatorResourceIdle  | Single resource | Resource idle, i.e. total time waiting for the next job to be processed |
 | IndicatorNumberTasksAssigned  | Single resource | Number of tasks assigned to the selected resource |
 | IndicatorResourceCost  | List of resources| Total cost of selected resources |
 | IndicatorMaxBufferLevel  |Buffer | Maximum level of the selected buffer |

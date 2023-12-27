@@ -1,3 +1,7 @@
+---
+title: Introduction
+---
+
 # About
 
 ProcessScheduler operates on models written in the Python programming language, offering the flexibility to accommodate a wide range of scheduling requirements for tasks and resources.
