@@ -344,6 +344,21 @@ class TaskEndBefore(TaskConstraint):
 #
 # Optional classes only constraints
 #
+class OptionalTaskForceSchedule(TaskConstraint):
+    """task_2 is scheduled if and only if task_1 is scheduled"""
+
+    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+    to_be_scheduled: bool
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+
+        if not self.task.optional:
+            raise TypeError(f"Task {self.task_2.name} must be optional.")
+
+        self.set_z3_assertions(self.task._scheduled == self.to_be_scheduled)
+
+
 class OptionalTaskConditionSchedule(TaskConstraint):
     """An optional task that is scheduled only if a condition is fulfilled."""
 

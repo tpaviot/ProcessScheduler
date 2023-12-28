@@ -166,7 +166,11 @@ Defines constraints on the temporal distance between tasks using a shared resour
 
     If the task(s) is (are) optional(s), all these constraints apply only if the task is scheduled. If the solver does not schedule the task, these constraints does not apply.
 
-## Logical task constraints
+## Optional task constraints
+
+### OptionalTaskForceSchedule
+
+Force an optional task to be (un)scheduled.
 
 ### OptionalTaskConditionSchedule
 
