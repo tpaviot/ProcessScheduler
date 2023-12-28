@@ -340,6 +340,51 @@ def test_indicator_resource_idle_1() -> None:
     assert solution.indicators[ind.name] == 20
 
 
+def test_indicator_resource_idle_2() -> None:
+    problem = ps.SchedulingProblem(name="IndicatorResourceIdle2")
+    task_1 = ps.FixedDurationTask(name="task1", duration=2)
+    task_2 = ps.FixedDurationTask(name="task2", duration=5)
+    task_3 = ps.FixedDurationTask(name="task3", duration=8)
+    task_4 = ps.FixedDurationTask(name="task4", duration=7)
+    ps.TaskStartAt(task=task_1, value=3)
+    ps.TaskStartAt(task=task_2, value=10)
+    ps.TaskStartAt(task=task_3, value=30)
+    ps.TaskStartAt(task=task_4, value=48)
+    worker_1 = ps.Worker(name="Machine1")
+    worker_2 = ps.Worker(name="Machine2")
+    task_1.add_required_resource(worker_1)
+    task_2.add_required_resource(worker_1)
+    task_3.add_required_resource(worker_2)
+    task_4.add_required_resource(worker_2)
+    ind_1 = ps.IndicatorResourceIdle(resource=worker_1)
+    ind_2 = ps.IndicatorResourceIdle(resource=worker_2)
+    solver = ps.SchedulingSolver(problem=problem)
+    solution = solver.solve()
+    assert solution
+    assert solution.indicators[ind_1.name] == 5
+    assert solution.indicators[ind_2.name] == 10
+
+
+def test_indicator_resource_idle_3() -> None:
+    """3 tasks, one is optional non scheduled"""
+    problem = ps.SchedulingProblem(name="IndicatorResourceIdle3")
+    task_1 = ps.FixedDurationTask(name="task1", duration=2)
+    task_2 = ps.FixedDurationTask(name="task2", duration=5)
+    task_3 = ps.FixedDurationTask(name="task3", duration=8, optional=True)
+    ps.TaskStartAt(task=task_1, value=3)
+    ps.TaskStartAt(task=task_2, value=11)
+    ps.OptionalTaskForceSchedule(task=task_3, to_be_scheduled=False)
+    worker_1 = ps.Worker(name="Machine1")
+    task_1.add_required_resource(worker_1)
+    task_2.add_required_resource(worker_1)
+    task_3.add_required_resource(worker_1)
+    ind = ps.IndicatorResourceIdle(resource=worker_1)
+    solver = ps.SchedulingSolver(problem=problem)
+    solution = solver.solve()
+    assert solution
+    assert solution.indicators[ind.name] == 6
+
+
 def test_optimize_indicator_multi_objective() -> None:
     problem = ps.SchedulingProblem(name="OptimizeIndicatorMultiObjective", horizon=10)
     task_1 = ps.FixedDurationTask(name="task1", duration=2, priority=1)
