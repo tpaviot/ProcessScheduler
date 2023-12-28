@@ -320,3 +320,15 @@ def test_json_export_problem_solver_1(my_tmp_path):
     solver = ps.SchedulingSolver(problem=pb)
     solver.to_json()
     pb.to_json_file(my_tmp_path / "solver.json")
+
+
+#
+# Incremental solver save intermediate states
+#
+def test_incremental_optimizer_save_state() -> None:
+    pb = ps.SchedulingProblem(name="SaveIntermediateState", horizon=20)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    ob = ps.ObjectiveTasksStartLatest()
+    solution = ps.SchedulingSolver(problem=pb, save_intermediate_states=True).solve()
+    assert solution
+    assert solution.indicators[ob.target.name] == 17
