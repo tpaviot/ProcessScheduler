@@ -1,4 +1,5 @@
 # ProcessScheduler benchmark
+import json
 import time
 from datetime import datetime
 import subprocess
@@ -68,10 +69,14 @@ print(f"\tTotal memory: {get_size(svmem.total)}")
 model_creation_times = []
 computation_times = []
 
+md_template = "| logics | computing_time(s) | flowtime | priority | obj value |\n"
+md_template += "| - | - | - | - | - |\n"
+
+
 test_init_time = time.perf_counter()
 all_logics = [
     "QF_LRA",
-    "HORN",
+    # "HORN",
     "QF_LIA",
     "QF_RDL",
     "QF_IDL",
@@ -114,7 +119,6 @@ def get_problem():
     print("Create model...", end="")
     r_a = [ps.Worker(name="A_%i" % (i + 1)) for i in range(num_resource_a)]
     r_b = [ps.Worker(name="B_%i" % (i + 1)) for i in range(num_resource_b)]
-
     # Dev Team Tasks
     # For each dev_team pick one resource a and one resource b.
     ts_team_migration = [
@@ -130,8 +134,6 @@ def get_problem():
     # optimization
     ps.ObjectivePriorities()
     ps.ObjectiveMinimizeFlowtime()
-
-    # digital_transformation.add_objective_makespan(weight=10)
     return digital_transformation
 
 
@@ -144,26 +146,40 @@ for logics in all_logics:
     solver = ps.SchedulingSolver(
         problem=digital_transformation,
         logics=logics,
-        random_values=False,
+        random_values=True,
         parallel=False,
+        max_iter=10,
         max_time=10,
     )
     if solution := solver.solve():
         flowtime_result = solution.indicators["Flowtime"]
         priority_result = solution.indicators["TotalPriority"]
+        total_result = flowtime_result + priority_result
     else:
-        flowtime_result, priority_result = None, None
+        flowtime_result, priority_result, total_result = None, None, None
     computing_time = time.perf_counter() - top2
 
     computation_times.append(computing_time)
 
     print("Logics:", logics, "Total Time:", computing_time)
+
     results[logics] = {
         "computing_time (s)": f"{computing_time:.2f}",
         "flowtime result (lower is better)": flowtime_result,
-        "priorty_result (lower is better)": priority_result,
+        "priority_result (lower is better)": priority_result,
+        "total objective": total_result,
     }
+    md_template += f"|{logics}|{computing_time:.2f}|{flowtime_result}|{priority_result}|{total_result}\n"
+
+
 test_final_time = time.perf_counter()
 print("TOTAL BENCH TIME:", test_final_time - test_init_time)
 print("Results:")
 print(results)
+# save result to json
+with open(f"benchmark_logics_results_{bench_id}.json", "w") as f:
+    f.write(json.dumps(results))
+
+# save results to markdown
+with open(f"benchmark_logics_results_{bench_id}.md", "w") as f:
+    f.write(md_template)
