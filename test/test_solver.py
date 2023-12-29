@@ -1034,3 +1034,13 @@ def test_find_another_solution_global_1() -> None:
         solution = s.solve()
         nb_sol += 1
     assert nb_sol == 27
+
+
+#
+# Logics
+#
+def test_qf_idl_logics():
+    problem = ps.SchedulingProblem(name="LogicsQFIDL", horizon=6)
+    task_1 = ps.FixedDurationTask(name="task1", duration=2)
+    solver = ps.SchedulingSolver(problem=problem, logics="QF_UFIDL")
+    assert solver.solve()
