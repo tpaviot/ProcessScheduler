@@ -169,7 +169,7 @@ for logics in all_logics:
         "priority_result (lower is better)": priority_result,
         "total objective": total_result,
     }
-    md_template += f"|{logics}|{computing_time:.2f}|{flowtime_result}|{priority_result}|{total_result}\n"
+    md_template += f"|{logics}|{computing_time:.2f}|{flowtime_result}|{priority_result}|{total_result}|\n"
 
 
 test_final_time = time.perf_counter()
