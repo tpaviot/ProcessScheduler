@@ -90,6 +90,7 @@ class SchedulingSolver(BaseModelWithJson):
     ] = Field(default=None)
     verbosity: int = Field(default=0)
     optimizer: Literal["incremental", "optimize"] = Field(default="incremental")
+    max_iter: int = Field(default=None)
     save_intermediate_states: bool = Field(default=False)
     save_intermediate_states_path: str = Field(default=None)
     optimize_priority: Literal["pareto", "lex", "box", "weight"] = Field(
@@ -621,6 +622,7 @@ class SchedulingSolver(BaseModelWithJson):
             solution = self.solve_optimize_incremental(
                 self._objective._target,
                 kind="min" if self._objective.kind == "minimize" else "max",
+                max_iter=self.max_iter,
             )
             if not solution:
                 return False
