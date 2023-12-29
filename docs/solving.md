@@ -113,3 +113,32 @@ Please refer to the [Objectives](objectives.md) page for further details.
 ## Gantt chart
 
 Please refer to the [Gantt chart](gantt_chart.md) page for further details.
+
+## Logics
+
+| logics | computing_time(s) | flowtime | priority | obj value |
+| - | - | - | - | - |
+|QF_LRA|2.84|147|289|436|
+|QF_LIA|4.25|165|320|485|
+|QF_RDL|0.48|None|None|None|
+|QF_IDL|3.45|174|339|513|
+|QF_AUFLIA|6.01|129|270|399|
+|QF_ALIA|3.69|139|280|419|
+|QF_AUFLIRA|4.30|145|266|411|
+|QF_AUFNIA|4.41|159|337|496|
+|QF_AUFNIRA|5.35|168|310|478|
+|QF_ANIA|6.12|168|320|488|
+|QF_LIRA|5.41|151|302|453|
+|QF_UFLIA|6.18|143|296|439|
+|QF_UFLRA|9.19|143|305|448|
+|QF_UFIDL|4.98|132|263|395|
+|QF_UFRDL|5.69|171|352|523|
+|QF_NIRA|6.72|142|268|410|
+|QF_UFNRA|8.51|160|300|460|
+|QF_UFNIA|18.89|130|261|391|
+|QF_UFNIRA|6.36|171|320|491|
+|QF_S|5.28|152|289|441|
+|QF_SLIA|4.33|174|361|535|
+|UFIDL|6.70|126|246|372|
+|HORN|0.49|None|None|None|
+|QF_FPLRA|6.21|129|253|382|
