@@ -1,5 +1,9 @@
 # Scheduling. Theory, Algorithms, and Systems
 
+<a target="_blank" href="https://colab.research.google.com/github/tpaviot/ProcessScheduler/blob/master/examples-notebooks/pinedo.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
+
 This section presents examples from [Michael Pinedo](https://wp.nyu.edu/michaelpinedo/)'s renowned book:
 
 Pinedo, Michael. L. (2012) "Scheduling. Theory, Algorithms, and Systems". 4th edition. Springer New York, NY. ISBN  doi: [10.1007/978-1-4614-2361-4](https://doi.org/10.1007/978-1-4614-2361-4)
@@ -149,7 +153,7 @@ The maximum lateness optimization is achievd using:
 
 ``` py
 lateness_indicator = ps.IndicatorMaximumLateness()
-ps.ObjectiveMinimizeIndicator(target=ind, weight=1)
+ps.ObjectiveMinimizeIndicator(target=lateness_indicator, weight=1)
 ```
 
 After solving, this gives the following Gantt chart, confirming "that schedule 1, 3, 4, 2 has to be optimal".
