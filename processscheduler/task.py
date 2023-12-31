@@ -104,8 +104,7 @@ class Task(NamedUIDObject):
             # two cases, if the dure_date is a deadline (True by default):
             if self.due_date_is_deadline:
                 self.append_z3_assertion(self._end <= self.due_date)
-            else:
-                print("TODO: Should implement a penalty function")
+            # TODO: Should implement a penalty function if the due_date can be delayed
 
     def add_required_resource(self, resource: Resource, dynamic=False) -> None:
         """
