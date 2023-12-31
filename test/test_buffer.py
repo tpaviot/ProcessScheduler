@@ -383,7 +383,7 @@ def test_load_unload_concurrent_1() -> None:
 
 
 def test_load_unload_non_concurrent_1() -> None:
-    # tha same than the previous one but with a NonConccurent buffer
+    # same than the previous one but with a NonConccurent buffer
     pb = ps.SchedulingProblem(name="TestLoadUnloadNonConcurrent1")
 
     n = 4

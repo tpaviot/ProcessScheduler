@@ -219,7 +219,7 @@ def test_resource_tasks_distance_single_time_period_2() -> None:
     # task_2 must be scheduled after task_1
     ps.TaskPrecedence(task_before=task_1, task_after=task_2)
 
-    # add a makespan objective, to be sure, to schedule task_2 in the time interal
+    # add a makespan objective, to be sure, to schedule task_2 in the time interval
     ps.ObjectiveMinimizeMakespan()
 
     # as a consequence, task2 should be scheduled 4 periods after and start at 15

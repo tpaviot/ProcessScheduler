@@ -110,7 +110,7 @@ def test_operator_not_andd_1():
 
 
 def test_operator_xor_1() -> None:
-    # same as OperatorOr2 but with an exlusive or, there
+    # same as OperatorOr2 but with an exclusive or, there
     # is no solution
     pb = ps.SchedulingProblem(name="OperatorXor1", horizon=2)
     t_1 = ps.FixedDurationTask(name="t1", duration=2)

@@ -658,7 +658,7 @@ def test_indicator_flowtime_single_resource_5() -> None:
 
 
 def test_indicator_flowtime_single_resource_6() -> None:
-    # Mutliple time intervals (Currently fails for nb_time_intervals > 2, gantt to check total_flowtime is correct)
+    # Multiple time intervals (Currently fails for nb_time_intervals > 2, gantt to check total_flowtime is correct)
     nb_time_intervals = 7
     time_interval_length = 13  # always > 5
     horizon = nb_time_intervals * time_interval_length

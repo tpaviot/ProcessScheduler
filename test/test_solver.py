@@ -671,7 +671,7 @@ def test_pinedo_4_1_5() -> None:
     solution = solve_problem(problem)
     assert solution
     # here, the solution is a bit different: 1, 4, 5, 6, 3, 2
-    # the optimial sum is 360
+    # the optimal sum is 360
     assert (
         solution.indicators[total_tardiness.name]
         + solution.indicators[total_earliness.name]
@@ -815,7 +815,7 @@ def test_single_math_indicator_1():
 
 
 #
-# Muti optimizer
+# Multi objective optimizer
 #
 def test_multi_weighted_1():
     pb = ps.SchedulingProblem(name="MultiObjective1Weigthed", horizon=20)

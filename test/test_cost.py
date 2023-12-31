@@ -171,7 +171,7 @@ def test_optimize_linear_cost_2() -> None:
 
 def test_optimize_linear_cost_3() -> None:
     # if the cost function involves float numbers, this will
-    # result in a ToReal conversion of z3 interger variables,
+    # result in a ToReal conversion of z3 integer variables,
     # and may lead to unepexted behaviours
     problem = ps.SchedulingProblem(name="OptimizeLinearCost3")
 

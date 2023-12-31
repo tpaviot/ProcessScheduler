@@ -48,7 +48,7 @@ def test_sort_no_duplicates():
 
 
 def test_sort_duplicates():
-    """sort an array of 20 integers with only 10 differen"""
+    """sort an array of 20 integers with only 10 different"""
     lst_to_sort = random.sample(range(-100, 100), 10) * 2
     sorted_variables, assertions = sort_duplicates(lst_to_sort)
     s = z3.Solver()
