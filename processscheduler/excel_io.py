@@ -65,7 +65,6 @@ def export_solution_to_excel_file(solution, excel_filename, colors: bool):
 
         for task_name, task_start, task_end in ress.assignments:
             # unavailabilities are rendered with a grey dashed bar
-            text_to_display = "" if "NotAvailable" in task_name else task_name
             bg_color = _get_color_from_string(task_name, colors)
 
             cell_task_format = workbook.add_format({"align": "center"})
@@ -80,7 +79,7 @@ def export_solution_to_excel_file(solution, excel_filename, colors: bool):
                     task_start + 1,  # start column
                     i + 1,  # row
                     task_end,  # end column
-                    text_to_display,
+                    task_name,  # text to display
                     cell_task_format,
                 )
             else:

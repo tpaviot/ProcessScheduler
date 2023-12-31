@@ -85,20 +85,9 @@ class SchedulingSolution(BaseModelWithJson):
     buffers: Dict[str, BufferSolution] = Field(default={})
     indicators: Dict[str, int] = Field(default={})
 
-    def get_all_tasks_but_unavailable(self):
-        """Return all tasks except those of the type UnavailabilityTask
-        used to represent a ResourceUnavailable constraint."""
-        return {
-            task: self.tasks[task] for task in self.tasks if "NotAvailable" not in task
-        }
-
     def get_scheduled_tasks(self):
-        """Return scheduled tasks."""
-        tasks_not_unavailable = self.get_all_tasks_but_unavailable()
         return {
-            task: tasks_not_unavailable[task]
-            for task in tasks_not_unavailable
-            if tasks_not_unavailable[task].scheduled
+            task: self.tasks[task] for task in self.tasks if self.tasks[task].scheduled
         }
 
     def add_indicator_solution(self, indicator_name: str, indicator_value: int) -> None:

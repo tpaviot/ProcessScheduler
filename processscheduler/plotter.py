@@ -123,7 +123,7 @@ def render_gantt_plotly(
 
     # tasks to render
     if render_mode == "Task":
-        tasks_to_render = solution.get_all_tasks_but_unavailable()
+        tasks_to_render = solution.get_scheduled_tasks()
     else:
         tasks_to_render = solution.tasks
 
@@ -228,7 +228,9 @@ def render_gantt_matplotlib(
 
     # tasks to render
     if render_mode == "Task":
-        tasks_to_render = solution.get_all_tasks_but_unavailable()
+        tasks_to_render = (
+            solution.get_scheduled_tasks()
+        )  # get_all_tasks_but_unavailable()
     else:
         tasks_to_render = solution.tasks
 
@@ -337,15 +339,9 @@ def render_gantt_matplotlib(
             ress = solution.resources[resource_name]
             # each interval from the busy_intervals list is rendered as a bar
             for task_name, start, end in ress.assignments:
-                # unavailabilities are rendered with a grey dashed bar
-                if "NotAvailable" in task_name:
-                    hatch = "//"
-                    bar_color = "white"
-                    text_to_display = ""
-                else:
-                    hatch = None
-                    bar_color = task_colors[task_name]
-                    text_to_display = task_name
+                hatch = None
+                bar_color = task_colors[task_name]
+                text_to_display = task_name
                 draw_broken_barh_with_text(
                     start, end - start, bar_color, text_to_display, hatch
                 )

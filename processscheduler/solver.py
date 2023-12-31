@@ -850,5 +850,7 @@ class SchedulingSolver(BaseModelWithJson):
 
     def export_to_smt2(self, smt_filename: str):
         """export the model to a smt file to be processed by another SMT solver"""
+        if not self._initialized:
+            self.initialize()
         with open(smt_filename, "w", encoding="utf-8") as outfile:
             outfile.write(self._solver.to_smt2())
