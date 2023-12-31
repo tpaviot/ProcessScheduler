@@ -26,7 +26,7 @@ import processscheduler as ps
 ```
 
 ### Create the scheduling problem
-The total horizon is unknwown, leave it empty and only set the problem name.
+The total horizon is unknown, leave it empty and only set the problem name.
 
 
 ```python

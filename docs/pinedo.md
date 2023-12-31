@@ -105,7 +105,7 @@ durations = [7, 6, 6, 1, 2, 1, 1, 7, 7, 14]
 We solve the problem in the same way and obtain the following schedule:
 ![Pinedo232PSGanttSol2](img/pinedo_example_232_solution_2.svg){ width="100%" }
 
-Here the conclusion is sligthly different from the one from Pinedo's book, where "one would expect that, if each one of the ten processing times is reduced by one time unit, the makespan would be less than 31. However, requiring the schedule to be non-delay results in the schedule depicted in [..] with a makespan of 32". Our solution, however, has a makespan of 27.
+Here the conclusion is slightly different from the one from Pinedo's book, where "one would expect that, if each one of the ten processing times is reduced by one time unit, the makespan would be less than 31. However, requiring the schedule to be non-delay results in the schedule depicted in [..] with a makespan of 32". Our solution, however, has a makespan of 27.
 
 With 3 machines and the original settings, we get the following schedule:
 
@@ -149,7 +149,7 @@ J3.add_required_resource(M1)
 J4.add_required_resource(M1)
 ```
 
-The maximum lateness optimization is achievd using:
+The maximum lateness optimization is achieved using:
 
 ``` py
 lateness_indicator = ps.IndicatorMaximumLateness()
@@ -455,4 +455,4 @@ The resulting Gantt chart displays the optimal sequence, which is 5, 3, 1, 2, 4,
 
 ![Pinedo611PSGanttSol](img/pinedo_6_1_1_gantt_solution.svg){ width="100%" }
 
-This has to be be compared to the statement from Pinedo, p.161, where "the two sequences suggested by the heuristic are therefore 2, 5, 3, 1, 4 and 5, 2, 3, 1, 4. The makespan under both these sequences is 32. Complete enumeration veriﬁes that both sequences are optimal." We should verify that the Pinedo's sequence is actually a solution found by ProcessScheduler. This can be achived by adding a constraint to ensure that job 2 is prior to job 1.
+This has to be be compared to the statement from Pinedo, p.161, where "the two sequences suggested by the heuristic are therefore 2, 5, 3, 1, 4 and 5, 2, 3, 1, 4. The makespan under both these sequences is 32. Complete enumeration veriﬁes that both sequences are optimal." We should verify that the Pinedo's sequence is actually a solution found by ProcessScheduler. This can be achieved by adding a constraint to ensure that job 2 is prior to job 1.

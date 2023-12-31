@@ -15,7 +15,7 @@ classDiagram
 
 The most common case is that a finite number $n$ of workers are required to perform a set of $m$ tasks.
 
-There are three ways to assign resource(s) to perform a task : single resource assignment, multiple resource assignement and alternative resource assignement.
+There are three ways to assign resource(s) to perform a task : single resource assignment, multiple resource assignment and alternative resource assignment.
 
 
 ## Single resource assignment

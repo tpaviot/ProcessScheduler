@@ -45,7 +45,7 @@ For instance, if you have two drillers, with the first one capable of drilling 3
 ``` py
 driller_1 = Worker(name='Driller1',
                    productivity=3)
-driller_2 = Worker(namme='Driller1',
+driller_2 = Worker(name='Driller1',
                    productivity=9)
 ```
 
@@ -57,7 +57,7 @@ driller_2 = Worker(namme='Driller1',
 
 You can associate cost information with any resource, enabling ProcessScheduler to compute the total cost of a schedule, the cost per resource, or optimize the schedule to minimize costs (see the Objective section for details).
 
-The resource cost can be defined as a **time dependant [Function](function.md)**.
+The resource cost can be defined as a **time dependent [Function](function.md)**.
 
 ### Constant Cost Per Period
 

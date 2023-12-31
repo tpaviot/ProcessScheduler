@@ -62,7 +62,7 @@ impl = Implies(condition=t_2._start == 4,
                list_of_constraints=[TasksEndSynced(task_1=t_3,task_2=t_4)]
 ```
 
-## Conditionnal expression
+## Conditional expression
 
 ``` mermaid
 classDiagram

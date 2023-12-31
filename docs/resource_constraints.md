@@ -83,7 +83,7 @@ ps.ResourceTasksDistance(
 
 A non-delay schedule is a type of feasible schedule where no machine is kept idle while there is an operation waiting for processing. Essentially, this approach prohibits unforced idleness.
 
-`ResourceNonDelay` class is designed to prevent idle time for a resource when a task is ready for processing bu forcing idle time to 0. That means that all tasks processed by this resource will be contiguous in the schedule, if ever a solution exists.
+`ResourceNonDelay` class is designed to prevent idle time for a resource when a task is ready for processing but forcing idle time to 0. That means that all tasks processed by this resource will be contiguous in the schedule, if ever a solution exists.
 
 ``` py
 machine_1 = ps.Worker('Machine1')

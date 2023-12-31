@@ -10,7 +10,7 @@ ps.ConstraintFromExpression(expression=t1.start == t_2.end + t_4.duration)
 
 !!! warning
 
-	A z3 ArithRef relation involved the "==" operator, used for assignement, not comparison. Your linter may complain about this syntax.
+	A z3 ArithRef relation involved the "==" operator, used for assignment, not comparison. Your linter may complain about this syntax.
 
 You can combine the following variables:
 

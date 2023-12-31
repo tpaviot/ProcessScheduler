@@ -8,7 +8,7 @@ graph TD
   B --> C[3. Constraint the schedule];
   C --> D[4. Add objectives];
   D --> E[5. Solve];
-  E --> F[6. Analye];
+  E --> F[6. Analyse];
   F --> B;
 ```
 

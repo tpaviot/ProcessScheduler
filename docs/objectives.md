@@ -36,7 +36,7 @@ You can create your own objective using the `ObjectiveMaximizeIndicator` and `Ob
 
 ## Available solvers : incremental and optimize
 
-The default optimization solver is `incremental`. After a solution is found, the solver will run again and again to find a better solution untill the maximum allowed time is reached. If you provide a small max_time value, the solver will exit to the last found value, but there may be a better value. In that case, just increase the max_time and run again the solver.
+The default optimization solver is `incremental`. After a solution is found, the solver will run again and again to find a better solution until the maximum allowed time is reached. If you provide a small max_time value, the solver will exit to the last found value, but there may be a better value. In that case, just increase the max_time and run again the solver.
 
 ``` py
 solver = ps.SchedulingSolver(problem=pb,
