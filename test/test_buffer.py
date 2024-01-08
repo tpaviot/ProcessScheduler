@@ -62,7 +62,7 @@ def test_unload_buffer_1() -> None:
     ps.TaskStartAt(task=task_1, value=5)
     ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=3)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer.name].state == [10, 7]
@@ -83,7 +83,7 @@ def test_unload_buffer_2() -> None:
     ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=3)
     ps.TaskUnloadBuffer(task=task_2, buffer=buffer, quantity=2)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer.name].state == [10, 7, 5]
@@ -105,7 +105,7 @@ def test_unload_buffer_3() -> None:
     ps.TaskUnloadBuffer(task=task_2, buffer=buffer, quantity=2)
     ps.TaskUnloadBuffer(task=task_3, buffer=buffer, quantity=1)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer.name].state == [10, 7, 5, 4]
@@ -118,7 +118,7 @@ def test_unload_buffer_4() -> None:
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     buffer = ps.NonConcurrentBuffer(name="Buffer1", final_state=15)
     ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=3)
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer.name].state == [18, 15]
@@ -134,7 +134,7 @@ def test_load_buffer_1() -> None:
     ps.TaskStartAt(task=task_1, value=5)
     ps.TaskLoadBuffer(task=task_1, buffer=buffer, quantity=3)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer.name].state == [10, 13]
@@ -156,7 +156,7 @@ def test_load_buffer_2() -> None:
     ps.TaskLoadBuffer(task=task_2, buffer=buffer, quantity=2)
     ps.TaskLoadBuffer(task=task_3, buffer=buffer, quantity=1)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer.name].state == [10, 13, 15, 16]
@@ -175,7 +175,7 @@ def test_load_unload_feed_buffers_1() -> None:
     ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=3)
     ps.TaskLoadBuffer(task=task_1, buffer=buffer_2, quantity=2)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer_1.name].state == [10, 7]
@@ -228,7 +228,7 @@ def test_unload_buffer_multiple_1() -> None:
     ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=3)
     ps.TaskUnloadBuffer(task=task_2, buffer=buffer, quantity=4)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer.name].state == [10, 7, 3]
@@ -253,7 +253,7 @@ def test_unload_buffer_multiple_3() -> None:
     ps.TaskUnloadBuffer(task=task_2, buffer=buffer, quantity=4)
     ps.TaskLoadBuffer(task=task_3, buffer=buffer, quantity=8)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer.name].state == [13, 9, 5, 13]
@@ -282,7 +282,7 @@ def test_unload_buffer_concurrent_1() -> None:
     ps.TaskUnloadBuffer(task=task_2, buffer=buffer, quantity=39)
     ps.TaskUnloadBuffer(task=task_3, buffer=buffer, quantity=17)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer.name].state == [100, 100 - (23 + 39 + 17)]
@@ -308,7 +308,7 @@ def test_unload_buffer_concurrent_2() -> None:
     ps.TaskUnloadBuffer(task=task_2, buffer=buffer, quantity=39)
     ps.TaskUnloadBuffer(task=task_3, buffer=buffer, quantity=17)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer.name].state == [
@@ -339,7 +339,7 @@ def test_unload_buffer_multiple_4() -> None:
     ps.TaskUnloadBuffer(task=task_3, buffer=buffer, quantity=3)
     ps.TaskUnloadBuffer(task=task_4, buffer=buffer, quantity=3)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer.name].state == [20, 14, 8]
@@ -429,7 +429,7 @@ def test_buffer_indicator_1() -> None:
     ps.TaskStartAt(task=task_1, value=0)
     indic_max = ps.IndicatorMaxBufferLevel(buffer=buffer_1)
     indic_min = ps.IndicatorMinBufferLevel(buffer=buffer_1)
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
     assert solution.buffers[buffer_1.name].state == [10, 7]
@@ -458,7 +458,7 @@ def test_objective_maximize_max_buffer_level_1() -> None:
 
     oo = ps.ObjectiveMaximizeMaxBufferLevel(buffer=buffer_1)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
 
@@ -486,7 +486,7 @@ def test_objective_maximize_max_buffer_level_2() -> None:
     oo = ps.ObjectiveMaximizeMaxBufferLevel(buffer=buffer_1)
     indic_min = ps.IndicatorMinBufferLevel(buffer=buffer_1)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
 
     assert solution
@@ -511,7 +511,7 @@ def test_objective_minimize_max_buffer_level_1() -> None:
 
     oo = ps.ObjectiveMinimizeMaxBufferLevel(buffer=buffer_1)
 
-    solver = ps.SchedulingSolver(problem=pb)
+    solver = ps.SchedulingSolver(problem=pb, max_time=20)
     solution = solver.solve()
     assert solution
 
