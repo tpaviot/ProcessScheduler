@@ -184,10 +184,8 @@ def test_optimize_linear_cost_3() -> None:
 
     # because float parameters, should use ToReal conversion
     # and a warning emitted
-    # TODO: wait for the next z3 release, otherwise no warning is emitted
-    # with pytest.warns(UserWarning):
-    #    cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
-    cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
+    with pytest.warns(UserWarning):
+        cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
 
 
 def test_quadratic_cost_1() -> None:
