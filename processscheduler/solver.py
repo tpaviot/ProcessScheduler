@@ -53,6 +53,7 @@ from processscheduler.util import (
     clean_buffer_states,
 )
 
+
 #
 # Solver class definition
 #
@@ -653,7 +654,9 @@ class SchedulingSolver(BaseModelWithJson):
                             constraint_name = self._map_boolrefs_to_constraints[
                                 f"{asst}"
                             ]
-                            conflicting_contraits.append(self.problem.constraints[constraint_name])
+                            conflicting_contraits.append(
+                                self.problem.constraints[constraint_name]
+                            )
                         else:
                             unknown_asst_origins.append(f"{asst}")
                     print(
@@ -663,10 +666,10 @@ class SchedulingSolver(BaseModelWithJson):
                         print("\t -> ", end="")
                         print(c)
                         print("====")
-                    #print(
+                    # print(
                     #    f"\tUnknown assertion origins ({len(unknown_asst_origins)} conflicts):"
-                    #)
-                    #for a in unknown_asst_origins:
+                    # )
+                    # for a in unknown_asst_origins:
                     #    print(f"\t\t-> {a}")
                 return False
 

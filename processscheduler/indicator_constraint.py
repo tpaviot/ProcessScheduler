@@ -42,6 +42,12 @@ class IndicatorBounds(IndicatorConstraint):
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
+
+        if self.lower_bound is None and self.upper_bound is None:
+            raise AssertionError(
+                "lower and upper bounds cannot be set to None, either one of them must be set"
+            )
+
         if self.lower_bound is not None:
             self.append_z3_assertion(
                 self.indicator._indicator_variable >= self.lower_bound

@@ -130,7 +130,7 @@ class SchedulingProblem(NamedUIDObject):
             IfThenElse,
             # indicator constraints
             IndicatorTarget,
-            IndicatorBounds
+            IndicatorBounds,
         ],
     ] = Field(default={})
 
