@@ -703,3 +703,62 @@ def test_indicator_nb_tasks_assigned_to_resource_1() -> None:
 
     assert solution
     assert solution.indicators["Nb Tasks Assigned (Worker1)"] == n
+
+
+#
+# Indicator constraints
+#
+def test_indicator_constraint_1() -> None:
+    # 4 tasks to be processed by three workers
+    # assign the number of tasks to be processed
+    problem = ps.SchedulingProblem(name="IndicatorConstraint1")
+    t_1 = ps.FixedDurationTask(name="T1", duration=8)
+    t_2 = ps.FixedDurationTask(name="T2", duration=7)
+    t_3 = ps.FixedDurationTask(name="T3", duration=7)
+    t_4 = ps.FixedDurationTask(name="T4", duration=7)
+    w_1 = ps.Worker(name="W1")
+    w_2 = ps.Worker(name="W2")
+    w_3 = ps.Worker(name="W3")
+    t_1.add_required_resource(ps.SelectWorkers(list_of_workers=[w_1, w_2, w_3]))
+    t_2.add_required_resource(ps.SelectWorkers(list_of_workers=[w_1, w_2, w_3]))
+    t_3.add_required_resource(ps.SelectWorkers(list_of_workers=[w_1, w_2, w_3]))
+    t_4.add_required_resource(ps.SelectWorkers(list_of_workers=[w_1, w_2, w_3]))
+
+    number_of_tasks_w_1 = ps.IndicatorNumberTasksAssigned(resource=w_1)
+    number_of_tasks_w_2 = ps.IndicatorNumberTasksAssigned(resource=w_2)
+    number_of_tasks_w_3 = ps.IndicatorNumberTasksAssigned(resource=w_3)
+
+    ps.IndicatorTarget(indicator=number_of_tasks_w_1, value=1)
+    ps.IndicatorTarget(indicator=number_of_tasks_w_2, value=1)
+    ps.IndicatorTarget(indicator=number_of_tasks_w_3, value=2)
+
+    solution = ps.SchedulingSolver(problem=problem).solve()
+    assert solution
+
+
+def test_indicator_constraint_2() -> None:
+    # 4 tasks to be processed by three workers
+    # set the minimum number of tasks to be assigned to each
+    problem = ps.SchedulingProblem(name="IndicatorConstraint2")
+    t_1 = ps.FixedDurationTask(name="T1", duration=8)
+    t_2 = ps.FixedDurationTask(name="T2", duration=7)
+    t_3 = ps.FixedDurationTask(name="T3", duration=7)
+    t_4 = ps.FixedDurationTask(name="T4", duration=7)
+    w_1 = ps.Worker(name="W1")
+    w_2 = ps.Worker(name="W2")
+    w_3 = ps.Worker(name="W3")
+    t_1.add_required_resource(ps.SelectWorkers(list_of_workers=[w_1, w_2, w_3]))
+    t_2.add_required_resource(ps.SelectWorkers(list_of_workers=[w_1, w_2, w_3]))
+    t_3.add_required_resource(ps.SelectWorkers(list_of_workers=[w_1, w_2, w_3]))
+    t_4.add_required_resource(ps.SelectWorkers(list_of_workers=[w_1, w_2, w_3]))
+
+    number_of_tasks_w_1 = ps.IndicatorNumberTasksAssigned(resource=w_1)
+    number_of_tasks_w_2 = ps.IndicatorNumberTasksAssigned(resource=w_2)
+    number_of_tasks_w_3 = ps.IndicatorNumberTasksAssigned(resource=w_3)
+
+    ps.IndicatorBounds(indicator=number_of_tasks_w_1, lower_bound=1, upper_bound=4)
+    ps.IndicatorBounds(indicator=number_of_tasks_w_2, lower_bound=1, upper_bound=4)
+    ps.IndicatorBounds(indicator=number_of_tasks_w_3, lower_bound=1, upper_bound=4)
+
+    solution = ps.SchedulingSolver(problem=problem).solve()
+    assert solution
