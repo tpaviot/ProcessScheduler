@@ -48,6 +48,7 @@ from processscheduler.objective import Objective
 from processscheduler.resource import Resource, Worker, CumulativeWorker, SelectWorkers
 from processscheduler.constraint import *
 from processscheduler.task_constraint import *
+from processscheduler.indicator_constraint import *
 from processscheduler.resource_constraint import *
 from processscheduler.first_order_logic import Not, Or, And, Xor, Implies, IfThenElse
 from processscheduler.buffer import Buffer
@@ -127,6 +128,9 @@ class SchedulingProblem(NamedUIDObject):
             Xor,
             Implies,
             IfThenElse,
+            # indicator constraints
+            IndicatorTarget,
+            IndicatorBounds
         ],
     ] = Field(default={})
 

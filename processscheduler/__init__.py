@@ -67,6 +67,7 @@ from processscheduler.resource_constraint import (
     ResourceTasksDistance,
     ResourceNonDelay,
 )
+from processscheduler.indicator_constraint import IndicatorTarget, IndicatorBounds
 from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
 from processscheduler.function import (
     ConstantFunction,

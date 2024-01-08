@@ -83,6 +83,10 @@ class TaskConstraint(Constraint):
     """Constraint that applies on a Task"""
 
 
+class IndicatorConstraint(Constraint):
+    """Constraint that applies on an Indicator"""
+
+
 #
 # A Generic constraint that applies to both Resource or Task
 #
