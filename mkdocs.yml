@@ -78,6 +78,7 @@ nav:
   - Constraint:
     - Task constraints: task_constraints.md
     - Resource Constraints: resource_constraints.md
+    - Indicator Constraints: indicator_constraints.md
     - Customized Constraints: customized_constraints.md
     - First Order Logics: first_order_logic_constraints.md
   - Solve:
