@@ -26,6 +26,12 @@ from typing import Literal
 
 import z3
 
+# use rich print if available
+try:
+    from rich import print
+except ImportError:
+    pass
+
 from pydantic import Field, PositiveFloat, Extra, ConfigDict
 
 from processscheduler.base import BaseModelWithJson
@@ -46,7 +52,6 @@ from processscheduler.util import (
     sort_duplicates,
     clean_buffer_states,
 )
-
 
 #
 # Solver class definition
@@ -101,7 +106,7 @@ class SchedulingSolver(BaseModelWithJson):
         super().__init__(**data)
         self._objective = None  # the list of all objectives defined in this problem
         self._current_solution = None  # no solution until the problem is solved
-        self._map_boolrefs_to_geometric_constraints = {}
+        self._map_boolrefs_to_constraints = {}
         self._initialized = False
 
         if self.debug:
@@ -390,7 +395,7 @@ class SchedulingSolver(BaseModelWithJson):
                 # if the higher_contraint_name is defined, fill in the map_boolrefs_to_geometric_constraints dict
                 # to track the constraint that causes the conflict
                 if higher_constraint_name is not None:
-                    self._map_boolrefs_to_geometric_constraints[
+                    self._map_boolrefs_to_constraints[
                         asst_identifier
                     ] = higher_constraint_name
         else:
@@ -644,24 +649,25 @@ class SchedulingSolver(BaseModelWithJson):
                     unknown_asst_origins = []
                     for asst in unsat_core:
                         # look for an entry in the map dict
-                        if f"{asst}" in self._map_boolrefs_to_geometric_constraints:
-                            constraint = self._map_boolrefs_to_geometric_constraints[
+                        if f"{asst}" in self._map_boolrefs_to_constraints:
+                            constraint_name = self._map_boolrefs_to_constraints[
                                 f"{asst}"
                             ]
-                            conflicting_contraits.append(constraint)
+                            conflicting_contraits.append(self.problem.constraints[constraint_name])
                         else:
                             unknown_asst_origins.append(f"{asst}")
                     print(
-                        f"\tUnsatisfied assertions - conflict between {len(conflicting_contraits)} constraints:"
+                        f"\tUnsatisfied constraints - conflict between {len(conflicting_contraits)} constraints:"
                     )
                     for c in conflicting_contraits:
-                        print(f"\t\t-> {c}")
-                    print(
-                        f"\tUnknown assertion origins ({len(unknown_asst_origins)} conflicts):"
-                    )
-                    for a in unknown_asst_origins:
-                        print(f"\t\t-> {a}")
-                    # look the entry
+                        print("\t -> ", end="")
+                        print(c)
+                        print("====")
+                    #print(
+                    #    f"\tUnknown assertion origins ({len(unknown_asst_origins)} conflicts):"
+                    #)
+                    #for a in unknown_asst_origins:
+                    #    print(f"\t\t-> {a}")
                 return False
 
             if sat_result == z3.unknown:
