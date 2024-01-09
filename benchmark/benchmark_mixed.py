@@ -98,17 +98,17 @@ for horizon in range(20, n, step):
     # Create problem and initialize constraints
     pb = ps.SchedulingProblem(name="performance_analyzer", horizon=horizon)
     # Create resources and assign tasks
-    general_worker = ps.Worker("general")
+    general_worker = ps.Worker(name="general")
     workers = []
     for i in range(NB_WORKERS):
         name = f"worker_{i+1}"
-        worker = ps.Worker(name)
+        worker = ps.Worker(name=name)
 
         # Create tasks and assign resources
         tasks = []
         for j in range(NB_TASKS_PER_WORKER):
             tasks.append(
-                ps.FixedDurationTask(f"{name}__{j:02d}", duration=1, optional=True)
+                ps.FixedDurationTask(name=f"{name}__{j:02d}", duration=1, optional=True)
             )
             tasks[-1].add_required_resources([general_worker, worker])
 
@@ -118,11 +118,11 @@ for horizon in range(20, n, step):
     workload[(0, horizon)] = MAX_TASKS_IN_PROBLEM
 
     for worker in workers:
-        ps.WorkLoad(worker["worker"], workload, kind="max")
+        ps.WorkLoad(resource=worker["worker"], dict_time_intervals_and_bound=workload, kind="max")
 
     # Add constraints, define objective and solve problem
-    pb.add_objective_resource_utilization(general_worker)
-    solver = ps.SchedulingSolver(pb)
+    ps.ObjectiveMaximizeResourceUtilization(resource=general_worker)
+    solver = ps.SchedulingSolver(problem=pb, max_time=mt, logics=args.logics)
     solution = solver.solve()
     if not solution:
         break
