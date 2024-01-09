@@ -2,7 +2,6 @@
 [![codecov](https://codecov.io/gh/tpaviot/ProcessScheduler/branch/master/graph/badge.svg?token=9HI1FPJUDL)](https://codecov.io/gh/tpaviot/ProcessScheduler)
 [![Azure Build Status](https://dev.azure.com/tpaviot/ProcessScheduler/_apis/build/status/tpaviot.ProcessScheduler?branchName=master)](https://dev.azure.com/tpaviot/ProcessScheduler/_build?definitionId=9)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tpaviot/ProcessScheduler/HEAD?filepath=examples-notebooks)
-[![Documentation Status](https://readthedocs.org/projects/processscheduler/badge/?version=latest)](https://processscheduler.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/ProcessScheduler.svg)](https://badge.fury.io/py/ProcessScheduler)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4480745.svg)](https://doi.org/10.5281/zenodo.4480745)
 
@@ -11,28 +10,20 @@ ProcessScheduler is a Python package for creating optimized scheduling based on 
 
 ## Updates
 
-- [2023/12/13]: Huge on-going refactoring [#133](https://github.com/tpaviot/ProcessScheduler/issues/133)
-- [2023/12/12]: Release 0.9.4
+- 2023/12/13: Huge on-going refactoring [#133](https://github.com/tpaviot/ProcessScheduler/issues/133)
+- 2023/12/12: Release 0.9.4
 
 ## Features
 
-* Tasks: Creation of tasks defined by their duration, priority, and required effort.
-
-* Resources: Individual workers defined by their productivity, cost, and availability.
-
-* Resource Allocation: Allocation from a set of workers sharing common skills.
-
-* Buffers: Support for tasks that consume raw materials.
-
-* Indicators: Including cost, resource effort, or any customized indicator.
-
-* Task and resource constraints that can be combined using first-order logic operations (NOT, OR, XOR, AND, IMPLIES, IF/THEN ELSE) for rich representations.
-
-* Multi-optimized schedule computation, including makespan, flowtime, earliest start, latest start, resource cost, or any customized indicator you have defined.
-
-* Gantt diagram generation and rendering.
-
-* Results export to JSON, SMT-LIB 2.0, Excel, or other formats for further analysis.
+-   Tasks: Creation of tasks defined by their duration, priority, and required effort.
+-   Resources: Individual workers defined by their productivity, cost, and availability.
+-   Resource Allocation: Allocation from a set of workers sharing common skills.
+-   Buffers: Support for tasks that consume raw materials.
+-   Indicators: Including cost, resource effort, or any customized indicator.
+-   Task and resource constraints that can be combined using first-order logic operations (NOT, OR, XOR, AND, IMPLIES, IF/THEN ELSE) for rich representations.
+-   Multi-optimized schedule computation, including makespan, flowtime, earliest start, latest start, resource cost, or any customized indicator you have defined.
+-   Gantt diagram generation and rendering.
+-   Results export to JSON, SMT-LIB 2.0, Excel, or other formats for further analysis.
 
 ## Install latest version with pip
 
@@ -85,17 +76,12 @@ solution.render_gantt_matplotlib()
 
 ProcessScheduler uses the following tools to ensure code quality:
 
-* unittests,
-
-* code coverage (coverage.py, codecov.io),
-
-* continuous-integration at MS azure,
-
-* static code analysis (codacy),
-
-* spelling mistakes tracking (codespell),
-
-* code formatting using the black python formatter
+-   unittests,
+-   code coverage (coverage.py, codecov.io),
+-   continuous-integration at MS azure,
+-   static code analysis (codacy),
+-   spelling mistakes tracking (codespell),
+-   code formatting using the black python formatter
 
 ## License/Author
 
