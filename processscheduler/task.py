@@ -106,7 +106,9 @@ class Task(NamedUIDObject):
                 self.append_z3_assertion(self._end <= self.due_date)
             # TODO: Should implement a penalty function if the due_date can be delayed
 
-    def add_required_resource(self, resource: Resource, dynamic=False) -> None:
+    def add_required_resource(
+        self, resource: Resource, dynamic=False, delay_in=0, early_out=0
+    ) -> None:
         """
         Add a required resource to the current task.
 
@@ -177,8 +179,16 @@ class Task(NamedUIDObject):
                 self.append_z3_assertion(resource_busy_end <= self._end)
                 self.append_z3_assertion(resource_busy_start >= self._start)
             else:
-                self.append_z3_assertion(resource_busy_end == self._end)
-                self.append_z3_assertion(resource_busy_start == self._start)
+                if early_out > 0:
+                    self.append_z3_assertion(resource_busy_end == self._end - early_out)
+                else:
+                    self.append_z3_assertion(resource_busy_end == self._end)
+                if delay_in > 0:
+                    self.append_z3_assertion(
+                        resource_busy_start == self._start + delay_in
+                    )
+                else:
+                    self.append_z3_assertion(resource_busy_start == self._start)
             # finally, store this resource into the resource list
             self._required_resources.append(resource)
 

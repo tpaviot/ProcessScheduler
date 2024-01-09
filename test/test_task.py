@@ -377,3 +377,27 @@ def test_tasks_due_date_2() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert not solution
+
+
+#
+# Delay in, early out
+#
+def test_tasks_delay_in_early_out_1() -> None:
+    pb = ps.SchedulingProblem(name="TaskDelayInEarlyOut")
+
+    t1 = ps.FixedDurationTask(name="T1", duration=8)
+    t2 = ps.FixedDurationTask(name="T2", duration=6)
+
+    w1 = ps.Worker(name="W1")
+    w2 = ps.Worker(name="W2")
+
+    t1.add_required_resource(w1)
+    t1.add_required_resource(w2, delay_in=1, early_out=1)
+    t2.add_required_resource(w2)
+
+    ps.ObjectiveMinimizeMakespan()
+
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+
+    assert solution.horizon == 13
