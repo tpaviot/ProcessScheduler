@@ -117,7 +117,12 @@ class SchedulingSolver(BaseModelWithJson):
             z3.set_option("verbose", self.verbosity)
             z3.set_option(unsat_core=False)
 
-        z3.set_option("parallel.enable", self.parallel)
+        if self.parallel:
+            number_of_cpus = os.cpu_count()
+            z3.set_option("parallel.enable", True)
+            z3.set_option("sat.threads", number_of_cpus)
+            z3.set_option("smt.threads", number_of_cpus)
+
         if self.random_values:
             z3.set_option("sat.random_seed", random.randint(1, 1000))
             z3.set_option("smt.random_seed", random.randint(1, 1000))
