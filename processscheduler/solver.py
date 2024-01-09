@@ -64,7 +64,7 @@ class SchedulingSolver(BaseModelWithJson):
 
     problem: SchedulingProblem
     debug: bool = Field(default=False)
-    max_time: PositiveFloat = Field(default=10)
+    max_time: PositiveFloat = Field(default=20)
     parallel: bool = Field(default=False)
     random_values: bool = Field(default=False)
     logics: Literal[
