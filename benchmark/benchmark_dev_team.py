@@ -92,7 +92,6 @@ num_resource_b = 2
 
 for num_dev_teams in N:
     print("-> Num dev teams:", num_dev_teams)
-    init_time = time.perf_counter()
     # Resources
     digital_transformation = ps.SchedulingProblem(
         name="DigitalTransformation", horizon=num_dev_teams
@@ -114,6 +113,8 @@ for num_dev_teams in N:
     solver = ps.SchedulingSolver(
         problem=digital_transformation, max_time=mt, logics=args.logics
     )
+    init_time = time.perf_counter()
+
     solution = solver.solve()
 
     if not solution:

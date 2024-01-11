@@ -90,8 +90,6 @@ for problem_size in N:
     print("-> Problem size:", problem_size)
     # Teams and Resources
 
-    init_time = time.perf_counter()
-
     pb = ps.SchedulingProblem(name="n_queens_type_scheduling", horizon=problem_size)
     R = {i: ps.Worker(name="W-%i" % i) for i in range(problem_size)}
     T = {
@@ -110,6 +108,7 @@ for problem_size in N:
 
     # create the solver and solve
     solver = ps.SchedulingSolver(problem=pb, max_time=mt, logics=args.logics)
+    init_time = time.perf_counter()
     solution = solver.solve()
 
     if not solution:
