@@ -19,7 +19,7 @@ import os
 from typing import List
 from uuid import uuid4
 
-from pydantic import BaseModel, Field, Extra, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 
 import z3
 

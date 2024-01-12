@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. z3.If not, see <http://www.gnu.org/licenses/>.
 
-from typing import List, Tuple, Union
+from typing import Tuple, Union
 
-from pydantic import Field, PositiveInt
+from pydantic import Field
 
 from processscheduler.constraint import IndicatorConstraint
 from processscheduler.objective import Indicator

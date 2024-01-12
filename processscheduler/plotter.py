@@ -26,7 +26,6 @@ except ImportError:
 
 try:
     import matplotlib.pyplot as plt
-    import numpy as np
     from matplotlib.colors import LinearSegmentedColormap
 
     HAVE_MATPLOTLIB = True

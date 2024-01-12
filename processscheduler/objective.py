@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Any, Dict, Union, Tuple, List, Literal
+from typing import Any, Dict, Union, List, Literal
 import uuid
 
 import z3

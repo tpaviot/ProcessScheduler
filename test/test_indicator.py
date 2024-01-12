@@ -131,13 +131,13 @@ def test_indicator_number_of_tardy_tasks_1() -> None:
 
 def test_indicator_number_of_tardy_tasks_2() -> None:
     problem = ps.SchedulingProblem(name="IndicatorNumberOfTardyTasks2")
-    n = 10
-    for i in range(10):  # 10 tardy tasks
+    n = 10  # 10 tardy tasks
+    for i in range(n):
         t_i = ps.FixedDurationTask(
             name=f"T_{i}", duration=i + 2, due_date=i + 1, due_date_is_deadline=False
         )
         ps.TaskStartAt(task=t_i, value=0)  # tardiness 0  not tardy
-    for i in range(10, 20):  # 10 untardy tasks
+    for i in range(n, n + 10):  # 10 untardy tasks
         t_i = ps.FixedDurationTask(
             name=f"T_{i}", duration=i + 1, due_date=i + 5, due_date_is_deadline=False
         )

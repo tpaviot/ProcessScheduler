@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Dict, Optional, Union, Tuple, List
+from typing import Optional, Union, Tuple, List
 
 import z3
 
-from pydantic import Field, model_serializer
+from pydantic import Field
 
 from processscheduler.base import NamedUIDObject
 from processscheduler.task import Task

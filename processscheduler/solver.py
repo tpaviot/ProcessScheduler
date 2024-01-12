@@ -262,8 +262,6 @@ class SchedulingSolver(BaseModelWithJson):
             # and after, additional assertions
             # sort consume/feed times in asc order
             tasks_start_unload = [t._start for t in buffer._unloading_tasks]
-            number_of_unloading_tasks = len(tasks_start_unload)
-
             tasks_end_load = [t._end for t in buffer._loading_tasks]
 
             # sort_no_duplicates seems to be better in terms of performance

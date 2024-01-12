@@ -20,13 +20,13 @@ import z3
 from pydantic import Field, PositiveInt, model_serializer
 
 from processscheduler.base import NamedUIDObject
+from processscheduler.task import Task
 from processscheduler.function import (
     ConstantFunction,
     LinearFunction,
     PolynomialFunction,
 )
 
-# import processscheduler.context as ps_context
 import processscheduler.base
 
 
@@ -67,7 +67,7 @@ class Resource(NamedUIDObject):
         self._busy_intervals = {}  # type: Dict[Task, Tuple[z3.ArithRef, z3.ArithRef]]
 
     def add_busy_interval(
-        self, task, interval: Tuple[z3.ArithRef, z3.ArithRef]
+        self, task: Task, interval: Tuple[z3.ArithRef, z3.ArithRef]
     ) -> None:
         """add an interval in which the resource is busy"""
         self._busy_intervals[task] = interval
