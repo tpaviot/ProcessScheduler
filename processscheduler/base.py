@@ -16,10 +16,10 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from typing import List, Optional
+from typing import List
 from uuid import uuid4
 
-from pydantic import BaseModel, PositiveInt, Field, Extra, ConfigDict
+from pydantic import BaseModel, Field, Extra, ConfigDict
 
 import z3
 

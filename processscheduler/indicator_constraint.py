@@ -15,10 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. z3.If not, see <http://www.gnu.org/licenses/>.
 
-import uuid
-from typing import Literal, List, Tuple, Union
-
-import z3
+from typing import List, Tuple, Union
 
 from pydantic import Field, PositiveInt
 

@@ -32,7 +32,7 @@ try:
 except ImportError:
     pass
 
-from pydantic import Field, PositiveFloat, Extra, ConfigDict
+from pydantic import Field, PositiveFloat, ConfigDict
 
 from processscheduler.base import BaseModelWithJson
 from processscheduler.indicator import Indicator, IndicatorFromMathExpression
@@ -142,6 +142,8 @@ class SchedulingSolver(BaseModelWithJson):
         self._is_not_optimization_problem = False
         self._is_optimization_problem = False
         self._is_multi_objective_optimization_problem = False
+
+        self._solver = None  # to be set in initialize
 
     def get_parameters_description(self):
         """return the solver parameter names and values as a dict"""
@@ -263,7 +265,6 @@ class SchedulingSolver(BaseModelWithJson):
             number_of_unloading_tasks = len(tasks_start_unload)
 
             tasks_end_load = [t._end for t in buffer._loading_tasks]
-            number_of_loading_tasks = len(tasks_end_load)
 
             # sort_no_duplicates seems to be better in terms of performance
             # but not suitable for concurrent access to a buffer.
@@ -438,7 +439,7 @@ class SchedulingSolver(BaseModelWithJson):
         # in case of a single value to optimize
         if self._is_multi_objective_optimization_problem:
             if self.optimizer == "incremental" or self.optimize_priority == "weight":
-                eq_obj, _ = self.build_equivalent_weighted_objective()
+                self.build_equivalent_weighted_objective()
             else:
                 for obj in self.problem.objectives.values():
                     variable_to_optimize = obj._target
@@ -848,7 +849,7 @@ class SchedulingSolver(BaseModelWithJson):
             )
             if t.optional:
                 different_assertions.append(
-                    t._scheduled != f"{z3_sol[t._scheduled]}" == "True"
+                    t._scheduled != f"{self._current_solution[t._scheduled]}" == "True"
                 )
         # any of the assertions is meet
         self.append_z3_assertion(z3.Or(different_assertions))

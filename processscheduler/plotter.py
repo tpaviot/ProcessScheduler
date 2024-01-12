@@ -21,7 +21,7 @@ try:
     import numpy as np
 
     HAVE_NUMPY = True
-except ImportError as exc:
+except ImportError:
     HAVE_NUMPY = False
 
 try:
@@ -57,10 +57,10 @@ def plot_function(
 ) -> None:
     """Plot the function curve using matplotlib."""
     if not HAVE_MATPLOTLIB:
-        raise ModuleNotFoundError("matplotlib is not installed.") from exc
+        raise ModuleNotFoundError("matplotlib is not installed.")
 
     if not HAVE_NUMPY:
-        raise ModuleNotFoundError("numpy is not installed.") from exc
+        raise ModuleNotFoundError("numpy is not installed.")
 
     lower_bound, upper_bound = interval
     x = np.linspace(lower_bound, upper_bound, n_points)

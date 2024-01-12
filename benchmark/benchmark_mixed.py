@@ -118,7 +118,11 @@ for horizon in range(20, n, step):
     workload[(0, horizon)] = MAX_TASKS_IN_PROBLEM
 
     for worker in workers:
-        ps.WorkLoad(resource=worker["worker"], dict_time_intervals_and_bound=workload, kind="max")
+        ps.WorkLoad(
+            resource=worker["worker"],
+            dict_time_intervals_and_bound=workload,
+            kind="max",
+        )
 
     # Add constraints, define objective and solve problem
     ps.ObjectiveMaximizeResourceUtilization(resource=general_worker)

@@ -16,7 +16,6 @@
 
 import processscheduler as ps
 
-import processscheduler.base
 import pytest
 
 from pydantic import ValidationError

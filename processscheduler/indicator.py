@@ -15,8 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Any, Dict, Optional, Union, Tuple, List, Literal
-import uuid
+from typing import Dict, Optional, Union, Tuple, List
 
 import z3
 
@@ -182,10 +181,9 @@ class IndicatorNumberOfTardyTasks(Indicator):
             )
         tardiness_v = []
         for t in tasks:
-            task_is_tardy = z3.Bool(f"{t.name}_is_tardy")
             tardiness_v.append(t._end > t.due_date)
-        expression = z3.Sum(tardiness_v)
-        self.append_z3_assertion(self._indicator_variable == expression)
+        number_of_tardy_tasks = z3.Sum(tardiness_v)
+        self.append_z3_assertion(self._indicator_variable == number_of_tardy_tasks)
 
 
 class IndicatorMaximumLateness(Indicator):

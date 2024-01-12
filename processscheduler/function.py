@@ -18,8 +18,6 @@ import warnings
 
 from processscheduler.base import NamedUIDObject
 
-from pydantic import Field
-
 import z3
 
 

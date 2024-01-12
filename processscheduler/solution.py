@@ -16,10 +16,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import timedelta, datetime
-from typing import List, Optional, Tuple, Dict
-import random
+from typing import List, Tuple, Dict
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from processscheduler.base import BaseModelWithJson
 from processscheduler.problem import SchedulingProblem

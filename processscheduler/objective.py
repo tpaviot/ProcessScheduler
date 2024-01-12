@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Any, Dict, Optional, Union, Tuple, List, Literal
+from typing import Any, Dict, Union, Tuple, List, Literal
 import uuid
 
 import z3
@@ -23,10 +23,7 @@ import z3
 from pydantic import Field, model_serializer
 
 from processscheduler.base import NamedUIDObject
-from processscheduler.task import Task
-from processscheduler.resource import Worker, CumulativeWorker
 from processscheduler.function import ConstantFunction
-from processscheduler.buffer import ConcurrentBuffer, NonConcurrentBuffer
 from processscheduler.util import get_minimum, get_maximum
 from processscheduler.indicator import (
     Indicator,
