@@ -16,8 +16,6 @@
 
 import processscheduler as ps
 
-from pydantic import ValidationError
-
 import pytest
 
 # def test_general_cost_function_1() -> None:

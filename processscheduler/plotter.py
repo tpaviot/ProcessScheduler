@@ -29,14 +29,14 @@ try:
     from matplotlib.colors import LinearSegmentedColormap
 
     HAVE_MATPLOTLIB = True
-except ImportError as exc:
+except ImportError:
     HAVE_MATPLOTLIB = False
 
 try:
     from plotly.figure_factory import create_gantt
 
     HAVE_PLOTLY = True
-except ImportError as exc:
+except ImportError:
     HAVE_PLOTLY = False
 
 from processscheduler.function import (
