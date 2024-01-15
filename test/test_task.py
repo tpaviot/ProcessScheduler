@@ -21,6 +21,12 @@ import pytest
 from pydantic import ValidationError
 
 
+def test_create_task_without_problem() -> None:
+    ps.base.active_problem = None
+    with pytest.raises(AssertionError):
+        ps.FixedDurationTask(name="zdt", duration=3)
+
+
 def test_create_task_zero_duration() -> None:
     ps.SchedulingProblem(name="ProblemWithoutHorizon")
     task = ps.ZeroDurationTask(name="zdt")

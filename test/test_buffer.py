@@ -20,6 +20,12 @@ import processscheduler as ps
 import pytest
 
 
+def test_create_buffer_without_problem() -> None:
+    ps.base.active_problem = None
+    with pytest.raises(AssertionError):
+        ps.NonConcurrentBuffer(name="Buffer1")
+
+
 def test_wrong_instanciation_buffer_1() -> None:
     """error because no initial and final states"""
     ps.SchedulingProblem(name="BufferBasic", horizon=12)
