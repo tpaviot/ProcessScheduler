@@ -96,7 +96,8 @@ class Task(NamedUIDObject):
 
         # the release date
         if self.release_date is not None:
-            self.append_z3_assertion(self._start >= self.release_date)
+            if self.release_date > 0:  # other wise redundant constraint
+                self.append_z3_assertion(self._start >= self.release_date)
 
         # the due date
         if self.due_date is not None:
