@@ -45,6 +45,11 @@ from processscheduler.solution import (
 )
 from processscheduler.buffer import NonConcurrentBuffer, ConcurrentBuffer
 from processscheduler.problem import SchedulingProblem
+from processscheduler.task import (
+    FixedDurationTask,
+    VariableDurationTask,
+    ZeroDurationTask,
+)
 
 from processscheduler.util import (
     calc_parabola_from_three_points,
@@ -500,7 +505,12 @@ class SchedulingSolver(BaseModelWithJson):
             new_task_solution.type = type(task).__name__
             new_task_solution.start = z3_sol[task._start].as_long()
             new_task_solution.end = z3_sol[task._end].as_long()
-            new_task_solution.duration = z3_sol[task._duration].as_long()
+            if isinstance(task, FixedDurationTask):
+                new_task_solution.duration = task.duration
+            elif isinstance(task, VariableDurationTask):
+                new_task_solution.duration = z3_sol[task._duration].as_long()
+            elif isinstance(task, ZeroDurationTask):
+                new_task_solution.duration = 0
             new_task_solution.optional = task.optional
 
             new_task_solution.release_date = task.release_date

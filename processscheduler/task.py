@@ -81,7 +81,6 @@ class Task(NamedUIDObject):
         # z3 Int variables
         self._start = z3.Int(f"{self.name}_start")  # type: z3.ArithRef
         self._end = z3.Int(f"{self.name}_end")  # type: z3.ArithRef
-        self._duration = z3.Int(f"{self.name}_duration")  # type: z3.ArithRef
 
         # by default, the task is mandatory
         self._scheduled = True  # type: Union[bool, z3.BoolRef]
@@ -217,11 +216,17 @@ class Task(NamedUIDObject):
             # the first task is moved to -1, the second to -2
             # etc.
             point_in_past = -self._task_number
-            not_scheduled_assertion = z3.And(
-                self._start == point_in_past,  # to past
-                self._end == point_in_past,  # to past
-                self._duration == 0,
-            )
+            if isinstance(self, VariableDurationTask):
+                not_scheduled_assertion = z3.And(
+                    self._start == point_in_past,  # to past
+                    self._end == point_in_past,  # to past
+                    self._duration == 0,
+                )
+            else:
+                not_scheduled_assertion = z3.And(
+                    self._start == point_in_past,  # to past
+                    self._end == point_in_past,  # to past
+                )
             self.append_z3_assertion(
                 z3.If(
                     self._scheduled,
@@ -230,7 +235,8 @@ class Task(NamedUIDObject):
                 )
             )
         else:
-            self.append_z3_assertion(z3.And(list_of_z3_assertions))
+            for asst in list_of_z3_assertions:
+                self.append_z3_assertion(asst)
 
 
 class ZeroDurationTask(Task):
@@ -239,7 +245,7 @@ class ZeroDurationTask(Task):
     def __init__(self, **data) -> None:
         super().__init__(**data)
         # add an assertion: end = start because the duration is zero
-        self.set_assertions([self._start == self._end, self._duration == 0])
+        self.append_z3_assertion(self._start == self._end)
 
 
 class FixedDurationTask(Task):
@@ -258,8 +264,7 @@ class FixedDurationTask(Task):
     def __init__(self, **data) -> None:
         super().__init__(**data)
         assertions = [
-            self._start + self._duration == self._end,
-            self._duration == self.duration,
+            self._end - self._start == self.duration,
             self._start >= 0,
         ]
 
@@ -275,6 +280,8 @@ class VariableDurationTask(Task):
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
+
+        self._duration = z3.Int(f"{self.name}_duration")  # type: z3.ArithRef
 
         assertions = [
             self._start + self._duration == self._end,
