@@ -12,3 +12,4 @@ ipympl
 psutil
 XlsxWriter
 pytest
+pandas
