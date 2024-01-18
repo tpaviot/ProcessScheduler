@@ -88,7 +88,11 @@ def test_export_solution_to_json_file():
 
 
 def test_export_solution_to_excel_file():
-    SOLUTION.export_to_excel_file("excavator_nb.xlsx")
+    SOLUTION.to_excel_file("excavator_nb.xlsx")
     assert os.path.isfile("excavator_nb.xlsx")
-    SOLUTION.export_to_excel_file("excavator_colors.xlsx", colors=True)
+    SOLUTION.to_excel_file("excavator_colors.xlsx", colors=True)
     assert os.path.isfile("excavator_colors.xlsx")
+
+
+def test_export_solution_to_pandas_dataframe():
+    SOLUTION.to_df()

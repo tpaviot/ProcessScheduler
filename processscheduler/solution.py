@@ -24,6 +24,13 @@ from processscheduler.base import BaseModelWithJson
 from processscheduler.problem import SchedulingProblem
 from processscheduler.excel_io import export_solution_to_excel_file
 
+try:
+    from pandas import DataFrame as df
+
+    HAVE_PANDAS = True
+except ImportError:
+    HAVE_PANDAS = False
+
 
 class TaskSolution(BaseModelWithJson):
     """Class to represent the solution for a scheduled Task."""
@@ -107,5 +114,40 @@ class SchedulingSolution(BaseModelWithJson):
     #
     # File export
     #
-    def export_to_excel_file(self, excel_filename, colors=False):
+    def to_excel_file(self, excel_filename, colors=False):
         return export_solution_to_excel_file(self, excel_filename, colors)
+
+    def to_df(self):
+        """create and return a pandas dataframe representing"""
+        if not HAVE_PANDAS:
+            raise AssertionError("pandas is not installed")
+        names = []
+        starts = []
+        ends = []
+        durations = []
+        resources = []
+        scheduleds = []
+        tardies = []
+        for task_name in self.tasks:
+            t = self.tasks[task_name]
+            names.append(task_name)
+            starts.append(t.start)
+            ends.append(t.end)
+            durations.append(t.duration)
+            resources.append(t.assigned_resources)
+            scheduleds.append(t.scheduled)
+            # check tardies
+            tardies.append(t.start - t.due_date if t.due_date is not None else False)
+
+        tasks_df = df(
+            {
+                "Task name": names,
+                "Allocated Resources": resources,
+                "Start": starts,
+                "End": ends,
+                "Duration": durations,
+                "Scheduled": scheduleds,
+                "Tardy": tardies,
+            }
+        )
+        return tasks_df
