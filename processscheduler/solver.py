@@ -111,7 +111,7 @@ class SchedulingSolver(BaseModelWithJson):
     def __init__(self, **data) -> None:
         super().__init__(**data)
         self._objective = None  # the list of all objectives defined in this problem
-        self._current_solution = None  # no solution until the problem is solved
+        self._model = None  # no solution until the problem is solved
         self._map_boolrefs_to_constraints = {}
         self._initialized = False
 
@@ -641,12 +641,12 @@ class SchedulingSolver(BaseModelWithJson):
                 print("\tObjectives:\n\t======")
                 for obj_name in self.problem.objectives:
                     print(f"\t{obj_name}")
-            solution = self.solve_optimize_incremental(
+            model = self.solve_optimize_incremental(
                 self._objective._target,
                 kind="min" if self._objective.kind == "minimize" else "max",
                 max_iter=self.max_iter,
             )
-            if not solution:
+            if not model:
                 return False
         else:
             # first check satisfiability
@@ -693,22 +693,22 @@ class SchedulingSolver(BaseModelWithJson):
                 return False
 
             # then get the solution
-            solution = self._solver.model()
+            model = self._solver.model()
 
             # print objectives values if optimizer
             if self.optimizer == "optimize":
                 for obj in self.problem.objectives.values():
-                    print(obj.name, "Value : ", solution[obj._target].as_long())
+                    print(obj.name, "Value : ", model[obj._target].as_long())
 
-        self._current_solution = solution
+        self._model = model
 
-        sol = self.build_solution(solution)
+        solution = self.build_solution(model)
 
         if self.debug:
             self.print_statistics()
             self.print_solution()
 
-        return sol
+        return solution
 
     def solve_optimize_incremental(
         self,
@@ -838,26 +838,22 @@ class SchedulingSolver(BaseModelWithJson):
     def print_solution(self):
         """A utility method that displays all internal variables for the current solution"""
         print("Solution:")
-        for decl in self._current_solution.decls():
+        for decl in self._model.decls():
             var_name = decl.name()
-            var_value = self._current_solution[decl]
+            var_value = self._model[decl]
             print(f"\t-> {var_name}={var_value}")
 
     def find_another_solution(self) -> Union[bool, SchedulingSolution]:
         """compute the solver and find any other solution for the schedule"""
-        if self._current_solution is None:
+        if self._model is None:
             raise AssertionError("No current solution. First call the solve() method.")
         different_assertions = []
         for t in self.problem.tasks.values():
-            different_assertions.append(
-                t._start != self._current_solution[t._start].as_long()
-            )
-            different_assertions.append(
-                t._end != self._current_solution[t._end].as_long()
-            )
+            different_assertions.append(t._start != self._model[t._start].as_long())
+            different_assertions.append(t._end != self._model[t._end].as_long())
             if t.optional:
                 different_assertions.append(
-                    t._scheduled != f"{self._current_solution[t._scheduled]}" == "True"
+                    t._scheduled != f"{self. _model[t._scheduled]}" == "True"
                 )
         # any of the assertions is meet
         self.append_z3_assertion(z3.Or(different_assertions))
@@ -867,9 +863,9 @@ class SchedulingSolver(BaseModelWithJson):
         self, variable: z3.ArithRef
     ) -> Union[bool, SchedulingSolution]:
         """let the solver find another solution for the variable"""
-        if self._current_solution is None:
+        if self._model is None:
             raise AssertionError("No current solution. First call the solve() method.")
-        current_variable_value = self._current_solution[variable].as_long()
+        current_variable_value = self._model[variable].as_long()
         self.append_z3_assertion(variable != current_variable_value)
         return self.solve()
 
