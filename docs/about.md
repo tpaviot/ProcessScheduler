@@ -1,5 +1,5 @@
 ---
-title: Introduction
+title: About
 ---
 
 # About
@@ -15,32 +15,3 @@ Additionally, an introductory guide to programming with Z3 in Python is availabl
 It's worth noting that Z3 is the **only mandatory dependency** for ProcessScheduler.
 
 Furthermore, the tool offers the flexibility to visualize scheduling solutions by rendering them into Gantt charts, which can be exported in common formats such as JPG, PNG, PDF, or SVG. Please note that the optional libraries, matplotlib and plotly, are not pre-installed but can be easily integrated based on your preferences and needs.
-
-# Download/install
-
-Use ``pip`` to install the package and the required dependencies (Z3) on your machine:
-
-``` bash
-pip install ProcessScheduler
-```
-and check the installation from a python3 prompt:
-
-
-``` py
->>> import processscheduler as ps
-```
-
-# Development version
-
-Create a local copy of the `github <https://github.com/tpaviot/ProcessScheduler>`_ repository:
-
-``` bash
-git clone https://github.com/tpaviot/ProcessScheduler
-```
-
-Then install the development version:
-
-``` bash
-cd ProcessScheduler
-pip install -e .
-```
