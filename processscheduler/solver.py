@@ -641,7 +641,7 @@ class SchedulingSolver(BaseModelWithJson):
                 print("\tObjectives:\n\t======")
                 for obj_name in self.problem.objectives:
                     print(f"\t{obj_name}")
-            model = self.solve_optimize_incremental(
+            model = self._solve_optimize_incremental(
                 self._objective._target,
                 kind="min" if self._objective.kind == "minimize" else "max",
                 max_iter=self.max_iter,
@@ -710,7 +710,7 @@ class SchedulingSolver(BaseModelWithJson):
 
         return solution
 
-    def solve_optimize_incremental(
+    def _solve_optimize_incremental(
         self,
         variable: z3.ArithRef,
         max_iter: Optional[int] = None,
@@ -718,11 +718,6 @@ class SchedulingSolver(BaseModelWithJson):
     ) -> int:
         """target a min or max for a variable, without the z3.Optimize solver.
         The loop continues ever and ever until the next value is more than 90%"""
-        if not self._initialized:
-            self.initialize()
-
-        if kind not in ["min", "max"]:
-            raise ValueError("choose either 'min' or 'max'")
         num_iter = 0
         solution = False
         total_time = 0
