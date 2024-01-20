@@ -91,6 +91,13 @@ class SchedulingSolution(BaseModelWithJson):
     buffers: Dict[str, BufferSolution] = Field(default={})
     indicators: Dict[str, int] = Field(default={})
 
+    def __str__(self):
+        """by default, return a panda dataframe, if panda available"""
+        if HAVE_PANDAS:
+            return str(self.to_df())
+        else:
+            return repr(self)
+
     def get_scheduled_tasks(self):
         return {
             task: self.tasks[task] for task in self.tasks if self.tasks[task].scheduled
