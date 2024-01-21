@@ -285,10 +285,10 @@ class SchedulingSolver(BaseModelWithJson):
             for st, bfst in zip(sorted_times, buffer._state_changes_time):
                 self.append_z3_assertion(st == bfst)
 
-            # the final state of the list is constrained by the final_state value
-            if buffer.final_state is not None:
+            # the final state of the list is constrained by the final_level value
+            if buffer.final_level is not None:
                 self.append_z3_assertion(
-                    buffer._buffer_states[-1] == buffer.final_state
+                    buffer._buffer_states[-1] == buffer.final_level
                 )
             # lower and upper bounds
             if buffer.lower_bound is not None:

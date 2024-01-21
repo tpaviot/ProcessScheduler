@@ -27,7 +27,7 @@ from pydantic import Field
 
 class Buffer(NamedUIDObject):
     initial_level: int = Field(default=None)
-    final_state: int = Field(default=None)
+    final_level: int = Field(default=None)
     lower_bound: int = Field(default=None)
     upper_bound: int = Field(default=None)
 
@@ -39,7 +39,7 @@ class Buffer(NamedUIDObject):
                 "No context available. First create a SchedulingProblem"
             )
 
-        if self.initial_level is None and self.final_state is None:
+        if self.initial_level is None and self.final_level is None:
             raise AssertionError("At least initial state or final state must be set")
 
         # a dict that contains all tasks that consume this buffer
