@@ -38,7 +38,7 @@ machine_A = CumulativeWorker(name='MachineA',
 
 ## Resource productivity
 
-The `productivity` attribute of a worker represents the amount of work the worker can complete per period. By default, a worker's `productivity` is set to 0.
+The `productivity` attribute of a worker represents the amount of work the worker can complete per period. By default, a worker's `productivity` is set to 1.
 
 For instance, if you have two drillers, with the first one capable of drilling 3 holes per period and the second one drilling 9 holes per period, you can define them as follows:
 

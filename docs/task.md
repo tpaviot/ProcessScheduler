@@ -8,6 +8,18 @@ According to the [APICS dictionary](https://www.ascm.org/), a task may either be
 
 In the context of this software library, the concept of a task aligns with the first definition : the **lowest level to which work can be divided on a project**. ProcessScheduler's primary objective is to compute a chronological sequence, or temporal order, for a collection of tasks while adhering to a specific set of constraints. Three types of `Task` may be used to represent a scheduling problem : **ZeroDurationTask**, **FixedDurationTask** and **VariableDurationTask**. They follow the inheritance class diagram represented below.
 
+# Task model
+
+A `Task` instance is basically a time interval, defined by the three following parameters:
+
+- `start`: a point in the $[0, horizon]$ integer interval. If the task is scheduled, then $start>=0$
+
+- `end`: a point in the $[0, horizon]$ integer interval. If the task is scheduled, then $end>=start$ and $end<=horizon$
+
+- `duration`: a integer number of periods, such as $duration=end-start$
+
+![A task](img/Task.svg){ width="80%" }
+
 ``` mermaid
 classDiagram
   Task <|-- ZeroDurationTask
@@ -22,9 +34,19 @@ class Task{
     +int priority
     +int work_amount
 }
-
+class FixedDurationTask{
+    +int duration
+}
+class VariableDurationTask{
+    +int min_duration
+    +int max_duration
+    +list allowed_durations
+}
 ```
-## Common base Task model
+
+!!! warning
+
+    The `Task` class has to be considered as an abstract class that should not be instantiated. Use any of its three specialization (`ZeroDurationTask`, `FixedDurationTask` or `VariableDurationTask`) to represent your scheduling problem.
 
 The `Task` class and its derivatives represent any activity. The parameters for the creation of a `Task` are the following:
 
@@ -38,16 +60,19 @@ The `Task` class and its derivatives represent any activity. The parameters for 
 | priority | int | 1 | A number denoting the importance of the task relative to the other tasks in the system. A task with a priority of 10 should be considered as 10 times more important than a task with a priority of 1 |
 | work_amount | int | 0 | the quantity of work necessary to be completed by all the resources assigned |
 
+Additional parameters for the `FixedDurationTask` class.
 
-A `Task` instance is defined by the three following parameters:
+| Parameter name | Type | Default Value |Description |
+| ----------- | -----| ---|--------------------------------- |
+| duration | int |  | The task duration, such that $duration=end-start$ |
 
-- `start`: a point in the $[0, horizon]$ integer interval. If the task is scheduled, then $start>=0$
+Additional parameters for the `VariableDurationTask` class.
 
-- `end`: a point in the $[0, horizon]$ integer interval. If the task is scheduled, then $end>=start$ and $end<=horizon$
-
-- `duration`: a integer number of periods, such as $duration=end-start$
-
-![A task](img/Task.svg){ width="80%" }
+| Parameter name | Type | Default Value |Description |
+| ----------- | -----| ---|--------------------------------- |
+| min_duration | int | 0 | Minimal task duration |
+| max_duration | int | None | Maximal task duration |
+| allowed_duration | list | None | List of possible task durations |
 
 ``` py
 # Example: The duration of this task depends on the number

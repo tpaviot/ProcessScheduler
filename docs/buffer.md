@@ -14,6 +14,7 @@ class Buffer{
     +int upper_bound
     +int lowet_bound
     +int initial_level
+    +int final_level
 }
 ```
 
@@ -23,20 +24,28 @@ class Buffer{
 
 ## Buffer Attributes
 
-* `initial_level`: Represents the number of items in the buffer at time `t=0`. 
+* `initial_level`: Represents the number of items in the buffer at time `t=0`.
+
+* `final_level`: Represents the number of items in the buffer at schedule `t=horizon`.
 
 * `lower_bound`: An optional parameter setting the minimum number of items in the buffer. If the buffer level falls below this, the problem is unsatisfiable. This parameter can be crucial in settings where maintaining a minimum inventory level is essential for continuous operation.
 
 * `upper_bound`: An optional parameter representing the maximum buffer capacity. Exceeding this limit makes the problem unsatisfiable. This reflects the physical limitations of buffer spaces in industrial settings, especially with larger items.
 
-Both `initial_level`, `lower_bound` and `upper_bound` are optional parameters. A `NonConcurrentBuffer` can be created as follows:
+Both `initial_level`, `final_level`, `lower_bound` and `upper_bound` are optional parameters.
+
+!!! note
+
+    If `lower_bound` (resp. `upper_bound`) is specified, the solver will schedule tasks to that the buffer level is never lower (resp. greater) than the lower (resp. upper) bound.
+
+A `NonConcurrentBuffer` can be created as follows:
 
 ``` py
-buff1 = ps.NonConcurrentBuffer("Buffer1")
-buff2 = ps.NonConcurrentBuffer("Buffer2", initial_level=10)
-buff3 = ps.NonConcurrentBuffer("Buffer3", lower_bound=0)
-buff4 = ps.NonConcurrentBuffer("Buffer4", upper_bound=20)
-buff5 = ps.NonConcurrentBuffer("Buffer5",
+buff1 = ps.NonConcurrentBuffer(name="Buffer1")
+buff2 = ps.NonConcurrentBuffer(name="Buffer2", initial_level=10)
+buff3 = ps.NonConcurrentBuffer(name="Buffer3", lower_bound=0)
+buff4 = ps.NonConcurrentBuffer(name="Buffer4", upper_bound=20)
+buff5 = ps.NonConcurrentBuffer(name="Buffer5",
                                initial_level=3,
                                lower_bound=0, 
                                upper_bound=10)
@@ -46,7 +55,7 @@ buff5 = ps.NonConcurrentBuffer("Buffer5",
 
 Buffers are loaded/unloaded by dedicate tasks.
 
-* **Unloading Tasks**: These tasks remove a specified quantity at the start time, mimicking the immediate release of resources upon task commencement.
+* **Unloading Tasks**: These tasks remove a specified quantity at the task start time, mimicking the immediate release of resources upon task commencement.
 
 * **Loading Tasks**: These tasks add to the buffer upon task completion, reflecting the production or processing output.
 
@@ -63,15 +72,7 @@ c2 = ps.TaskLoadBuffer(task_2, buffer, quantity=6)
 
 !!! note
 
-    Unloading tasks remove quantities at the start time, while loading tasks add to the buffer at completion time.
-
-## Monitoring buffer level
-
-There are two indicators available:
-
-IndicatorMaxBufferLevel
-
-IndicatorMinBufferLevel
+    Unloading tasks remove quantities at the task start time, while loading tasks add to the buffer at task completion time.
 
 ### Example
 
@@ -91,8 +92,8 @@ buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_level=5)
 buffer_2 = ps.NonConcurrentBuffer(name="Buffer2", initial_level=0)
 
 # buffer constraints
-c1 = ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=1)
-c2 = ps.TaskLoadBuffer(task=task_1, buffer=buffer_2, quantity=1)
+bc_1 = ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=1)
+bc_2 = ps.TaskLoadBuffer(task=task_1, buffer=buffer_2, quantity=1)
 
 # solve and render
 solver = ps.SchedulingSolver(problem=pb)

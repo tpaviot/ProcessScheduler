@@ -2,9 +2,13 @@
 
 The `SchedulingProblem` class is the container for all modeling objects, such as tasks, resources and constraints.
 
+!!! note
+
+    Creating a `SchedulingProblem` is the first step of the Python script. 
+
 ## Time slots as integers
 
-A `SchedulingProblem` instance holds a *time* interval: the lower bound of this interval (the *initial time*) is always 0, the upper bound (the *final time*) can be set by passing the `horizon` attribute to the `__init__` method, for example:
+A `SchedulingProblem` instance holds a *time* interval: the lower bound of this interval (the *initial time*) is always 0, the upper bound (the *final time*) can be set by passing the `horizon` attribute, for example:
 
 ``` py
 my_problem = SchedulingProblem(name='MySchedulingProblem',
@@ -35,6 +39,33 @@ $$horizon = \frac{12-8}{1/60}=240$$
 
     The `horizon` attribute is optional. If it's not explicitly provided during the `__init__` method, the solver will determine an appropriate horizon value that complies with the defined constraints. In cases where the scheduling problem aims to optimize the horizon, such as achieving a specific makespan objective, manual setting of the horizon is not necessary.
 
+## SchedulingProblem class implementation
+
+| Parameter name | Type | Mandatory/Optional | Default Value |Description |
+| -------------- | -----| -------------------| --------------|----------- |
+| name           | str  | Mandatory          |               | Problem name |
+| horizon        | int  | Optional           |     None      | Problem horizon |
+| delta_time     | timedelta | Optional     | None | Value, in minutes, of one time unit |
+| start_time     | datetime.datetime | Optional | None | The start date |
+| end_time       | datetime.time | Optional | None | The end date |
+
+The only mandatory parameter is the problem `name`.
+
+If `horizon` is specified as an integer, the solver schedules tasks within the defined range, starting from $t=0$ to $t=\text{horizon}$. If unspecified, the solver autonomously determines an appropriate horizon.
+The `horizon` parameter does not need to be provided. If an integer is passed, the solver will schedule all tasks between the initial time ($t=0$) and the horizon ($t=horizon$). If not, the solver will decide about a possible horizon.
+
+!!! note
+
+    It is advisable to set the `horizon` parameter when the scheduling involves a predetermined period (e.g., a day, week, or month). This is particularly useful in scenarios aiming to minimize the scheduling horizon, such as in manufacturing scheduling where the goal is to reduce the time needed for processing jobs. In such cases, omitting the horizon allows the solver to optimize it based on problem requirements.
+
+## SchedulingProblem instantiation
+
+Here is the simpliest way to create `SchedulingProblem`.
+
+``` py
+import processscheduler as ps
+my_problem = ps.SchedulingProblem(name="MyFirstSchedulingProblem", horizon=100)
+```
 
 ## Mapping integers to datetime objects
 

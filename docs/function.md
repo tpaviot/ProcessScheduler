@@ -26,19 +26,21 @@ $$ f(x) = K, \forall x \in \mathbb{N}$$
 in python
 
 ```py
-my_function = ps.ConstantFunction(value=55)
+my_constant_function = ps.ConstantFunction(value=55)
+ps.plot_function(my_constant_function)
 ```
 
 ![svg](img/constant_function.svg)
 
 ## LinearFunction
 
-$$ f(x) = s \times t + i, \forall x \in \mathbb{N}$$
+$$ f(x) = s \times x + i, \forall x \in \mathbb{N}$$
 
 in python
 
 ```py
-my_function = ps.LinearFunction(slope=4, intercept=1)
+my_linear_function = ps.LinearFunction(slope=1, intercept=2)
+ps.plot_function(my_linear_function)
 ```
 
 ![svg](img/linear_function.svg)
@@ -48,7 +50,8 @@ my_function = ps.LinearFunction(slope=4, intercept=1)
 $$f(x)={a_n}x^n + {a_{n-1}}x^{n-1} + ... + {a_i}x^i + ... + {a_1}x+{a_0}$$
 
 ```py
-my_function = ps.PolynomialFunction(coefficients=[3, 6, 7])
+my_polynomial_function = ps.PolynomialFunction(coefficients=[1, 2, 3, 4])
+ps.plot_function(my_polynomial_function)
 ```
 
 ![svg](img/polynomial_function.svg)
