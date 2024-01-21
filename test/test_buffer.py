@@ -122,7 +122,7 @@ def test_unload_buffer_4() -> None:
     """unload a buffer defined from the final state"""
     pb = ps.SchedulingProblem(name="UnloadBuffer4")
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
-    buffer = ps.NonConcurrentBuffer(name="Buffer1", final_state=15)
+    buffer = ps.NonConcurrentBuffer(name="Buffer1", final_level=15)
     ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=3)
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
