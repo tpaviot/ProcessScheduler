@@ -19,5 +19,6 @@ dependencies:
     - pydantic
     - rich
     - pandas
+    - pyarrow
     - pytest
     - -e .

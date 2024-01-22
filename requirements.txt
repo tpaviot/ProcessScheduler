@@ -13,3 +13,4 @@ psutil
 XlsxWriter
 pytest
 pandas
+pyarrow
