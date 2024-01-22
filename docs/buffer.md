@@ -101,6 +101,6 @@ solution = solver.solve()
 ps.render_gantt_matplotlib(solution)
 ```
 
-The graphical output shows the Gantt chart and the evolution of the buffer states along the time line.
+The graphical output shows the Gantt chart and the evolution of the buffer levels along the time line.
 
 ![Buffer example](img/BufferExample.svg){ width="100%" }
