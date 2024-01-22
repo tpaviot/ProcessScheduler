@@ -55,7 +55,7 @@ from processscheduler.util import (
     calc_parabola_from_three_points,
     sort_no_duplicates,
     sort_duplicates,
-    clean_buffer_states,
+    clean_buffer_levels,
 )
 
 
@@ -102,8 +102,8 @@ class SchedulingSolver(BaseModelWithJson):
     verbosity: int = Field(default=0)
     optimizer: Literal["incremental", "optimize"] = Field(default="incremental")
     max_iter: int = Field(default=None)
-    save_intermediate_states: bool = Field(default=False)
-    save_intermediate_states_path: str = Field(default=None)
+    save_intermediate_levels: bool = Field(default=False)
+    save_intermediate_levels_path: str = Field(default=None)
     optimize_priority: Literal["pareto", "lex", "box", "weight"] = Field(
         default="pareto"
     )
@@ -281,21 +281,21 @@ class SchedulingSolver(BaseModelWithJson):
                 )
             self.append_z3_assertion(sort_assertions)
 
-            # add the constraints that give the buffer state change times
-            for st, bfst in zip(sorted_times, buffer._state_changes_time):
+            # add the constraints that give the buffer level change times
+            for st, bfst in zip(sorted_times, buffer._level_changes_time):
                 self.append_z3_assertion(st == bfst)
 
-            # the final state of the list is constrained by the final_level value
+            # the final level of the list is constrained by the final_level value
             if buffer.final_level is not None:
                 self.append_z3_assertion(
-                    buffer._buffer_states[-1] == buffer.final_level
+                    buffer._buffer_levels[-1] == buffer.final_level
                 )
             # lower and upper bounds
             if buffer.lower_bound is not None:
-                for st in buffer._buffer_states:
+                for st in buffer._buffer_levels:
                     self.append_z3_assertion(st >= buffer.lower_bound)
             if buffer.upper_bound is not None:
-                for st in buffer._buffer_states:
+                for st in buffer._buffer_levels:
                     self.append_z3_assertion(st <= buffer.upper_bound)
             #
             # Concurrent buffers
@@ -337,23 +337,23 @@ class SchedulingSolver(BaseModelWithJson):
                     )
                     self.append_z3_assertion(asst)
                     functions.append(f)
-                for i in range(len(buffer._buffer_states) - 1):
+                for i in range(len(buffer._buffer_levels) - 1):
                     if i == 0:
-                        asst = buffer._buffer_states[1] == buffer._buffer_states[
+                        asst = buffer._buffer_levels[1] == buffer._buffer_levels[
                             0
                         ] + z3.Sum(
-                            [f(buffer._state_changes_time[0]) for f in functions]
+                            [f(buffer._level_changes_time[0]) for f in functions]
                         )
                         self.append_z3_assertion(asst)
-                    else:  # if two consecutives state change times are the same, then only count them
+                    else:  # if two consecutives level change times are the same, then only count them
                         asst = z3.If(
-                            buffer._state_changes_time[i]
-                            == buffer._state_changes_time[i - 1],
-                            buffer._buffer_states[i + 1] == buffer._buffer_states[i],
-                            buffer._buffer_states[i + 1]
-                            == buffer._buffer_states[i]
+                            buffer._level_changes_time[i]
+                            == buffer._level_changes_time[i - 1],
+                            buffer._buffer_levels[i + 1] == buffer._buffer_levels[i],
+                            buffer._buffer_levels[i + 1]
+                            == buffer._buffer_levels[i]
                             + z3.Sum(
-                                [f(buffer._state_changes_time[i]) for f in functions]
+                                [f(buffer._level_changes_time[i]) for f in functions]
                             ),
                         )
                         self.append_z3_assertion(asst)
@@ -376,12 +376,12 @@ class SchedulingSolver(BaseModelWithJson):
                         buffer_mapping
                         == z3.Store(buffer_mapping, t._end, +buffer._loading_tasks[t])
                     )
-                # and, for the other, the buffer state i+1 is the buffer state i +/- the buffer change
-                for i in range(len(buffer._buffer_states) - 1):
+                # and, for the other, the buffer level i+1 is the buffer level i +/- the buffer change
+                for i in range(len(buffer._buffer_levels) - 1):
                     self.append_z3_assertion(
-                        buffer._buffer_states[i + 1]
-                        == buffer._buffer_states[i]
-                        + buffer_mapping[buffer._state_changes_time[i]]
+                        buffer._buffer_levels[i + 1]
+                        == buffer._buffer_levels[i]
+                        + buffer_mapping[buffer._level_changes_time[i]]
                     )
 
         # Finally add other assertions (FOL, user defined)
@@ -602,21 +602,21 @@ class SchedulingSolver(BaseModelWithJson):
         for buffer in self.problem.buffers:
             buffer_name = buffer.name
             new_buffer_solution = BufferSolution(name=buffer_name)
-            # buffer state values
-            state_values = [
-                z3_sol[sv_z3_var].as_long() for sv_z3_var in buffer._buffer_states
+            # buffer level values
+            level_values = [
+                z3_sol[sv_z3_var].as_long() for sv_z3_var in buffer._buffer_levels
             ]
-            # change_state_times
-            change_state_times = [
+            # change_level_times
+            change_level_times = [
                 z3_sol[sct_z3_var].as_long()
-                for sct_z3_var in buffer._state_changes_time
+                for sct_z3_var in buffer._level_changes_time
             ]
             # need to fix the results if ever the buffer
             # has been loaded/unloaded by concurrent tasks
             (
-                new_buffer_solution.state,
-                new_buffer_solution.state_change_times,
-            ) = clean_buffer_states(state_values, change_state_times)
+                new_buffer_solution.level,
+                new_buffer_solution.level_change_times,
+            ) = clean_buffer_levels(level_values, change_level_times)
 
             solution.add_buffer_solution(new_buffer_solution)
         # process indicators
@@ -761,13 +761,13 @@ class SchedulingSolver(BaseModelWithJson):
             # at this stage, is_sat should be sat
             solution = self._solver.model()
             current_variable_value = solution[variable].as_long()
-            # if requested, save intermediate_state
-            if self.save_intermediate_states:
+            # if requested, save intermediate_level
+            if self.save_intermediate_levels:
                 sol = self.build_solution(solution)
-                if self.save_intermediate_states_path is None:
-                    self.save_intermediate_states_path = os.getcwd()
+                if self.save_intermediate_levels_path is None:
+                    self.save_intermediate_levels_path = os.getcwd()
                 fn = os.path.join(
-                    self.save_intermediate_states_path,
+                    self.save_intermediate_levels_path,
                     f"{self.problem.name}_IntermediateSolution_Value_{current_variable_value}.json",
                 )
                 sol.to_json_file(fn)

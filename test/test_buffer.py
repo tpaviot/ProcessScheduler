@@ -27,7 +27,7 @@ def test_create_buffer_without_problem() -> None:
 
 
 def test_wrong_instanciation_buffer_1() -> None:
-    """error because no initial and final states"""
+    """error because no initial and final levels"""
     ps.SchedulingProblem(name="BufferBasic", horizon=12)
     with pytest.raises(AssertionError):
         ps.NonConcurrentBuffer(name="Buffer1")
@@ -51,11 +51,11 @@ def test_instanciate_buffer_error() -> None:
 # def test_no_load_or_unload_buffer() -> None:
 #      # only one buffer and one task
 #     pb = ps.SchedulingProblem(name="NoLoadUnloadBuffer")
-#     buffer = ps.NonConcurrentBuffer(name="Buffer1", final_state=10)
+#     buffer = ps.NonConcurrentBuffer(name="Buffer1", final_level=10)
 #     solver = ps.SchedulingSolver(problem=pb, debug=True)
 #     solution = solver.solve()
 #     assert solution
-#     assert solution.buffers[buffer.name].state == [10]
+#     assert solution.buffers[buffer.name].level == [10]
 
 
 def test_unload_buffer_1() -> None:
@@ -71,8 +71,8 @@ def test_unload_buffer_1() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer.name].state == [10, 7]
-    assert solution.buffers[buffer.name].state_change_times == [5]
+    assert solution.buffers[buffer.name].level == [10, 7]
+    assert solution.buffers[buffer.name].level_change_times == [5]
 
 
 def test_unload_buffer_2() -> None:
@@ -92,8 +92,8 @@ def test_unload_buffer_2() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer.name].state == [10, 7, 5]
-    assert solution.buffers[buffer.name].state_change_times == [5, 10]
+    assert solution.buffers[buffer.name].level == [10, 7, 5]
+    assert solution.buffers[buffer.name].level_change_times == [5, 10]
 
 
 def test_unload_buffer_3() -> None:
@@ -114,20 +114,20 @@ def test_unload_buffer_3() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer.name].state == [10, 7, 5, 4]
-    assert solution.buffers[buffer.name].state_change_times == [5, 10, 15]
+    assert solution.buffers[buffer.name].level == [10, 7, 5, 4]
+    assert solution.buffers[buffer.name].level_change_times == [5, 10, 15]
 
 
 def test_unload_buffer_4() -> None:
-    """unload a buffer defined from the final state"""
+    """unload a buffer defined from the final level"""
     pb = ps.SchedulingProblem(name="UnloadBuffer4")
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
-    buffer = ps.NonConcurrentBuffer(name="Buffer1", final_level=15)
-    ps.TaskUnloadBuffer(task=task_1, buffer=buffer, quantity=3)
+    buffer_1 = ps.NonConcurrentBuffer(name="Bugger1", final_level=15)
+    ps.TaskUnloadBuffer(task=task_1, buffer=buffer_1, quantity=3)
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer.name].state == [18, 15]
+    assert solution.buffers[buffer_1.name].level == [18, 15]
 
 
 def test_load_buffer_1() -> None:
@@ -143,8 +143,8 @@ def test_load_buffer_1() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer.name].state == [10, 13]
-    assert solution.buffers[buffer.name].state_change_times == [8]
+    assert solution.buffers[buffer.name].level == [10, 13]
+    assert solution.buffers[buffer.name].level_change_times == [8]
 
 
 def test_load_buffer_2() -> None:
@@ -165,8 +165,8 @@ def test_load_buffer_2() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer.name].state == [10, 13, 15, 16]
-    assert solution.buffers[buffer.name].state_change_times == [8, 13, 18]
+    assert solution.buffers[buffer.name].level == [10, 13, 15, 16]
+    assert solution.buffers[buffer.name].level_change_times == [8, 13, 18]
 
 
 def test_load_unload_feed_buffers_1() -> None:
@@ -184,10 +184,10 @@ def test_load_unload_feed_buffers_1() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer_1.name].state == [10, 7]
-    assert solution.buffers[buffer_1.name].state_change_times == [5]
-    assert solution.buffers[buffer_2.name].state == [0, 2]
-    assert solution.buffers[buffer_2.name].state_change_times == [8]
+    assert solution.buffers[buffer_1.name].level == [10, 7]
+    assert solution.buffers[buffer_1.name].level_change_times == [5]
+    assert solution.buffers[buffer_2.name].level == [0, 2]
+    assert solution.buffers[buffer_2.name].level_change_times == [8]
 
 
 def test_buffer_bounds_1() -> None:
@@ -237,8 +237,8 @@ def test_unload_buffer_multiple_1() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer.name].state == [10, 7, 3]
-    assert solution.buffers[buffer.name].state_change_times == [5, 6]
+    assert solution.buffers[buffer.name].level == [10, 7, 3]
+    assert solution.buffers[buffer.name].level_change_times == [5, 6]
 
 
 def test_unload_buffer_multiple_3() -> None:
@@ -262,8 +262,8 @@ def test_unload_buffer_multiple_3() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer.name].state == [13, 9, 5, 13]
-    assert solution.buffers[buffer.name].state_change_times == [7, 8, 19]
+    assert solution.buffers[buffer.name].level == [13, 9, 5, 13]
+    assert solution.buffers[buffer.name].level_change_times == [7, 8, 19]
 
 
 #
@@ -291,8 +291,8 @@ def test_unload_buffer_concurrent_1() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer.name].state == [100, 100 - (23 + 39 + 17)]
-    assert solution.buffers[buffer.name].state_change_times == [7]
+    assert solution.buffers[buffer.name].level == [100, 100 - (23 + 39 + 17)]
+    assert solution.buffers[buffer.name].level_change_times == [7]
 
 
 def test_unload_buffer_concurrent_2() -> None:
@@ -317,12 +317,12 @@ def test_unload_buffer_concurrent_2() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer.name].state == [
+    assert solution.buffers[buffer.name].level == [
         100,
         100 - (23 + 39),
         100 - (23 + 39 + 17),
     ]
-    assert solution.buffers[buffer.name].state_change_times == [7, 8]
+    assert solution.buffers[buffer.name].level_change_times == [7, 8]
 
 
 def test_unload_buffer_multiple_4() -> None:
@@ -348,8 +348,8 @@ def test_unload_buffer_multiple_4() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer.name].state == [20, 14, 8]
-    assert solution.buffers[buffer.name].state_change_times == [5, 6]
+    assert solution.buffers[buffer.name].level == [20, 14, 8]
+    assert solution.buffers[buffer.name].level_change_times == [5, 6]
 
 
 def test_load_unload_concurrent_1() -> None:
@@ -385,7 +385,7 @@ def test_load_unload_concurrent_1() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer.name].state[-1] == 179
+    assert solution.buffers[buffer.name].level[-1] == 179
 
 
 def test_load_unload_non_concurrent_1() -> None:
@@ -419,7 +419,7 @@ def test_load_unload_non_concurrent_1() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer.name].state[-1] == 179
+    assert solution.buffers[buffer.name].level[-1] == 179
 
 
 #
@@ -438,8 +438,8 @@ def test_buffer_indicator_1() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer_1.name].state == [10, 7]
-    assert solution.buffers[buffer_1.name].state_change_times == [0]
+    assert solution.buffers[buffer_1.name].level == [10, 7]
+    assert solution.buffers[buffer_1.name].level_change_times == [0]
     assert solution.indicators[indic_max.name] == 10
     assert solution.indicators[indic_min.name] == 7
 

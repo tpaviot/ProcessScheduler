@@ -126,27 +126,27 @@ def sort_no_duplicates(z3_int_list):
     return a, constraints
 
 
-def clean_buffer_states(buffer_states, buffer_change_times):
+def clean_buffer_levels(buffer_levels, buffer_change_times):
     """
-    Clean buffer states and corresponding change times by removing duplicates.
+    Clean buffer levels and corresponding change times by removing duplicates.
 
     Args:
-        buffer_states (list): List of buffer states.
+        buffer_levels (list): List of buffer levels.
         buffer_change_times (list): List of buffer change times.
 
     Returns:
-        tuple: Cleaned buffer states and corresponding change times.
+        tuple: Cleaned buffer levels and corresponding change times.
     """
-    if len(buffer_states) != len(buffer_change_times) + 1:
+    if len(buffer_levels) != len(buffer_change_times) + 1:
         raise AssertionError(
-            "Buffer states list should have exactly one more element than buffer change times."
+            "Buffer levels list should have exactly one more element than buffer change times."
         )
-    new_l1 = []  # Initial buffer state is always present
+    new_l1 = []  # Initial buffer level is always present
     new_l2 = []
-    first_state = buffer_states.pop(0)
-    for a, b in zip(buffer_states, buffer_change_times):
+    first_level = buffer_levels.pop(0)
+    for a, b in zip(buffer_levels, buffer_change_times):
         if new_l2.count(b) < 1:
             new_l1.append(a)
             new_l2.append(b)
-    new_l1 = [first_state] + new_l1
+    new_l1 = [first_level] + new_l1
     return new_l1, new_l2

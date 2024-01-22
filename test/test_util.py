@@ -19,7 +19,7 @@ from processscheduler.util import (
     calc_parabola_from_three_points,
     sort_no_duplicates,
     sort_duplicates,
-    clean_buffer_states,
+    clean_buffer_levels,
     get_minimum,
     get_maximum,
 )
@@ -60,8 +60,8 @@ def test_sort_duplicates():
     assert sorted(lst_to_sort) == sorted_integers
 
 
-def test_clean_buffer_states():
-    assert clean_buffer_states([100, 21, 21, 21], [7, 7, 7]) == ([100, 21], [7])
+def test_clean_buffer_levels():
+    assert clean_buffer_levels([100, 21, 21, 21], [7, 7, 7]) == ([100, 21], [7])
 
 
 def test_get_maximum():

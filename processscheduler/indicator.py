@@ -314,7 +314,7 @@ class IndicatorMaxBufferLevel(Indicator):
         self.name = f"MaximizeBuffer{self.buffer.name}Level"
 
         self.append_z3_list_of_assertions(
-            get_maximum(self._indicator_variable, self.buffer._buffer_states)
+            get_maximum(self._indicator_variable, self.buffer._buffer_levels)
         )
 
 
@@ -329,5 +329,5 @@ class IndicatorMinBufferLevel(Indicator):
         self.name = f"Mini {self.buffer.name} level"
 
         self.append_z3_list_of_assertions(
-            get_minimum(self._indicator_variable, self.buffer._buffer_states)
+            get_minimum(self._indicator_variable, self.buffer._buffer_levels)
         )

@@ -96,3 +96,7 @@ def test_export_solution_to_excel_file():
 
 def test_export_solution_to_pandas_dataframe():
     SOLUTION.to_df()
+
+
+def test_print_solution_as_pandas_dataframe():
+    print(SOLUTION)

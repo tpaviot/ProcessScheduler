@@ -365,12 +365,12 @@ def render_gantt_matplotlib(
         buffer_chart.set_ylabel("Buffer level")
 
         for buffer in solution.buffers.values():
-            all_x = [0] + buffer.state_change_times + [solution.horizon]
-            # build data from the state and state_change_times
+            all_x = [0] + buffer.level_change_times + [solution.horizon]
+            # build data from the level and level_change_times
             i = 0
             X = []
             Y = []
-            for y in buffer.state:
+            for y in buffer.level:
                 X += [all_x[i], all_x[i + 1], np.nan]
                 Y += [y, y, np.nan]
                 i += 1

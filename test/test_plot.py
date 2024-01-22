@@ -253,10 +253,10 @@ def test_load_unload_feed_buffers_1() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
-    assert solution.buffers[buffer_1.name].state == [10, 7]
-    assert solution.buffers[buffer_1.name].state_change_times == [5]
-    assert solution.buffers[buffer_2.name].state == [0, 2]
-    assert solution.buffers[buffer_2.name].state_change_times == [8]
+    assert solution.buffers[buffer_1.name].level == [10, 7]
+    assert solution.buffers[buffer_1.name].level_change_times == [5]
+    assert solution.buffers[buffer_2.name].level == [0, 2]
+    assert solution.buffers[buffer_2.name].level_change_times == [8]
 
     # plot buffers
     ps.render_gantt_matplotlib(solution, show_plot=False)

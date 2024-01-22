@@ -72,11 +72,11 @@ class BufferSolution(BaseModelWithJson):
     """Class to represent the solution for a Buffer."""
 
     name: str
-    # a collection of instants where the buffer state changes
-    state_change_times: List[int] = Field(default=[])
-    # a collection that represents the buffer state along the
+    # a collection of instants where the buffer level changes
+    level_change_times: List[int] = Field(default=[])
+    # a collection that represents the buffer level along the
     # whole schedule. Represented a integer values
-    state: List[int] = Field(default=[])
+    level: List[int] = Field(default=[])
 
 
 class SchedulingSolution(BaseModelWithJson):
