@@ -4,7 +4,7 @@ The V2 branch is a reformating of the codebase that results in backward incompat
 
 [X] port to pydantic V2
 
-[ ] results to a pandas dataframe
+[X] results to a pandas dataframe
 
 [X] get rid off context, only use problem
 
@@ -20,9 +20,9 @@ The V2 branch is a reformating of the codebase that results in backward incompat
 
 [X] Move to pytest
 
-[ ] pyproject.toml
+[WIP] pyproject.toml
 
-[ ] extend tasks constraints (StartSync, EndSync etc.) to a list of n entries rather than 2 entries
+[X] extend tasks constraints (StartSync, EndSync etc.) to a list of n entries rather than 2 entries
 
 [X] Move first order logic to classes that inherit from NamedUIDObject
 
@@ -30,11 +30,11 @@ The V2 branch is a reformating of the codebase that results in backward incompat
 
 [X] Use object (unique) names for object creation
 
-[WIP] Refactor Indicators and Objectives to get be consistent with other objects
+[X] Refactor Indicators and Objectives to get be consistent with other objects
 
-[ ] Add more tests for OptimizeResourceUtilization (both Maximize and Minimize)
+[X] Add more tests for OptimizeResourceUtilization (both Maximize and Minimize)
 
-[ ] Add more tests for Objectives start earlieast, latest etc. coverage is not wide enough
+[X] Add more tests for Objectives start earlieast, latest etc. coverage is not wide enough
 
 [X] in problem, change add_objectve_minimal
 
