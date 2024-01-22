@@ -1,6 +1,6 @@
 # Run
 
-In order to check that the installation is successful and processscheduler ready to run on your machine, edit/run the following example:
+In order to check that the installation is successful and ProcessScheduler ready to run on your machine, edit/run the following example:
 
 ```python
 import processscheduler as ps 
