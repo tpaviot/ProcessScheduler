@@ -2,7 +2,7 @@
 title: About
 ---
 
-# About
+# What's inside?
 
 ProcessScheduler operates on models written in the Python programming language, offering the flexibility to accommodate a wide range of scheduling requirements for tasks and resources.
 
@@ -12,6 +12,6 @@ Bjørner, N., Phan, AD., Fleckenstein, L. (2015). νZ - An Optimizing SMT Solver
 
 Additionally, an introductory guide to programming with Z3 in Python is available at [z3-py-tutorial](https://ericpony.github.io/z3py-tutorial/guide-examples.htm). 
 
-It's worth noting that Z3 is the **only mandatory dependency** for ProcessScheduler.
+It's worth noting that Z3 and pydantic are the **only mandatory dependencies** for ProcessScheduler.
 
 Furthermore, the tool offers the flexibility to visualize scheduling solutions by rendering them into Gantt charts, which can be exported in common formats such as JPG, PNG, PDF, or SVG. Please note that the optional libraries, matplotlib and plotly, are not pre-installed but can be easily integrated based on your preferences and needs.
