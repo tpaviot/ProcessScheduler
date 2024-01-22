@@ -102,8 +102,8 @@ class SchedulingSolver(BaseModelWithJson):
     verbosity: int = Field(default=0)
     optimizer: Literal["incremental", "optimize"] = Field(default="incremental")
     max_iter: int = Field(default=None)
-    save_intermediate_levels: bool = Field(default=False)
-    save_intermediate_levels_path: str = Field(default=None)
+    save_intermediate_states: bool = Field(default=False)
+    save_intermediate_states_path: str = Field(default=None)
     optimize_priority: Literal["pareto", "lex", "box", "weight"] = Field(
         default="pareto"
     )
@@ -762,12 +762,12 @@ class SchedulingSolver(BaseModelWithJson):
             solution = self._solver.model()
             current_variable_value = solution[variable].as_long()
             # if requested, save intermediate_level
-            if self.save_intermediate_levels:
+            if self.save_intermediate_states:
                 sol = self.build_solution(solution)
-                if self.save_intermediate_levels_path is None:
-                    self.save_intermediate_levels_path = os.getcwd()
+                if self.save_intermediate_states_path is None:
+                    self.save_intermediate_states_path = os.getcwd()
                 fn = os.path.join(
-                    self.save_intermediate_levels_path,
+                    self.save_intermediate_states_path,
                     f"{self.problem.name}_IntermediateSolution_Value_{current_variable_value}.json",
                 )
                 sol.to_json_file(fn)
