@@ -62,7 +62,8 @@ watch:
 
 nav:
 - Introduction:
-  - About: about.md
+  - Features: features.md
+  - What's inside: inside.md
   - Download/Install: download_install.md
   - Run: run.md
 - Concepts:

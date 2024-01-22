@@ -5,8 +5,7 @@ dependencies:
   - pip
   - python=3.10
   - pip:
-    - z3-solver==4.12.2.0
-    - importlib-resources
+    - z3-solver==4.12.5.0
     - matplotlib
     - plotly
     - kaleido
