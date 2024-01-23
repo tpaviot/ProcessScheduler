@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
+import csv
 import os
 
 import processscheduler as ps
@@ -100,3 +101,19 @@ def test_export_solution_to_pandas_dataframe():
 
 def test_print_solution_as_pandas_dataframe():
     print(SOLUTION)
+
+
+def test_export_solution_as_csv():
+    csv_str_1 = SOLUTION.to_csv()
+    # change the default pseparator
+    csv_str_2 = SOLUTION.to_csv(separator=";")
+    # as a file
+    SOLUTION.to_csv(csv_filename="tst.csv")
+    # check that the exporter file is a correct csv file
+    with open("tst.csv", newline="") as csvfile:
+        csv_content = csv.reader(csvfile)
+        # try to read the 4 lines
+        for _ in range(4):
+            l = next(csv_content)
+            assert isinstance(l, list)
+            assert len(l) == 7

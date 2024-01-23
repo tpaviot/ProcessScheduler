@@ -121,7 +121,7 @@ class SchedulingSolution(BaseModelWithJson):
     #
     # File export
     #
-    def to_excel_file(self, excel_filename, colors=False):
+    def to_excel_file(self, excel_filename: str, colors: bool = False):
         return export_solution_to_excel_file(self, excel_filename, colors)
 
     def to_df(self):
@@ -158,3 +158,15 @@ class SchedulingSolution(BaseModelWithJson):
             }
         )
         return tasks_df
+
+    def to_csv(self, csv_filename: str = None, separator=","):
+        """export the solution to csv file if filename is provided, otherwise
+        return the csv content as a string"""
+        if not HAVE_PANDAS:
+            raise AssertionError("csv exporter requires pandas to be installed")
+        csv_content = self.to_df().to_csv(index=False, sep=separator)
+        if csv_filename is not None:
+            with open(csv_filename, "w", encoding="utf8") as f:
+                f.write(csv_content)
+        else:
+            return csv_content
