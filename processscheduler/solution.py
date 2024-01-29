@@ -164,9 +164,7 @@ class SchedulingSolution(BaseModelWithJson):
         return the csv content as a string"""
         if not HAVE_PANDAS:
             raise AssertionError("csv exporter requires pandas to be installed")
-        csv_content = self.to_df().to_csv(index=False, sep=separator)
         if csv_filename is not None:
-            with open(csv_filename, "w", encoding="utf8") as f:
-                f.write(csv_content)
+            self.to_df().to_csv(path_or_buf=csv_filename, index=False, sep=separator)
         else:
-            return csv_content
+            return self.to_df().to_csv(index=False, sep=separator)
