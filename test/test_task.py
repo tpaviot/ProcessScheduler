@@ -341,7 +341,7 @@ def test_tasks_contiguous() -> None:
 #
 def test_tasks_release_date_1() -> None:
     pb = ps.SchedulingProblem(name="TaskReleaseDate1")
-    t_1 = ps.FixedDurationTask(name="t1", duration=7, release_date=19)
+    ps.FixedDurationTask(name="t1", duration=7, release_date=19)
     ps.ObjectiveMinimizeMakespan()
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
@@ -352,7 +352,7 @@ def test_tasks_release_date_1() -> None:
 def test_tasks_release_date_2() -> None:
     """no solution, because release date is too late"""
     pb = ps.SchedulingProblem(name="TaskReleaseDate2", horizon=12)
-    t_1 = ps.FixedDurationTask(name="t1", duration=10, release_date=19)
+    ps.FixedDurationTask(name="t1", duration=10, release_date=19)
     ps.ObjectiveMinimizeMakespan()
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
@@ -364,7 +364,7 @@ def test_tasks_release_date_2() -> None:
 #
 def test_tasks_due_date_1() -> None:
     pb = ps.SchedulingProblem(name="TaskDueDate1")
-    t_1 = ps.FixedDurationTask(name="t1", duration=9, due_date=19)
+    ps.FixedDurationTask(name="t1", duration=9, due_date=19)
     ps.ObjectiveMinimizeMakespan()
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()

@@ -114,7 +114,7 @@ def test_select_worker_same_name() -> None:
     worker_1 = ps.Worker(name="wkr_1")
     assert isinstance(worker_1, ps.Worker)
     worker_2 = ps.Worker(name="wkr_2")
-    sw1 = ps.SelectWorkers(name="sw1", list_of_workers=[worker_1, worker_2])
-    sw2 = ps.SelectWorkers(name="sw2", list_of_workers=[worker_1, worker_2])
+    ps.SelectWorkers(name="sw1", list_of_workers=[worker_1, worker_2])
+    ps.SelectWorkers(name="sw2", list_of_workers=[worker_1, worker_2])
     with pytest.raises(ValueError):
-        sw3 = ps.SelectWorkers(name="sw1", list_of_workers=[worker_1, worker_2])
+        ps.SelectWorkers(name="sw1", list_of_workers=[worker_1, worker_2])

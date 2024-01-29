@@ -665,8 +665,8 @@ def test_pinedo_4_1_5() -> None:
     total_tardiness = ps.IndicatorTardiness(list_of_tasks=all_tasks)
     total_earliness = ps.IndicatorEarliness(list_of_tasks=all_tasks)
 
-    ob1 = ps.ObjectiveMinimizeIndicator(target=total_tardiness, weight=1)
-    ob2 = ps.ObjectiveMinimizeIndicator(target=total_earliness, weight=1)
+    ps.ObjectiveMinimizeIndicator(target=total_tardiness, weight=1)
+    ps.ObjectiveMinimizeIndicator(target=total_earliness, weight=1)
 
     solution = solve_problem(problem)
     assert solution
@@ -1014,17 +1014,17 @@ def test_find_another_solution_variable_2() -> None:
     assert solution2
     s.find_another_solution_for_variable(t._start)
     solution3 = s.solve()
-    assert solution2
+    assert solution3
     s.find_another_solution_for_variable(t._start)
-    solution = s.solve()
-    assert not solution
+    solution4 = s.solve()
+    assert not solution4
 
 
 def test_find_another_solution_global_1() -> None:
     pb = ps.SchedulingProblem(name="FindAnotherSolution", horizon=4)
-    t1 = ps.FixedDurationTask(name="T1", duration=2)
-    t2 = ps.FixedDurationTask(name="T2", duration=2)
-    t3 = ps.FixedDurationTask(name="T3", duration=2)
+    ps.FixedDurationTask(name="T1", duration=2)
+    ps.FixedDurationTask(name="T2", duration=2)
+    ps.FixedDurationTask(name="T3", duration=2)
     # three are 3 ** 3 = 27 different schedules
     s = ps.SchedulingSolver(problem=pb)
     nb_sol = 0
@@ -1041,6 +1041,6 @@ def test_find_another_solution_global_1() -> None:
 #
 def test_qf_idl_logics():
     problem = ps.SchedulingProblem(name="LogicsQFIDL", horizon=6)
-    task_1 = ps.FixedDurationTask(name="task1", duration=2)
+    ps.FixedDurationTask(name="task1", duration=2)
     solver = ps.SchedulingSolver(problem=problem, logics="QF_UFIDL")
     assert solver.solve()
