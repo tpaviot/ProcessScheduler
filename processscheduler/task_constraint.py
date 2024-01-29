@@ -24,7 +24,6 @@ from pydantic import Field, PositiveInt
 
 from processscheduler.constraint import TaskConstraint
 from processscheduler.task import (
-    Task,
     FixedDurationTask,
     ZeroDurationTask,
     VariableDurationTask,

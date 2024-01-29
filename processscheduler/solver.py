@@ -35,7 +35,7 @@ except ImportError:
 from pydantic import Field, PositiveFloat, ConfigDict
 
 from processscheduler.base import BaseModelWithJson
-from processscheduler.indicator import Indicator, IndicatorFromMathExpression
+from processscheduler.indicator import IndicatorFromMathExpression
 from processscheduler.objective import Objective
 from processscheduler.solution import (
     SchedulingSolution,
