@@ -10,6 +10,7 @@ ProcessScheduler is a Python package for creating optimized scheduling based on 
 
 ## Updates
 
+-   2024/01/30: Release 2.0.0a
 -   2023/12/13: Huge on-going refactoring [#133](https://github.com/tpaviot/ProcessScheduler/issues/133)
 -   2023/12/12: Release 0.9.4
 

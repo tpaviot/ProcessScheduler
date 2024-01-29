@@ -1,5 +1,30 @@
 RELEASE NOTES
 
+Version 2.0.0a
+==============
+This release introduces major API changes.
+
+Bump z3-solver to release 4.12.5.0
+
+Refactoring:
+  - port codebase to pydantic V2
+
+  - export solution to pandas dataframe
+
+  - define LinearFunction, PolynomialFunction etc. for costs
+
+  - JSON importer/exporter improvements thanks to pydantic
+
+  - use pytest for unittest suite
+
+  - poetry support
+
+  - refactor Indicator and Objective
+
+  - documentation use mkdocs material
+
+  - more tests
+
 Version 0.9.4
 =============
 Bump z3-solver to release 4.12.4.0
