@@ -104,13 +104,15 @@ def test_print_solution_as_pandas_dataframe():
 
 
 def test_export_solution_as_csv():
+    csv_filename = "tst.csv"
     SOLUTION.to_csv()
     # change the default pseparator
     SOLUTION.to_csv(separator=";")
     # as a file
-    SOLUTION.to_csv(csv_filename="tst.csv")
+    SOLUTION.to_csv(csv_filename=csv_filename)
+    assert os.path.isfile(csv_filename)
     # check that the exporter file is a correct csv file
-    with open("tst.csv", newline="") as csvfile:
+    with open(csv_filename, "r", encoding="utf8") as csvfile:
         csv_content = csv.reader(csvfile)
         # try to read the 4 lines
         for _ in range(4):
