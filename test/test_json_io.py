@@ -131,7 +131,7 @@ def test_CumulativeWorker_to_json_file(my_tmp_path):
 
 
 def test_SelectWorkers_to_json_file(my_tmp_path):
-    pb = ps.SchedulingProblem(name="SelectWorkersToJson")
+    ps.SchedulingProblem(name="SelectWorkersToJson")
     w1 = ps.Worker(name="W1")
     w2 = ps.Worker(name="W2")
     w3 = ps.Worker(name="W3")
@@ -141,9 +141,9 @@ def test_SelectWorkers_to_json_file(my_tmp_path):
 
 def test_SelectWorkers_from_json(my_tmp_path):
     pb = ps.SchedulingProblem(name="SelectWorkersFromJson")
-    w1 = ps.Worker(name="W1")
-    w2 = ps.Worker(name="W2")
-    w3 = ps.Worker(name="W3")
+    ps.Worker(name="W1")
+    ps.Worker(name="W2")
+    ps.Worker(name="W3")
 
     # to build a select workers, first read
     with open(my_tmp_path / "select_workers.json", "r") as f:
@@ -252,7 +252,7 @@ def test_Problem_add_from_json_unknown_object():
 
 def test_Problem_add_from_json_file(my_tmp_path):
     pb = ps.SchedulingProblem(name="ProblemAddFromJsonFile")
-    t = pb.add_from_json_file(my_tmp_path / "fixed_duration_task.json")
+    pb.add_from_json_file(my_tmp_path / "fixed_duration_task.json")
 
 
 def test_json_export_problem_solver_1(my_tmp_path):
@@ -327,7 +327,7 @@ def test_json_export_problem_solver_1(my_tmp_path):
 #
 def test_incremental_optimizer_save_state() -> None:
     pb = ps.SchedulingProblem(name="SaveIntermediateState", horizon=20)
-    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    ps.FixedDurationTask(name="task1", duration=3)
     ob = ps.ObjectiveTasksStartLatest()
     solution = ps.SchedulingSolver(problem=pb, save_intermediate_states=True).solve()
     assert solution

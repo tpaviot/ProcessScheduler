@@ -31,20 +31,9 @@ from processscheduler.task import (
     ZeroDurationTask,
     VariableDurationTask,
 )
-from processscheduler.function import (
-    ConstantFunction,
-    LinearFunction,
-    PolynomialFunction,
-    GeneralFunction,
-)
-from processscheduler.indicator import (
-    Indicator,
-    IndicatorFromMathExpression,
-    IndicatorResourceUtilization,
-    IndicatorResourceCost,
-)
+from processscheduler.indicator import Indicator
 from processscheduler.objective import Objective
-from processscheduler.resource import Resource, Worker, CumulativeWorker, SelectWorkers
+from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
 from processscheduler.constraint import *
 from processscheduler.task_constraint import *
 from processscheduler.indicator_constraint import *
@@ -177,7 +166,7 @@ class SchedulingProblem(NamedUIDObject):
         s = json.loads(json_string)
         # first find the class to instantiate
         s_type = s["type"]
-        if not s_type in _object_types:
+        if s_type not in _object_types:
             raise AssertionError(f"{s_type} type not known")
 
         # create and return the object

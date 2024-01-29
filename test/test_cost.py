@@ -171,7 +171,7 @@ def test_optimize_linear_cost_3() -> None:
     # if the cost function involves float numbers, this will
     # result in a ToReal conversion of z3 integer variables,
     # and may lead to unepexted behaviours
-    problem = ps.SchedulingProblem(name="OptimizeLinearCost3")
+    ps.SchedulingProblem(name="OptimizeLinearCost3")
 
     t_1 = ps.FixedDurationTask(name="t1", duration=17)
 
@@ -183,7 +183,7 @@ def test_optimize_linear_cost_3() -> None:
     # because float parameters, should use ToReal conversion
     # and a warning emitted
     with pytest.warns(UserWarning):
-        cost_ind = ps.IndicatorResourceCost(list_of_resources=[worker_1])
+        ps.IndicatorResourceCost(list_of_resources=[worker_1])
 
 
 def test_quadratic_cost_1() -> None:
@@ -193,7 +193,7 @@ def test_quadratic_cost_1() -> None:
 
     worker_1 = ps.Worker(
         name="Worker1",
-        cost=ps.PolynomialFunction(coefficients=[23, 13, 513]),
+        cost=ps.PolynomialFunction(coefficients=[23, -13, 513]),
     )
     t_1.add_required_resource(worker_1)
 
@@ -209,9 +209,7 @@ def test_quadratic_cost_1() -> None:
         return 23 * t * t - 13 * t + 513
 
     expected_cost = int(((int_cost_function(13) + int_cost_function(13 + 17)) * 17) / 2)
-    # TODO: assert solution.indicators[cost_ind.name] == expected_cost
-    # E       assert 222462 == 212959
-    # test_cost.py:254: AssertionError
+    assert solution.indicators[cost_ind.name] == expected_cost
 
 
 def test_optimize_quadratic_cost_2() -> None:

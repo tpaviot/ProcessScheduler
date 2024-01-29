@@ -81,7 +81,7 @@ def test_unload_buffer_2() -> None:
 
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=3)
-    task_3 = ps.FixedDurationTask(name="task3", duration=3)
+    ps.FixedDurationTask(name="task3", duration=3)
     buffer = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
 
     ps.TaskStartAt(task=task_1, value=5)

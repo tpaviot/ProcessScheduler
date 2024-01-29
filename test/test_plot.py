@@ -58,7 +58,7 @@ def test_gantt_matplotlib_indicator():
     worker_1 = ps.Worker(name="Worker1", cost=ps.LinearFunction(slope=23, intercept=3))
     t_1.add_required_resource(worker_1)
 
-    ff = ps.IndicatorResourceCost(list_of_resources=[worker_1])
+    ps.IndicatorResourceCost(list_of_resources=[worker_1])
 
     solution = ps.SchedulingSolver(problem=problem).solve()
 
