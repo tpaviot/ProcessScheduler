@@ -60,7 +60,7 @@ The `horizon` parameter does not need to be provided. If an integer is passed, t
 
 ## SchedulingProblem instantiation
 
-Here is the simpliest way to create `SchedulingProblem`.
+Here is the simplest way to create `SchedulingProblem`.
 
 ``` py
 import processscheduler as ps

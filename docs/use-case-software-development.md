@@ -1,6 +1,9 @@
 # Use case: software development
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/tpaviot/ProcessScheduler/HEAD?filepath=doc/use-case-software-development.ipynb)
+<a target="_blank" href="https://colab.research.google.com/github/tpaviot/ProcessScheduler/blob/master/examples-notebooks/use-case-software-development.ipynb">
+  <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
 
 To illustrate the way to use ProcessScheduler, let's imagine the simple following use case: the developmenent of a scheduling software intended for end-user. The software is developed using Python, and provides a modern Qt GUI. Three junior developers are in charge (Elias, Louis, Elise), under the supervision of their project manager Justine. The objective of this document is to generate a schedule of the different developmenent tasks to go rom the early design stages to the first software release. This notebook can tested online at mybinder.org
 

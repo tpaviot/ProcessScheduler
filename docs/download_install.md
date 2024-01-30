@@ -3,7 +3,7 @@
 Use ``pip`` to install the package and the required dependencies (Z3 and pydantic) on your machine:
 
 ``` bash
-pip install ProcessScheduler
+pip install ProcessScheduler==2.0.0a0
 ```
 and check the installation from a python3 prompt:
 
