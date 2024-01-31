@@ -533,7 +533,7 @@ def test_get_scheduled_tasks() -> None:
     assert "task3" in scheduled_tasks_dictionary
 
 
-def test_get_scheduled_tasks() -> None:
+def test_for_schedule_non_optional_tasks() -> None:
     pb = ps.SchedulingProblem(name="ForceScheduleNonOptionalTask", horizon=14)
     task_1 = ps.FixedDurationTask(name="task1", duration=10)
     with pytest.raises(TypeError):
