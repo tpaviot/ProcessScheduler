@@ -24,6 +24,7 @@ from processscheduler.util import (
     get_maximum,
 )
 
+import pytest
 import z3
 
 
@@ -82,6 +83,15 @@ def test_get_maximum():
     assert s.check() == z3.sat
 
 
+def test_get_maximum_empty_list():
+    maxi = z3.Int("maxi2")
+    # find maximum
+    with pytest.raises(AssertionError):
+        get_maximum(maxi, [])
+    with pytest.raises(AssertionError):
+        get_maximum(maxi, None)
+
+
 def test_get_minimum():
     # 20 integers between 10 and 99
     lst = random.sample(range(10, 100), k=20)
@@ -98,3 +108,16 @@ def test_get_minimum():
     s.add([a == b for a, b in zip(lst, z3_lst)])
     s.add(mini == 5)
     assert s.check() == z3.sat
+
+
+def test_get_minimum_empty_list():
+    mini = z3.Int("mini2")
+    with pytest.raises(AssertionError):
+        get_maximum(mini, [])
+    with pytest.raises(AssertionError):
+        get_maximum(mini, None)
+
+
+def test_clean_buffers_different_sizes() -> None:
+    with pytest.raises(AssertionError):
+        clean_buffer_levels([1, 2, 3], [1, 2, 3])
