@@ -55,7 +55,7 @@ def build_excavator_problem() -> ps.SchedulingProblem:
 
     # problem.add_objective_makespan() ## ERROR Serialization
 
-    # problem.add_indicator_resource_cost([small_exc, medium_ex])
+    ps.IndicatorResourceCost(list_of_resources=[small_exc, medium_ex])
 
     return problem
 
