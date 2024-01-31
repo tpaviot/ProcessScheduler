@@ -148,6 +148,59 @@ def test_indicator_number_of_tardy_tasks_2() -> None:
     assert solution.indicators[tard_1.name] == 10
 
 
+def test_indicator_number_of_tardy_tasks_3() -> None:
+    problem = ps.SchedulingProblem(name="IndicatorNumberOfTardyTasks3")
+    t_1 = ps.FixedDurationTask(
+        name="T1", duration=5, due_date=5, due_date_is_deadline=False
+    )
+    t_2 = ps.FixedDurationTask(
+        name="T2", duration=7, due_date=6, due_date_is_deadline=False
+    )
+    t_3 = ps.FixedDurationTask(
+        name="T3", duration=11, due_date=5, due_date_is_deadline=False
+    )
+
+    ps.TaskStartAt(task=t_1, value=0)  # lateness 0
+    ps.TaskStartAt(task=t_2, value=0)  # lateness 1
+    ps.TaskStartAt(task=t_3, value=0)  # lateness 6
+    tard_1 = ps.IndicatorNumberOfTardyTasks(list_of_tasks=[t_1, t_2])
+    solution = ps.SchedulingSolver(problem=problem).solve()
+    assert solution
+    assert solution.indicators[tard_1.name] == 1
+
+
+#
+# Earlyness
+#
+def test_indicator_earliness_1() -> None:
+    problem = ps.SchedulingProblem(name="IndicatorMaximumEarlyness1")
+
+    task_1 = ps.FixedDurationTask(
+        name="task1", duration=106, due_date=180, due_date_is_deadline=False
+    )
+    task_2 = ps.FixedDurationTask(
+        name="task2", duration=100, due_date=180, due_date_is_deadline=False
+    )
+    task_3 = ps.FixedDurationTask(
+        name="task3", duration=96, due_date=180, due_date_is_deadline=False
+    )
+    single_machine = ps.Worker(name="Worker1")
+
+    for t in [
+        task_1,
+        task_2,
+        task_3,
+    ]:  # all the tasks are processed on the same machine
+        t.add_required_resource(single_machine)
+
+    total_earliness = ps.IndicatorEarliness(
+        list_of_tasks=[task_1, task_2]
+    )  # take all tasks by default
+
+    solution = ps.SchedulingSolver(problem=problem).solve()
+    assert solution
+
+
 #
 # Maximum lateness
 #
@@ -186,22 +239,22 @@ def test_indicator_maximum_lateness_2() -> None:
 def test_indicator_maximum_lateness_3() -> None:
     problem = ps.SchedulingProblem(name="IndicatorMaximumLateness3")
     t_1 = ps.FixedDurationTask(
-        name="T1", duration=5, due_date=5, due_date_is_deadline=False
+        name="T1", duration=5, due_date=20, due_date_is_deadline=False
     )
     t_2 = ps.FixedDurationTask(
-        name="T2", duration=7, due_date=6, due_date_is_deadline=False
+        name="T2", duration=7, due_date=50, due_date_is_deadline=False
     )
     t_3 = ps.FixedDurationTask(
         name="T3", duration=11, due_date=5, due_date_is_deadline=False
     )
 
-    ps.TaskStartAt(task=t_1, value=0)  # lateness 0
-    ps.TaskStartAt(task=t_2, value=0)  # lateness 1
-    ps.TaskStartAt(task=t_3, value=0)  # lateness 6
-    tard_1 = ps.IndicatorNumberOfTardyTasks(list_of_tasks=[t_1, t_2])
+    ps.TaskStartAt(task=t_1, value=0)  # negative lateness: -15
+    ps.TaskStartAt(task=t_2, value=0)  # negative lateness: -43
+    ps.TaskStartAt(task=t_3, value=0)
+    tard_1 = ps.IndicatorMaximumLateness(list_of_tasks=[t_1, t_2])
     solution = ps.SchedulingSolver(problem=problem).solve()
     assert solution
-    assert solution.indicators[tard_1.name] == 1
+    assert solution.indicators[tard_1.name] == -15
 
 
 #

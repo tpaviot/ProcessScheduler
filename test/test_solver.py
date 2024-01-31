@@ -663,7 +663,7 @@ def test_pinedo_4_1_5() -> None:
         t.add_required_resource(single_machine)
 
     total_tardiness = ps.IndicatorTardiness(list_of_tasks=all_tasks)
-    total_earliness = ps.IndicatorEarliness(list_of_tasks=all_tasks)
+    total_earliness = ps.IndicatorEarliness()  # take all tasks by default
 
     ps.ObjectiveMinimizeIndicator(target=total_tardiness, weight=1)
     ps.ObjectiveMinimizeIndicator(target=total_earliness, weight=1)
