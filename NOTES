@@ -1,5 +1,15 @@
 RELEASE NOTES
 
+
+Version 2.0.0
+=============
+Minor fixes.
+
+Fixes:
+  - increase code coverage
+  - fix colab urls in notebooks
+  - minor fixes to ForceOptionalSchedule constraint
+
 Version 2.0.0a
 ==============
 This release introduces major API changes.
