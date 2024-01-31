@@ -16,7 +16,7 @@ jobs:
       pip install -r requirements.txt && \
       pip install pytest coverage && \
       pip install -e .
-    displayName: Install
+    displayName: 'Install using pip'
 
   - bash: |
       python -c 'from processscheduler import *'
@@ -55,3 +55,7 @@ jobs:
         coverage html && \
         bash <(curl -s https://codecov.io/bash)
       displayName: 'Coverage and export to codecov (Linux py310 only)'
+
+  - bash: |
+      poetry install
+    displayName: 'Install using poetry'
