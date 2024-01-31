@@ -30,8 +30,3 @@ pydantic = ">=2"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[[tool.poetry.source]]
-name = "pypi-all"
-url = "https://repository.bluegrove.com/repository/pypi-all/simple/"
-priority = "default"
