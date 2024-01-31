@@ -353,7 +353,7 @@ class OptionalTaskForceSchedule(TaskConstraint):
         super().__init__(**data)
 
         if not self.task.optional:
-            raise TypeError(f"Task {self.task_2.name} must be optional.")
+            raise TypeError(f"Task {self.task.name} must be optional.")
 
         self.set_z3_assertions(self.task._scheduled == self.to_be_scheduled)
 
