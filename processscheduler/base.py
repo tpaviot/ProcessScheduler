@@ -128,9 +128,3 @@ class NamedUIDObject(BaseModelWithJson):
 # None by default
 # the scheduling problem will set this variable
 active_problem = None
-
-
-def clear_active_problem() -> None:
-    """Clear current context"""
-    if active_problem is not None:
-        active_problem.clear()
