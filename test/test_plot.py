@@ -238,9 +238,9 @@ def test_gantt_plotly_raise_wrong_type():
         ps.render_gantt_plotly(solution, render_mode="foo")
 
 
-def test_load_unload_feed_buffers_1() -> None:
+def test_gantt_plotly_with_buffers() -> None:
     # one task that consumes and feed two different buffers
-    pb = ps.SchedulingProblem(name="LoadUnloadBuffer1")
+    pb = ps.SchedulingProblem(name="PlotlyWithBuffers")
 
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     buffer_1 = ps.NonConcurrentBuffer(name="Buffer1", initial_level=10)
@@ -259,4 +259,4 @@ def test_load_unload_feed_buffers_1() -> None:
     assert solution.buffers[buffer_2.name].level_change_times == [8]
 
     # plot buffers
-    ps.render_gantt_matplotlib(solution, show_plot=False)
+    ps.render_gantt_plotly(solution, show_plot=False)

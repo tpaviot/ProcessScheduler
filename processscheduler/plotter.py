@@ -16,6 +16,7 @@
 from pathlib import Path
 import random
 from typing import Optional, Tuple, Union
+import warnings
 
 try:
     import numpy as np
@@ -85,8 +86,8 @@ def plot_function(
     plt.legend()
     plt.title(title)
     plt.grid(True)
-    plt.xlabel("t")
-    plt.ylabel("F(t)")
+    plt.xlabel("x")
+    plt.ylabel("F(x)")
 
     if show_plot:
         plt.show()
@@ -113,9 +114,6 @@ def render_gantt_plotly(
 
     if not HAVE_PLOTLY:
         raise AssertionError("plotly is not installed.")
-
-    if not HAVE_NUMPY:
-        raise AssertionError("numpy not installed.")
 
     if render_mode not in ["Task", "Resource"]:
         raise ValueError("data_type must be either Task or Resource")
@@ -191,7 +189,7 @@ def render_gantt_plotly(
 
     # buffers, show an histogram
     if solution.buffers:
-        print("POPO il y a des buffers!!")
+        warnings.warn("Not implemented. TODO: render buffers")
 
     if fig_filename is not None:
         fig.write_image(fig_filename)
