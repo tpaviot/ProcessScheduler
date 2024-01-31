@@ -238,7 +238,7 @@ def test_gantt_plotly_raise_wrong_type():
         ps.render_gantt_plotly(solution, render_mode="foo")
 
 
-def test_gantt_plotly_with_buffers() -> None:
+def test_gantt_with_buffers() -> None:
     # one task that consumes and feed two different buffers
     pb = ps.SchedulingProblem(name="PlotlyWithBuffers")
 
@@ -260,3 +260,4 @@ def test_gantt_plotly_with_buffers() -> None:
 
     # plot buffers
     ps.render_gantt_plotly(solution, show_plot=False)
+    ps.render_gantt_matplotlib(solution, show_plot=False)
