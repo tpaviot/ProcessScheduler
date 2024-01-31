@@ -14,7 +14,7 @@ jobs:
   
   - bash: |
       pip install -r requirements.txt && \
-      pip install pytest coverage && \
+      pip install pytest poetry coverage && \
       pip install -e .
     displayName: 'Install using pip'
 

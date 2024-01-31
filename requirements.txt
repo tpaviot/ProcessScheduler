@@ -10,6 +10,5 @@ isodate
 ipympl
 psutil
 XlsxWriter
-pytest
 pandas
 pyarrow
