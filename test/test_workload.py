@@ -172,3 +172,29 @@ def test_multiple_workers_work_load_2() -> None:
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert not solution
+
+
+# WorkLoad for a cumulative resource
+def test_cumulative_resource_work_load_1() -> None:
+    # same problem, but we force two tasks to be scheduled at start and end
+    # of the planning
+    pb = ps.SchedulingProblem(
+        name="CumulativeResourceWorkLoadUnavailability", horizon=12
+    )
+    # both tasks 1 can be run in parallel
+    task_1 = ps.FixedDurationTask(name="task1", duration=4)
+    task_2 = ps.FixedDurationTask(name="task2", duration=4)
+    worker_1 = ps.CumulativeWorker(name="Worker1", size=2)
+    task_1.add_required_resource(worker_1)
+    task_2.add_required_resource(worker_1)
+
+    ps.WorkLoad(resource=worker_1, dict_time_intervals_and_bound={(3, 8): 0})
+
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    # both tasks should start at 8.
+    assert (
+        solution.tasks[task_1.name].start == 8
+        and solution.tasks[task_2.name].start == 8
+    )
