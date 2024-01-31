@@ -160,6 +160,22 @@ def test_create_task_start_at() -> None:
     assert c.value == 1
 
 
+def test_create_redundant_constraint() -> None:
+    pb = ps.SchedulingProblem(name="CreateRedundantTaskConstraint")
+    t_1 = ps.FixedDurationTask(name="task_1", duration=2)
+    ps.TaskStartAt(task=t_1, value=1)
+    ps.TaskStartAt(task=t_1, value=1)
+    ps.SchedulingSolver(problem=pb).solve()
+
+
+def test_print_task() -> None:
+    ps.SchedulingProblem(name="CreateTaskStartAt")
+    t_1 = ps.FixedDurationTask(name="task_1", duration=2)
+    str(t_1)
+    repr(t_1)
+    print(t_1)
+
+
 def test_create_task_start_after_strict() -> None:
     ps.SchedulingProblem(name="CreateTaskStartAfterStrict")
     t_1 = ps.FixedDurationTask(name="task_1", duration=2)
