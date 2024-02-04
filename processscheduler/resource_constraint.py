@@ -197,6 +197,83 @@ class ResourceUnavailable(ResourceConstraint):
             )
 
 
+class ResourcePeriodicallyUnavailable(ResourceConstraint):
+    """
+    This constraint sets the unavailability of a resource in terms of time intervals in one period.
+
+    Parameters:
+    - resource: The resource for which unavailability is defined.
+    - list_of_time_intervals: A list of time intervals *in one period* during which the resource is unavailable for any task.
+      For example, [(0, 2), (5, 8)] represents time intervals from 0 to 2 and from 5 to 8 in one period.
+    - period: The length of one period after which to repeat the list of time intervals.
+      For example, setting this to 5 with [(2, 4)] gives unavailabilities at (2, 4), (7, 9), (12, 14), ...
+    - start: The start after which repeating the list of time intervals is active (default is 0).
+    - offset: The shift of the repeated list of time intervals (default is 0).
+      It might be desired to set also the start parameter to the same value, as otherwise the pattern shifts in from the left or the right into the schedule.
+    - end: The end until which repeating the list of time intervals is activate (default is None).
+    - optional (bool, optional): Whether the constraint is optional (default is False).
+    """
+
+    resource: Union[Worker, CumulativeWorker]
+    list_of_time_intervals: List[Tuple[int, int]]
+    period: int
+    start: int = 0
+    offset: int = 0
+    end: Union[int, None] = None
+
+
+    def __init__(self, **data):
+        """
+        Initialize a ResourceUnavailable constraint.
+
+        :param resource: The resource for which unavailability is defined.
+        :param list_of_time_intervals: A list of time intervals *in one period* during which the resource is unavailable for any task.
+          For example, [(0, 2), (5, 8)] represents time intervals from 0 to 2 and from 5 to 8.
+        :param period: The length of one period after which to repeat the list of time intervals.
+          For example, setting this to 5 with [(2, 4)] gives unavailabilities at (2, 4), (7, 9), (12, 14), ...
+        :param start: The start after which repeating the list of time intervals is active (default is 0).
+        :param offset: The shift of the repeated list of time intervals (default is 0).
+          It might be desired to set also the start parameter to the same value, as otherwise the pattern shifts in from the left or the right into the schedule.
+        :param end: The end until which repeating the list of time intervals is activate (default is None).
+        :param optional: Whether the constraint is optional (default is False).
+        """
+        super().__init__(**data)
+
+        if isinstance(self.resource, Worker):
+            workers = [self.resource]
+        elif isinstance(self.resource, CumulativeWorker):
+            workers = self.resource.cumulative_workers
+
+        resource_assigned = False
+
+        for interval_lower_bound, interval_upper_bound in self.list_of_time_intervals:
+            for worker in workers:
+                for start_task_i, end_task_i in worker.get_busy_intervals():
+                    resource_assigned = True
+                    duration = end_task_i - start_task_i
+                    conds = [
+                        z3.Xor(
+                            (start_task_i - self.offset) % self.period >= interval_upper_bound,
+                            (start_task_i - self.offset) % self.period + duration <= interval_lower_bound
+                        )
+                    ]
+
+                    if self.start > 0:
+                        conds.append(end_task_i <= self.start)
+                    if self.end is not None:
+                        conds.append(start_task_i >= self.end)
+
+                    if len(conds) > 1:
+                        self.set_z3_assertions(z3.Or(*conds))
+                    else:
+                        self.set_z3_assertions(*conds)
+
+        if not resource_assigned:
+            raise AssertionError(
+                "The resource is not assigned to any task. Please first assign the resource to one or more tasks, and then add the ResourceUnavailable constraint."
+            )
+
+
 class ResourceNonDelay(ResourceConstraint):
     """All tasks processed by the resource are contiguous, there's no idle while an operation
     if waiting for processing"""

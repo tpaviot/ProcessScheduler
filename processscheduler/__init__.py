@@ -63,6 +63,7 @@ from processscheduler.resource_constraint import (
     SameWorkers,
     DistinctWorkers,
     ResourceUnavailable,
+    ResourcePeriodicallyUnavailable,
     WorkLoad,
     ResourceTasksDistance,
     ResourceNonDelay,
