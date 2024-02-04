@@ -118,7 +118,7 @@ def test_resource_periodically_unavailable_6() -> None:
         resource=worker_1,
         list_of_time_intervals=[(2, 4)],
         offset=2, # shift interval to (4, 6)
-        start=3,  # TODO: end_task_i <= start, so it must be set to the task duration
+        start=3,  # end_task_i <= start, so it must be set to the task duration
         end=14,   # unavailability interval at (14, 16), but it should be ignored
         period=5
     )
