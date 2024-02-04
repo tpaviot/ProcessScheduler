@@ -270,7 +270,7 @@ class ResourcePeriodicallyUnavailable(ResourceConstraint):
 
         if not resource_assigned:
             raise AssertionError(
-                "The resource is not assigned to any task. Please first assign the resource to one or more tasks, and then add the ResourceUnavailable constraint."
+                "The resource is not assigned to any task. Please first assign the resource to one or more tasks, and then add the ResourcePeriodicallyUnavailable constraint."
             )
 
 
