@@ -198,3 +198,10 @@ def test_cumulative_resource_work_load_1() -> None:
         solution.tasks[task_1.name].start == 8
         and solution.tasks[task_2.name].start == 8
     )
+
+
+def test_resource_workload_raise_issue() -> None:
+    ps.SchedulingProblem(name="ResourceWorkloadRaiseIssue", horizon=10)
+    worker_1 = ps.Worker(name="Worker1")
+    with pytest.raises(AssertionError):
+        ps.WorkLoad(resource=worker_1, dict_time_intervals_and_bound={(3, 8): 0})
