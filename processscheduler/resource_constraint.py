@@ -25,6 +25,7 @@ from pydantic import Field
 from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
 from processscheduler.constraint import ResourceConstraint
 from processscheduler.util import sort_no_duplicates
+from processscheduler.task import VariableDurationTask
 
 
 class WorkLoad(ResourceConstraint):
@@ -271,6 +272,178 @@ class ResourcePeriodicallyUnavailable(ResourceConstraint):
         if not resource_assigned:
             raise AssertionError(
                 "The resource is not assigned to any task. Please first assign the resource to one or more tasks, and then add the ResourcePeriodicallyUnavailable constraint."
+            )
+
+
+class ResourceInterrupted(ResourceConstraint):
+    """
+    This constraint sets the interrupts of a resource in terms of time intervals.
+
+    Parameters:
+    - resource: The resource for which interrupts are defined.
+    - list_of_time_intervals: A list of time intervals during which the resource is interrupting any task.
+      For example, [(0, 2), (5, 8)] represents time intervals from 0 to 2 and from 5 to 8.
+    - optional (bool, optional): Whether the constraint is optional (default is False).
+    """
+
+    resource: Union[Worker, CumulativeWorker]
+    list_of_time_intervals: List[Tuple[int, int]]
+
+    def __init__(self, **data) -> None:
+        """
+        Initialize a ResourceInterrupted constraint.
+
+        :param resource: The resource for which interrupts are defined.
+        :param list_of_time_intervals: A list of time intervals during which the resource is interrupting any task.
+          For example, [(0, 2), (5, 8)] represents time intervals from 0 to 2 and from 5 to 8.
+        :param optional: Whether the constraint is optional (default is False).
+        """
+        super().__init__(**data)
+
+        if isinstance(self.resource, Worker):
+            workers = [self.resource]
+        elif isinstance(self.resource, CumulativeWorker):
+            workers = self.resource.cumulative_workers
+
+        resource_assigned = False
+
+        for interval_lower_bound, interval_upper_bound in self.list_of_time_intervals:
+            for worker in workers:
+                for task, (start_task_i, end_task_i) in worker._busy_intervals.items():
+                    resource_assigned = True
+                    conds = []
+                    overlap_condition = z3.And(
+                        start_task_i < interval_lower_bound,
+                        end_task_i > interval_upper_bound
+                    )
+                    # the usefulness of this constraint depends on the assertions set in the tasks
+                    # if the task is allowed to adjust its duration, add the overlap to it,...
+                    if isinstance(task, VariableDurationTask):
+                        overlap = interval_upper_bound - interval_lower_bound
+                        variable_conds = [
+                            overlap_condition,
+                            start_task_i + task.min_duration + overlap <= end_task_i
+                        ]
+
+                        if task.max_duration is not None:
+                            variable_conds.append(start_task_i + task.max_duration + overlap >= end_task_i)
+
+                        conds.append(
+                            z3.And(*variable_conds)
+                        )
+                    # ...otherwise just make sure the task does not start or end within an interrupt.
+                    else:
+                        conds.append(overlap_condition)
+
+                    conds.extend([
+                        start_task_i >= interval_upper_bound,
+                        end_task_i <= interval_lower_bound
+                    ])
+                    self.set_z3_assertions(z3.Xor(*conds))
+
+        if not resource_assigned:
+            raise AssertionError(
+                "The resource is not assigned to any task. Please first assign the resource to one or more tasks, and then add the ResourceInterrupted constraint."
+            )
+
+
+class ResourcePeriodicallyInterrupted(ResourceConstraint):
+    """
+    This constraint sets the interrupts of a resource in terms of time intervals.
+
+    Parameters:
+    - resource: The resource for which interrupts are defined.
+    - list_of_time_intervals: A list of time intervals during which the resource is interrupting any task.
+      For example, [(0, 2), (5, 8)] represents time intervals from 0 to 2 and from 5 to 8.
+    - optional (bool, optional): Whether the constraint is optional (default is False).
+    """
+
+    resource: Union[Worker, CumulativeWorker]
+    list_of_time_intervals: List[Tuple[int, int]]
+    period: int
+    start: int = 0
+    offset: int = 0
+    end: Union[int, None] = None
+
+    def __init__(self, **data) -> None:
+        """
+        Initialize a ResourceInterrupted constraint.
+
+        :param resource: The resource for which interrupts are defined.
+        :param list_of_time_intervals: A list of time intervals during which the resource is interrupting any task.
+          For example, [(0, 2), (5, 8)] represents time intervals from 0 to 2 and from 5 to 8.
+        :param optional: Whether the constraint is optional (default is False).
+        """
+        super().__init__(**data)
+
+        if isinstance(self.resource, Worker):
+            workers = [self.resource]
+        elif isinstance(self.resource, CumulativeWorker):
+            workers = self.resource.cumulative_workers
+
+        resource_assigned = False
+
+        for worker in workers:
+            for task, (start_task_i, end_task_i) in worker._busy_intervals.items():
+                resource_assigned = True
+                duration = end_task_i - start_task_i
+
+                for interval_lower_bound, interval_upper_bound in self.list_of_time_intervals:
+                    conds = []
+
+                    # at least one overlap
+                    overlap_condition = z3.Not(z3.Xor(
+                        (start_task_i - self.offset) % self.period >= interval_upper_bound,
+                        (start_task_i - self.offset) % self.period + duration <= interval_lower_bound
+                    ))
+
+                    # the usefulness of this constraint depends on the assertions set in the tasks
+                    # if the task is allowed to adjust its duration, add the overlap to it,...
+                    if isinstance(task, VariableDurationTask):
+                        crossings = z3.If(
+                            (end_task_i - self.offset) % self.period > interval_lower_bound,
+                            duration / self.period + 1,
+                            duration / self.period
+                        )
+                        overlap = (interval_upper_bound - interval_lower_bound) * crossings
+                        variable_conds = [
+                            overlap_condition,
+                            task._duration >= task.min_duration + overlaps
+                        ]
+
+                        if task.max_duration is not None:
+                            variable_conds.append(
+                                task._duration <= task.max_duration + overlaps
+                            )
+
+                        conds.append(
+                            z3.And(*variable_conds)
+                        )
+                    # ...otherwise just make sure the task does not start or end within an interrupt.
+                    else:
+                        conds.append(overlap_condition)
+
+                    conds.extend([
+                        (start_task_i - self.offset) % self.period >= interval_upper_bound,
+                        (end_task_i - self.offset) % self.period <= interval_lower_bound
+                    ])
+
+                    core = z3.Xor(*conds)
+
+                    mask = [core]
+                    if self.start > 0:
+                        mask.append(end_task_i <= self.start)
+                    if self.end is not None:
+                        mask.append(start_task_i >= self.end)
+
+                    if len(mask) > 1:
+                        self.set_z3_assertions(z3.Or(*mask))
+                    else:
+                        self.set_z3_assertions(*mask)
+
+        if not resource_assigned:
+            raise AssertionError(
+                "The resource is not assigned to any task. Please first assign the resource to one or more tasks, and then add the ResourcePeriodicallyInterrupted constraint."
             )
 
 
