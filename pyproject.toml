@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ProcessScheduler"
-version = "2.0.0"
+version = "2.1.0"
 description = "A Python package for automatic and optimized resource scheduling"
 license = "GPL-3.0-or-later"
 authors = ["Thomas Paviot <tpaviot@gmail.com>"]
