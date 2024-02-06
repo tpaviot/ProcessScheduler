@@ -139,3 +139,30 @@ def test_resource_periodically_unavailable_6() -> None:
     assert solution.tasks[task_3.name].end == 14
     assert solution.tasks[task_4.name].start == 14 # unavailability at (14, 16) ignored
     assert solution.tasks[task_4.name].end == 17
+
+def test_resource_periodically_unavailable_7() -> None:
+    pb = ps.SchedulingProblem(name="ResourcePeriodicallyUnavailable3")
+    task_1 = ps.FixedDurationTask(name="task1", duration=2)
+    task_2 = ps.FixedDurationTask(name="task2", duration=1)
+    task_3 = ps.FixedDurationTask(name="task3", duration=1)
+    ps.TaskPrecedence(task_before=task_1, task_after=task_2)
+    ps.TaskPrecedence(task_before=task_2, task_after=task_3)
+    worker_1 = ps.Worker(name="Worker1")
+    for task in (task_1, task_2, task_3):
+        task.add_required_resource(worker_1)
+    ps.ResourcePeriodicallyUnavailable(
+        resource=worker_1,
+        list_of_time_intervals=[(1, 2), (3, 4)],
+        period=5
+    )
+
+    ps.ObjectiveMinimizeMakespan()
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    assert solution.tasks[task_1.name].start == 4
+    assert solution.tasks[task_1.name].end == 6
+    assert solution.tasks[task_2.name].start == 7
+    assert solution.tasks[task_2.name].end == 8
+    assert solution.tasks[task_3.name].start == 9
+    assert solution.tasks[task_3.name].end == 10
