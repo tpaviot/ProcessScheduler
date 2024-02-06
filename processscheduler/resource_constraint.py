@@ -378,6 +378,13 @@ class ResourcePeriodicallyInterrupted(ResourceConstraint):
     - list_of_time_intervals: A list of time intervals during which the resource is interrupting any task.
       For example, [(0, 2), (5, 8)] represents time intervals from 0 to 2 and from 5 to 8.
     - optional (bool, optional): Whether the constraint is optional (default is False).
+    - period: The length of one period after which to repeat the list of time intervals.
+      For example, setting this to 5 with [(2, 4)] gives unavailabilities at (2, 4), (7, 9), (12, 14), ...
+    - start: The start after which repeating the list of time intervals is active (default is 0).
+    - offset: The shift of the repeated list of time intervals (default is 0).
+      It might be desired to set also the start parameter to the same value, as otherwise the pattern shifts in from the left or the right into the schedule.
+    - end: The end until which repeating the list of time intervals is activate (default is None).
+    - optional (bool, optional): Whether the constraint is optional (default is False).
     """
 
     resource: Union[Worker, CumulativeWorker]
@@ -394,6 +401,13 @@ class ResourcePeriodicallyInterrupted(ResourceConstraint):
         :param resource: The resource for which interrupts are defined.
         :param list_of_time_intervals: A list of time intervals during which the resource is interrupting any task.
           For example, [(0, 2), (5, 8)] represents time intervals from 0 to 2 and from 5 to 8.
+        :param optional: Whether the constraint is optional (default is False).
+        :param period: The length of one period after which to repeat the list of time intervals.
+          For example, setting this to 5 with [(2, 4)] gives unavailabilities at (2, 4), (7, 9), (12, 14), ...
+        :param start: The start after which repeating the list of time intervals is active (default is 0).
+        :param offset: The shift of the repeated list of time intervals (default is 0).
+          It might be desired to set also the start parameter to the same value, as otherwise the pattern shifts in from the left or the right into the schedule.
+        :param end: The end until which repeating the list of time intervals is activate (default is None).
         :param optional: Whether the constraint is optional (default is False).
         """
         super().__init__(**data)
@@ -491,7 +505,7 @@ class ResourcePeriodicallyInterrupted(ResourceConstraint):
                             task._duration <= task.max_duration + total_overlap
                         )
 
-
+            # TODO: add AND only of mask is set?
             core = z3.And(*conds)
 
             mask = [core]
