@@ -307,39 +307,61 @@ class ResourceInterrupted(ResourceConstraint):
 
         resource_assigned = False
 
-        for interval_lower_bound, interval_upper_bound in self.list_of_time_intervals:
-            for worker in workers:
-                for task, (start_task_i, end_task_i) in worker._busy_intervals.items():
-                    resource_assigned = True
-                    conds = []
-                    overlap_condition = z3.And(
-                        start_task_i < interval_lower_bound,
-                        end_task_i > interval_upper_bound
-                    )
-                    # the usefulness of this constraint depends on the assertions set in the tasks
-                    # if the task is allowed to adjust its duration, add the overlap to it,...
-                    if isinstance(task, VariableDurationTask):
-                        overlap = interval_upper_bound - interval_lower_bound
-                        variable_conds = [
-                            overlap_condition,
-                            start_task_i + task.min_duration + overlap <= end_task_i
-                        ]
+        for worker in workers:
+            conds = []
+            for task, (start_task_i, end_task_i) in worker._busy_intervals.items():
+                resource_assigned = True
+                overlaps = []
 
-                        if task.max_duration is not None:
-                            variable_conds.append(start_task_i + task.max_duration + overlap >= end_task_i)
+                is_interruptible = isinstance(task, VariableDurationTask)
 
-                        conds.append(
-                            z3.And(*variable_conds)
-                        )
-                    # ...otherwise just make sure the task does not start or end within an interrupt.
-                    else:
-                        conds.append(overlap_condition)
-
-                    conds.extend([
+                for interval_lower_bound, interval_upper_bound in self.list_of_time_intervals:
+                    overlap_condition = z3.Not(z3.Xor(
                         start_task_i >= interval_upper_bound,
                         end_task_i <= interval_lower_bound
-                    ])
-                    self.set_z3_assertions(z3.Xor(*conds))
+                    ))
+                    overlap = z3.If(
+                        overlap_condition,
+                        interval_upper_bound - interval_lower_bound,
+                        0
+                    )
+                    overlaps.append(overlap)
+
+                    if is_interruptible:
+                        # just make sure that the task does not start or end within the time interval...
+                        # TODO: account for zero-duration?
+                        conds.extend([
+                            z3.Xor(
+                                start_task_i <= interval_lower_bound,
+                                start_task_i >= interval_upper_bound
+                            ),
+                            z3.Xor(
+                                end_task_i <= interval_lower_bound,
+                                end_task_i >= interval_upper_bound
+                            )
+                        ])
+                    else:
+                        # ...otherwise make sure the task does not overlap with the time interval
+                        conds.append(
+                            z3.Xor(
+                                start_task_i >= interval_upper_bound,
+                                end_task_i <= interval_lower_bound
+                            )
+                        )
+
+                if is_interruptible:
+                    # add assertions for task duration based on the total count of overlapped periods
+                    total_overlap = z3.Sum(*overlaps)
+                    conds.append(
+                        task._duration >= task.min_duration + total_overlap
+                    )
+                    if task.max_duration is not None:
+                        conds.append(
+                            task._duration <= task.max_duration + total_overlap
+                        )
+
+            # TODO: remove AND, as the solver does that anyways?
+            self.set_z3_assertions(z3.And(*conds))
 
         if not resource_assigned:
             raise AssertionError(
@@ -384,62 +406,104 @@ class ResourcePeriodicallyInterrupted(ResourceConstraint):
         resource_assigned = False
 
         for worker in workers:
+            conds = []
             for task, (start_task_i, end_task_i) in worker._busy_intervals.items():
                 resource_assigned = True
+                overlaps = []
+
+                # check if the task allows variable duration
+                is_interruptible = isinstance(task, VariableDurationTask)
+
                 duration = end_task_i - start_task_i
+                folded_start_task_i = (start_task_i - self.offset) % self.period
+                folded_end_task_i = (end_task_i - self.offset) % self.period
 
                 for interval_lower_bound, interval_upper_bound in self.list_of_time_intervals:
-                    conds = []
+                    # intervals need to be defined in one period
+                    if interval_upper_bound > self.period:
+                        raise AssertionError(f"interval ({interval_lower_bound}, {interval_upper_bound}) exceeds period {self.period}")
 
-                    # at least one overlap
-                    overlap_condition = z3.Not(z3.Xor(
-                        (start_task_i - self.offset) % self.period >= interval_upper_bound,
-                        (start_task_i - self.offset) % self.period + duration <= interval_lower_bound
+                    # if true, the folded task overlaps with the time interval in the first period
+                    crossing_condition = z3.Not(z3.Xor(
+                        # folded task is completely before the first time interval
+                        z3.And(
+                            folded_start_task_i <= interval_lower_bound,
+                            folded_start_task_i + duration % self.period <= interval_lower_bound,
+                        ),
+                        # folded task is completely between the first and second time interval
+                        z3.And(
+                            folded_start_task_i >= interval_upper_bound,
+                            folded_start_task_i + duration % self.period <= interval_lower_bound + self.period,
+                        )
                     ))
 
-                    # the usefulness of this constraint depends on the assertions set in the tasks
-                    # if the task is allowed to adjust its duration, add the overlap to it,...
-                    if isinstance(task, VariableDurationTask):
-                        crossings = z3.If(
-                            (end_task_i - self.offset) % self.period > interval_lower_bound,
-                            duration / self.period + 1,
-                            duration / self.period
-                        )
-                        overlap = (interval_upper_bound - interval_lower_bound) * crossings
-                        variable_conds = [
-                            overlap_condition,
-                            task._duration >= task.min_duration + overlaps
-                        ]
+                    # if true, the task overlaps with at least one time interval
+                    overlap_condition = z3.Or(
+                        crossing_condition,
+                        # task does not fit between two intervals
+                        duration > interval_lower_bound + self.period - interval_upper_bound
+                    )
 
-                        if task.max_duration is not None:
-                            variable_conds.append(
-                                task._duration <= task.max_duration + overlaps
+                    # adjust the number of crossed time intervals
+                    crossings = z3.If(
+                        crossing_condition,
+                        duration / self.period + 1,
+                        duration / self.period
+                    )
+                    # calculate the total overlap for this particular time interval
+                    overlap = z3.If(
+                        overlap_condition,
+                        (interval_upper_bound - interval_lower_bound) * crossings,
+                        0
+                    )
+                    overlaps.append(overlap)
+
+                    if is_interruptible:
+                        # just make sure that the task does not start or end within one of the time intervals...
+                        # TODO: account for zero-duration?
+                        conds.extend([
+                            z3.Xor(
+                                folded_start_task_i <= interval_lower_bound,
+                                folded_start_task_i >= interval_upper_bound
+                            ),
+                            z3.Xor(
+                                folded_end_task_i <= interval_lower_bound,
+                                folded_end_task_i >= interval_upper_bound
                             )
-
+                        ])
+                    else:
+                        # ...otherwise make sure the task does not overlap with any of time intervals
                         conds.append(
-                            z3.And(*variable_conds)
+                            z3.Xor(
+                                folded_start_task_i >= interval_upper_bound,
+                                folded_start_task_i + duration <= interval_lower_bound
+                            )
                         )
-                    # ...otherwise just make sure the task does not start or end within an interrupt.
-                    else:
-                        conds.append(overlap_condition)
 
-                    conds.extend([
-                        (start_task_i - self.offset) % self.period >= interval_upper_bound,
-                        (end_task_i - self.offset) % self.period <= interval_lower_bound
-                    ])
+                if is_interruptible:
+                    # add assertions for task duration based on the total count of overlapped periods
+                    total_overlap = z3.Sum(*overlaps)
+                    conds.append(
+                        task._duration >= task.min_duration + total_overlap
+                    )
+                    if task.max_duration is not None:
+                        conds.append(
+                            task._duration <= task.max_duration + total_overlap
+                        )
 
-                    core = z3.Xor(*conds)
 
-                    mask = [core]
-                    if self.start > 0:
-                        mask.append(end_task_i <= self.start)
-                    if self.end is not None:
-                        mask.append(start_task_i >= self.end)
+            core = z3.And(*conds)
 
-                    if len(mask) > 1:
-                        self.set_z3_assertions(z3.Or(*mask))
-                    else:
-                        self.set_z3_assertions(*mask)
+            mask = [core]
+            if self.start > 0:
+                mask.append(end_task_i <= self.start)
+            if self.end is not None:
+                mask.append(start_task_i >= self.end)
+
+            if len(mask) > 1:
+                self.set_z3_assertions(z3.Or(*mask))
+            else:
+                self.set_z3_assertions(*mask)
 
         if not resource_assigned:
             raise AssertionError(
