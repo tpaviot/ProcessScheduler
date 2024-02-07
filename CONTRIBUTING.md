@@ -33,7 +33,13 @@ You're welcome to contribute new jupyter notebooks.
 
 *   follow the naming conventions (see below),
 *   each commit should be described by a short and explicit commit message,
-*   use [pylint](https://pypi.org/project/pylint/) to check the code quality and remove common warnings: remove trailing whitespaces, unused imports, unuser variables etc. However, no need to reach a 10/10 mark,
+*   use [ruff](https://pypi.org/project/pylint/) format and check to ensure code quality
+```bash
+pip install ruff
+cd ProcessScheduler/processscheduler
+ruff format *.py
+ruff check *.py
+```
 *   submit a Pull Request (PR)
 
 ## Naming Conventions
