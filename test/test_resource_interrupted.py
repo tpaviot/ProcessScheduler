@@ -85,7 +85,7 @@ def test_resource_cumulative_worker_interrupted_fixed_duration() -> None:
 
 def test_resource_cumulative_worker_interrupted_variable_duration() -> None:
     pb = ps.SchedulingProblem(name="variable_duration")
-    task_1 = ps.VariableDurationTask(name="task1", min_duration=3)
+    task_1 = ps.VariableDurationTask(name="task1", min_duration=3, max_duration=5)
     task_2 = ps.VariableDurationTask(name="task2", min_duration=4)
     ps.TaskStartAt(task=task_1, value=0)  # pin to have a more stable outcome
     worker_1 = ps.CumulativeWorker(name="Worker1", size=2)
