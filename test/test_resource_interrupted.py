@@ -36,11 +36,12 @@ def test_resource_interrupted_fixed_duration() -> None:
     assert solution.tasks[task_2.name].start == 8
     assert solution.tasks[task_2.name].end == 12
 
+
 def test_resource_interrupted_variable_duration() -> None:
     pb = ps.SchedulingProblem(name="variable_duration")
     task_1 = ps.VariableDurationTask(name="task1", min_duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=4)
-    ps.TaskStartAt(task=task_1, value=0) # pin to have a more stable outcome
+    ps.TaskStartAt(task=task_1, value=0)  # pin to have a more stable outcome
     worker_1 = ps.Worker(name="Worker1")
     task_1.add_required_resource(worker_1)
     task_2.add_required_resource(worker_1)

@@ -24,7 +24,9 @@ def test_resource_periodically_unavailable_1() -> None:
     task_1 = ps.FixedDurationTask(name="task1", duration=3)
     worker_1 = ps.Worker(name="Worker1")
     task_1.add_required_resource(worker_1)
-    ps.ResourcePeriodicallyUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3), (6, 8)], period=10)
+    ps.ResourcePeriodicallyUnavailable(
+        resource=worker_1, list_of_time_intervals=[(1, 3), (6, 8)], period=10
+    )
 
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
@@ -40,8 +42,12 @@ def test_resource_periodically_unavailable_2() -> None:
     task_1.add_required_resource(worker_1)
     # difference with the first one: build 2 constraints
     # merged using a and_
-    ps.ResourcePeriodicallyUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3)], period=10)
-    ps.ResourcePeriodicallyUnavailable(resource=worker_1, list_of_time_intervals=[(6, 8)], period=10)
+    ps.ResourcePeriodicallyUnavailable(
+        resource=worker_1, list_of_time_intervals=[(1, 3)], period=10
+    )
+    ps.ResourcePeriodicallyUnavailable(
+        resource=worker_1, list_of_time_intervals=[(6, 8)], period=10
+    )
 
     # that should not change the problem solution
     solver = ps.SchedulingSolver(problem=pb)
@@ -59,8 +65,12 @@ def test_resource_periodically_unavailable_3() -> None:
     # difference with the previous ones: too much unavailability,
     # so possible solution
     # merged using a and_
-    ps.ResourcePeriodicallyUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3)], period=10)
-    ps.ResourcePeriodicallyUnavailable(resource=worker_1, list_of_time_intervals=[(5, 8)], period=10)
+    ps.ResourcePeriodicallyUnavailable(
+        resource=worker_1, list_of_time_intervals=[(1, 3)], period=10
+    )
+    ps.ResourcePeriodicallyUnavailable(
+        resource=worker_1, list_of_time_intervals=[(5, 8)], period=10
+    )
 
     # that should not change the problem solution
     solver = ps.SchedulingSolver(problem=pb)
@@ -72,7 +82,9 @@ def test_resource_periodically_unavailable_4() -> None:
     ps.SchedulingProblem(name="ResourcePeriodicallyUnavailable4", horizon=10)
     worker_1 = ps.Worker(name="Worker1")
     with pytest.raises(AssertionError):
-        ps.ResourcePeriodicallyUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3)], period=10)
+        ps.ResourcePeriodicallyUnavailable(
+            resource=worker_1, list_of_time_intervals=[(1, 3)], period=10
+        )
 
 
 def test_resource_periodically_unavailable_5() -> None:
@@ -86,9 +98,7 @@ def test_resource_periodically_unavailable_5() -> None:
     for task in (task_1, task_2, task_3):
         task.add_required_resource(worker_1)
     ps.ResourcePeriodicallyUnavailable(
-        resource=worker_1,
-        list_of_time_intervals=[(3, 5)],
-        period=5
+        resource=worker_1, list_of_time_intervals=[(3, 5)], period=5
     )
 
     solver = ps.SchedulingSolver(problem=pb)
@@ -117,28 +127,29 @@ def test_resource_periodically_unavailable_6() -> None:
     ps.ResourcePeriodicallyUnavailable(
         resource=worker_1,
         list_of_time_intervals=[(2, 4)],
-        offset=2, # shift interval to (4, 6)
+        offset=2,  # shift interval to (4, 6)
         start=3,  # end_task_i <= start, so it must be set to the task duration
-        end=14,   # unavailability interval at (14, 16), but it should be ignored
-        period=5
+        end=14,  # unavailability interval at (14, 16), but it should be ignored
+        period=5,
     )
     ps.ResourceUnavailable(
         resource=worker_1,
-        list_of_time_intervals=[(3, 4)] # leaving task_1 starting at 0 as only option
+        list_of_time_intervals=[(3, 4)],  # leaving task_1 starting at 0 as only option
     )
 
-    ps.ObjectiveMinimizeMakespan() # ensure dense packing
+    ps.ObjectiveMinimizeMakespan()  # ensure dense packing
     solver = ps.SchedulingSolver(problem=pb)
     solution = solver.solve()
     assert solution
     assert solution.tasks[task_1.name].start == 0  # unavailability at (0, 1) ignored
     assert solution.tasks[task_1.name].end == 3
     assert solution.tasks[task_2.name].start == 6
-    assert solution.tasks[task_2.name].end == 9    # expected unavailability
+    assert solution.tasks[task_2.name].end == 9  # expected unavailability
     assert solution.tasks[task_3.name].start == 11
     assert solution.tasks[task_3.name].end == 14
-    assert solution.tasks[task_4.name].start == 14 # unavailability at (14, 16) ignored
+    assert solution.tasks[task_4.name].start == 14  # unavailability at (14, 16) ignored
     assert solution.tasks[task_4.name].end == 17
+
 
 def test_resource_periodically_unavailable_7() -> None:
     pb = ps.SchedulingProblem(name="ResourcePeriodicallyUnavailable3")
@@ -151,9 +162,7 @@ def test_resource_periodically_unavailable_7() -> None:
     for task in (task_1, task_2, task_3):
         task.add_required_resource(worker_1)
     ps.ResourcePeriodicallyUnavailable(
-        resource=worker_1,
-        list_of_time_intervals=[(1, 2), (3, 4)],
-        period=5
+        resource=worker_1, list_of_time_intervals=[(1, 2), (3, 4)], period=5
     )
 
     ps.ObjectiveMinimizeMakespan()

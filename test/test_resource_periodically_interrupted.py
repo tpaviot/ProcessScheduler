@@ -26,9 +26,7 @@ def test_resource_periodically_interrupted_fixed_duration() -> None:
     task_1.add_required_resource(worker_1)
     task_2.add_required_resource(worker_1)
     ps.ResourcePeriodicallyInterrupted(
-        resource=worker_1,
-        list_of_time_intervals=[(1, 2), (4, 5)],
-        period=10
+        resource=worker_1, list_of_time_intervals=[(1, 2), (4, 5)], period=10
     )
 
     ps.ObjectiveMinimizeMakespan()
@@ -45,14 +43,12 @@ def test_resource_periodically_interrupted_variable_duration() -> None:
     pb = ps.SchedulingProblem(name="variable_duration")
     task_1 = ps.VariableDurationTask(name="task1", min_duration=3)
     task_2 = ps.FixedDurationTask(name="task2", duration=4)
-    ps.TaskStartAt(task=task_1, value=0) # pin to have a more stable outcome
+    ps.TaskStartAt(task=task_1, value=0)  # pin to have a more stable outcome
     worker_1 = ps.Worker(name="Worker1")
     task_1.add_required_resource(worker_1)
     task_2.add_required_resource(worker_1)
     ps.ResourcePeriodicallyInterrupted(
-        resource=worker_1,
-        list_of_time_intervals=[(1, 2), (4, 5)],
-        period=10
+        resource=worker_1, list_of_time_intervals=[(1, 2), (4, 5)], period=10
     )
 
     ps.ObjectiveMinimizeMakespan()
@@ -69,11 +65,15 @@ def test_resource_periodically_interrupted_assignment_assertion() -> None:
     ps.SchedulingProblem(name="assignment_assertion")
     worker_1 = ps.Worker(name="Worker1")
     with pytest.raises(AssertionError):
-        ps.ResourcePeriodicallyInterrupted(resource=worker_1, list_of_time_intervals=[(1, 3)], period=6)
+        ps.ResourcePeriodicallyInterrupted(
+            resource=worker_1, list_of_time_intervals=[(1, 3)], period=6
+        )
 
 
 def test_resource_periodically_interrupted_period_assertion() -> None:
     ps.SchedulingProblem(name="period_assertion")
     worker_1 = ps.Worker(name="Worker1")
     with pytest.raises(AssertionError):
-        ps.ResourcePeriodicallyInterrupted(resource=worker_1, list_of_time_intervals=[(1, 2), (3, 5)], period=4)
+        ps.ResourcePeriodicallyInterrupted(
+            resource=worker_1, list_of_time_intervals=[(1, 2), (3, 5)], period=4
+        )
