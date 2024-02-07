@@ -63,9 +63,12 @@ from processscheduler.resource_constraint import (
     SameWorkers,
     DistinctWorkers,
     ResourceUnavailable,
+    ResourcePeriodicallyUnavailable,
     WorkLoad,
     ResourceTasksDistance,
     ResourceNonDelay,
+    ResourceInterrupted,
+    ResourcePeriodicallyInterrupted,
 )
 from processscheduler.indicator_constraint import IndicatorTarget, IndicatorBounds
 from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
