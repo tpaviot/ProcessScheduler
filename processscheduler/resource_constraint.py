@@ -329,15 +329,14 @@ class ResourceInterrupted(ResourceConstraint):
 
                     if is_interruptible:
                         # just make sure that the task does not start or end within the time interval...
-                        # TODO: account for zero-duration?
                         conds.extend([
                             z3.Xor(
-                                start_task_i <= interval_lower_bound,
+                                start_task_i < interval_lower_bound,
                                 start_task_i >= interval_upper_bound
                             ),
                             z3.Xor(
                                 end_task_i <= interval_lower_bound,
-                                end_task_i >= interval_upper_bound
+                                end_task_i > interval_upper_bound
                             )
                         ])
                     else:
@@ -480,7 +479,6 @@ class ResourcePeriodicallyInterrupted(ResourceConstraint):
 
                     if is_interruptible or is_fixed_interruptible:
                         # just make sure that the task does not start or end within one of the time intervals...
-                        # TODO: account for zero-duration?
                         conds.extend([
                             z3.Xor(
                                 folded_start_task_i < interval_lower_bound,
