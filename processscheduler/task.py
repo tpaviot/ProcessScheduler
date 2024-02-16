@@ -74,7 +74,9 @@ class Task(NamedUIDObject):
         super().__init__(**data)
 
         # workers required to process the task
-        self._required_resources = []  # type: List[Union[Worker, CumulativeWorker, SelectWorkers]]
+        self._required_resources = (
+            []
+        )  # type: List[Union[Worker, CumulativeWorker, SelectWorkers]]
 
         # z3 Int variables
         self._start = z3.Int(f"{self.name}_start")  # type: z3.ArithRef
@@ -88,7 +90,9 @@ class Task(NamedUIDObject):
             raise AssertionError("No active problem. First create a SchedulingProblem")
         # the task_number is an integer that is incremented each time
         # a task is created. The first task has number 1, the second number 2 etc.
-        self._task_number = processscheduler.base.active_problem.add_task(self)  # type: int
+        self._task_number = processscheduler.base.active_problem.add_task(
+            self
+        )  # type: int
 
         # the release date
         if self.release_date is not None:
@@ -269,7 +273,6 @@ class FixedDurationTask(Task):
 
 
 class FixedDurationInterruptibleTask(Task):
-
     duration: PositiveInt
 
     def __init__(self, **data) -> None:
@@ -278,7 +281,7 @@ class FixedDurationInterruptibleTask(Task):
         assertions = [
             self._end - self._start == self.duration + self._overlap,
             self._start >= 0,
-            self._overlap >= 0
+            self._overlap >= 0,
         ]
 
         self.set_assertions(assertions)
