@@ -27,6 +27,8 @@ from processscheduler.task import (
     FixedDurationTask,
     ZeroDurationTask,
     VariableDurationTask,
+    FixedDurationInterruptibleTask,
+    Task
 )
 from processscheduler.buffer import ConcurrentBuffer, NonConcurrentBuffer
 from processscheduler.util import sort_no_duplicates
@@ -37,7 +39,7 @@ from processscheduler.util import sort_no_duplicates
 #
 class TaskGroup(TaskConstraint):
     list_of_tasks: List[
-        Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+        Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
     ]
     time_interval: Tuple[int, int] = Field(default=None)
     time_interval_length: int = Field(default=0)
@@ -107,10 +109,10 @@ class TaskPrecedence(TaskConstraint):
     """Task precedence relation"""
 
     task_before: Union[
-        FixedDurationTask, ZeroDurationTask, VariableDurationTask, TaskGroup
+        FixedDurationTask, ZeroDurationTask, VariableDurationTask, TaskGroup, FixedDurationInterruptibleTask, Task
     ]
     task_after: Union[
-        FixedDurationTask, ZeroDurationTask, VariableDurationTask, TaskGroup
+        FixedDurationTask, ZeroDurationTask, VariableDurationTask, TaskGroup, FixedDurationInterruptibleTask, Task
     ]
     offset: int = Field(default=0, ge=0)
     kind: Literal["lax", "strict", "tight"] = Field(default="lax")
@@ -154,8 +156,8 @@ class TaskPrecedence(TaskConstraint):
 class TasksStartSynced(TaskConstraint):
     """Two tasks that must start at the same time"""
 
-    task_1: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
-    task_2: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+    task_1: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
+    task_2: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -177,8 +179,8 @@ class TasksStartSynced(TaskConstraint):
 class TasksEndSynced(TaskConstraint):
     """Two tasks that must complete at the same time"""
 
-    task_1: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
-    task_2: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+    task_1: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
+    task_2: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -201,8 +203,8 @@ class TasksDontOverlap(TaskConstraint):
     """Two tasks must not overlap, i.e. one needs to be completed before
     the other can be processed"""
 
-    task_1: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
-    task_2: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+    task_1: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
+    task_2: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -228,7 +230,7 @@ class TasksContiguous(TaskConstraint):
     """A list of tasks are scheduled contiguously."""
 
     list_of_tasks: List[
-        Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+        Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
     ]
 
     def __init__(self, **data) -> None:
@@ -261,7 +263,7 @@ class TasksContiguous(TaskConstraint):
 class TaskStartAt(TaskConstraint):
     """One task must start at the desired time"""
 
-    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
     value: Union[int, z3.ArithRef]
 
     def __init__(self, **data) -> None:
@@ -278,7 +280,7 @@ class TaskStartAt(TaskConstraint):
 
 
 class TaskStartAfter(TaskConstraint):
-    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
     value: Union[int, z3.ArithRef]
     kind: Literal["lax", "strict"] = Field(default="lax")
 
@@ -301,7 +303,7 @@ class TaskStartAfter(TaskConstraint):
 class TaskEndAt(TaskConstraint):
     """On task must complete at the desired time"""
 
-    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
     value: Union[int, z3.ArithRef]
 
     def __init__(self, **data) -> None:
@@ -320,7 +322,7 @@ class TaskEndAt(TaskConstraint):
 class TaskEndBefore(TaskConstraint):
     """task.end < value"""
 
-    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
     value: Union[int, z3.ArithRef]
     kind: Literal["lax", "strict"] = Field(default="lax")
 
@@ -346,7 +348,7 @@ class TaskEndBefore(TaskConstraint):
 class OptionalTaskForceSchedule(TaskConstraint):
     """task_2 is scheduled if and only if task_1 is scheduled"""
 
-    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
     to_be_scheduled: bool
 
     def __init__(self, **data) -> None:
@@ -361,7 +363,7 @@ class OptionalTaskForceSchedule(TaskConstraint):
 class OptionalTaskConditionSchedule(TaskConstraint):
     """An optional task that is scheduled only if a condition is fulfilled."""
 
-    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
     condition: z3.BoolRef
 
     def __init__(self, **data) -> None:
@@ -382,8 +384,8 @@ class OptionalTaskConditionSchedule(TaskConstraint):
 class OptionalTasksDependency(TaskConstraint):
     """task_2 is scheduled if and only if task_1 is scheduled"""
 
-    task_1: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
-    task_2: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+    task_1: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
+    task_2: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
@@ -399,7 +401,7 @@ class ForceScheduleNOptionalTasks(TaskConstraint):
     at at least/at most/exactly n tasks, with 0 < n <= m."""
 
     list_of_optional_tasks: List[
-        Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+        Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
     ]
     nb_tasks_to_schedule: PositiveInt = Field(default=1)
     kind: Literal["min", "max", "exact"] = Field(default="exact")
@@ -429,7 +431,7 @@ class ScheduleNTasksInTimeIntervals(TaskConstraint):
     in this time interval"""
 
     list_of_tasks: List[
-        Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+        Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
     ]
     nb_tasks_to_schedule: int
     list_of_time_intervals: List[Tuple[int, int]]
@@ -487,7 +489,7 @@ class TaskUnloadBuffer(TaskConstraint):
     """A tasks that unloads a buffer, i.e. that takes one or more
     quantity units to the buffer."""
 
-    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
     buffer: Union[NonConcurrentBuffer, ConcurrentBuffer]
     quantity: int
 
@@ -501,7 +503,7 @@ class TaskLoadBuffer(TaskConstraint):
     """A task that loads a buffer, i.e. a that adds one or more
     quantity unis to the buffer."""
 
-    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask]
+    task: Union[FixedDurationTask, ZeroDurationTask, VariableDurationTask, FixedDurationInterruptibleTask]
     buffer: Union[NonConcurrentBuffer, ConcurrentBuffer]
     quantity: int
 

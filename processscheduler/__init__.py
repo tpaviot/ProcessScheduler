@@ -56,6 +56,7 @@ from processscheduler.task import (
     ZeroDurationTask,
     FixedDurationTask,
     VariableDurationTask,
+    FixedDurationInterruptibleTask,
 )
 from processscheduler.constraint import *
 from processscheduler.task_constraint import *

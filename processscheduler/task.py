@@ -268,6 +268,22 @@ class FixedDurationTask(Task):
         self.set_assertions(assertions)
 
 
+class FixedDurationInterruptibleTask(Task):
+
+    duration: PositiveInt
+
+    def __init__(self, **data) -> None:
+        super().__init__(**data)
+        self._overlap = z3.Int(f"{self.name}_overlap")
+        assertions = [
+            self._end - self._start == self.duration + self._overlap,
+            self._start >= 0,
+            self._overlap >= 0
+        ]
+
+        self.set_assertions(assertions)
+
+
 class VariableDurationTask(Task):
     """The duration can take any value, computed by the solver."""
 
