@@ -359,6 +359,11 @@ class ResourceInterrupted(ResourceConstraint):
                         conds.append(
                             task._duration <= task.max_duration + total_overlap
                         )
+                elif is_fixed_interruptible:
+                    total_overlap = z3.Sum(*overlaps)
+                    conds.append(
+                        task._overlap == total_overlap
+                    )
 
             # TODO: remove AND, as the solver does that anyways?
             self.set_z3_assertions(z3.And(*conds))
