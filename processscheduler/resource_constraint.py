@@ -28,7 +28,6 @@ from processscheduler.util import sort_no_duplicates
 from processscheduler.task import (
     VariableDurationTask,
     FixedDurationInterruptibleTask,
-    Task,
 )
 
 
