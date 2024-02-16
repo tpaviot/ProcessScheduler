@@ -69,30 +69,77 @@ def test_resource_unavailable_3() -> None:
 
 
 def test_resource_unavailable_4() -> None:
-    ps.SchedulingProblem(name="ResourceUnavailable3", horizon=10)
+    pb = ps.SchedulingProblem(name="ResourceUnavailable4")
+    task_1 = ps.FixedDurationTask(name="task1", duration=4)
+    worker_1 = ps.Worker(name="Worker1")
+    task_1.add_required_resource(worker_1)
+    # create 10 unavailabilities with a length of 3 and try
+    # to schedule a task with length 4, it should be scheduled
+    # at the end
+    maxi = 50
+    intervs = [(i, i + 3) for i in range(0, maxi, 6)]
+
+    ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=intervs)
+    ps.ObjectiveMinimizeMakespan()
+
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    assert solution.tasks[task_1.name].start == maxi + 1
+
+
+def test_resource_unavailable_raise_issue() -> None:
+    ps.SchedulingProblem(name="ResourceUnavailableRaiseException", horizon=10)
     worker_1 = ps.Worker(name="Worker1")
     with pytest.raises(AssertionError):
         ps.ResourceUnavailable(resource=worker_1, list_of_time_intervals=[(1, 3)])
 
 
-# def test_resource_unavailable_cumulative_5() :
-#     pb_bs = ps.SchedulingProblem(name="ResourceUnavailableCumulative1", horizon=10)
-#     # tasks
-#     t1 = ps.FixedDurationTask(name="T1", duration=2)
-#     t2 = ps.FixedDurationTask(name="T2", duration=2)
-#     t3 = ps.FixedDurationTask(name="T3", duration=2)
+def test_resource_unavailable_cumulative_1():
+    pb_bs = ps.SchedulingProblem(name="ResourceUnavailableCumulative1", horizon=10)
+    # tasks
+    t1 = ps.FixedDurationTask(name="T1", duration=2)
+    t2 = ps.FixedDurationTask(name="T2", duration=2)
+    t3 = ps.FixedDurationTask(name="T3", duration=2)
 
-#     # workers
-#     r1 = ps.CumulativeWorker(name="Machine1", size=3)
+    # workers
+    r1 = ps.CumulativeWorker(name="Machine1", size=3)
 
-#     # resource assignment
-#     t1.add_required_resource(r1)
-#     t2.add_required_resource(r1)
-#     t3.add_required_resource(r1)
+    # resource assignment
+    t1.add_required_resource(r1)
+    t2.add_required_resource(r1)
+    t3.add_required_resource(r1)
 
-#     ps.ResourceUnavailable(resource=r1, list_of_time_intervals=[(1, 10)])
+    ps.ResourceUnavailable(resource=r1, list_of_time_intervals=[(1, 10)])
 
-#     # plot solution
-#     solver = ps.SchedulingSolver(problem=pb_bs)
-#     solution = solver.solve()
-#     assert not (solution)
+    # plot solution
+    solver = ps.SchedulingSolver(problem=pb_bs)
+    solution = solver.solve()
+    assert not solution
+
+
+def test_resource_unavailable_cumulative_2():
+    # same as the previous one, but this time there should be one and only
+    # one solution
+    pb_bs = ps.SchedulingProblem(name="ResourceUnavailableCumulative1", horizon=12)
+    # tasks
+    t1 = ps.FixedDurationTask(name="T1", duration=2)
+    t2 = ps.FixedDurationTask(name="T2", duration=2)
+    t3 = ps.FixedDurationTask(name="T3", duration=2)
+
+    # workers
+    r1 = ps.CumulativeWorker(name="Machine1", size=3)
+
+    # resource assignment
+    t1.add_required_resource(r1)
+    t2.add_required_resource(r1)
+    t3.add_required_resource(r1)
+
+    ps.ResourceUnavailable(resource=r1, list_of_time_intervals=[(1, 10)])
+
+    # plot solution
+    solver = ps.SchedulingSolver(problem=pb_bs)
+    solution = solver.solve()
+    assert solution.tasks[t1.name].start == 10
+    assert solution.tasks[t2.name].start == 10
+    assert solution.tasks[t3.name].start == 10

@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
-__VERSION__ = "2.x.x"
+__VERSION__ = "2.1.0"
 
 try:
     import z3

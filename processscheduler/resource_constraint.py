@@ -190,7 +190,7 @@ class ResourceUnavailable(ResourceConstraint):
                 for start_task_i, end_task_i in worker.get_busy_intervals():
                     resource_assigned = True
                     self.set_z3_assertions(
-                        z3.Xor(
+                        z3.Or(
                             start_task_i >= interval_upper_bound,
                             end_task_i <= interval_lower_bound,
                         )
