@@ -314,6 +314,7 @@ class ResourceInterrupted(ResourceConstraint):
                 overlaps = []
 
                 is_interruptible = isinstance(task, VariableDurationTask)
+                is_fixed_interruptible = isinstance(task, FixedDurationInterruptibleTask)
 
                 for interval_lower_bound, interval_upper_bound in self.list_of_time_intervals:
                     overlap_condition = z3.Not(z3.Xor(
@@ -432,6 +433,7 @@ class ResourcePeriodicallyInterrupted(ResourceConstraint):
                 # check if the task allows variable duration
                 is_interruptible = isinstance(task, VariableDurationTask)
                 is_fixed_interruptible = isinstance(task, FixedDurationInterruptibleTask)
+
 
                 duration = end_task_i - start_task_i
                 folded_start_task_i = (start_task_i - self.offset) % self.period
