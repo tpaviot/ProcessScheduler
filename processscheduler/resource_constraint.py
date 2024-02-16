@@ -176,7 +176,7 @@ class ResourceUnavailable(ResourceConstraint):
         if isinstance(self.resource, Worker):
             workers = [self.resource]
         elif isinstance(self.resource, CumulativeWorker):
-            workers = self.resource.cumulative_workers
+            workers = self.resource._cumulative_workers
 
         resource_assigned = False
 
@@ -243,7 +243,7 @@ class ResourcePeriodicallyUnavailable(ResourceConstraint):
         if isinstance(self.resource, Worker):
             workers = [self.resource]
         elif isinstance(self.resource, CumulativeWorker):
-            workers = self.resource.cumulative_workers
+            workers = self.resource._cumulative_workers
 
         resource_assigned = False
 
@@ -303,7 +303,7 @@ class ResourceInterrupted(ResourceConstraint):
         if isinstance(self.resource, Worker):
             workers = [self.resource]
         elif isinstance(self.resource, CumulativeWorker):
-            workers = self.resource.cumulative_workers
+            workers = self.resource._cumulative_workers
 
         resource_assigned = False
 
@@ -415,7 +415,7 @@ class ResourcePeriodicallyInterrupted(ResourceConstraint):
         if isinstance(self.resource, Worker):
             workers = [self.resource]
         elif isinstance(self.resource, CumulativeWorker):
-            workers = self.resource.cumulative_workers
+            workers = self.resource._cumulative_workers
 
         resource_assigned = False
 
