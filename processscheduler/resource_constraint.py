@@ -344,12 +344,12 @@ class ResourceInterrupted(ResourceConstraint):
                         conds.extend(
                             [
                                 z3.Xor(
-                                    start_task_i < interval_lower_bound,
+                                    start_task_i <= interval_lower_bound,
                                     start_task_i >= interval_upper_bound,
                                 ),
                                 z3.Xor(
                                     end_task_i <= interval_lower_bound,
-                                    end_task_i > interval_upper_bound,
+                                    end_task_i >= interval_upper_bound,
                                 ),
                             ]
                         )
@@ -504,12 +504,12 @@ class ResourcePeriodicallyInterrupted(ResourceConstraint):
                         conds.extend(
                             [
                                 z3.Xor(
-                                    folded_start_task_i < interval_lower_bound,
+                                    folded_start_task_i <= interval_lower_bound,
                                     folded_start_task_i >= interval_upper_bound,
                                 ),
                                 z3.Xor(
                                     folded_end_task_i <= interval_lower_bound,
-                                    folded_end_task_i > interval_upper_bound,
+                                    folded_end_task_i >= interval_upper_bound,
                                 ),
                             ]
                         )
