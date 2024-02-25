@@ -24,7 +24,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-z3-solver = "==4.12.5.0"
+z3-solver = "==4.12.6.0"
 pydantic = ">=2.5"
 
 [build-system]
