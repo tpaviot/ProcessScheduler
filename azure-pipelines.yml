@@ -6,8 +6,8 @@ jobs:
 
 - template: template.yml
   parameters:
-    name: macOS_11_python310
-    vmImage: 'macOS-11'
+    name: macOS_12_python310
+    vmImage: 'macOS-12'
 
 - template: template.yml
   parameters:
