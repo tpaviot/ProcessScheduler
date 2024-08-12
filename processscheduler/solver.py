@@ -131,8 +131,8 @@ class SchedulingSolver(BaseModelWithJson):
             z3.set_option("sat.threads", 1)
             z3.set_option("smt.threads", 1)
         if self.random_values:
-            z3.set_option("sat.random_seed", random.randint(1, 1000))
-            z3.set_option("smt.random_seed", random.randint(1, 1000))
+            z3.set_option("sat.random_seed", random.randint(1, 2**32 - 1))
+            z3.set_option("smt.random_seed", random.randint(1, 2**32 - 1))
             z3.set_option("smt.arith.random_initial_value", True)
         else:
             z3.set_option("sat.random_seed", 0)
@@ -407,9 +407,9 @@ class SchedulingSolver(BaseModelWithJson):
                 # if the higher_contraint_name is defined, fill in the map_boolrefs_to_geometric_constraints dict
                 # to track the constraint that causes the conflict
                 if higher_constraint_name is not None:
-                    self._map_boolrefs_to_constraints[
-                        asst_identifier
-                    ] = higher_constraint_name
+                    self._map_boolrefs_to_constraints[asst_identifier] = (
+                        higher_constraint_name
+                    )
         else:
             self._solver.add(assts)
 
