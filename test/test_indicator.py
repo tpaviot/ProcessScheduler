@@ -385,7 +385,7 @@ def test_indicator_resource_idle_1() -> None:
     task_1.add_required_resource(worker)
     task_2.add_required_resource(worker)
     task_3.add_required_resource(worker)
-    ind = ps.IndicatorResourceIdle(resource=worker)
+    ind = ps.IndicatorResourceIdle(list_of_resources=[worker])
     solver = ps.SchedulingSolver(problem=problem)
     solution = solver.solve()
     assert solution
@@ -408,13 +408,11 @@ def test_indicator_resource_idle_2() -> None:
     task_2.add_required_resource(worker_1)
     task_3.add_required_resource(worker_2)
     task_4.add_required_resource(worker_2)
-    ind_1 = ps.IndicatorResourceIdle(resource=worker_1)
-    ind_2 = ps.IndicatorResourceIdle(resource=worker_2)
+    ind = ps.IndicatorResourceIdle(list_of_resources=[worker_1, worker_2])
     solver = ps.SchedulingSolver(problem=problem)
     solution = solver.solve()
     assert solution
-    assert solution.indicators[ind_1.name] == 5
-    assert solution.indicators[ind_2.name] == 10
+    assert solution.indicators[ind.name] == 15
 
 
 def test_indicator_resource_idle_3() -> None:
@@ -430,7 +428,7 @@ def test_indicator_resource_idle_3() -> None:
     task_1.add_required_resource(worker_1)
     task_2.add_required_resource(worker_1)
     task_3.add_required_resource(worker_1)
-    ind = ps.IndicatorResourceIdle(resource=worker_1)
+    ind = ps.IndicatorResourceIdle(list_of_resources=[worker_1])
     solver = ps.SchedulingSolver(problem=problem)
     solution = solver.solve()
     assert solution

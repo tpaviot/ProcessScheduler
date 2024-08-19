@@ -271,34 +271,45 @@ class IndicatorResourceCost(Indicator):
 
 
 class IndicatorResourceIdle(Indicator):
-    resource: Union[Worker, CumulativeWorker]
+    """An indicator for tracking the idle time of a resource in a process scheduler.
+
+    This class calculates the total idle time of a given resource (Worker or CumulativeWorker)
+    by analyzing the total gaps between scheduled tasks.
+    """
+
+    list_of_resources: List[Union[Worker, CumulativeWorker]]
 
     def __init__(self, **data) -> None:
         super().__init__(**data)
 
-        self.name = f"ResourceIdle{self.resource.name}"
+        self.name = self.name = (
+            f"IdleTime ({','.join(res.name for res in self.list_of_resources)})"
+        )
 
-        starts = []
-        ends = []
-        for start_var, end_var in self.resource._busy_intervals.values():
-            starts.append(start_var)
-            ends.append(end_var)
-        # sort both lists
-        sorted_starts, c1 = sort_no_duplicates(starts)
-        sorted_ends, c2 = sort_no_duplicates(ends)
-        self.append_z3_list_of_assertions(c1 + c2)
-        # from now, starts and ends are sorted in asc order
-        # the space between two consecutive tasks is the sorted_start[i+1]-sorted_end[i]
-        # we just have to constraint this variable
         diffs = []
-        for i in range(1, len(sorted_starts)):
-            condition_only_scheduled_tasks = z3.And(
-                sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0
-            )
-            new_diff = z3.If(
-                condition_only_scheduled_tasks, sorted_starts[i] - sorted_ends[i - 1], 0
-            )
-            diffs.append(new_diff)
+        for resource in self.list_of_resources:
+            starts = []
+            ends = []
+            for start_var, end_var in resource._busy_intervals.values():
+                starts.append(start_var)
+                ends.append(end_var)
+            # sort both lists
+            sorted_starts, c1 = sort_no_duplicates(starts)
+            sorted_ends, c2 = sort_no_duplicates(ends)
+            self.append_z3_list_of_assertions(c1 + c2)
+            # from now, starts and ends are sorted in asc order
+            # the space between two consecutive tasks is the sorted_start[i+1]-sorted_end[i]
+            # we just have to constraint this variable
+            for i in range(1, len(sorted_starts)):
+                condition_only_scheduled_tasks = z3.And(
+                    sorted_ends[i - 1] >= 0, sorted_starts[i] >= 0
+                )
+                new_diff = z3.If(
+                    condition_only_scheduled_tasks,
+                    sorted_starts[i] - sorted_ends[i - 1],
+                    0,
+                )
+                diffs.append(new_diff)
 
         self.append_z3_assertion(self._indicator_variable == z3.Sum(diffs))
 
