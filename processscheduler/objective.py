@@ -114,7 +114,7 @@ class ObjectiveMaximizeResourceUtilization(Objective):
 
 
 class ObjectiveMinimizeResourceCost(Objective):
-    """Minimise the total cost of selected resources"""
+    """Minimize the total cost of selected resources."""
 
     def __init__(self, **data) -> None:
         lor = data["list_of_resources"]
@@ -132,8 +132,7 @@ class ObjectiveMinimizeResourceCost(Objective):
 
 
 class ObjectiveTasksStartLatest(Objective):
-    """maximize the minimum start time, i.e. all the tasks
-    are scheduled as late as possible"""
+    """Maximize the minimum start time, i.e. all the tasks are scheduled as late as possible."""
 
     def __init__(self, **data) -> None:
         if "list_of_tasks" in data:
@@ -165,8 +164,7 @@ class ObjectiveTasksStartLatest(Objective):
 
 
 class ObjectiveTasksStartEarliest(Objective):
-    """This is the dual of the completion weighted times
-    but for task starts."""
+    """Minimize start times, i.e. all the tasks are scheduled as early as possible."""
 
     def __init__(self, **data) -> None:
         all_priorities = []
@@ -187,8 +185,7 @@ class ObjectiveTasksStartEarliest(Objective):
 
 
 class ObjectiveMinimizeGreatestStartTime(Objective):
-    """minimize the greatest start time, i.e. tasks are schedules
-    as early as possible"""
+    """Minimize the greatest start time, i.e. tasks are scheduled as early as possible"""
 
     def __init__(self, **data) -> None:
         if "list_of_tasks" in data:
@@ -222,7 +219,7 @@ class ObjectiveMinimizeFlowtime(Objective):
 
     o = Σ C j
 
-    Be careful that it is contradictory with the minimize makespan objective."""
+    This objective is known to be contradictory with the minimize makespan objective."""
 
     def __init__(self, **data) -> None:
         if "list_of_tasks" in data:
@@ -252,7 +249,7 @@ class ObjectivePriorities(Objective):
 
     According to this rule, the jobs are ordered in decreasing order of wj/pj ,
     where wj is the weight for task j, denoted priority in our case, and pj
-    is the"""
+    is the priority for task j."""
 
     def __init__(self, **data) -> None:
         all_priorities = []
