@@ -66,6 +66,8 @@ class Resource(NamedUIDObject):
         # busy intervals can be for example [(1,3), (5, 7)]
         # Dict[Task, Tuple[z3.ArithRef, z3.ArithRef]]
         self._busy_intervals = {}
+        # a flag to tells whether or not this resource is part of a SelectWorker instance
+        self._part_of_selectworker = False
 
     def add_busy_interval(
         self, task, interval: Tuple[z3.ArithRef, z3.ArithRef]
@@ -76,6 +78,13 @@ class Resource(NamedUIDObject):
     def get_busy_intervals(self) -> List[Tuple[z3.ArithRef, z3.ArithRef]]:
         """returns the list of all busy intervals"""
         return list(self._busy_intervals.values())
+
+    def set_part_of_selectworker(self) -> None:
+        """Set the related flag to True"""
+        self._part_of_selectworker = True
+
+    def is_part_of_selectworker(self) -> bool:
+        return self._part_of_selectworker
 
 
 class Worker(Resource):
@@ -122,9 +131,11 @@ class CumulativeWorker(Resource):
             Worker(
                 name=f"{self.name}_CumulativeWorker_{i+1}",
                 productivity=productivities[i],
-                cost=ConstantFunction(value=costs_per_period[i])
-                if costs_per_period[i] is not None
-                else None,
+                cost=(
+                    ConstantFunction(value=costs_per_period[i])
+                    if costs_per_period[i] is not None
+                    else None
+                ),
             )
             for i in range(self.size)
         ]
@@ -165,8 +176,11 @@ class SelectWorkers(Resource):
         self._list_of_workers = []
         for worker in self.list_of_workers:
             if isinstance(worker, CumulativeWorker):
+                for w in worker._cumulative_workers:
+                    w.set_part_of_selectworker()
                 self._list_of_workers.extend(worker._cumulative_workers)
             else:
+                worker.set_part_of_selectworker()
                 self._list_of_workers.append(worker)
 
         # a dict that maps workers and selected boolean
