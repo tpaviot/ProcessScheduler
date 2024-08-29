@@ -86,9 +86,12 @@ class ObjectiveMinimizeMakespan(Objective):
     usually implies a good utilization of the machine(s)."""
 
     def __init__(self, **data) -> None:
+        makespan = IndicatorFromMathExpression(
+            name="Makespan", expression=processscheduler.base.active_problem._horizon
+        )
         super().__init__(
             name="MinimizeMakeSpan",
-            target=processscheduler.base.active_problem._horizon,
+            target=makespan,
             kind="minimize",
         )
 
