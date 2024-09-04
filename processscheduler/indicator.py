@@ -293,6 +293,10 @@ class IndicatorResourceIdle(Indicator):
             for start_var, end_var in resource._busy_intervals.values():
                 starts.append(start_var)
                 ends.append(end_var)
+            if (
+                len(starts) <= 1 and len(ends) <= 1
+            ):  # only one task is assigned to this resource
+                continue
             # sort both lists
             sorted_starts, c1 = sort_no_duplicates(starts)
             sorted_ends, c2 = sort_no_duplicates(ends)

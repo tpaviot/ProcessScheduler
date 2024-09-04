@@ -435,6 +435,20 @@ def test_indicator_resource_idle_3() -> None:
     assert solution.indicators[ind.name] == 6
 
 
+def test_indicator_resource_idle_4() -> None:
+    """Only 1 task, no idle time by definition"""
+    problem = ps.SchedulingProblem(name="IndicatorResourceIdle4")
+    task_1 = ps.FixedDurationTask(name="task1", duration=2)
+    ps.TaskStartAt(task=task_1, value=3)
+    worker_1 = ps.Worker(name="Machine1")
+    task_1.add_required_resource(worker_1)
+    ind = ps.IndicatorResourceIdle(list_of_resources=[worker_1])
+    solver = ps.SchedulingSolver(problem=problem)
+    solution = solver.solve()
+    assert solution
+    assert solution.indicators[ind.name] == 0
+
+
 def test_optimize_indicator_multi_objective() -> None:
     problem = ps.SchedulingProblem(name="OptimizeIndicatorMultiObjective", horizon=10)
     task_1 = ps.FixedDurationTask(name="task1", duration=2, priority=1)
