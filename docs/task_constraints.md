@@ -21,12 +21,6 @@ classDiagram
     pb.add_constraint([task.applied == True])
     ```
 
-## Groups
-
-### Ordered task group
-
-### Unordered task group
-
 ## Single task temporal constraints
 
 These constraints apply to individual tasks.
@@ -61,7 +55,7 @@ class TaskEndBefore{
 | ----------- | -----| ------------------------------------ |
 | TaskStartAt |$task.start = value$      | starts exactly at the instant `value`  |
 | TaskStartAfter |$task.start >= value$       | task must start after a given time instant |
-| TaskEndAt | $task.end = value$    | task ends exactly at the specified time instant. |
+| TaskEndAt | $task.end = value$    | task ends exactly at the specified time instant |
 | TaskEndBefore  |$task.end <= value$  | task ends before or at a given time instant |
 
 
@@ -96,7 +90,17 @@ class TaskPrecedence{
 
 Ensures that one task is scheduled before another. The precedence can be either 'lax,' 'strict,' or 'tight,' and an optional offset can be applied.
 
-The `TaskPrecedence` class takes two parameters `task_1` and `task_2` and constraints `task_2` to be scheduled after `task_1` is completed. The precedence type can either be :const:`'lax'` (default, `task_2.start` >= `task_1.end`)), :const:`'strict'` (`task_2.start` >= `task_1.end`)) or :const:`'tight'` (`task_2.start` >= `task_1.end`, task_2 starts immediately after task_1 is completed). An optional parameter `offset` can be additionally set.
+The `TaskPrecedence` class takes two parameters `task_1` and `task_2` and constraints `task_2` to be scheduled after `task_1` is completed. 
+
+The `kind` constraint can be
+
+*  `'tight'`  (t1.end == t2.start)
+*  `'lax'`  (t1.end <= t2.start)
+*  `'strict'`  (t1.end < t2.start)
+
+The default value is `'lax'`.
+
+An optional parameter `offset` can be additionally set:
 
 ``` py
 task_1 = ps.FixedDurationTask(name='Task1', duration=3)
@@ -138,7 +142,7 @@ Ensures that two tasks should not overlap in time.
 
 Forces a set of tasks to be scheduled contiguously.
 
-`TasksContiguous` takes a liste of tasks, force the schedule so that tasks are contiguous.
+`TasksContiguous` takes a list of tasks and forces the schedule so that tasks are contiguous.
 
 ### UnorderedTaskGroup
 
@@ -146,7 +150,13 @@ An UnorderedTaskGroup represents a collection of tasks that can be scheduled in 
 
 ### OrderedTaskGroup
 
-A set of tasks that can be scheduled in any order, with time bounds
+A set of tasks that can be scheduled in a specified order, with time bounds. The `kind` constraint can be 
+
+* `'tight'` (t1.end == t2.start)
+* `'lax'` (t1.end <= t2.start)
+* `'strict'` (t1.end < t2.start)
+
+The default value is `'lax'`.
 
 ## Advanced tasks constraints
 
