@@ -31,7 +31,7 @@ setup(
     license="GPLv3",
     platforms="Platform Independent",
     packages=find_packages(),
-    install_requires=["z3-solver==4.13.2.0", "pydantic>=2"],
+    install_requires=["z3-solver==4.13.3.0", "pydantic>=2"],
     classifiers=CLASSIFIERS,
     zip_safe=True,
 )
