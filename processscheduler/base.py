@@ -16,7 +16,7 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-from typing import List
+from typing import Any, Dict, List
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, ConfigDict
@@ -31,6 +31,7 @@ class BaseModelWithJson(BaseModel):
 
     name: str = Field(default=None)
     type: str = Field(default=None)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
     def __init__(self, **data) -> None:
         """The base name for all ProcessScheduler objects.
