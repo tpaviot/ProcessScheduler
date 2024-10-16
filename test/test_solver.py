@@ -144,7 +144,7 @@ def test_schedule_single_task_single_resource_metadata() -> None:
     # task should have been scheduled with start at 0
     # and end at 2
     task_solution = solution.tasks[task.name]
-    resource_solution = solution.resources[resource.name]
+    resource_solution = solution.resources[worker.name]
 
     assert task_solution.start == 0
     assert task_solution.end == 7
