@@ -128,6 +128,31 @@ def test_schedule_single_task_single_resource() -> None:
     assert task_solution.assigned_resources == ["worker"]
 
 
+def test_schedule_single_task_single_resource_metadata() -> None:
+    problem = ps.SchedulingProblem(name="SingleTaskSingleResourceMetadata", horizon=20)
+
+    task_metadata = {"field_1": "value_1", "field_2": "value_2"}
+    task = ps.FixedDurationTask(name="task", duration=7, metadata=task_metadata)
+
+    worker_metadata = {"field_3": "value_3", "field_4": "value_4"}
+    worker = ps.Worker(name="worker", metadata=worker_metadata)
+
+    task.add_required_resource(worker)
+
+    solution = solve_problem(problem)
+    assert solution
+    # task should have been scheduled with start at 0
+    # and end at 2
+    task_solution = solution.tasks[task.name]
+    resource_solution = solution.resources[resource.name]
+
+    assert task_solution.start == 0
+    assert task_solution.end == 7
+    assert task_solution.assigned_resources == ["worker"]
+    assert task_solution.metadata == task_metadata
+    assert resource_solution.metadata == worker_metadata
+
+
 def test_schedule_two_tasks_two_alternative_workers() -> None:
     problem = ps.SchedulingProblem(name="TwoTasksTwoSelectWorkers", horizon=4)
     # two tasks

@@ -561,6 +561,9 @@ class SchedulingSolver(BaseModelWithJson):
                     if resource_name not in new_task_solution.assigned_resources:
                         new_task_solution.assigned_resources.append(resource_name)
 
+            # metadata
+            new_task_solution.metadata = task.metadata
+
             solution.add_task_solution(new_task_solution)
 
         # process resources
@@ -591,6 +594,9 @@ class SchedulingSolver(BaseModelWithJson):
                 ):
                     new_resource_solution.assignments.append((task_name, start, end))
 
+            # metadata
+            new_resource_solution.metadata = resource.metadata
+
             if "_CumulativeWorker_" in resource.name:
                 cumulative_worker_name = resource.name.split("_CumulativeWorker_")[0]
                 if cumulative_worker_name not in solution.resources:
@@ -617,6 +623,9 @@ class SchedulingSolver(BaseModelWithJson):
                 new_buffer_solution.level,
                 new_buffer_solution.level_change_times,
             ) = clean_buffer_levels(level_values, change_level_times)
+
+            # metadata
+            new_buffer_solution.metadata = buffer.metadata
 
             solution.add_buffer_solution(new_buffer_solution)
         # process indicators
