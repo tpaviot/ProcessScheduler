@@ -1,13 +1,13 @@
 jobs:
 - template: template.yml
   parameters:
-    name: Ubuntu_22_04_python310
-    vmImage: 'ubuntu-22.04'
+    name: Ubuntu_24_04_python310
+    vmImage: 'ubuntu-24.04'
 
 - template: template.yml
   parameters:
-    name: macOS_12_python310
-    vmImage: 'macOS-12'
+    name: macOS_14_python310
+    vmImage: 'macOS-14'
 
 - template: template.yml
   parameters:
