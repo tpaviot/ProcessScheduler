@@ -140,7 +140,7 @@ class SchedulingSolver(BaseModelWithJson):
             z3.set_option("smt.arith.random_initial_value", False)
 
         # set timeout
-        if self.max_time != "inf":
+        if self.max_time != float("inf"):
             z3.set_option("timeout", int(self.max_time * 1000))  # in milliseconds
 
         # some flags that will be used after
@@ -784,7 +784,7 @@ class SchedulingSolver(BaseModelWithJson):
             print(
                 f"\tFound value: {current_variable_value} elapsed time:{total_time:.3f}s"
             )
-            if self.max_time != "inf" and total_time > self.max_time:
+            if self.max_time != float("inf") and total_time > self.max_time:
                 print("Max time exceeded. Stop incremental solver.")
                 break
 
@@ -807,7 +807,7 @@ class SchedulingSolver(BaseModelWithJson):
                 # Compute the expected value
                 a, b, c = calc_parabola_from_three_points([0, 1, 2], three_last_times)
                 expected_next_time = a * 9 + 3 * b + c
-                if self.max_time != "inf" and expected_next_time > self.max_time:
+                if self.max_time != float("inf") and expected_next_time > self.max_time:
                     print(
                         "Max time expected on the next iteration. Stop incremental solver."
                     )

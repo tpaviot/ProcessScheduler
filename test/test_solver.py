@@ -283,6 +283,16 @@ def test_solve_max_time():
     assert not solution
 
 
+def test_solve_inf_max_time():
+    """just to test that setting max_time to 'inf' works"""
+    problem = build_complex_problem("SolveInfMaxTime", 10)
+    ps.ObjectiveMinimizeMakespan()
+    # 1s is not enough to solve this problem
+    max_time_solver = ps.SchedulingSolver(problem=problem, max_time=float("inf"))
+    solution = max_time_solver.solve()
+    assert solution
+
+
 def test_solve_non_integer_max_time():
     """a stress test which"""
     problem = build_complex_problem(name="SolveMaxTime", n=1000)
