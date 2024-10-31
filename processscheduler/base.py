@@ -47,7 +47,7 @@ class BaseModelWithJson(BaseModel):
         self._uid = uuid4().int
 
         if self.name is None:
-            self.name = f"{self.__class__.__name__}_{str(self._uid)[:8]}"
+            self.name = f"{self.__class__.__name__}_{str(self._uid)[:12]}"
 
         self.type = f"{self.__class__.__name__}"
 
