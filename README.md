@@ -35,7 +35,7 @@ Install with pip.
 pip install ProcessScheduler==2.0.0
 ```
 
-This comes with the only required dependency: the Microsoft free and open source licenses [S3 solver](https://github.com/Z3Prover/z3). If you want to take advantage of all the features, you can install optional dependencies:
+This comes with the only required dependency: the Microsoft free and open source licensed [Z3-solver](https://github.com/Z3Prover/z3). If you want to take advantage of all the features, you can install optional dependencies:
 
 ```bash
 pip install matplotlib plotly kaleido ipywidgets isodate ipympl psutil XlsxWriter
@@ -47,7 +47,7 @@ There are some Jupypter notebooks that can be executed online at [myBinder.org](
 
 ## Documentation
 
-User-end documentation available at https://processscheduler.readthedocs.io/
+User-end documentation available at https://processscheduler.github.io/
 
 ## Helloworld
 
