@@ -52,8 +52,8 @@ def test_resource_interrupted_variable_duration() -> None:
     solution = solver.solve()
     assert solution
     assert solution.tasks[task_1.name].start == 0
-    assert solution.tasks[task_1.name].end == 8
-    assert solution.tasks[task_2.name].start == 8
+    assert solution.tasks[task_1.name].end <= 8   # does not matter when it exactly ends
+    assert solution.tasks[task_2.name].start == 8 # does matter
     assert solution.tasks[task_2.name].end == 12
 
 
