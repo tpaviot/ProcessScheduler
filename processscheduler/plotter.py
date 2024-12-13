@@ -105,6 +105,7 @@ def render_gantt_plotly(
     sort: Optional[str] = None,
     fig_filename: Optional[str] = None,
     html_filename: Optional[str] = None,
+    sort_by_start: bool = False,
 ) -> None:
     """Use plotly.create_gantt method, see
     https://plotly.github.io/plotly.py-docs/generated/plotly.figure_factory.create_gantt.html
@@ -121,6 +122,14 @@ def render_gantt_plotly(
     # tasks to render
     if render_mode == "Task":
         tasks_to_render = solution.get_scheduled_tasks()
+        if sort_by_start:
+            tasks_to_render = dict(
+                sorted(
+                    tasks_to_render.items(),
+                    key=lambda item: solution.tasks[item[0]].start,
+                    reverse=True
+                )
+            )
     else:
         tasks_to_render = solution.tasks
 
@@ -209,6 +218,7 @@ def render_gantt_matplotlib(
     show_indicators: Optional[bool] = True,
     render_mode: Optional[str] = "Resource",
     fig_filename: Optional[str] = None,
+    sort_by_start: bool = False
 ) -> None:
     """generate a gantt diagram using matplotlib.
     Inspired by
@@ -228,6 +238,14 @@ def render_gantt_matplotlib(
         tasks_to_render = (
             solution.get_scheduled_tasks()
         )  # get_all_tasks_but_unavailable()
+        if sort_by_start:
+            tasks_to_render = dict(
+                sorted(
+                    tasks_to_render.items(),
+                    key=lambda item: solution.tasks[item[0]].start,
+                    reverse=True
+                )
+            )
     else:
         tasks_to_render = solution.tasks
 
