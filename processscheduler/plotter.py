@@ -18,6 +18,8 @@ import random
 from typing import Optional, Tuple, Union
 import warnings
 
+from processscheduler.task_constraint import TaskStartAt
+
 try:
     import numpy as np
 
@@ -45,7 +47,7 @@ from processscheduler.function import (
     LinearFunction,
     PolynomialFunction,
 )
-from processscheduler.solution import SchedulingSolution
+from processscheduler.solution import SchedulingSolution, TaskSolution
 
 
 def plot_function(
@@ -92,7 +94,14 @@ def plot_function(
     if show_plot:
         plt.show()
 
-
+def sort_by_task_start(tasks: dict[str, TaskSolution], solution: SchedulingSolution) -> dict[str, TaskSolution]:
+    return dict(
+        sorted(
+            tasks.items(),
+            key=lambda item: solution.tasks[item[0]].start,
+            reverse=True
+        )
+    )
 #
 # Gantt graphical rendering using plotly and matplotlib
 #
@@ -105,6 +114,7 @@ def render_gantt_plotly(
     sort: Optional[str] = None,
     fig_filename: Optional[str] = None,
     html_filename: Optional[str] = None,
+    sort_by_start: bool = False,
 ) -> None:
     """Use plotly.create_gantt method, see
     https://plotly.github.io/plotly.py-docs/generated/plotly.figure_factory.create_gantt.html
@@ -121,6 +131,8 @@ def render_gantt_plotly(
     # tasks to render
     if render_mode == "Task":
         tasks_to_render = solution.get_scheduled_tasks()
+        if sort_by_start:
+            tasks_to_render = sort_by_task_start(tasks_to_render, solution)
     else:
         tasks_to_render = solution.tasks
 
@@ -209,6 +221,7 @@ def render_gantt_matplotlib(
     show_indicators: Optional[bool] = True,
     render_mode: Optional[str] = "Resource",
     fig_filename: Optional[str] = None,
+    sort_by_start: bool = False
 ) -> None:
     """generate a gantt diagram using matplotlib.
     Inspired by
@@ -228,6 +241,8 @@ def render_gantt_matplotlib(
         tasks_to_render = (
             solution.get_scheduled_tasks()
         )  # get_all_tasks_but_unavailable()
+        if sort_by_start:
+            tasks_to_render = sort_by_task_start(tasks_to_render, solution)
     else:
         tasks_to_render = solution.tasks
 
