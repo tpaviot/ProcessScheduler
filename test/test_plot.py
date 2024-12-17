@@ -156,6 +156,24 @@ def test_gantt_matplotlib_wrong_render_mode():
         ps.render_gantt_matplotlib(solution, render_mode="foo", show_plot=False)
 
 
+def test_gantt_matplotlib_sort_task_chronologically():
+    pb = ps.SchedulingProblem(name="SortTaskChronologically", horizon=20)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    task_2 = ps.FixedDurationTask(name="task2", duration=4)
+    task_3 = ps.FixedDurationTask(name="task3", duration=5)
+    worker_1 = ps.Worker(name="Worker1")
+    task_1.add_required_resource(worker_1)
+    task_2.add_required_resource(worker_1)
+    task_3.add_required_resource(worker_1)
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    with pytest.raises(ValueError):
+        ps.render_gantt_matplotlib(
+            solution, render_mode="foo", show_plot=False, sort_by_start=True
+        )
+
+
 def test_gantt_plotly_base():
     """take the single task/single resource and display output"""
     problem = ps.SchedulingProblem(name="RenderSolutionPlotly", horizon=7)
@@ -236,6 +254,24 @@ def test_gantt_plotly_raise_wrong_type():
     # display solution, using both ascii or matplotlib
     with pytest.raises(ValueError):
         ps.render_gantt_plotly(solution, render_mode="foo")
+
+
+def test_gantt_plotly_sort_task_chronologically():
+    pb = ps.SchedulingProblem(name="PlotlySortTaskChronologically", horizon=20)
+    task_1 = ps.FixedDurationTask(name="task1", duration=3)
+    task_2 = ps.FixedDurationTask(name="task2", duration=4)
+    task_3 = ps.FixedDurationTask(name="task3", duration=5)
+    worker_1 = ps.Worker(name="Worker1")
+    task_1.add_required_resource(worker_1)
+    task_2.add_required_resource(worker_1)
+    task_3.add_required_resource(worker_1)
+    solver = ps.SchedulingSolver(problem=pb)
+    solution = solver.solve()
+    assert solution
+    with pytest.raises(ValueError):
+        ps.render_gantt_plotly(
+            solution, render_mode="foo", show_plot=False, sort_by_start=True
+        )
 
 
 def test_gantt_with_buffers() -> None:
