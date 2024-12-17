@@ -18,8 +18,6 @@ import random
 from typing import Optional, Tuple, Union
 import warnings
 
-from processscheduler.task_constraint import TaskStartAt
-
 try:
     import numpy as np
 
@@ -94,14 +92,17 @@ def plot_function(
     if show_plot:
         plt.show()
 
-def sort_by_task_start(tasks: dict[str, TaskSolution], solution: SchedulingSolution) -> dict[str, TaskSolution]:
+
+def sort_by_task_start(
+    tasks: dict[str, TaskSolution], solution: SchedulingSolution
+) -> dict[str, TaskSolution]:
     return dict(
         sorted(
-            tasks.items(),
-            key=lambda item: solution.tasks[item[0]].start,
-            reverse=True
+            tasks.items(), key=lambda item: solution.tasks[item[0]].start, reverse=True
         )
     )
+
+
 #
 # Gantt graphical rendering using plotly and matplotlib
 #
@@ -221,7 +222,7 @@ def render_gantt_matplotlib(
     show_indicators: Optional[bool] = True,
     render_mode: Optional[str] = "Resource",
     fig_filename: Optional[str] = None,
-    sort_by_start: bool = False
+    sort_by_start: bool = False,
 ) -> None:
     """generate a gantt diagram using matplotlib.
     Inspired by
