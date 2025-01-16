@@ -133,6 +133,24 @@ def test_cumulative_select_worker_1():
     assert solution
 
 
+def test_cumulative_with_makespan():
+    nb_tasks = 16
+    capa = 4
+    pb_bs = ps.SchedulingProblem(name="Hospital")
+    # workers
+    r1 = ps.CumulativeWorker(name="Room", size=capa)
+
+    for i in range(nb_tasks):
+        t = ps.FixedDurationTask(name=f"T{i+1}", duration=5)
+        t.add_required_resource(r1)
+    ps.ObjectiveMinimizeMakespan()
+    solver = ps.SchedulingSolver(problem=pb_bs)
+    solution = solver.solve()
+
+    assert solution
+    assert solution.horizon == 20
+
+
 def test_cumulative_hosp():
     n = 16
     capa = 4
