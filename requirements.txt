@@ -1,4 +1,4 @@
-z3-solver==4.13.4.0
+z3-solver==4.14.0.0
 setuptools
 rich
 pydantic
