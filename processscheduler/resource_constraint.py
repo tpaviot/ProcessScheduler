@@ -25,7 +25,10 @@ from pydantic import Field
 from processscheduler.resource import Worker, CumulativeWorker, SelectWorkers
 from processscheduler.constraint import ResourceConstraint
 from processscheduler.util import sort_no_duplicates
-from processscheduler.task import VariableDurationTask
+from processscheduler.task import (
+    VariableDurationTask,
+    FixedDurationInterruptibleTask,
+)
 
 
 class WorkLoad(ResourceConstraint):
@@ -242,7 +245,7 @@ class ResourcePeriodicallyUnavailable(ResourceConstraint):
         if isinstance(self.resource, Worker):
             workers = [self.resource]
         elif isinstance(self.resource, CumulativeWorker):
-            workers = self.resource.cumulative_workers
+            workers = self.resource._cumulative_workers
 
         resource_assigned = False
 
@@ -315,6 +318,9 @@ class ResourceInterrupted(ResourceConstraint):
                 overlaps = []
 
                 is_interruptible = isinstance(task, VariableDurationTask)
+                is_fixed_interruptible = isinstance(
+                    task, FixedDurationInterruptibleTask
+                )
 
                 for (
                     interval_lower_bound,
@@ -335,7 +341,6 @@ class ResourceInterrupted(ResourceConstraint):
 
                     if is_interruptible:
                         # just make sure that the task does not start or end within the time interval...
-                        # TODO: account for zero-duration?
                         conds.extend(
                             [
                                 z3.Xor(
@@ -365,6 +370,9 @@ class ResourceInterrupted(ResourceConstraint):
                         conds.append(
                             task._duration <= task.max_duration + total_overlap
                         )
+                elif is_fixed_interruptible:
+                    total_overlap = z3.Sum(*overlaps)
+                    conds.append(task._overlap == total_overlap)
 
             # TODO: remove AND, as the solver does that anyways?
             self.set_z3_assertions(z3.And(*conds))
@@ -421,7 +429,7 @@ class ResourcePeriodicallyInterrupted(ResourceConstraint):
         if isinstance(self.resource, Worker):
             workers = [self.resource]
         elif isinstance(self.resource, CumulativeWorker):
-            workers = self.resource.cumulative_workers
+            workers = self.resource._cumulative_workers
 
         resource_assigned = False
 
@@ -433,6 +441,9 @@ class ResourcePeriodicallyInterrupted(ResourceConstraint):
 
                 # check if the task allows variable duration
                 is_interruptible = isinstance(task, VariableDurationTask)
+                is_fixed_interruptible = isinstance(
+                    task, FixedDurationInterruptibleTask
+                )
 
                 duration = end_task_i - start_task_i
                 folded_start_task_i = (start_task_i - self.offset) % self.period
@@ -488,9 +499,8 @@ class ResourcePeriodicallyInterrupted(ResourceConstraint):
                     )
                     overlaps.append(overlap)
 
-                    if is_interruptible:
+                    if is_interruptible or is_fixed_interruptible:
                         # just make sure that the task does not start or end within one of the time intervals...
-                        # TODO: account for zero-duration?
                         conds.extend(
                             [
                                 z3.Xor(
@@ -520,6 +530,9 @@ class ResourcePeriodicallyInterrupted(ResourceConstraint):
                         conds.append(
                             task._duration <= task.max_duration + total_overlap
                         )
+                elif is_fixed_interruptible:
+                    total_overlap = z3.Sum(*overlaps)
+                    conds.append(task._overlap == total_overlap)
 
             # TODO: add AND only of mask is set?
             core = z3.And(*conds)
